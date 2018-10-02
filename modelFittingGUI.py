@@ -54,7 +54,19 @@ LABEL_PARAMETER_2B = 'Plasma Flow Rate, \n Fp (ml/min)'
 LABEL_PARAMETER_3A = 'Transfer Rate Constant, \n Ktrans (1/min)'
 LABEL_PARAMETER_3B = 'Biliary Efflux Rate, \n Kbc (mL/100mL/min)'
 DEFAULT_REPORT_FILE_PATH_NAME = 'report.pdf'
+LOG_FILE_NAME = "ModelFitting.log"
 #######################################
+
+#Create and configure the logger
+if os.path.exists(LOG_FILE_NAME):
+   #delete existing copy of PDF called reportFileName
+   os.remove(LOG_FILE_NAME) 
+LOG_FORMAT = "%(levelname)s %(asctime)s - %(message)s"
+logging.basicConfig(filename=LOG_FILE_NAME, 
+                    level=logging.DEBUG, 
+                    format=LOG_FORMAT)
+logger = logging.getLogger()
+
 
 class Window(QDialog):
     def __init__(self, parent=None):
@@ -246,6 +258,8 @@ class Window(QDialog):
         self.btnExit.clicked.connect(self.exitApp)
 
         verticalLayoutLeft.addStretch()  #Aligns Save Report & Exit buttons to the top of verticalLayoutLeft
+        
+        logger.debug("GUI created successfully.")
 
     def returnErrorString(self):
         return 'Error: {}. {}, line: {}'.format(sys.exc_info()[0],
@@ -263,7 +277,8 @@ class Window(QDialog):
                 self.cmbModels.setCurrentIndex(0)
                 self.btnSaveReport.hide()
         except Exception as e:
-            print('Error in function displayModelFittingGroupBox: ' + str(e) + ' ' + returnErrorString)      
+            print('Error in function displayModelFittingGroupBox: ' + str(e) + ' ' + returnErrorString) 
+            logger.error('Error in function displayModelFittingGroupBox: ' + str(e) + ' ' + returnErrorString)
 
     def displayFitModelButton(self):
         try:
@@ -694,7 +709,9 @@ class Window(QDialog):
                 print('Error in function plot when an event associated with ' + str(callingFunction) + ' is fired : ROI=' + ROI + ' AIF = ' + AIF + ' : ' + str(e) + ' ' + returnErrorString)
             
     def exitApp(self):
+        logger.debug("Application closed using the Exit button.")
         sys.exit(0)
+        
                 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
