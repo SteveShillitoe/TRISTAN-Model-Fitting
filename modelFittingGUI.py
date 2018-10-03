@@ -63,7 +63,7 @@ if os.path.exists(LOG_FILE_NAME):
    os.remove(LOG_FILE_NAME) 
 LOG_FORMAT = "%(levelname)s %(asctime)s - %(message)s"
 logging.basicConfig(filename=LOG_FILE_NAME, 
-                    level=logging.DEBUG, 
+                    level=logging.INFO, 
                     format=LOG_FORMAT)
 logger = logging.getLogger()
 
@@ -259,7 +259,7 @@ class Window(QDialog):
 
         verticalLayoutLeft.addStretch()  #Aligns Save Report & Exit buttons to the top of verticalLayoutLeft
         
-        logger.debug("GUI created successfully.")
+        logger.info("GUI created successfully.")
 
     def returnErrorString(self):
         return 'Error: {}. {}, line: {}'.format(sys.exc_info()[0],
@@ -268,17 +268,20 @@ class Window(QDialog):
     
     def displayModelFittingGroupBox(self):
         try:
-            if str(self.cmbROI.currentText()) != 'Please Select':
+            ROI = str(self.cmbROI.currentText())
+            if ROI != 'Please Select':
                 self.groupBoxModel.show()
                 self.btnSaveReport.show()
+                logger.info("Function displayModelFittingGroupBox called. Model group box and Save Report button shown when ROI = {}".format(ROI))
             else:
                 self.groupBoxModel.hide()
                 self.cmbAIF.setCurrentIndex(0)
                 self.cmbModels.setCurrentIndex(0)
                 self.btnSaveReport.hide()
+                logger.info("Function displayModelFittingGroupBox called. Model group box and Save Report button hidden.")
         except Exception as e:
-            print('Error in function displayModelFittingGroupBox: ' + str(e) + ' ' + returnErrorString) 
-            logger.error('Error in function displayModelFittingGroupBox: ' + str(e) + ' ' + returnErrorString)
+            print('Error in function displayModelFittingGroupBox: ' + str(e) + ' ' + self.returnErrorString) 
+            logger.error('Error in function displayModelFittingGroupBox: ' + str(e) + ' ' + self.returnErrorString)
 
     def displayFitModelButton(self):
         try:
@@ -286,11 +289,14 @@ class Window(QDialog):
             AIF = str(self.cmbAIF.currentText())
             if ROI != 'Please Select' and AIF != 'Please Select':
                 self.btnFitModel.show()
+                logger.info("Function displayFitModelButton called. Fit Model button shown when ROI = {} and AIF = {}".format(ROI, AIF))
             else:
                 self.btnFitModel.hide()
+                logger.info("Function displayFitModelButton called. Fit Model button hidden.")
         except Exception as e:
-            print('Error in function displayFitModelButton: ' + str(e) + ' ' + returnErrorString)
-            
+            print('Error in function displayFitModelButton: ' + str(e) + ' ' + self.returnErrorString)
+            logger.error('Error in function displayFitModelButton: ' + str(e) + ' ' + self.returnErrorString)
+
     def runCurveFit(self):
         try:
             modelName = str(self.cmbModels.currentText())
@@ -315,24 +321,29 @@ class Window(QDialog):
             arrayROIConcs = np.array(concentrationData[ROI], dtype='float')
             arrayInputConcs = np.array(concentrationData[AIF], dtype='float')
             if self.cboxConstaint.isChecked():
-                addConstrain=True
+                addConstraint = True
             else:
-                addConstrain=False
+                addConstraint=False
             #Call curve fitting routine
-            popt, pcov = TracerKineticModels.curveFit(modelName, arrayTimes, arrayInputConcs, arrayROIConcs, initialParametersArray, addConstrain)
+            logger.info('TracerKineticModels.curveFit called with model {}, parameters {} and Constraint = {}'.format(modelName, initialParametersArray, addConstraint))
+            optimumParams, confidenceLevelParams = TracerKineticModels.curveFit(modelName, arrayTimes, arrayInputConcs, arrayROIConcs, initialParametersArray, addConstraint)
+            logger.info('TracerKineticModels.curveFit returned optimum parameters {} with confidence levels {}'.format(optimumParams, confidenceLevelParams))
+            
             #Populate parameter spinboxes with optimim values from curve fitting
-            if modelName ==  'Extended Tofts' or modelName == 'High-Flow Gadoxetate':
-                self.spinBoxParameter1.setValue(popt[0])
-                self.spinBoxParameter2.setValue(popt[1])
-                self.spinBoxParameter3.setValue(popt[2])
-            elif modelName ==  'One Compartment':
-                self.spinBoxParameter1.setValue(popt[0])
-                self.spinBoxParameter2.setValue(popt[1])
+            if optimumParams.size == 3:
+                self.spinBoxParameter1.setValue(optimumParams[0])
+                self.spinBoxParameter2.setValue(optimumParams[1])
+                self.spinBoxParameter3.setValue(optimumParams[2])
+            elif optimumParams.szie == 2:
+                self.spinBoxParameter1.setValue(optimumParams[0])
+                self.spinBoxParameter2.setValue(optimumParams[1])
             
         except ValueError as ve:
-            print ('Value Error: runCurveFit with model ' + modelName + ': '+ str(ve) + ' ' + returnErrorString)
+            print ('Value Error: runCurveFit with model ' + modelName + ': '+ str(ve) + ' ' + self.returnErrorString)
+            logger.error('Value Error: runCurveFit with model ' + modelName + ': '+ str(ve) + ' ' + self.returnErrorString)
         except Exception as e:
-            print('Error in function runCurveFit with model ' + modelName + ': ' + str(e) + ' ' + returnErrorString)
+            print('Error in function runCurveFit with model ' + modelName + ': ' + str(e) + ' ' + self.returnErrorString)
+            logger.error('Error in function runCurveFit with model ' + modelName + ': ' + str(e) + ' ' + self.returnErrorString)
         
     def savePDFReport(self):
         try:
@@ -374,9 +385,10 @@ class Window(QDialog):
                 QApplication.restoreOverrideCursor()
                 #Delete image file
                 os.remove(IMAGE_NAME)
-
+                logger.info('PDF Report created called ' + reportFileName)
         except Exception as e:
-            print('Error in function savePDFReport: ' + str(e) + ' ' + returnErrorString)
+            print('Error in function savePDFReport: ' + str(e) + ' ' + self.returnErrorString)
+            logger.error('Error in function savePDFReport: ' + str(e) + ' ' + self.returnErrorString)
        
     def loadDataFile(self):
         global concentrationData
@@ -416,7 +428,7 @@ class Window(QDialog):
                             QMessageBox().warning(self, "CSV data file", "The first column must contain time data.", QMessageBox.Ok)
                             raise RuntimeError('The first column in the CSV file must contain time data.')    
 
-                    
+                    logger.info('CSV data file {} loaded'.format(dataFileName))
                     #Column headers form the keys in the dictionary called concentrationData
                     for header in headers:
                         concentrationData[header.title()]=[]
@@ -439,12 +451,16 @@ class Window(QDialog):
                     dataFileName = os.path.basename(dataFileName)
         except csv.Error:
             print('CSV Reader error in function loadDataFile: file %s, line %d: %s' % (dataFileName, readCSV.line_num, csv.Error))
+            logger.error('CSV Reader error in function loadDataFile: file %s, line %d: %s' % (dataFileName, readCSV.line_num, csv.Error))
         except IOError:
             print ('IOError in function loadDataFile: cannot open file' + dataFileName + ' or read its data')
+            logger.error ('IOError in function loadDataFile: cannot open file' + dataFileName + ' or read its data')
         except RuntimeError as re:
             print('Runtime error in function loadDataFile: ' + str(re))
+            logger.error('Runtime error in function loadDataFile: ' + str(re))
         except Exception as e:
-            print('Error in function loadDataFile: ' + str(e) + ' ' + returnErrorString + ' at line in CSV file ', readCSV.line_num)
+            print('Error in function loadDataFile: ' + str(e) + ' ' + self.returnErrorString + ' at line in CSV file ', readCSV.line_num)
+            logger.error('Error in function loadDataFile: ' + str(e) + ' ' + self.returnErrorString + ' at line in CSV file ', readCSV.line_num)
 
     def configureGUIAfterLoadingData(self):
         try:
@@ -463,13 +479,17 @@ class Window(QDialog):
             self.cmbVIF.addItems(organArray)
             self.lblROI.show()
             self.cmbROI.show()
+            logger.info('Function configureGUIAfterLoadingData called and the following organ list loaded: {}'.format(organArray))
         except RuntimeError as re:
-            print('runtime error in function configureGUIAfterLoadingData: ' + str(re) + ' ' + returnErrorString)
+            print('runtime error in function configureGUIAfterLoadingData: ' + str(re) + ' ' + self.returnErrorString)
+            logger.error('runtime error in function configureGUIAfterLoadingData: ' + str(re) + ' ' + self.returnErrorString)
         except Exception as e:
-            print('Error in function configureGUIAfterLoadingData: ' + str(e) + ' ' + returnErrorString)
+            print('Error in function configureGUIAfterLoadingData: ' + str(e) + ' ' + self.returnErrorString)
+            logger.error('Error in function configureGUIAfterLoadingData: ' + str(e) + ' ' + self.returnErrorString)
         
     def returnListOrgans(self):
         try:
+            logger.info('Function returnListOrgans called')
             organList =[]
             counter=0
             organList.append('Please Select') #First item at the top of the drop-down list
@@ -479,9 +499,11 @@ class Window(QDialog):
                 counter+=1        
             return organList
         except RuntimeError as re:
-            print('runtime error in function returnListOrgans' + str(re) + ' ' + returnErrorString)
+            print('runtime error in function returnListOrgans' + str(re) + ' ' + self.returnErrorString)
+            logger.error('runtime error in function returnListOrgans' + str(re) + ' ' + self.returnErrorString)
         except Exception as e:
-            print('Error in function returnListOrgans: ' + str(e) + ' ' + returnErrorString)
+            print('Error in function returnListOrgans: ' + str(e) + ' ' + self.returnErrorString)
+            logger.error('Error in function returnListOrgans: ' + str(e) + ' ' + self.returnErrorString)
         
     
     def initialiseParameterSpinBoxes(self):
@@ -492,6 +514,7 @@ class Window(QDialog):
             self.spinBoxParameter3.blockSignals(True)
             
             modelName = str(self.cmbModels.currentText())
+            logger.info('Function initialiseParameterSpinBoxes called when model = ' + modelName)
             if modelName ==  'Extended Tofts':
                 self.spinBoxParameter1.setValue(DEFAULT_VALUE_Vp)
                 self.spinBoxParameter2.setValue(DEFAULT_VALUE_Ve)
@@ -508,7 +531,8 @@ class Window(QDialog):
             self.spinBoxParameter2.blockSignals(False)
             self.spinBoxParameter3.blockSignals(False)
         except Exception as e:
-            print('Error in function initialiseParameterSpinBoxes: ' + str(e) + ' ' + returnErrorString)
+            print('Error in function initialiseParameterSpinBoxes: ' + str(e) + ' ' + self.returnErrorString)
+            logger.error('Error in function initialiseParameterSpinBoxes: ' + str(e) + ' ' + self.returnErrorString)
 
     def configureGUIForEachModel(self):
         try:
@@ -518,6 +542,7 @@ class Window(QDialog):
             self.btnReset.show()
             self.initialiseParameterSpinBoxes() #Typical initial values for each model 
             modelName = str(self.cmbModels.currentText())
+            logger.info('Function configureGUIForEachModel called when model = ' + modelName)
             if modelName ==  'Extended Tofts':
                 self.labelParameter1.setText(LABEL_PARAMETER_1A)
                 self.labelParameter1.show()
@@ -606,20 +631,24 @@ class Window(QDialog):
                 self.labelParameter3.hide()
                 self.btnFitModel.hide()
         except Exception as e:
-            print('Error in function configureGUIForEachModel: ' + str(e) + ' ' + returnErrorString)
+            print('Error in function configureGUIForEachModel: ' + str(e) + ' ' + self.returnErrorString)
+            logger.error('Error in function configureGUIForEachModel: ' + str(e) + ' ' + self.returnErrorString)
             
     def getScreenResolution(self):
         try:
             width, height = pyautogui.size()
+            logger.info('Function getScreenResolution called. Screen width = {}, height = {}.'.format(width, height))
             return width, height
         except Exception as e:
-            print('Error in function getScreenResolution: ' + str(e) + ' ' + returnErrorString)
+            print('Error in function getScreenResolution: ' + str(e) + ' ' + self.returnErrorString)
+            logger.error('Error in function getScreenResolution: ' + str(e) + ' ' + self.returnErrorString)
     
         
     def determineTextSize(self):
         """Determines the optimum size for labels on the matplotlib graph from
             the screen resolution"""
         try:
+            logger.info('Function determineTextSize called.')
             width, _ = self.getScreenResolution()
             
             if width == 1920: #Desktop
@@ -637,7 +666,8 @@ class Window(QDialog):
 
             return tickLabelSize, xyAxisLabelSize, titleSize
         except Exception as e:
-            print('Error in function determineTextSize: ' + str(e) + ' ' + returnErrorString)
+            print('Error in function determineTextSize: ' + str(e) + ' ' + self.returnErrorString)
+            logger.error('Error in function determineTextSize: ' + str(e) + ' ' + self.returnErrorString)
     
     def plot(self, callingFunction):
         try:
@@ -667,6 +697,9 @@ class Window(QDialog):
 
             AIF = str(self.cmbAIF.currentText())
             VIF = str(self.cmbVIF.currentText())
+
+            logger.info('Function plot called from ' + callingFunction + ' when ROI={}, AIF={} and VIF={}'.format(ROI, AIF, VIF))
+
             if AIF != 'Please Select':
                 arrayAIFConcs = np.array(concentrationData[AIF], dtype='float')
                 ax.plot(arrayTimes, arrayAIFConcs, 'r.-', label= AIF)
@@ -674,6 +707,7 @@ class Window(QDialog):
                 parameter2 = self.spinBoxParameter2.value()
                 parameter3 = self.spinBoxParameter3.value()
                 if VIF == 'Please Select':
+                    logger.info('TracerKineticModels.modelSelector called when model ={} and parameters are {}, {}, {}'. format(modelName, parameter1, parameter2, parameter3))
                     listModel = TracerKineticModels.modelSelector(modelName, arrayTimes, arrayAIFConcs, parameter1, parameter2, parameter3)
                     arrayModel =  np.array(listModel, dtype='float')
                     ax.plot(arrayTimes, arrayModel, 'g--', label= modelName + ' model')
@@ -704,12 +738,14 @@ class Window(QDialog):
                 self.canvas.draw()
             
         except RuntimeError as re:
-                print('Runtime error in function plot ' + str(re) + ' ' + returnErrorString)
+                print('Runtime error in function plot ' + str(re) + ' ' + self.returnErrorString)
+                logger.error('Runtime error in function plot ' + str(re) + ' ' + self.returnErrorString)
         except Exception as e:
-                print('Error in function plot when an event associated with ' + str(callingFunction) + ' is fired : ROI=' + ROI + ' AIF = ' + AIF + ' : ' + str(e) + ' ' + returnErrorString)
-            
+                print('Error in function plot when an event associated with ' + str(callingFunction) + ' is fired : ROI=' + ROI + ' AIF = ' + AIF + ' : ' + str(e) + ' ' + self.returnErrorString)
+                logger.error('Error in function plot when an event associated with ' + str(callingFunction) + ' is fired : ROI=' + ROI + ' AIF = ' + AIF + ' : ' + str(e) + ' ' + self.returnErrorString)
+    
     def exitApp(self):
-        logger.debug("Application closed using the Exit button.")
+        logger.info("Application closed using the Exit button.")
         sys.exit(0)
         
                 
