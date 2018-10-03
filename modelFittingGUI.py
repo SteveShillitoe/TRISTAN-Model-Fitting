@@ -326,7 +326,7 @@ class Window(QDialog):
                 addConstraint=False
             #Call curve fitting routine
             logger.info('TracerKineticModels.curveFit called with model {}, parameters {} and Constraint = {}'.format(modelName, initialParametersArray, addConstraint))
-            optimumParams, confidenceLevelParams = TracerKineticModels.curveFit(modelName, arrayTimes, arrayInputConcs, arrayROIConcs, initialParametersArray, addConstraint)
+            optimumParams, estimatedCovariance = TracerKineticModels.curveFit(modelName, arrayTimes, arrayInputConcs, arrayROIConcs, initialParametersArray, addConstraint)
             logger.info('TracerKineticModels.curveFit returned optimum parameters {} with confidence levels {}'.format(optimumParams, confidenceLevelParams))
             
             #Populate parameter spinboxes with optimim values from curve fitting
