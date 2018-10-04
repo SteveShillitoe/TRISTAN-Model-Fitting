@@ -9,7 +9,7 @@ from PyQt5.QtGui import QCursor
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtWidgets import QApplication, QDialog,  QApplication, QPushButton, \
      QVBoxLayout, QHBoxLayout, QGroupBox, QComboBox, QLabel, QDoubleSpinBox, \
-     QMessageBox, QFileDialog, QCheckBox
+     QMessageBox, QFileDialog, QCheckBox, QLineEdit
 
 
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
@@ -32,7 +32,7 @@ from PDFWriter import PDF
 
 #Initialise global dictionary to hold concentration data
 concentrationData={}
-dataFileName = ''   #Global for inclusion in a PDF report
+estimatedCovarianceArray = np.array([]) #Global for inclusion in a PDF report
 
 ########################################
 ##              CONSTANTS             ##
@@ -93,6 +93,7 @@ class Window(QDialog):
         self.btnLoadDisplayData = QPushButton('Load and display data.')
         self.btnLoadDisplayData.setToolTip('Open file dialog box')
         self.btnLoadDisplayData.clicked.connect(self.loadDataFile)
+        self.lblDataFileName = QLabel('')
         #Create dropdown lists for selection of ROI & AIF
         self.lblROI = QLabel("Region of Interest:")
         self.cmbROI = QComboBox()
@@ -121,6 +122,7 @@ class Window(QDialog):
         verticalSpacer = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
         verticalLayoutLeft.addItem(verticalSpacer)
         verticalLayoutLeft.addWidget(self.btnLoadDisplayData)
+        verticalLayoutLeft.addWidget(self.lblDataFileName)
         verticalLayoutLeft.addItem(verticalSpacer)
         #Below Load Data button add ROI list
         ROI_HorizontalLayout = QHBoxLayout()
@@ -232,14 +234,45 @@ class Window(QDialog):
         self.spinBoxParameter1.valueChanged.connect(lambda: self.plot('spinBoxParameter1')) 
         self.spinBoxParameter2.valueChanged.connect(lambda: self.plot('spinBoxParameter2')) 
         self.spinBoxParameter3.valueChanged.connect(lambda: self.plot('spinBoxParameter3'))
+
+        self.txtPara1CoVar1 = QLineEdit(self)
+        self.txtPara1CoVar2 = QLineEdit(self)
+        self.txtPara1CoVar3 = QLineEdit(self)
+        self.txtPara1CoVar1.hide()
+        self.txtPara1CoVar2.hide()
+        self.txtPara1CoVar3.hide() 
+        #self.txtPara1CoVar1.setReadOnly()
+        #self.txtPara1CoVar2.setReadOnly()
+        #self.txtPara1CoVar3.setReadOnly()
+        self.txtPara2CoVar1 = QLineEdit(self)
+        self.txtPara2CoVar2 = QLineEdit(self)
+        self.txtPara2CoVar3 = QLineEdit(self)
+        self.txtPara2CoVar1.hide()
+        self.txtPara2CoVar2.hide()
+        self.txtPara2CoVar3.hide() 
+        self.txtPara3CoVar1 = QLineEdit(self)
+        self.txtPara3CoVar2 = QLineEdit(self)
+        self.txtPara3CoVar3 = QLineEdit(self)
+        self.txtPara3CoVar1.hide()
+        self.txtPara3CoVar2.hide()
+        self.txtPara3CoVar3.hide() 
         
         #Place spin boxes and their labels in horizontal layouts
         modelHorizontalLayout5.addWidget(self.labelParameter1)
         modelHorizontalLayout5.addWidget(self.spinBoxParameter1)
+        modelHorizontalLayout5.addWidget(self.txtPara1CoVar1)
+        modelHorizontalLayout5.addWidget(self.txtPara1CoVar2)
+        modelHorizontalLayout5.addWidget(self.txtPara1CoVar3)
         modelHorizontalLayout6.addWidget(self.labelParameter2)
         modelHorizontalLayout6.addWidget(self.spinBoxParameter2)
+        modelHorizontalLayout6.addWidget(self.txtPara2CoVar1)
+        modelHorizontalLayout6.addWidget(self.txtPara2CoVar2)
+        modelHorizontalLayout6.addWidget(self.txtPara2CoVar3)
         modelHorizontalLayout7.addWidget(self.labelParameter3)
         modelHorizontalLayout7.addWidget(self.spinBoxParameter3)
+        modelHorizontalLayout7.addWidget(self.txtPara3CoVar1)
+        modelHorizontalLayout7.addWidget(self.txtPara3CoVar2)
+        modelHorizontalLayout7.addWidget(self.txtPara3CoVar3)
         
         self.btnFitModel = QPushButton('Fit Model')
         self.btnFitModel.setToolTip('Use non-linear least squares to fit the selected model to the data')
@@ -265,7 +298,18 @@ class Window(QDialog):
         return 'Error: {}. {}, line: {}'.format(sys.exc_info()[0],
                                          sys.exc_info()[1],
                                          sys.exc_info()[2].tb_lineno)
-    
+
+    def clearCovarienceTextBoxes(self):
+        self.txtPara1CoVar1.clear()
+        self.txtPara1CoVar2.clear()
+        self.txtPara1CoVar3.clear() 
+        self.txtPara2CoVar1.clear()
+        self.txtPara2CoVar2.clear()
+        self.txtPara2CoVar3.clear() 
+        self.txtPara3CoVar1.clear()
+        self.txtPara3CoVar2.clear()
+        self.txtPara3CoVar3.clear() 
+
     def displayModelFittingGroupBox(self):
         try:
             ROI = str(self.cmbROI.currentText())
@@ -280,8 +324,8 @@ class Window(QDialog):
                 self.btnSaveReport.hide()
                 logger.info("Function displayModelFittingGroupBox called. Model group box and Save Report button hidden.")
         except Exception as e:
-            print('Error in function displayModelFittingGroupBox: ' + str(e) + ' ' + self.returnErrorString) 
-            logger.error('Error in function displayModelFittingGroupBox: ' + str(e) + ' ' + self.returnErrorString)
+            print('Error in function displayModelFittingGroupBox: ' + str(e) + ' ' + str(self.returnErrorString)) 
+            logger.error('Error in function displayModelFittingGroupBox: ' + str(e) + ' ' + str(self.returnErrorString))
 
     def displayFitModelButton(self):
         try:
@@ -294,11 +338,13 @@ class Window(QDialog):
                 self.btnFitModel.hide()
                 logger.info("Function displayFitModelButton called. Fit Model button hidden.")
         except Exception as e:
-            print('Error in function displayFitModelButton: ' + str(e) + ' ' + self.returnErrorString)
-            logger.error('Error in function displayFitModelButton: ' + str(e) + ' ' + self.returnErrorString)
+            print('Error in function displayFitModelButton: ' + str(e) + ' ' + str(self.returnErrorString))
+            logger.error('Error in function displayFitModelButton: ' + str(e) + ' ' + str(self.returnErrorString))
 
     def runCurveFit(self):
         try:
+            self.clearCovarienceTextBoxes()
+
             modelName = str(self.cmbModels.currentText())
             initialParametersArray = []
             
@@ -326,24 +372,33 @@ class Window(QDialog):
                 addConstraint=False
             #Call curve fitting routine
             logger.info('TracerKineticModels.curveFit called with model {}, parameters {} and Constraint = {}'.format(modelName, initialParametersArray, addConstraint))
-            optimumParams, estimatedCovariance = TracerKineticModels.curveFit(modelName, arrayTimes, arrayInputConcs, arrayROIConcs, initialParametersArray, addConstraint)
-            logger.info('TracerKineticModels.curveFit returned optimum parameters {} with confidence levels {}'.format(optimumParams, confidenceLevelParams))
+            optimumParams, estimatedCovarianceArray = TracerKineticModels.curveFit(modelName, arrayTimes, arrayInputConcs, arrayROIConcs, initialParametersArray, addConstraint)
+            logger.info('TracerKineticModels.curveFit returned optimum parameters {} with confidence levels {}'.format(optimumParams, estimatedCovarianceArray))
             
             #Populate parameter spinboxes with optimim values from curve fitting
+            #Also populate hidden textboxes with the three covarience values for each parameter
+            #These textboxes are used to persist data beyond this function call for inclusion in the
+            #PDF Report
+            self.spinBoxParameter1.setValue(optimumParams[0])
+            self.txtPara1CoVar1.setText(str(estimatedCovarianceArray[0,0]))
+            self.txtPara1CoVar2.setText(str(estimatedCovarianceArray[0,1]))
+            self.txtPara1CoVar3.setText(str(estimatedCovarianceArray[0,2])) 
+            self.spinBoxParameter2.setValue(optimumParams[1])
+            self.txtPara2CoVar1.setText(str(estimatedCovarianceArray[1,0]))
+            self.txtPara2CoVar2.setText(str(estimatedCovarianceArray[1,1]))
+            self.txtPara2CoVar3.setText(str(estimatedCovarianceArray[1,2])) 
             if optimumParams.size == 3:
-                self.spinBoxParameter1.setValue(optimumParams[0])
-                self.spinBoxParameter2.setValue(optimumParams[1])
                 self.spinBoxParameter3.setValue(optimumParams[2])
-            elif optimumParams.szie == 2:
-                self.spinBoxParameter1.setValue(optimumParams[0])
-                self.spinBoxParameter2.setValue(optimumParams[1])
+                self.txtPara3CoVar1.setText(str(estimatedCovarianceArray[2,0]))
+                self.txtPara3CoVar2.setText(str(estimatedCovarianceArray[2,1]))
+                self.txtPara3CoVar3.setText(str(estimatedCovarianceArray[2,2])) 
             
         except ValueError as ve:
-            print ('Value Error: runCurveFit with model ' + modelName + ': '+ str(ve) + ' ' + self.returnErrorString)
-            logger.error('Value Error: runCurveFit with model ' + modelName + ': '+ str(ve) + ' ' + self.returnErrorString)
+            print ('Value Error: runCurveFit with model ' + modelName + ': '+ str(ve) + ' ' + str(self.returnErrorString))
+            logger.error('Value Error: runCurveFit with model ' + modelName + ': '+ str(ve) + ' ' + str(self.returnErrorString))
         except Exception as e:
-            print('Error in function runCurveFit with model ' + modelName + ': ' + str(e) + ' ' + self.returnErrorString)
-            logger.error('Error in function runCurveFit with model ' + modelName + ': ' + str(e) + ' ' + self.returnErrorString)
+            print('Error in function runCurveFit with model ' + modelName + ': ' + str(e) + ' ' + str(self.returnErrorString))
+            logger.error('Error in function runCurveFit with model ' + modelName + ': ' + str(e) + ' ' + str(self.returnErrorString))
         
     def savePDFReport(self):
         try:
@@ -369,32 +424,44 @@ class Window(QDialog):
                 parameter1 = self.spinBoxParameter1.value()
                 parameter2 = self.spinBoxParameter2.value()
                 parameter3 = self.spinBoxParameter3.value()
+
+                covarianceArray =[[self.txtPara1CoVar1.text(), self.txtPara1CoVar2.text(), self.txtPara1CoVar3.text()],
+                                  [self.txtPara2CoVar1.text(), self.txtPara2CoVar2.text(), self.txtPara2CoVar3.text()],
+                                   [self.txtPara3CoVar1.text(), self.txtPara3CoVar2.text(), self.txtPara3CoVar3.text()]]
+
+                logger.info('In function savePDFReport, contents of covarianceArray = {}'.format(covarianceArray))
                 
-##                def createAndSavePDFReport(self, fileName, dataFileName, modelName, imageName,
-##                               parameter1Text, parameter1Value,
-##                               parameter2Text, parameter2Value,
-##                               parameter3Text = None, parameter3Value = None):
+                #Get the data file name from the label on the form
+                dataFileName = str(self.lblDataFileName.text).replace('loaded','').strip() 
+                
+##                def createAndSavePDFReport(self, fileName, dataFileName, modelName, imageName, 
+#                               parameter1Text, parameter1Value,
+#                               parameter2Text, parameter2Value,
+#                               parameter3Text = None, parameter3Value = None, covarianceArray =[])
                 
                 QApplication.setOverrideCursor(QCursor(QtCore.Qt.WaitCursor))
                 if modelName ==  'One Compartment':
-                    pdf.createAndSavePDFReport(reportFileName, dataFileName, modelName, IMAGE_NAME, LABEL_PARAMETER_1A, parameter1, LABEL_PARAMETER_2B, parameter2)
+                    pdf.createAndSavePDFReport(reportFileName, dataFileName, modelName, IMAGE_NAME, LABEL_PARAMETER_1A, parameter1, LABEL_PARAMETER_2B, parameter2, _, _, estimatedCovarianceArray)
                 elif modelName ==  'Extended Tofts':
-                    pdf.createAndSavePDFReport(reportFileName, dataFileName, modelName, IMAGE_NAME, LABEL_PARAMETER_1A, parameter1, LABEL_PARAMETER_2A, parameter2, LABEL_PARAMETER_3A, parameter3)
+                    pdf.createAndSavePDFReport(reportFileName, dataFileName, modelName, IMAGE_NAME, LABEL_PARAMETER_1A, parameter1, LABEL_PARAMETER_2A, parameter2, LABEL_PARAMETER_3A, parameter3, estimatedCovarianceArray)
                 elif modelName == 'High-Flow Gadoxetate':
-                    pdf.createAndSavePDFReport(reportFileName, dataFileName, modelName, IMAGE_NAME, LABEL_PARAMETER_1B, parameter1, LABEL_PARAMETER_2A, parameter2, LABEL_PARAMETER_3B, parameter3)
+                    pdf.createAndSavePDFReport(reportFileName, dataFileName, modelName, IMAGE_NAME, LABEL_PARAMETER_1B, parameter1, LABEL_PARAMETER_2A, parameter2, LABEL_PARAMETER_3B, parameter3, estimatedCovarianceArray)
                 QApplication.restoreOverrideCursor()
+
                 #Delete image file
                 os.remove(IMAGE_NAME)
                 logger.info('PDF Report created called ' + reportFileName)
         except Exception as e:
-            print('Error in function savePDFReport: ' + str(e) + ' ' + self.returnErrorString)
-            logger.error('Error in function savePDFReport: ' + str(e) + ' ' + self.returnErrorString)
+            print('Error in function savePDFReport: ' + str(e) + ' ' + str(self.returnErrorString))
+            logger.error('Error in function savePDFReport: ' + str(e) + ' ' + str(self.returnErrorString))
        
     def loadDataFile(self):
         global concentrationData
-        global dataFileName
         #clear the global dictionary of previous data
         concentrationData.clear()
+
+        #Clear label displaying name of the datafile
+        self.lblDataFileName.setText('')
         
         #get the data file in csv format
         #filter parameter set so that the user can only open a csv file
@@ -429,6 +496,11 @@ class Window(QDialog):
                             raise RuntimeError('The first column in the CSV file must contain time data.')    
 
                     logger.info('CSV data file {} loaded'.format(dataFileName))
+                    
+                    #Extract data filename from the full data file path
+                    dataFileName = os.path.basename(dataFileName)
+                    self.lblDataFileName.setText(dataFileName + ' loaded')
+
                     #Column headers form the keys in the dictionary called concentrationData
                     for header in headers:
                         concentrationData[header.title()]=[]
@@ -447,8 +519,6 @@ class Window(QDialog):
                     #plot function called here in case we need to clear a graph showing data from a previous data file
                     self.plot('loadDataFile')
 
-                    #Extract data filename from the full data file path
-                    dataFileName = os.path.basename(dataFileName)
         except csv.Error:
             print('CSV Reader error in function loadDataFile: file %s, line %d: %s' % (dataFileName, readCSV.line_num, csv.Error))
             logger.error('CSV Reader error in function loadDataFile: file %s, line %d: %s' % (dataFileName, readCSV.line_num, csv.Error))
@@ -459,8 +529,8 @@ class Window(QDialog):
             print('Runtime error in function loadDataFile: ' + str(re))
             logger.error('Runtime error in function loadDataFile: ' + str(re))
         except Exception as e:
-            print('Error in function loadDataFile: ' + str(e) + ' ' + self.returnErrorString + ' at line in CSV file ', readCSV.line_num)
-            logger.error('Error in function loadDataFile: ' + str(e) + ' ' + self.returnErrorString + ' at line in CSV file ', readCSV.line_num)
+            print('Error in function loadDataFile: ' + str(e) + ' ' + str(self.returnErrorString) + ' at line in CSV file ', readCSV.line_num)
+            logger.error('Error in function loadDataFile: ' + str(e) + ' ' + str(self.returnErrorString) + ' at line in CSV file ', readCSV.line_num)
 
     def configureGUIAfterLoadingData(self):
         try:
@@ -481,11 +551,11 @@ class Window(QDialog):
             self.cmbROI.show()
             logger.info('Function configureGUIAfterLoadingData called and the following organ list loaded: {}'.format(organArray))
         except RuntimeError as re:
-            print('runtime error in function configureGUIAfterLoadingData: ' + str(re) + ' ' + self.returnErrorString)
-            logger.error('runtime error in function configureGUIAfterLoadingData: ' + str(re) + ' ' + self.returnErrorString)
+            print('runtime error in function configureGUIAfterLoadingData: ' + str(re) + ' ' + str(self.returnErrorString))
+            logger.error('runtime error in function configureGUIAfterLoadingData: ' + str(re) + ' ' + str(self.returnErrorString))
         except Exception as e:
-            print('Error in function configureGUIAfterLoadingData: ' + str(e) + ' ' + self.returnErrorString)
-            logger.error('Error in function configureGUIAfterLoadingData: ' + str(e) + ' ' + self.returnErrorString)
+            print('Error in function configureGUIAfterLoadingData: ' + str(e) + ' ' + str(self.returnErrorString))
+            logger.error('Error in function configureGUIAfterLoadingData: ' + str(e) + ' ' + str(self.returnErrorString))
         
     def returnListOrgans(self):
         try:
@@ -499,11 +569,11 @@ class Window(QDialog):
                 counter+=1        
             return organList
         except RuntimeError as re:
-            print('runtime error in function returnListOrgans' + str(re) + ' ' + self.returnErrorString)
-            logger.error('runtime error in function returnListOrgans' + str(re) + ' ' + self.returnErrorString)
+            print('runtime error in function returnListOrgans' + str(re) + ' ' + str(self.returnErrorString))
+            logger.error('runtime error in function returnListOrgans' + str(re) + ' ' + str(self.returnErrorString))
         except Exception as e:
-            print('Error in function returnListOrgans: ' + str(e) + ' ' + self.returnErrorString)
-            logger.error('Error in function returnListOrgans: ' + str(e) + ' ' + self.returnErrorString)
+            print('Error in function returnListOrgans: ' + str(e) + ' ' + str(self.returnErrorString))
+            logger.error('Error in function returnListOrgans: ' + str(e) + ' ' + str(self.returnErrorString))
         
     
     def initialiseParameterSpinBoxes(self):
@@ -531,8 +601,8 @@ class Window(QDialog):
             self.spinBoxParameter2.blockSignals(False)
             self.spinBoxParameter3.blockSignals(False)
         except Exception as e:
-            print('Error in function initialiseParameterSpinBoxes: ' + str(e) + ' ' + self.returnErrorString)
-            logger.error('Error in function initialiseParameterSpinBoxes: ' + str(e) + ' ' + self.returnErrorString)
+            print('Error in function initialiseParameterSpinBoxes: ' + str(e) + ' ' + str(self.returnErrorString))
+            logger.error('Error in function initialiseParameterSpinBoxes: ' + str(e) + ' ' + str(self.returnErrorString))
 
     def configureGUIForEachModel(self):
         try:
@@ -631,8 +701,8 @@ class Window(QDialog):
                 self.labelParameter3.hide()
                 self.btnFitModel.hide()
         except Exception as e:
-            print('Error in function configureGUIForEachModel: ' + str(e) + ' ' + self.returnErrorString)
-            logger.error('Error in function configureGUIForEachModel: ' + str(e) + ' ' + self.returnErrorString)
+            print('Error in function configureGUIForEachModel: ' + str(e) + ' ' + str(self.returnErrorString))
+            logger.error('Error in function configureGUIForEachModel: ' + str(e) + ' ' + str(self.returnErrorString))
             
     def getScreenResolution(self):
         try:
@@ -640,8 +710,8 @@ class Window(QDialog):
             logger.info('Function getScreenResolution called. Screen width = {}, height = {}.'.format(width, height))
             return width, height
         except Exception as e:
-            print('Error in function getScreenResolution: ' + str(e) + ' ' + self.returnErrorString)
-            logger.error('Error in function getScreenResolution: ' + str(e) + ' ' + self.returnErrorString)
+            print('Error in function getScreenResolution: ' + str(e) + ' ' + str(self.returnErrorString))
+            logger.error('Error in function getScreenResolution: ' + str(e) + ' ' + str(self.returnErrorString))
     
         
     def determineTextSize(self):
@@ -666,8 +736,8 @@ class Window(QDialog):
 
             return tickLabelSize, xyAxisLabelSize, titleSize
         except Exception as e:
-            print('Error in function determineTextSize: ' + str(e) + ' ' + self.returnErrorString)
-            logger.error('Error in function determineTextSize: ' + str(e) + ' ' + self.returnErrorString)
+            print('Error in function determineTextSize: ' + str(e) + ' ' + str(self.returnErrorString))
+            logger.error('Error in function determineTextSize: ' + str(e) + ' ' + str(self.returnErrorString))
     
     def plot(self, callingFunction):
         try:
@@ -738,11 +808,11 @@ class Window(QDialog):
                 self.canvas.draw()
             
         except RuntimeError as re:
-                print('Runtime error in function plot ' + str(re) + ' ' + self.returnErrorString)
-                logger.error('Runtime error in function plot ' + str(re) + ' ' + self.returnErrorString)
+                print('Runtime error in function plot ' + str(re) + ' ' + str(self.returnErrorString))
+                logger.error('Runtime error in function plot ' + str(re) + ' ' + str(self.returnErrorString))
         except Exception as e:
-                print('Error in function plot when an event associated with ' + str(callingFunction) + ' is fired : ROI=' + ROI + ' AIF = ' + AIF + ' : ' + str(e) + ' ' + self.returnErrorString)
-                logger.error('Error in function plot when an event associated with ' + str(callingFunction) + ' is fired : ROI=' + ROI + ' AIF = ' + AIF + ' : ' + str(e) + ' ' + self.returnErrorString)
+                print('Error in function plot when an event associated with ' + str(callingFunction) + ' is fired : ROI=' + ROI + ' AIF = ' + AIF + ' : ' + str(e) + ' ' + str(self.returnErrorString))
+                logger.error('Error in function plot when an event associated with ' + str(callingFunction) + ' is fired : ROI=' + ROI + ' AIF = ' + AIF + ' : ' + str(e) + ' ' + str(self.returnErrorString))
     
     def exitApp(self):
         logger.info("Application closed using the Exit button.")

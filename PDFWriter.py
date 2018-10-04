@@ -42,22 +42,59 @@ class PDF(FPDF):
         # Current Date & Time - Right justified
         self.cell(0, 10, currentDateTime, 0, 0, 'R')
 
-    def createAndSavePDFReport(self, fileName, dataFileName, modelName, imageName,
+    def createAndSavePDFReport(self, fileName, dataFileName, modelName, imageName, 
                                parameter1Text, parameter1Value,
                                parameter2Text, parameter2Value,
-                               parameter3Text = None, parameter3Value = None):
+                               parameter3Text = None, parameter3Value = None, covarianceArray =[]):
         try:
             self.add_page() #First Page in Portrait format, A4
             self.set_font('Arial', 'BU', 12)
             self.write(5, modelName + ' model.\n')
             self.set_font('Arial', '', 10)
+            self.write(5, 'Data file name = ' + dataFileName + '\n\n')
+
+            #Build table
             if parameter3Text is not None:
-                parameter3Str =  '\n' + str(parameter3Text) + ' = ' + str(parameter3Value)
+                numRowsData = 3
             else:
-                parameter3Str = ''
-                
-            self.write(5, 'Data file name = ' + dataFileName + '\n' + parameter1Text + ' = ' + str(parameter1Value) + '\n' + parameter2Text + ' = ' + str(parameter2Value) + parameter3Str + '\n')
-            
+                numRowsData = 2
+            # Effective page width, or just effectivePageWidth
+            effectivePageWidth = self.w - 2*self.l_margin
+            # Set column width to 1/7 of effective page width to distribute content 
+            # evenly across table and page
+            col_width = effectivePageWidth/7
+            # Text height is the same as current font size
+            textHeight = self.font_size
+            #Header Row
+            self.cell(col_width*3,textHeight, 'Parameter', border=1)
+            self.cell(col_width,textHeight, 'Value', border=1)
+            self.cell(col_width,textHeight, 'Covariance 1', border=1)
+            self.cell(col_width,textHeight, 'Covariance 2', border=1)
+            self.cell(col_width,textHeight, 'Covariance 3', border=1)
+            self.ln(textHeight)
+            #Body of Table
+            #Row 1
+            self.cell(col_width*3,textHeight*2, parameter1Text.replace('\n', ''), border=1)
+            self.cell(col_width,textHeight*2, str(parameter1Value), border=1)
+            for i in range(3):
+                self.cell(col_width,textHeight*2, str(round(covarianceArray[0,i], 3)), border=1)
+            self.ln(textHeight*2)
+            #Row 2
+            self.cell(col_width*3,textHeight*2, parameter2Text.replace('\n', ''), border=1)
+            self.cell(col_width,textHeight*2, str(parameter2Value), border=1)
+            for i in range(3):
+                self.cell(col_width,textHeight*2, str(round(covarianceArray[1,i], 3)), border=1)
+            self.ln(textHeight*2)
+            if numRowsData == 3:
+                #Row 3
+                self.cell(col_width*3,textHeight*2, parameter3Text.replace('\n', ''), border=1)
+                self.cell(col_width,textHeight*2, str(parameter3Value), border=1)
+                for i in range(3):
+                    self.cell(col_width,textHeight*2, str(round(covarianceArray[2,i], 3)), border=1)
+                self.ln(textHeight*2)
+
+            self.write(10, '\n') #line break
+
             self.image(imageName, x = None, y = None, w = 170, h = 130, type = '', link = '') #Add image to PDF
             self.output(fileName, 'F')  #Save PDF
         except Exception as e:
