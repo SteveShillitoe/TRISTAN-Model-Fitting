@@ -11,11 +11,11 @@ from PyQt5.QtWidgets import QApplication, QDialog,  QApplication, QPushButton, \
      QVBoxLayout, QHBoxLayout, QGroupBox, QComboBox, QLabel, QDoubleSpinBox, \
      QMessageBox, QFileDialog, QCheckBox, QLineEdit
 
-
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 import matplotlib.pyplot as plt
+
+from scipy.stats.distributions import  t
 
 #To remove unwanted default buttons in the Navigation Toolbar
 #create a subclass of NavigationToolbar that only defines the desired buttons
@@ -32,7 +32,11 @@ from PDFWriter import PDF
 
 #Initialise global dictionary to hold concentration data
 concentrationData={}
+#Initialise global string variable to hold the name of the data file.
+#Needs to be global for printing in the PDF report
 dataFileName = ''
+#Initialise global list that holds results of curve fitting
+optimisedParamaterList = []
 
 ########################################
 ##              CONSTANTS             ##
@@ -204,8 +208,6 @@ class Window(QDialog):
 
         self.cboxDelay = QCheckBox('Delay', self)
         self.cboxConstaint = QCheckBox('Constraint', self)
-        #self.cboxDelay.stateChanged.connect(self.runCurveFit))
-        self.cboxConstaint.stateChanged.connect(self.runCurveFit)
         self.cboxDelay.hide()
         self.cboxConstaint.hide()
         self.btnReset = QPushButton('Reset')
@@ -240,48 +242,17 @@ class Window(QDialog):
         self.spinBoxParameter1.valueChanged.connect(lambda: self.plot('spinBoxParameter1')) 
         self.spinBoxParameter2.valueChanged.connect(lambda: self.plot('spinBoxParameter2')) 
         self.spinBoxParameter3.valueChanged.connect(lambda: self.plot('spinBoxParameter3'))
+        self.spinBoxParameter1.valueChanged.connect(lambda: optimisedParamaterList.clear()) 
+        self.spinBoxParameter2.valueChanged.connect(lambda: optimisedParamaterList.clear()) 
+        self.spinBoxParameter3.valueChanged.connect(lambda: optimisedParamaterList.clear())
 
-        self.txtPara1CoVar1 = QLineEdit(self)
-        self.txtPara1CoVar2 = QLineEdit(self)
-        self.txtPara1CoVar3 = QLineEdit(self)
-        self.txtPara1CoVar1.hide()
-        self.txtPara1CoVar2.hide()
-        self.txtPara1CoVar3.hide() 
-        #self.txtPara1CoVar1.setReadOnly()
-        #self.txtPara1CoVar2.setReadOnly()
-        #self.txtPara1CoVar3.setReadOnly()
-        self.txtPara2CoVar1 = QLineEdit(self)
-        self.txtPara2CoVar2 = QLineEdit(self)
-        self.txtPara2CoVar3 = QLineEdit(self)
-        self.txtPara2CoVar1.hide()
-        self.txtPara2CoVar2.hide()
-        self.txtPara2CoVar3.hide() 
-        self.txtPara3CoVar1 = QLineEdit(self)
-        self.txtPara3CoVar2 = QLineEdit(self)
-        self.txtPara3CoVar3 = QLineEdit(self)
-        self.txtPara3CoVar1.hide()
-        self.txtPara3CoVar2.hide()
-        self.txtPara3CoVar3.hide()
-        self.spinBoxParameter1.valueChanged.connect(self.clearCovarienceTextBoxes)
-        self.spinBoxParameter2.valueChanged.connect(self.clearCovarienceTextBoxes)
-        self.spinBoxParameter3.valueChanged.connect(self.clearCovarienceTextBoxes)
-        
         #Place spin boxes and their labels in horizontal layouts
         modelHorizontalLayout5.addWidget(self.labelParameter1)
         modelHorizontalLayout5.addWidget(self.spinBoxParameter1)
-        modelHorizontalLayout5.addWidget(self.txtPara1CoVar1)
-        modelHorizontalLayout5.addWidget(self.txtPara1CoVar2)
-        modelHorizontalLayout5.addWidget(self.txtPara1CoVar3)
         modelHorizontalLayout6.addWidget(self.labelParameter2)
         modelHorizontalLayout6.addWidget(self.spinBoxParameter2)
-        modelHorizontalLayout6.addWidget(self.txtPara2CoVar1)
-        modelHorizontalLayout6.addWidget(self.txtPara2CoVar2)
-        modelHorizontalLayout6.addWidget(self.txtPara2CoVar3)
         modelHorizontalLayout7.addWidget(self.labelParameter3)
         modelHorizontalLayout7.addWidget(self.spinBoxParameter3)
-        modelHorizontalLayout7.addWidget(self.txtPara3CoVar1)
-        modelHorizontalLayout7.addWidget(self.txtPara3CoVar2)
-        modelHorizontalLayout7.addWidget(self.txtPara3CoVar3)
         
         self.btnFitModel = QPushButton('Fit Model')
         self.btnFitModel.setToolTip('Use non-linear least squares to fit the selected model to the data')
@@ -310,16 +281,16 @@ class Window(QDialog):
                                          sys.exc_info()[1],
                                          sys.exc_info()[2].tb_lineno)
 
-    def clearCovarienceTextBoxes(self):
-        self.txtPara1CoVar1.clear()
-        self.txtPara1CoVar2.clear()
-        self.txtPara1CoVar3.clear() 
-        self.txtPara2CoVar1.clear()
-        self.txtPara2CoVar2.clear()
-        self.txtPara2CoVar3.clear() 
-        self.txtPara3CoVar1.clear()
-        self.txtPara3CoVar2.clear()
-        self.txtPara3CoVar3.clear() 
+    #def clearCovarienceTextBoxes(self):
+    #    self.txtPara1CoVar1.clear()
+    #    self.txtPara1CoVar2.clear()
+    #    self.txtPara1CoVar3.clear() 
+    #    self.txtPara2CoVar1.clear()
+    #    self.txtPara2CoVar2.clear()
+    #    self.txtPara2CoVar3.clear() 
+    #    self.txtPara3CoVar1.clear()
+    #    self.txtPara3CoVar2.clear()
+    #    self.txtPara3CoVar3.clear() 
 
     def displayModelFittingGroupBox(self):
         try:
@@ -354,10 +325,11 @@ class Window(QDialog):
 
     def runCurveFit(self):
         try:
-            self.clearCovarienceTextBoxes()
+            #self.clearCovarienceTextBoxes()
 
             modelName = str(self.cmbModels.currentText())
             initialParametersArray = []
+            tempList = []
             
             if modelName ==  'One Compartment':
                 parameter1 = self.spinBoxParameter1.value()
@@ -387,31 +359,41 @@ class Window(QDialog):
             if self.cboxConstaint.isChecked():
                 addConstraint = True
             else:
-                addConstraint=False
+                addConstraint = False
+
             #Call curve fitting routine
             logger.info('TracerKineticModels.curveFit called with model {}, parameters {} and Constraint = {}'.format(modelName, initialParametersArray, addConstraint))
-            optimumParams, estimatedCovarianceArray = TracerKineticModels.curveFit(modelName, arrayTimes, arrayInputConcs, arrayROIConcs, initialParametersArray, addConstraint)
-            logger.info('TracerKineticModels.curveFit returned optimum parameters {} with confidence levels {}'.format(optimumParams, estimatedCovarianceArray))
+            optimumParams, paramCovarianceMatrix = TracerKineticModels.curveFit(modelName, arrayTimes, arrayInputConcs, arrayROIConcs, initialParametersArray, addConstraint)
+            logger.info('TracerKineticModels.curveFit returned optimum parameters {} with confidence levels {}'.format(optimumParams, paramCovarianceMatrix))
             
-            #Populate parameter spinboxes with optimim values from curve fitting
-            #Also populate hidden textboxes with the three covarience values for each parameter
-            #These textboxes are used to persist data beyond this function call for inclusion in the
-            #PDF Report
             self.spinBoxParameter1.setValue(optimumParams[0])
-            self.txtPara1CoVar1.setText(str(round(estimatedCovarianceArray[0,0],4)))
-            self.txtPara1CoVar2.setText(str(round(estimatedCovarianceArray[0,1],4)))
-            if optimumParams.size == 3:
-                self.txtPara1CoVar3.setText(str(round(estimatedCovarianceArray[0,2],4)))
             self.spinBoxParameter2.setValue(optimumParams[1])
-            self.txtPara2CoVar1.setText(str(round(estimatedCovarianceArray[1,0],4)))
-            self.txtPara2CoVar2.setText(str(round(estimatedCovarianceArray[1,1],4)))
-            if optimumParams.size == 3:
-                self.txtPara2CoVar3.setText(str(round(estimatedCovarianceArray[1,2],4)))
             if optimumParams.size == 3:
                 self.spinBoxParameter3.setValue(optimumParams[2])
-                self.txtPara3CoVar1.setText(str(round(estimatedCovarianceArray[2,0],4)))
-                self.txtPara3CoVar2.setText(str(round(estimatedCovarianceArray[2,1],4)))
-                self.txtPara3CoVar3.setText(str(round(estimatedCovarianceArray[2,2],4)))
+
+            numDataPoints = arrayROIConcs.size
+            numParams = len(initialParametersArray)
+            #logger.info('Function calcParameterConfidenceIntervals called with numDataPoints = {} '
+            # ' and numParams= {}'.format(numDataPoints, numParams))
+            #self.calcParameterConfidenceIntervals(numDataPoints, numParams, optimumParams, estimatedCovarianceArray)
+            
+            alpha = 0.05 #95% confidence interval = 100*(1-alpha)
+            degsOfFreedom = max(0, numDataPoints - numParams) #Number of degrees of freedom
+
+            #student-t value for the degrees of freedom and the confidence level
+            tval = t.ppf(1.0-alpha/2., degsOfFreedom)
+         
+            for i in range(numParams):
+                optimisedParamaterList.append([])
+            i=0    
+            for counter, numParams, var in zip(range(numDataPoints), optimumParams, np.diag(paramCovarianceMatrix)):
+                sigma = var**0.5
+                optimisedParamaterList[i].append(numParams)
+                optimisedParamaterList[i].append(round((numParams - sigma*tval), 5))
+                optimisedParamaterList[i].append(round((numParams + sigma*tval), 5))
+                i+=1
+            
+            logger.info('In calcParameterConfidenceIntervals, optimisedParamaterList = {}'.format(optimisedParamaterList))
             
         except ValueError as ve:
             print ('Value Error: runCurveFit with model ' + modelName + ': '+ str(ve) + ' ' + str(self.returnErrorString))
@@ -419,7 +401,7 @@ class Window(QDialog):
         except Exception as e:
             print('Error in function runCurveFit with model ' + modelName + ': ' + str(e) + ' ' + str(self.returnErrorString))
             logger.error('Error in function runCurveFit with model ' + modelName + ': ' + str(e) + ' ' + str(self.returnErrorString))
-        
+    
     def savePDFReport(self):
         try:
             pdf = PDF(REPORT_TITLE) 
@@ -439,20 +421,11 @@ class Window(QDialog):
                     os.remove(reportFileName)   
                 modelName = str(self.cmbModels.currentText())
                 
-                self.figure.savefig(fname=IMAGE_NAME, dpi=200)  #dpi=200 so as to get a clear image in the PDF report
+                self.figure.savefig(fname=IMAGE_NAME, dpi=150)  #dpi=200 so as to get a clear image in the PDF report
                 
                 parameter1 = self.spinBoxParameter1.value()
                 parameter2 = self.spinBoxParameter2.value()
                 parameter3 = self.spinBoxParameter3.value()
-
-                covarianceArray =[[self.txtPara1CoVar1.text(), self.txtPara1CoVar2.text(), self.txtPara1CoVar3.text()],
-                                  [self.txtPara2CoVar1.text(), self.txtPara2CoVar2.text(), self.txtPara2CoVar3.text()],
-                                   [self.txtPara3CoVar1.text(), self.txtPara3CoVar2.text(), self.txtPara3CoVar3.text()]]
-
-                logger.info('In function savePDFReport, contents of covarianceArray = {}'.format(covarianceArray))
-                
-                #Get the data file name from the label on the form
-                #dataFileName = str(self.lblDataFileName.text).replace('loaded','').strip() 
                 
 ##                def createAndSavePDFReport(self, fileName, dataFileName, modelName, imageName, 
 #                               parameter1Text, parameter1Value,
@@ -461,11 +434,11 @@ class Window(QDialog):
                 
                 QApplication.setOverrideCursor(QCursor(QtCore.Qt.WaitCursor))
                 if modelName ==  'One Compartment':
-                    pdf.createAndSavePDFReport(reportFileName, dataFileName, modelName, IMAGE_NAME, LABEL_PARAMETER_1A, parameter1, LABEL_PARAMETER_2B, parameter2, None, None, covarianceArray)
+                    pdf.createAndSavePDFReport(reportFileName, dataFileName, modelName, IMAGE_NAME, LABEL_PARAMETER_1A, parameter1, LABEL_PARAMETER_2B, parameter2, None, None, optimisedParamaterList)
                 elif modelName ==  'Extended Tofts':
-                    pdf.createAndSavePDFReport(reportFileName, dataFileName, modelName, IMAGE_NAME, LABEL_PARAMETER_1A, parameter1, LABEL_PARAMETER_2A, parameter2, LABEL_PARAMETER_3A, parameter3, covarianceArray)
+                    pdf.createAndSavePDFReport(reportFileName, dataFileName, modelName, IMAGE_NAME, LABEL_PARAMETER_1A, parameter1, LABEL_PARAMETER_2A, parameter2, LABEL_PARAMETER_3A, parameter3, optimisedParamaterList)
                 elif modelName == 'High-Flow Gadoxetate':
-                    pdf.createAndSavePDFReport(reportFileName, dataFileName, modelName, IMAGE_NAME, LABEL_PARAMETER_1B, parameter1, LABEL_PARAMETER_2A, parameter2, LABEL_PARAMETER_3B, parameter3, covarianceArray)
+                    pdf.createAndSavePDFReport(reportFileName, dataFileName, modelName, IMAGE_NAME, LABEL_PARAMETER_1B, parameter1, LABEL_PARAMETER_2A, parameter2, LABEL_PARAMETER_3B, parameter3, optimisedParamaterList)
                 QApplication.restoreOverrideCursor()
 
                 #Delete image file

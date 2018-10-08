@@ -62,42 +62,42 @@ class PDF(FPDF):
             effectivePageWidth = self.w - 2*self.l_margin
             # Set column width to 1/7 of effective page width to distribute content 
             # evenly across table and page
-            col_width = effectivePageWidth/7
+            col_width = effectivePageWidth/6
             # Text height is the same as current font size
             textHeight = self.font_size
             #Header Row
             self.cell(col_width*3,textHeight, 'Parameter', border=1)
             self.cell(col_width,textHeight, 'Value', border=1)
-            self.cell(col_width,textHeight, 'Covariance 1', border=1)
-            self.cell(col_width,textHeight, 'Covariance 2', border=1)
-
-            if numRowsData == 3:
-                maxNumColumns = 3
-                self.cell(col_width,textHeight, 'Covariance 3', border=1)
-            else:
-                maxNumColumns = 2
-
+            self.cell(col_width*2,textHeight, '95% confidence interval', border=1)
             self.ln(textHeight)
             #Body of Table
             #Row 1
             self.cell(col_width*3,textHeight*2, parameter1Text.replace('\n', ''), border=1)
-            self.cell(col_width,textHeight*2, str(parameter1Value), border=1)
-
-            for i in range(maxNumColumns):
-                self.cell(col_width,textHeight*2, covarianceArray[0][i], border=1)
+            self.cell(col_width,textHeight*2, str(round(parameter1Value,5)), border=1)
+            if len(covarianceArray) > 0:
+                confidenceStr = '[{}     {}]'.format(covarianceArray[0][1], covarianceArray[0][2])
+            else:
+                confidenceStr = 'N/A'
+            self.cell(col_width*2,textHeight*2, confidenceStr, border=1)
             self.ln(textHeight*2)
             #Row 2
             self.cell(col_width*3,textHeight*2, parameter2Text.replace('\n', ''), border=1)
-            self.cell(col_width,textHeight*2, str(parameter2Value), border=1)
-            for i in range(maxNumColumns):
-                self.cell(col_width,textHeight*2, covarianceArray[1][i], border=1)
+            self.cell(col_width,textHeight*2, str(round(parameter2Value,5)), border=1)
+            if len(covarianceArray) > 0:
+                confidenceStr = '[{}     {}]'.format(covarianceArray[1][1], covarianceArray[1][2])
+            else:
+                confidenceStr = 'N/A'
+            self.cell(col_width*2,textHeight*2, confidenceStr, border=1)
             self.ln(textHeight*2)
             if numRowsData == 3:
                 #Row 3
                 self.cell(col_width*3,textHeight*2, parameter3Text.replace('\n', ''), border=1)
-                self.cell(col_width,textHeight*2, str(parameter3Value), border=1)
-                for i in range(3):
-                    self.cell(col_width,textHeight*2, covarianceArray[2][i], border=1)
+                self.cell(col_width,textHeight*2, str(round(parameter3Value,5)), border=1)
+                if len(covarianceArray) > 0:
+                    confidenceStr = '[{}     {}]'.format(covarianceArray[2][1], covarianceArray[2][2])
+                else:
+                    confidenceStr = 'N/A'
+                self.cell(col_width*2,textHeight*2, confidenceStr, border=1)
                 self.ln(textHeight*2)
 
             self.write(10, '\n') #line break
