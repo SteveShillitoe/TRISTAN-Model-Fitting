@@ -5,7 +5,7 @@ import numpy as np
 import pyautogui
 import logging
 
-from PyQt5.QtGui import QCursor, QIcon
+from PyQt5.QtGui import QCursor, QIcon, QFont
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtWidgets import QApplication, QDialog,  QApplication, QPushButton, \
      QVBoxLayout, QHBoxLayout, QGroupBox, QComboBox, QLabel, QDoubleSpinBox, \
@@ -92,13 +92,17 @@ class Window(QDialog):
 
         # Create a button and connect it to the `plot` method
         self.btnLoadDisplayData = QPushButton('Load and display data.')
+        self.btnLoadDisplayData.setFont(QFont("Arial", weight=QFont.Bold))
         self.btnLoadDisplayData.setToolTip('Open file dialog box')
         self.btnLoadDisplayData.clicked.connect(self.loadDataFile)
         self.lblDataFileName = QLabel('')
+        self.lblDataFileName.setFont(QFont("Arial", weight=QFont.Bold))
         #Create dropdown lists for selection of ROI & AIF
         self.lblROI = QLabel("Region of Interest:")
+        self.lblROI.setFont(QFont("Arial", weight=QFont.Bold))
         self.cmbROI = QComboBox()
         self.cmbROI.setToolTip('Select Region of Interest')
+        self.cmbROI.setFont(QFont("Arial", weight=QFont.Bold))
         self.lblROI.hide()
         self.cmbROI.hide()
         
@@ -133,6 +137,7 @@ class Window(QDialog):
         
         #Create a group box and place it in the left-handside vertical layout
         self.groupBoxModel = QGroupBox('Model Fitting')
+        self.groupBoxModel.setFont(QFont("Arial", weight=QFont.Bold))
         self.groupBoxModel.hide()
         verticalLayoutLeft.addWidget(self.groupBoxModel)
         verticalLayoutLeft.addItem(verticalSpacer)
@@ -285,12 +290,14 @@ class Window(QDialog):
         self.btnFitModel.clicked.connect(self.runCurveFit)
 
         self.btnSaveReport = QPushButton('Save Report in PDF Format')
+        self.btnSaveReport.setFont(QFont("Arial", weight=QFont.Bold))
         self.btnSaveReport.hide()
         self.btnSaveReport.setToolTip('Insert an image of the graph opposite and associated data in a PDF file')
         verticalLayoutLeft.addWidget(self.btnSaveReport, QtCore.Qt.AlignTop)
         self.btnSaveReport.clicked.connect(self.savePDFReport)
 
         self.btnExit = QPushButton('Exit')
+        self.btnExit.setFont(QFont("Arial", weight=QFont.Bold))
         verticalLayoutLeft.addWidget(self.btnExit)
         self.btnExit.clicked.connect(self.exitApp)
 
