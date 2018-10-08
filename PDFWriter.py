@@ -70,27 +70,34 @@ class PDF(FPDF):
             self.cell(col_width,textHeight, 'Value', border=1)
             self.cell(col_width,textHeight, 'Covariance 1', border=1)
             self.cell(col_width,textHeight, 'Covariance 2', border=1)
-            self.cell(col_width,textHeight, 'Covariance 3', border=1)
+
+            if numRowsData == 3:
+                maxNumColumns = 3
+                self.cell(col_width,textHeight, 'Covariance 3', border=1)
+            else:
+                maxNumColumns = 2
+
             self.ln(textHeight)
             #Body of Table
             #Row 1
             self.cell(col_width*3,textHeight*2, parameter1Text.replace('\n', ''), border=1)
             self.cell(col_width,textHeight*2, str(parameter1Value), border=1)
-            for i in range(3):
-                self.cell(col_width,textHeight*2, str(round(covarianceArray[0,i], 3)), border=1)
+
+            for i in range(maxNumColumns):
+                self.cell(col_width,textHeight*2, covarianceArray[0][i], border=1)
             self.ln(textHeight*2)
             #Row 2
             self.cell(col_width*3,textHeight*2, parameter2Text.replace('\n', ''), border=1)
             self.cell(col_width,textHeight*2, str(parameter2Value), border=1)
-            for i in range(3):
-                self.cell(col_width,textHeight*2, str(round(covarianceArray[1,i], 3)), border=1)
+            for i in range(maxNumColumns):
+                self.cell(col_width,textHeight*2, covarianceArray[1][i], border=1)
             self.ln(textHeight*2)
             if numRowsData == 3:
                 #Row 3
                 self.cell(col_width*3,textHeight*2, parameter3Text.replace('\n', ''), border=1)
                 self.cell(col_width,textHeight*2, str(parameter3Value), border=1)
                 for i in range(3):
-                    self.cell(col_width,textHeight*2, str(round(covarianceArray[2,i], 3)), border=1)
+                    self.cell(col_width,textHeight*2, covarianceArray[2][i], border=1)
                 self.ln(textHeight*2)
 
             self.write(10, '\n') #line break
@@ -98,5 +105,6 @@ class PDF(FPDF):
             self.image(imageName, x = None, y = None, w = 170, h = 130, type = '', link = '') #Add image to PDF
             self.output(fileName, 'F')  #Save PDF
         except Exception as e:
-            print('PDFWriter.createAndSavePDFReport: ' + str(e))    
+            print('PDFWriter.createAndSavePDFReport: ' + str(e)) 
+            self.output(fileName, 'F')  #Save PDF
 

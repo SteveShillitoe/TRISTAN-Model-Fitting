@@ -32,7 +32,7 @@ from PDFWriter import PDF
 
 #Initialise global dictionary to hold concentration data
 concentrationData={}
-estimatedCovarianceArray = np.array([]) #Global for inclusion in a PDF report
+dataFileName = ''
 
 ########################################
 ##              CONSTANTS             ##
@@ -255,7 +255,10 @@ class Window(QDialog):
         self.txtPara3CoVar3 = QLineEdit(self)
         self.txtPara3CoVar1.hide()
         self.txtPara3CoVar2.hide()
-        self.txtPara3CoVar3.hide() 
+        self.txtPara3CoVar3.hide()
+        self.spinBoxParameter1.valueChanged.connect(self.clearCovarienceTextBoxes)
+        self.spinBoxParameter2.valueChanged.connect(self.clearCovarienceTextBoxes)
+        self.spinBoxParameter3.valueChanged.connect(self.clearCovarienceTextBoxes)
         
         #Place spin boxes and their labels in horizontal layouts
         modelHorizontalLayout5.addWidget(self.labelParameter1)
@@ -353,11 +356,18 @@ class Window(QDialog):
                 initialParametersArray.append(parameter1)
                 parameter2 = self.spinBoxParameter2.value()
                 initialParametersArray.append(parameter2)
-            elif modelName ==  'Extended Tofts' or modelName == 'High-Flow Gadoxetate':
+            elif modelName ==  'Extended Tofts':
                 parameter1 = self.spinBoxParameter1.value()
                 initialParametersArray.append(parameter1)
                 parameter2 = self.spinBoxParameter2.value()
                 initialParametersArray.append(parameter2)
+                parameter3 = self.spinBoxParameter3.value()
+                initialParametersArray.append(parameter3)
+            elif modelName == 'High-Flow Gadoxetate':
+                parameter2 = self.spinBoxParameter1.value()
+                initialParametersArray.append(parameter2)
+                parameter1 = self.spinBoxParameter2.value()
+                initialParametersArray.append(parameter1)
                 parameter3 = self.spinBoxParameter3.value()
                 initialParametersArray.append(parameter3)
                 
@@ -380,18 +390,20 @@ class Window(QDialog):
             #These textboxes are used to persist data beyond this function call for inclusion in the
             #PDF Report
             self.spinBoxParameter1.setValue(optimumParams[0])
-            self.txtPara1CoVar1.setText(str(estimatedCovarianceArray[0,0]))
-            self.txtPara1CoVar2.setText(str(estimatedCovarianceArray[0,1]))
-            self.txtPara1CoVar3.setText(str(estimatedCovarianceArray[0,2])) 
+            self.txtPara1CoVar1.setText(str(round(estimatedCovarianceArray[0,0],4)))
+            self.txtPara1CoVar2.setText(str(round(estimatedCovarianceArray[0,1],4)))
+            if optimumParams.size == 3:
+                self.txtPara1CoVar3.setText(str(round(estimatedCovarianceArray[0,2],4)))
             self.spinBoxParameter2.setValue(optimumParams[1])
-            self.txtPara2CoVar1.setText(str(estimatedCovarianceArray[1,0]))
-            self.txtPara2CoVar2.setText(str(estimatedCovarianceArray[1,1]))
-            self.txtPara2CoVar3.setText(str(estimatedCovarianceArray[1,2])) 
+            self.txtPara2CoVar1.setText(str(round(estimatedCovarianceArray[1,0],4)))
+            self.txtPara2CoVar2.setText(str(round(estimatedCovarianceArray[1,1],4)))
+            if optimumParams.size == 3:
+                self.txtPara2CoVar3.setText(str(round(estimatedCovarianceArray[1,2],4)))
             if optimumParams.size == 3:
                 self.spinBoxParameter3.setValue(optimumParams[2])
-                self.txtPara3CoVar1.setText(str(estimatedCovarianceArray[2,0]))
-                self.txtPara3CoVar2.setText(str(estimatedCovarianceArray[2,1]))
-                self.txtPara3CoVar3.setText(str(estimatedCovarianceArray[2,2])) 
+                self.txtPara3CoVar1.setText(str(round(estimatedCovarianceArray[2,0],4)))
+                self.txtPara3CoVar2.setText(str(round(estimatedCovarianceArray[2,1],4)))
+                self.txtPara3CoVar3.setText(str(round(estimatedCovarianceArray[2,2],4)))
             
         except ValueError as ve:
             print ('Value Error: runCurveFit with model ' + modelName + ': '+ str(ve) + ' ' + str(self.returnErrorString))
@@ -432,7 +444,7 @@ class Window(QDialog):
                 logger.info('In function savePDFReport, contents of covarianceArray = {}'.format(covarianceArray))
                 
                 #Get the data file name from the label on the form
-                dataFileName = str(self.lblDataFileName.text).replace('loaded','').strip() 
+                #dataFileName = str(self.lblDataFileName.text).replace('loaded','').strip() 
                 
 ##                def createAndSavePDFReport(self, fileName, dataFileName, modelName, imageName, 
 #                               parameter1Text, parameter1Value,
@@ -441,11 +453,11 @@ class Window(QDialog):
                 
                 QApplication.setOverrideCursor(QCursor(QtCore.Qt.WaitCursor))
                 if modelName ==  'One Compartment':
-                    pdf.createAndSavePDFReport(reportFileName, dataFileName, modelName, IMAGE_NAME, LABEL_PARAMETER_1A, parameter1, LABEL_PARAMETER_2B, parameter2, _, _, estimatedCovarianceArray)
+                    pdf.createAndSavePDFReport(reportFileName, dataFileName, modelName, IMAGE_NAME, LABEL_PARAMETER_1A, parameter1, LABEL_PARAMETER_2B, parameter2, None, None, covarianceArray)
                 elif modelName ==  'Extended Tofts':
-                    pdf.createAndSavePDFReport(reportFileName, dataFileName, modelName, IMAGE_NAME, LABEL_PARAMETER_1A, parameter1, LABEL_PARAMETER_2A, parameter2, LABEL_PARAMETER_3A, parameter3, estimatedCovarianceArray)
+                    pdf.createAndSavePDFReport(reportFileName, dataFileName, modelName, IMAGE_NAME, LABEL_PARAMETER_1A, parameter1, LABEL_PARAMETER_2A, parameter2, LABEL_PARAMETER_3A, parameter3, covarianceArray)
                 elif modelName == 'High-Flow Gadoxetate':
-                    pdf.createAndSavePDFReport(reportFileName, dataFileName, modelName, IMAGE_NAME, LABEL_PARAMETER_1B, parameter1, LABEL_PARAMETER_2A, parameter2, LABEL_PARAMETER_3B, parameter3, estimatedCovarianceArray)
+                    pdf.createAndSavePDFReport(reportFileName, dataFileName, modelName, IMAGE_NAME, LABEL_PARAMETER_1B, parameter1, LABEL_PARAMETER_2A, parameter2, LABEL_PARAMETER_3B, parameter3, covarianceArray)
                 QApplication.restoreOverrideCursor()
 
                 #Delete image file
@@ -457,6 +469,8 @@ class Window(QDialog):
        
     def loadDataFile(self):
         global concentrationData
+        global dataFileName
+
         #clear the global dictionary of previous data
         concentrationData.clear()
 
@@ -499,7 +513,7 @@ class Window(QDialog):
                     
                     #Extract data filename from the full data file path
                     dataFileName = os.path.basename(dataFileName)
-                    self.lblDataFileName.setText(dataFileName + ' loaded')
+                    self.lblDataFileName.setText('File ' + dataFileName + ' loaded')
 
                     #Column headers form the keys in the dictionary called concentrationData
                     for header in headers:
@@ -590,8 +604,8 @@ class Window(QDialog):
                 self.spinBoxParameter2.setValue(DEFAULT_VALUE_Ve)
                 self.spinBoxParameter3.setValue(DEFAULT_VALUE_Ktrans)
             elif modelName == 'High-Flow Gadoxetate':
-                self.spinBoxParameter1.setValue(DEFAULT_VALUE_Kce)
-                self.spinBoxParameter2.setValue(DEFAULT_VALUE_Ve)
+                self.spinBoxParameter1.setValue(DEFAULT_VALUE_Ve)
+                self.spinBoxParameter2.setValue(DEFAULT_VALUE_Kce)
                 self.spinBoxParameter3.setValue(DEFAULT_VALUE_Kbc)
             elif modelName ==  'One Compartment':
                 self.spinBoxParameter1.setValue(DEFAULT_VALUE_Vp)
@@ -628,7 +642,7 @@ class Window(QDialog):
                 self.labelParameter3.setText(LABEL_PARAMETER_3A)
                 self.labelParameter3.show()
             elif modelName == 'High-Flow Gadoxetate':
-                self.labelParameter1.setText(LABEL_PARAMETER_1B)
+                self.labelParameter1.setText(LABEL_PARAMETER_2A)
                 self.labelParameter1.show()
                 self.lblAIF.show()
                 self.cmbAIF.show()
@@ -637,7 +651,7 @@ class Window(QDialog):
                 self.spinBoxParameter1.show()
                 self.spinBoxParameter2.show()
                 self.spinBoxParameter3.show()
-                self.labelParameter2.setText(LABEL_PARAMETER_2A)
+                self.labelParameter2.setText(LABEL_PARAMETER_1B)
                 self.labelParameter2.show()
                 self.labelParameter3.setText(LABEL_PARAMETER_3B)
                 self.labelParameter3.show()
@@ -773,9 +787,15 @@ class Window(QDialog):
             if AIF != 'Please Select':
                 arrayAIFConcs = np.array(concentrationData[AIF], dtype='float')
                 ax.plot(arrayTimes, arrayAIFConcs, 'r.-', label= AIF)
-                parameter1 = self.spinBoxParameter1.value()
-                parameter2 = self.spinBoxParameter2.value()
-                parameter3 = self.spinBoxParameter3.value()
+                if modelName == 'High-Flow Gadoxetate':
+                    parameter1 = self.spinBoxParameter2.value()
+                    parameter2 = self.spinBoxParameter1.value()
+                    parameter3 = self.spinBoxParameter3.value()
+                else:
+                    parameter1 = self.spinBoxParameter1.value()
+                    parameter2 = self.spinBoxParameter2.value()
+                    parameter3 = self.spinBoxParameter3.value()
+
                 if VIF == 'Please Select':
                     logger.info('TracerKineticModels.modelSelector called when model ={} and parameters are {}, {}, {}'. format(modelName, parameter1, parameter2, parameter3))
                     listModel = TracerKineticModels.modelSelector(modelName, arrayTimes, arrayAIFConcs, parameter1, parameter2, parameter3)
