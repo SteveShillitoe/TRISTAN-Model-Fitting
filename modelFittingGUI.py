@@ -5,7 +5,7 @@ import numpy as np
 import pyautogui
 import logging
 
-from PyQt5.QtGui import QCursor
+from PyQt5.QtGui import QCursor, QIcon
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtWidgets import QApplication, QDialog,  QApplication, QPushButton, \
      QVBoxLayout, QHBoxLayout, QGroupBox, QComboBox, QLabel, QDoubleSpinBox, \
@@ -74,6 +74,7 @@ class Window(QDialog):
         super(Window, self).__init__(parent)
       
         self.setWindowTitle(WINDOW_TITLE)
+        self.setWindowIcon(QIcon('TRISTAN LOGO.jpg'))
         width, height = self.getScreenResolution()
         self.setGeometry(width*0.17, height*0.25, width*0.67, height*0.5)
         self.setWindowFlags(QtCore.Qt.WindowMinMaxButtonsHint |  QtCore.Qt.WindowCloseButtonHint)
