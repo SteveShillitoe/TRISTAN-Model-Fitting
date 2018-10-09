@@ -1,8 +1,10 @@
 import Tools as tools
 from scipy.optimize import curve_fit
 import numpy as np
+import logging
 
-import random
+#Create logger
+logger = logging.getLogger(__name__)
 
 #############################################
 ##          TracerKineticModels module    ###
@@ -12,11 +14,12 @@ to several tracer kinetic models.  The global list variable modelNames lists the
 for display in a dropdown list."""
 
 
-modelNames = ['Select a model','Extended Tofts','One Compartment','High-Flow Gadoxetate', 'Descriptive', 'AIF & VIF']
+modelNames = ['Select a model','Extended Tofts','One Compartment','High-Flow Gadoxetate']
 
 def modelSelector(modelName, times, inputConcentration, parameter1, parameter2, parameter3):
     """Function called in the GUI of the model fitting tool to select the function corresponding
         to each model"""
+    logger.info("In TracerKineticModels.modelSelector. Called with model {} and parameters {}, {}, {}".format(modelName, parameter1, parameter2, parameter3 ))
     timeInputConc2DArray = np.column_stack((times, inputConcentration,))
     if modelName ==  'Extended Tofts':
         return extendedTofts(timeInputConc2DArray, parameter1, parameter2, parameter3)
@@ -30,22 +33,23 @@ def modelSelector(modelName, times, inputConcentration, parameter1, parameter2, 
         return AIF_VIF_Model()
     
 
-def ROI_OnlyModel():
-        listConcentrationsFromModel = []
-        for i in range(0,60):
-            x = random.random()
-            listConcentrationsFromModel.append(x)
-        return listConcentrationsFromModel
+#def ROI_OnlyModel():
+#        listConcentrationsFromModel = []
+#        for i in range(0,60):
+#            x = random.random()
+#            listConcentrationsFromModel.append(x)
+#        return listConcentrationsFromModel
 
-def AIF_VIF_Model():
-        listConcentrationsFromModel = []
-        for i in range(0,60):
-            x = random.random()
-            listConcentrationsFromModel.append(x)
-        return listConcentrationsFromModel
+#def AIF_VIF_Model():
+#        listConcentrationsFromModel = []
+#        for i in range(0,60):
+#            x = random.random()
+#            listConcentrationsFromModel.append(x)
+#        return listConcentrationsFromModel
         
 def extendedTofts(xData2DArray, Vp, Ve, Ktrans):
     try:
+        logger.info('In function TracerKineticModels.extendedTofts with Vp={}, Ve={} and Ktrans={}'.format(Vp, Ve, Ktrans))
         #In order to use scipy.optimize.curve_fit, time and concentration must be
         #combined into one function input parameter, a 2D array, then separated into individual
         #1 D arrays 
@@ -59,9 +63,11 @@ def extendedTofts(xData2DArray, Vp, Ve, Ktrans):
         return listConcentrationsFromModel
     except Exception as e:
         print('TracerKineticModels.extendedTofts: ' + str(e))
+        logger.error('Runtime error in function TracerKineticModels.extendedTofts:' + str(re) )
             
 def oneCompartment(xData2DArray, Vp, Fp):
     try:
+        logger.info('In function TracerKineticModels.oneCompartment with Vp={} and Fp={}'.format(Vp, Fp))
         #In order to use scipy.optimize.curve_fit, time and concentration must be
         #combined into one function input parameter, a 2D array, then separated into individual
         #1 D arrays
@@ -76,9 +82,12 @@ def oneCompartment(xData2DArray, Vp, Fp):
         return listConcentrationsFromModel
     except Exception as e:
         print('TracerKineticModels.oneCompartment: ' + str(e))
+        logger.error('Runtime error in function TracerKineticModels.oneCompartment:' + str(re) )
 
 def highFlowGadoxetate(xData2DArray, Kce, Ve, Kbc):
     try:
+        logger.info('In function TracerKineticModels.highFlowGadoxetate with Kce={}, Ve={} and Kbc={}'.format(Kce, Ve, Kbc))
+        
         #In order to use scipy.optimize.curve_fit, time and concentration must be
         #combined into one function input parameter, a 2D array, then separated into individual
         #1 D arrays
@@ -93,9 +102,11 @@ def highFlowGadoxetate(xData2DArray, Kce, Ve, Kbc):
         return listConcentrationsFromModel
     except Exception as e:
         print('TracerKineticModels.highFlowGadoxetate: ' + str(e))
+        logger.error('Runtime error in function TracerKineticModels.highFlowGadoxetate:' + str(re) )
 
 def curveFit(modelName, times, inputConcentration, concROI, paramArray, constrain):
     try:
+        logger.info('In function TracerKineticModels.curveFit with model={}, parameters = {} and constrain={}'.format(modelName,paramArray, constrain) )
         if constrain == True:
             lowerBound = 0
             upperBound = 6.0

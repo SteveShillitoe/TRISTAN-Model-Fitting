@@ -5,6 +5,11 @@ import errno
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtWidgets import QDialog
 
+import logging
+
+#Create logger
+logger = logging.getLogger(__name__)
+
 #This is a global variable used to hold the current date and time 
 #displayed in the footer of the PDF report.
 currentDateTime = str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
@@ -19,7 +24,7 @@ class PDF(FPDF):
     def __init__(self, title):
         super().__init__() #Inherit functionality from the __init__ method of class FPDF
         self.title = title  #Then add a local property
-    
+        logger.info('In module ' + __name__ + '. Created an instance of class PDF.')
 
     def header(self):
         # Logo
@@ -47,6 +52,11 @@ class PDF(FPDF):
                                parameter2Text, parameter2Value,
                                parameter3Text = None, parameter3Value = None, covarianceArray =[]):
         try:
+            logger.info('Function PDFWriter.createAndSavePDFReport called with filename={}, \
+            dataFileName={}, modelName={}, imageName={}, parameter1Text={}, parameter1Value={},\
+                 parameter2Text={}, parameter2Value={},parameter3Text ={}, parameter3Value ={}' \
+             .format(fileName, dataFileName, modelName, imageName,parameter1Text, parameter1Value,
+             parameter2Text, parameter2Value,parameter3Text, parameter3Value))
             self.add_page() #First Page in Portrait format, A4
             self.set_font('Arial', 'BU', 12)
             self.write(5, modelName + ' model.\n')
@@ -58,6 +68,9 @@ class PDF(FPDF):
                 numRowsData = 3
             else:
                 numRowsData = 2
+
+            logger.info('In Function PDFWriter.createAndSavePDFReport printing results table with numRowsData ={} from {}'.format(numRowsData, covarianceArray))
+            
             # Effective page width, or just effectivePageWidth
             effectivePageWidth = self.w - 2*self.l_margin
             # Set column width to 1/7 of effective page width to distribute content 
@@ -106,5 +119,6 @@ class PDF(FPDF):
             self.output(fileName, 'F')  #Save PDF
         except Exception as e:
             print('PDFWriter.createAndSavePDFReport: ' + str(e)) 
+            logger.error('PDFWriter.createAndSavePDFReport: ' + str(e)) 
             self.output(fileName, 'F')  #Save PDF
 
