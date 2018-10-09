@@ -280,10 +280,10 @@ class Window(QDialog):
         
         logger.info("GUI created successfully.")
 
-    def returnErrorString(self):
-        return 'Error: {}. {}, line: {}'.format(sys.exc_info()[0],
-                                         sys.exc_info()[1],
-                                         sys.exc_info()[2].tb_lineno)
+    #def returnErrorString(self):
+    #    return 'Error: {}. {}, line: {}'.format(sys.exc_info()[0],
+    #                                     sys.exc_info()[1],
+    #                                     sys.exc_info()[2].tb_lineno)
 
     def clearOptimisedParamaterList(self, callingControl):
         try:
@@ -547,8 +547,8 @@ class Window(QDialog):
             self.cmbROI.show()
             logger.info('Function configureGUIAfterLoadingData called and the following organ list loaded: {}'.format(organArray))
         except RuntimeError as re:
-            print('runtime error in function configureGUIAfterLoadingData: ' + str(re) + ' ' + str(self.returnErrorString))
-            logger.error('runtime error in function configureGUIAfterLoadingData: ' + str(re) + ' ' + str(self.returnErrorString))
+            print('runtime error in function configureGUIAfterLoadingData: ' + str(re) )
+            logger.error('runtime error in function configureGUIAfterLoadingData: ' + str(re) )
         except Exception as e:
             print('Error in function configureGUIAfterLoadingData: ' + str(e) )
             logger.error('Error in function configureGUIAfterLoadingData: ' + str(e))
