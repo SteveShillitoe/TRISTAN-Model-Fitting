@@ -37,6 +37,9 @@ concentrationData={}
 dataFileName = ''
 #Initialise global list that holds results of curve fitting
 optimisedParamaterList = []
+oldParameter1 =0.0
+oldParameter2 =0.0
+oldParameter3 =0.0
 
 ########################################
 ##              CONSTANTS             ##
@@ -208,6 +211,7 @@ class Window(QDialog):
 
         self.cboxDelay = QCheckBox('Delay', self)
         self.cboxConstaint = QCheckBox('Constraint', self)
+        self.cboxConstaint.clicked.connect(self.setParameterSpinBoxesToConstraintValue)
         self.cboxDelay.hide()
         self.cboxConstaint.hide()
         self.btnReset = QPushButton('Reset')
@@ -596,6 +600,38 @@ class Window(QDialog):
             print('Error in function initialiseParameterSpinBoxes: ' + str(e) )
             logger.error('Error in function initialiseParameterSpinBoxes: ' + str(e) )
 
+    def setParameterSpinBoxesToConstraintValue(self):
+        """Set model parameter spinboxes to the upper bound of the constaint"""
+        global oldParameter1 
+        global oldParameter2 
+        global oldParameter3
+        try:
+            self.spinBoxParameter1.blockSignals(True)
+            self.spinBoxParameter2.blockSignals(True)
+            self.spinBoxParameter3.blockSignals(True)
+            upperBound = TracerKineticModels.PARAMETER_UPPER_BOUND
+     
+            if self.cboxConstaint.isChecked():
+                logger.info('Function setParameterSpinBoxesToConstraintValue called. Upper Bound = {}'.format(upperBound))
+                oldParameter1 = self.spinBoxParameter1.value()
+                oldParameter2 = self.spinBoxParameter2.value()
+                oldParameter3 = self.spinBoxParameter3.value()
+                self.spinBoxParameter1.setValue(upperBound)
+                self.spinBoxParameter2.setValue(upperBound)
+                self.spinBoxParameter3.setValue(upperBound)
+            else:
+                logger.info('Function setParameterSpinBoxesToConstraintValue called, parameter spinboxes reset to old values')
+                self.spinBoxParameter1.setValue(oldParameter1)
+                self.spinBoxParameter2.setValue(oldParameter2)
+                self.spinBoxParameter3.setValue(oldParameter3)
+
+            self.spinBoxParameter1.blockSignals(False)
+            self.spinBoxParameter2.blockSignals(False)
+            self.spinBoxParameter3.blockSignals(False)
+        except Exception as e:
+            print('Error in function setParameterSpinBoxesToConstraintValue: ' + str(e) )
+            logger.error('Error in function setParameterSpinBoxesToConstraintValue: ' + str(e) )
+
     def configureGUIForEachModel(self):
         try:
             self.cboxDelay.show()
@@ -805,9 +841,6 @@ class Window(QDialog):
                 # draw the graph on the canvas
                 self.canvas.draw()
             
-        except RuntimeError as re:
-                print('Runtime error in function plot ' + str(re) )
-                logger.error('Runtime error in function plot ' + str(re) )
         except Exception as e:
                 print('Error in function plot when an event associated with ' + str(callingFunction) + ' is fired : ROI=' + ROI + ' AIF = ' + AIF + ' : ' + str(e) )
                 logger.error('Error in function plot when an event associated with ' + str(callingFunction) + ' is fired : ROI=' + ROI + ' AIF = ' + AIF + ' : ' + str(e) )

@@ -15,6 +15,9 @@ for display in a dropdown list."""
 
 
 modelNames = ['Select a model','Extended Tofts','One Compartment','High-Flow Gadoxetate']
+PARAMETER_LOWER_BOUND = 0
+PARAMETER_UPPER_BOUND = 5.0
+
 
 def modelSelector(modelName, times, inputConcentration, parameter1, parameter2, parameter3):
     """Function called in the GUI of the model fitting tool to select the function corresponding
@@ -108,8 +111,8 @@ def curveFit(modelName, times, inputConcentration, concROI, paramArray, constrai
     try:
         logger.info('In function TracerKineticModels.curveFit with model={}, parameters = {} and constrain={}'.format(modelName,paramArray, constrain) )
         if constrain == True:
-            lowerBound = 0
-            upperBound = 6.0
+            lowerBound = PARAMETER_LOWER_BOUND
+            upperBound = PARAMETER_UPPER_BOUND
         else:
             lowerBound = -np.inf
             upperBound = np.inf
