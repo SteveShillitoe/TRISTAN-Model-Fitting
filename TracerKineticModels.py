@@ -66,7 +66,7 @@ def extendedTofts(xData2DArray, Vp, Ve, Ktrans):
         return listConcentrationsFromModel
     except Exception as e:
         print('TracerKineticModels.extendedTofts: ' + str(e))
-        logger.error('Runtime error in function TracerKineticModels.extendedTofts:' + str(re) )
+        logger.error('Runtime error in function TracerKineticModels.extendedTofts:' + str(e) )
             
 def oneCompartment(xData2DArray, Vp, Fp):
     try:
@@ -85,7 +85,7 @@ def oneCompartment(xData2DArray, Vp, Fp):
         return listConcentrationsFromModel
     except Exception as e:
         print('TracerKineticModels.oneCompartment: ' + str(e))
-        logger.error('Runtime error in function TracerKineticModels.oneCompartment:' + str(re) )
+        logger.error('Runtime error in function TracerKineticModels.oneCompartment:' + str(e) )
 
 def highFlowGadoxetate(xData2DArray, Kce, Ve, Kbc):
     try:
@@ -105,7 +105,7 @@ def highFlowGadoxetate(xData2DArray, Kce, Ve, Kbc):
         return listConcentrationsFromModel
     except Exception as e:
         print('TracerKineticModels.highFlowGadoxetate: ' + str(e))
-        logger.error('Runtime error in function TracerKineticModels.highFlowGadoxetate:' + str(re) )
+        logger.error('Runtime error in function TracerKineticModels.highFlowGadoxetate:' + str(e) )
 
 def curveFit(modelName, times, inputConcentration, concROI, paramArray, constrain):
     try:
