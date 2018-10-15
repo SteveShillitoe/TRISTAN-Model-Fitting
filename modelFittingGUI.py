@@ -9,7 +9,7 @@ from PyQt5.QtGui import QCursor, QIcon, QFont
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtWidgets import QApplication, QDialog,  QApplication, QPushButton, \
      QVBoxLayout, QHBoxLayout, QGroupBox, QComboBox, QLabel, QDoubleSpinBox, \
-     QMessageBox, QFileDialog, QCheckBox, QLineEdit
+     QMessageBox, QFileDialog, QCheckBox, QLineEdit, QSizePolicy
 
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
@@ -32,6 +32,8 @@ from PDFWriter import PDF
 
 #Initialise global dictionary to hold concentration data
 concentrationData={}
+#Initialise global list to hold concentrations calculated using the selected model
+listModel = []
 #Initialise global string variable to hold the name of the data file.
 #Needs to be global for printing in the PDF report
 dataFileName = ''
@@ -61,6 +63,7 @@ LABEL_PARAMETER_2B = 'Plasma Flow Rate, \n Fp (ml/min)'
 LABEL_PARAMETER_3A = 'Transfer Rate Constant, \n Ktrans (1/min)'
 LABEL_PARAMETER_3B = 'Biliary Efflux Rate, \n Kbc (mL/100mL/min)'
 DEFAULT_REPORT_FILE_PATH_NAME = 'report.pdf'
+DEFAULT_PLOT_DATA_FILE_PATH_NAME = 'plot.csv'
 LOG_FILE_NAME = "ModelFitting.log"
 #######################################
 
@@ -88,7 +91,7 @@ class Window(QDialog):
         
         #Set up the graph to plot concentration data on
         # an instance of a figure
-        self.figure = plt.figure()
+        self.figure = plt.figure(figsize=(5, 4), dpi=100)
         # this is the Canvas Widget that displays the `figure`
         # it takes the `figure` instance as a parameter to __init__
         self.canvas = FigureCanvas(self.figure)
@@ -107,6 +110,7 @@ class Window(QDialog):
         #Create dropdown lists for selection of ROI & AIF
         self.lblROI = QLabel("Region of Interest:")
         self.lblROI.setFont(QFont("Arial", weight=QFont.Bold))
+        self.lblROI.setAlignment(QtCore.Qt.AlignRight)
         self.cmbROI = QComboBox()
         self.cmbROI.setToolTip('Select Region of Interest')
         self.cmbROI.setFont(QFont("Arial", weight=QFont.Bold))
@@ -123,8 +127,8 @@ class Window(QDialog):
         self.setLayout(horizontalLayout)
         self.setLayout(verticalLayoutRight)
         self.setLayout(verticalLayoutLeft)
-        horizontalLayout.addLayout(verticalLayoutLeft)
-        horizontalLayout.addLayout(verticalLayoutRight)
+        horizontalLayout.addLayout(verticalLayoutLeft,2)
+        horizontalLayout.addLayout(verticalLayoutRight,3)
 
         #Right-hand side layout box holds the graph and associated toolbar
         verticalLayoutRight.addWidget(self.toolbar)
@@ -160,6 +164,7 @@ class Window(QDialog):
         modelHorizontalLayout6 = QHBoxLayout()
         modelHorizontalLayout7 = QHBoxLayout()
         modelHorizontalLayout8 = QHBoxLayout()
+        modelHorizontalLayout9 = QHBoxLayout()
         modelVerticalLayout.addLayout(modelHorizontalLayout2)
         modelVerticalLayout.addLayout(modelHorizontalLayout3)
         modelVerticalLayout.addLayout(modelHorizontalLayout4)
@@ -168,6 +173,7 @@ class Window(QDialog):
         modelVerticalLayout.addLayout(modelHorizontalLayout6)
         modelVerticalLayout.addLayout(modelHorizontalLayout7)
         modelVerticalLayout.addLayout(modelHorizontalLayout8)
+        modelVerticalLayout.addLayout(modelHorizontalLayout9)
         self.groupBoxModel.setLayout(modelVerticalLayout)
 
         #Create dropdown list to hold names of models
@@ -183,15 +189,17 @@ class Window(QDialog):
 
         #Create dropdown lists for selection of AIF & VIF
         self.lblAIF = QLabel("Arterial Input Function:")
+        self.lblAIF.setAlignment(QtCore.Qt.AlignRight)
         self.cmbAIF = QComboBox()
         self.cmbAIF.setToolTip('Select Arterial Input Function')
         self.lblVIF = QLabel("Venal Input Function:")
+        self.lblVIF.setAlignment(QtCore.Qt.AlignRight)
         self.cmbVIF = QComboBox()
         self.cmbVIF.setToolTip('Select Venal Input Function')
         self.cmbROI.activated.connect(lambda: self.plot('cmbROI'))
         self.cmbROI.currentIndexChanged.connect(self.displayModelFittingGroupBox)
         self.cmbAIF.activated.connect(lambda: self.plot('cmbAIF'))
-        self.cmbAIF.currentIndexChanged.connect(self.displayFitModelButton)
+        self.cmbAIF.currentIndexChanged.connect(self.displayFitModelSaveCSVButtons)
         self.cmbVIF.activated.connect(lambda: self.plot('cmbVIF'))
         self.lblAIF.hide()
         self.cmbAIF.hide()
@@ -202,6 +210,7 @@ class Window(QDialog):
         self.cmbVIF.setSizeAdjustPolicy(QComboBox.AdjustToContents)
         
         #Add lists and their labels to the horizontal layouts
+        modelHorizontalLayout2.insertStretch (0, 2)
         modelHorizontalLayout2.addWidget(self.modelLabel)
         modelHorizontalLayout2.addWidget(self.cmbModels)
         modelHorizontalLayout3.addWidget(self.lblAIF)
@@ -234,12 +243,16 @@ class Window(QDialog):
         self.spinBoxParameter1 = QDoubleSpinBox()
         self.spinBoxParameter1.setRange(-100, 1000)
         self.spinBoxParameter1.setSingleStep(0.1)
+        self.spinBoxParameter1.setMinimumSize(self.spinBoxParameter1.minimumSizeHint())
+        self.spinBoxParameter1.resize(self.spinBoxParameter1.sizeHint())
         self.spinBoxParameter2 = QDoubleSpinBox()
         self.spinBoxParameter2.setRange(-100, 1000)
         self.spinBoxParameter2.setSingleStep(0.1)
+        self.spinBoxParameter2.resize(self.spinBoxParameter2.sizeHint())
         self.spinBoxParameter3 = QDoubleSpinBox()
         self.spinBoxParameter3.setRange(-100, 1000)
         self.spinBoxParameter3.setSingleStep(0.01)
+        self.spinBoxParameter3.resize(self.spinBoxParameter3.sizeHint())
         self.spinBoxParameter1.hide()
         self.spinBoxParameter2.hide()
         self.spinBoxParameter3.hide()
@@ -264,6 +277,12 @@ class Window(QDialog):
         modelHorizontalLayout8.addWidget(self.btnFitModel)
         self.btnFitModel.clicked.connect(self.runCurveFit)
 
+        self.btnSaveCSV = QPushButton('Save plots to CSV file')
+        self.btnSaveCSV.setToolTip('Save the data plotted on the graph to a CSV file')
+        self.btnSaveCSV.hide()
+        modelHorizontalLayout9.addWidget(self.btnSaveCSV)
+        self.btnSaveCSV.clicked.connect(self.saveCSVFile)
+
         self.btnSaveReport = QPushButton('Save Report in PDF Format')
         self.btnSaveReport.setFont(QFont("Arial", weight=QFont.Bold))
         self.btnSaveReport.hide()
@@ -284,6 +303,41 @@ class Window(QDialog):
     #    return 'Error: {}. {}, line: {}'.format(sys.exc_info()[0],
     #                                     sys.exc_info()[1],
     #                                     sys.exc_info()[2].tb_lineno)
+
+    def saveCSVFile(self):
+        try:
+            logger.info('Function saveCSVFile called.')
+            modelName = str(self.cmbModels.currentText())
+            modelName.replace(" ", "-")
+            #Ask the user to specify the path & name of the CSV file. The name of the model is suggested as a default file name.
+            CSVFileName, _ = QFileDialog.getSaveFileName(self, caption="Enter CSV file name", directory=DEFAULT_PLOT_DATA_FILE_PATH_NAME, filter="*.csv")
+            logger.info('Function saveCSVFile - csv file name = ' + CSVFileName)
+            
+            ROI = str(self.cmbROI.currentText())
+            AIF = str(self.cmbAIF.currentText())
+
+            with open(CSVFileName, 'w',  newline='') as csvfile:
+                writeCSV = csv.writer(csvfile,  delimiter=',')
+                #write header row
+                writeCSV.writerow(['Time', ROI, AIF, modelName + ' model'])
+                for i, time in enumerate(concentrationData['Time']):
+                    writeCSV.writerow([time, concentrationData[ROI][i], concentrationData[AIF][i], listModel[i]])
+                csvfile.close()
+
+        except csv.Error:
+            print('CSV Writer error in function saveCSVFile: file %s, line %d: %s' % (CSVFileName, WriteCSV.line_num, csv.Error))
+            logger.error('CSV Writer error in function saveCSVFile: file %s, line %d: %s' % (CSVFileName, WriteCSV.line_num, csv.Error))
+        except IOError as IOe:
+            print ('IOError in function saveCSVFile: cannot open file ' + CSVFileName + ' or read its data: ' + str(IOe))
+            logger.error ('IOError in function saveCSVFile: cannot open file ' + CSVFileName + ' or read its data; ' + str(IOe))
+        except RuntimeError as re:
+            print('Runtime error in function saveCSVFile: ' + str(re))
+            logger.error('Runtime error in function saveCSVFile: ' + str(re))
+        except Exception as e:
+            print('Error in function saveCSVFile: ' + str(e) + ' at line in CSV file ', WriteCSV.line_num)
+            logger.error('Error in function saveCSVFile: ' + str(e) + ' at line in CSV file ', WriteCSV.line_num)
+
+
 
     def clearOptimisedParamaterList(self, callingControl):
         try:
@@ -310,19 +364,21 @@ class Window(QDialog):
             print('Error in function displayModelFittingGroupBox: ' + str(e)) 
             logger.error('Error in function displayModelFittingGroupBox: ' + str(e))
 
-    def displayFitModelButton(self):
+    def displayFitModelSaveCSVButtons(self):
         try:
             ROI = str(self.cmbROI.currentText())
             AIF = str(self.cmbAIF.currentText())
             if ROI != 'Please Select' and AIF != 'Please Select':
                 self.btnFitModel.show()
-                logger.info("Function displayFitModelButton called. Fit Model button shown when ROI = {} and AIF = {}".format(ROI, AIF))
+                self.btnSaveCSV.show()
+                logger.info("Function displayFitModelSaveCSVButtons called. Fit Model button shown when ROI = {} and AIF = {}".format(ROI, AIF))
             else:
                 self.btnFitModel.hide()
-                logger.info("Function displayFitModelButton called. Fit Model button hidden.")
+                self.btnSaveCSV.hide()
+                logger.info("Function displayFitModelSaveCSVButtons called. Fit Model button hidden.")
         except Exception as e:
-            print('Error in function displayFitModelButton: ' + str(e))
-            logger.error('Error in function displayFitModelButton: ' + str(e))
+            print('Error in function displayFitModelSaveCSVButtons: ' + str(e))
+            logger.error('Error in function displayFitModelSaveCSVButtons: ' + str(e))
 
     def runCurveFit(self):
         try:
@@ -500,16 +556,19 @@ class Window(QDialog):
                     #Column headers form the keys in the dictionary called concentrationData
                     for header in headers:
                         concentrationData[header.title()]=[]
+                    #Also add a 'model' key to hold a list of concentrations generated by a model
+                    concentrationData['model'] = []
 
                     #Each key in the dictionary is paired with a list of corresponding concentrations (except for the Time key that is paired with a list of times)
                     for row in readCSV:
                         counter=0
                         for key in concentrationData:
-                            if counter == 0:
-                                concentrationData[key].append(int(row[counter]))
-                            else:
-                                concentrationData[key].append(float(row[counter]))
-                            counter+=1           
+                            if key != 'model':
+                                if counter == 0:
+                                    concentrationData[key].append(int(row[counter]))
+                                else:
+                                    concentrationData[key].append(float(row[counter]))
+                                counter+=1           
                    
                     self.configureGUIAfterLoadingData()
                     #plot function called here in case we need to clear a graph showing data from a previous data file
@@ -606,28 +665,33 @@ class Window(QDialog):
         global oldParameter2 
         global oldParameter3
         try:
-            self.spinBoxParameter1.blockSignals(True)
-            self.spinBoxParameter2.blockSignals(True)
-            self.spinBoxParameter3.blockSignals(True)
+            
             upperBound = TracerKineticModels.PARAMETER_UPPER_BOUND
      
             if self.cboxConstaint.isChecked():
                 logger.info('Function setParameterSpinBoxesToConstraintValue called. Upper Bound = {}'.format(upperBound))
-                oldParameter1 = self.spinBoxParameter1.value()
+                
+                oldParameter1 = self.spinBoxParameter1.value() 
                 oldParameter2 = self.spinBoxParameter2.value()
                 oldParameter3 = self.spinBoxParameter3.value()
+
+                self.spinBoxParameter1.blockSignals(True)
+                self.spinBoxParameter2.blockSignals(True)
+                self.spinBoxParameter3.blockSignals(True)
+
                 self.spinBoxParameter1.setValue(upperBound)
                 self.spinBoxParameter2.setValue(upperBound)
                 self.spinBoxParameter3.setValue(upperBound)
+
+                self.spinBoxParameter1.blockSignals(False)
+                self.spinBoxParameter2.blockSignals(False)
+                self.spinBoxParameter3.blockSignals(False)
             else:
                 logger.info('Function setParameterSpinBoxesToConstraintValue called, parameter spinboxes reset to old values')
                 self.spinBoxParameter1.setValue(oldParameter1)
                 self.spinBoxParameter2.setValue(oldParameter2)
                 self.spinBoxParameter3.setValue(oldParameter3)
 
-            self.spinBoxParameter1.blockSignals(False)
-            self.spinBoxParameter2.blockSignals(False)
-            self.spinBoxParameter3.blockSignals(False)
         except Exception as e:
             print('Error in function setParameterSpinBoxesToConstraintValue: ' + str(e) )
             logger.error('Error in function setParameterSpinBoxesToConstraintValue: ' + str(e) )
@@ -728,6 +792,7 @@ class Window(QDialog):
                 self.labelParameter2.hide()
                 self.labelParameter3.hide()
                 self.btnFitModel.hide()
+                self.btnSaveCSV.hide()
         except Exception as e:
             print('Error in function configureGUIForEachModel: ' + str(e) )
             logger.error('Error in function configureGUIForEachModel: ' + str(e) )
@@ -769,6 +834,7 @@ class Window(QDialog):
     
     def plot(self, callingFunction):
         try:
+            global listModel
             self.figure.clear()
             
             # create an axis
@@ -833,7 +899,7 @@ class Window(QDialog):
                 ax.set_title('Tissue Concentrations', fontsize=titleSize, pad=25)
                 ax.grid()
                 chartBox = ax.get_position()
-                ax.set_position([chartBox.x0, chartBox.y0, chartBox.width*0.85, chartBox.height])
+                ax.set_position([chartBox.x0*1.1, chartBox.y0, chartBox.width*0.9, chartBox.height])
                 ax.legend(loc='upper center', bbox_to_anchor=(1.025, 1.0), shadow=True, ncol=1, fontsize='x-large')
                 # refresh canvas
                 self.canvas.draw()
