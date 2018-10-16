@@ -9,7 +9,7 @@ from PyQt5.QtGui import QCursor, QIcon, QFont
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtWidgets import QApplication, QDialog,  QApplication, QPushButton, \
      QVBoxLayout, QHBoxLayout, QGroupBox, QComboBox, QLabel, QDoubleSpinBox, \
-     QMessageBox, QFileDialog, QCheckBox, QLineEdit, QSizePolicy
+     QMessageBox, QFileDialog, QCheckBox, QLineEdit, QSizePolicy, QGridLayout
 
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
@@ -86,7 +86,7 @@ class Window(QDialog):
         self.setWindowTitle(WINDOW_TITLE)
         self.setWindowIcon(QIcon('TRISTAN LOGO.jpg'))
         width, height = self.getScreenResolution()
-        self.setGeometry(width*0.17, height*0.25, width*0.67, height*0.5)
+        self.setGeometry(width*0.05, height*0.25, width*0.9, height*0.5)
         self.setWindowFlags(QtCore.Qt.WindowMinMaxButtonsHint |  QtCore.Qt.WindowCloseButtonHint)
         
         #Set up the graph to plot concentration data on
@@ -123,16 +123,21 @@ class Window(QDialog):
         horizontalLayout = QHBoxLayout()
         verticalLayoutLeft = QVBoxLayout()
         verticalLayoutLeft.sizeHint()
+        verticalLayoutMiddle = QVBoxLayout()
         verticalLayoutRight = QVBoxLayout()
+        verticalLayoutRight.sizeHint()
+        
         self.setLayout(horizontalLayout)
-        self.setLayout(verticalLayoutRight)
         self.setLayout(verticalLayoutLeft)
+        self.setLayout(verticalLayoutMiddle)
+        self.setLayout(verticalLayoutRight)
         horizontalLayout.addLayout(verticalLayoutLeft,2)
-        horizontalLayout.addLayout(verticalLayoutRight,3)
+        horizontalLayout.addLayout(verticalLayoutMiddle,3)
+        horizontalLayout.addLayout(verticalLayoutRight,2)
 
-        #Right-hand side layout box holds the graph and associated toolbar
-        verticalLayoutRight.addWidget(self.toolbar)
-        verticalLayoutRight.addWidget(self.canvas)
+        #Middle layout box holds the graph and associated toolbar
+        verticalLayoutMiddle.addWidget(self.toolbar)
+        verticalLayoutMiddle.addWidget(self.canvas)
 
         #Left hand-side vertical layout holds the Load data file button
         verticalSpacer = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
@@ -148,6 +153,7 @@ class Window(QDialog):
         
         #Create a group box and place it in the left-handside vertical layout
         self.groupBoxModel = QGroupBox('Model Fitting')
+        self.groupBoxModel.setAlignment(QtCore.Qt.AlignHCenter)
         self.groupBoxModel.setFont(QFont("Arial", weight=QFont.Bold))
         self.groupBoxModel.hide()
         verticalLayoutLeft.addWidget(self.groupBoxModel)
@@ -185,6 +191,7 @@ class Window(QDialog):
         self.cmbModels.addItems(TracerKineticModels.modelNames)
         self.cmbModels.setCurrentIndex(0) #Display "Select a Model"
         self.cmbModels.currentIndexChanged.connect(self.configureGUIForEachModel)
+        self.cmbModels.currentIndexChanged.connect(lambda: self.clearOptimisedParamaterList('cmbModels')) 
         self.cmbModels.activated.connect(lambda: self.plot('cmbModels'))
 
         #Create dropdown lists for selection of AIF & VIF
@@ -259,9 +266,9 @@ class Window(QDialog):
         self.spinBoxParameter1.valueChanged.connect(lambda: self.plot('spinBoxParameter1')) 
         self.spinBoxParameter2.valueChanged.connect(lambda: self.plot('spinBoxParameter2')) 
         self.spinBoxParameter3.valueChanged.connect(lambda: self.plot('spinBoxParameter3'))
-        self.spinBoxParameter1.valueChanged.connect(lambda: self.clearOptimisedParamaterList('spinBoxParameter1')) 
-        self.spinBoxParameter2.valueChanged.connect(lambda: self.clearOptimisedParamaterList('spinBoxParameter2'))
-        self.spinBoxParameter3.valueChanged.connect(lambda: self.clearOptimisedParamaterList('spinBoxParameter3'))
+        #self.spinBoxParameter1.valueChanged.connect(lambda: self.clearOptimisedParamaterList('spinBoxParameter1')) 
+        #self.spinBoxParameter2.valueChanged.connect(lambda: self.clearOptimisedParamaterList('spinBoxParameter2'))
+        #self.spinBoxParameter3.valueChanged.connect(lambda: self.clearOptimisedParamaterList('spinBoxParameter3'))
 
         #Place spin boxes and their labels in horizontal layouts
         modelHorizontalLayout5.addWidget(self.labelParameter1)
@@ -297,6 +304,42 @@ class Window(QDialog):
 
         verticalLayoutLeft.addStretch()  #Aligns Save Report & Exit buttons to the top of verticalLayoutLeft
         
+        #Create a group box and place it in the right-handside vertical layout
+        self.groupBoxResults = QGroupBox('Curve Fitting Results')
+        self.groupBoxResults.setAlignment(QtCore.Qt.AlignHCenter)
+        self.groupBoxResults.setFont(QFont("Arial", weight=QFont.Bold))
+        verticalLayoutRight.addWidget(self.groupBoxResults)
+        verticalLayoutRight.addItem(verticalSpacer)
+        gridLayoutResults = QGridLayout()
+        gridLayoutResults.setAlignment(QtCore.Qt.AlignTop) 
+        self.groupBoxResults.setLayout(gridLayoutResults)
+        
+        self.lblHeaderLeft = QLabel("Parameter")
+        self.lblHeaderMiddle = QLabel("Value")
+        self.lblHeaderRight = QLabel("95% Confidence Interval")
+        self.lblParam1Name = QLabel("")
+        self.lblParam1Value = QLabel("")
+        self.lblParam1ConfInt = QLabel("")
+        self.lblParam2Name = QLabel("")
+        self.lblParam2Value = QLabel("")
+        self.lblParam2ConfInt = QLabel("")
+        self.lblParam3Name = QLabel("")
+        self.lblParam3Value = QLabel("")
+        self.lblParam3ConfInt = QLabel("")
+        
+        gridLayoutResults.addWidget(self.lblHeaderLeft, 1, 1)
+        gridLayoutResults.addWidget(self.lblHeaderMiddle, 1, 3)
+        gridLayoutResults.addWidget(self.lblHeaderRight, 1, 5)
+        gridLayoutResults.addWidget(self.lblParam1Name, 2, 1, QtCore.Qt.AlignTop)
+        gridLayoutResults.addWidget(self.lblParam1Value, 2, 3, QtCore.Qt.AlignTop)
+        gridLayoutResults.addWidget(self.lblParam1ConfInt, 2, 5, QtCore.Qt.AlignTop)
+        gridLayoutResults.addWidget(self.lblParam2Name, 3, 1, QtCore.Qt.AlignTop)
+        gridLayoutResults.addWidget(self.lblParam2Value, 3, 3, QtCore.Qt.AlignTop)
+        gridLayoutResults.addWidget(self.lblParam2ConfInt, 3, 5, QtCore.Qt.AlignTop)
+        gridLayoutResults.addWidget(self.lblParam3Name, 4, 1, QtCore.Qt.AlignTop)
+        gridLayoutResults.addWidget(self.lblParam3Value, 4, 3, QtCore.Qt.AlignTop)
+        gridLayoutResults.addWidget(self.lblParam3ConfInt, 4, 5, QtCore.Qt.AlignTop)
+
         logger.info("GUI created successfully.")
 
     #def returnErrorString(self):
@@ -304,6 +347,43 @@ class Window(QDialog):
     #                                     sys.exc_info()[1],
     #                                     sys.exc_info()[2].tb_lineno)
 
+    def displayOptimumParamaterValuesOnGUI(self):
+        try:
+            logger.info('Function displayOptimumParamaterValuesOnGUI called.')
+            self.lblParam1Name.setText(self.labelParameter1.text())
+            self.lblParam1Value.setText(str(round(optimisedParamaterList[0][0], 5)))
+            confidenceStr = '[{}     {}]'.format(optimisedParamaterList[0][1], optimisedParamaterList[0][2])
+            self.lblParam1ConfInt.setText(confidenceStr) 
+            self.lblParam2Name.setText(self.labelParameter2.text())
+            self.lblParam2Value.setText(str(round(optimisedParamaterList[1][0], 5)))
+            confidenceStr = '[{}     {}]'.format(optimisedParamaterList[1][1], optimisedParamaterList[1][2])
+            self.lblParam2ConfInt.setText(confidenceStr)
+
+            if len(optimisedParamaterList) == 3:
+                self.lblParam3Name.setText(self.labelParameter3.text())
+                self.lblParam3Value.setText(str(round(optimisedParamaterList[2][0], 5)))
+                confidenceStr = '[{}     {}]'.format(optimisedParamaterList[2][1], optimisedParamaterList[2][2])
+                self.lblParam3ConfInt.setText(confidenceStr)
+        except Exception as e:
+            print('Error in function displayOptimumParamaterValuesOnGUI: ' + str(e))
+            logger.error('Error in function displayOptimumParamaterValuesOnGUI: ' + str(e))
+
+    def clearOptimumParamaterValuesOnGUI(self):
+        try:
+            logger.info('Function clearOptimumParamaterValuesOnGUI called.')
+            self.lblParam1Name.clear()
+            self.lblParam1Value.clear()
+            self.lblParam1ConfInt.clear()
+            self.lblParam2Name.clear()
+            self.lblParam2Value.clear()
+            self.lblParam2ConfInt.clear()
+            self.lblParam3Name.clear()
+            self.lblParam3Value.clear()
+            self.lblParam3ConfInt.clear()
+        except Exception as e:
+            print('Error in function clearOptimumParamaterValuesOnGUI: ' + str(e))
+            logger.error('Error in function clearOptimumParamaterValuesOnGUI: ' + str(e))
+    
     def saveCSVFile(self):
         try:
             logger.info('Function saveCSVFile called.')
@@ -337,12 +417,11 @@ class Window(QDialog):
             print('Error in function saveCSVFile: ' + str(e) + ' at line in CSV file ', WriteCSV.line_num)
             logger.error('Error in function saveCSVFile: ' + str(e) + ' at line in CSV file ', WriteCSV.line_num)
 
-
-
     def clearOptimisedParamaterList(self, callingControl):
         try:
             logger.info('clearOptimisedParamaterList called from ' + callingControl)
             optimisedParamaterList.clear()
+            self.clearOptimumParamaterValuesOnGUI()
         except Exception as e:
             print('Error in function clearOptimisedParamaterList: ' + str(e)) 
             logger.error('Error in function clearOptimisedParamaterList: ' + str(e))
@@ -382,11 +461,8 @@ class Window(QDialog):
 
     def runCurveFit(self):
         try:
-            #self.clearCovarienceTextBoxes()
-
             modelName = str(self.cmbModels.currentText())
             initialParametersArray = []
-            tempList = []
             
             if modelName ==  'One Compartment':
                 parameter1 = self.spinBoxParameter1.value()
@@ -440,17 +516,23 @@ class Window(QDialog):
             #student-t value for the degrees of freedom and the confidence level
             tval = t.ppf(1.0-alpha/2., degsOfFreedom)
          
+            #Remove results of previous curve fitting
+            optimisedParamaterList.clear()
+            #optimisedParamaterList is a list of lists. 
+            #Add an empty list for each parameter to hold its value and confidence limits
             for i in range(numParams):
                 optimisedParamaterList.append([])
-            i=0    
+               
             for counter, numParams, var in zip(range(numDataPoints), optimumParams, np.diag(paramCovarianceMatrix)):
                 sigma = var**0.5
-                optimisedParamaterList[i].append(numParams)
-                optimisedParamaterList[i].append(round((numParams - sigma*tval), 5))
-                optimisedParamaterList[i].append(round((numParams + sigma*tval), 5))
+                optimisedParamaterList[counter].append(numParams)
+                optimisedParamaterList[counter].append(round((numParams - sigma*tval), 5))
+                optimisedParamaterList[counter].append(round((numParams + sigma*tval), 5))
                 i+=1
             
+            
             logger.info('In calcParameterConfidenceIntervals, optimisedParamaterList = {}'.format(optimisedParamaterList))
+            self.displayOptimumParamaterValuesOnGUI()
             
         except ValueError as ve:
             print ('Value Error: runCurveFit with model ' + modelName + ': '+ str(ve))
@@ -702,7 +784,8 @@ class Window(QDialog):
             self.cboxConstaint.show()
             self.cboxConstaint.setChecked(False)
             self.btnReset.show()
-            self.initialiseParameterSpinBoxes() #Typical initial values for each model 
+            self.initialiseParameterSpinBoxes() #Typical initial values for each model
+            self.clearOptimumParamaterValuesOnGUI() #Remove results of curve fitting of the previous model
             modelName = str(self.cmbModels.currentText())
             logger.info('Function configureGUIForEachModel called when model = ' + modelName)
             if modelName ==  'Extended Tofts':
@@ -746,6 +829,7 @@ class Window(QDialog):
                 self.labelParameter2.setText(LABEL_PARAMETER_2B)
                 self.labelParameter2.show()
                 self.labelParameter3.hide()
+                self.labelParameter3.clear()
                 self.spinBoxParameter2.setValue(DEFAULT_VALUE_Fp) #Default value
             elif modelName == 'Descriptive':
                 self.labelParameter1.setText(LABEL_PARAMETER_1A)
@@ -791,6 +875,10 @@ class Window(QDialog):
                 self.labelParameter1.hide()
                 self.labelParameter2.hide()
                 self.labelParameter3.hide()
+                self.labelParameter1.clear()
+                self.labelParameter2.clear()
+                self.labelParameter3.clear()
+
                 self.btnFitModel.hide()
                 self.btnSaveCSV.hide()
         except Exception as e:
@@ -900,7 +988,7 @@ class Window(QDialog):
                 ax.grid()
                 chartBox = ax.get_position()
                 ax.set_position([chartBox.x0*1.1, chartBox.y0, chartBox.width*0.9, chartBox.height])
-                ax.legend(loc='upper center', bbox_to_anchor=(1.025, 1.0), shadow=True, ncol=1, fontsize='x-large')
+                ax.legend(loc='upper center', bbox_to_anchor=(1.0, 1.0), shadow=True, ncol=1, fontsize='x-large')
                 # refresh canvas
                 self.canvas.draw()
             else:
@@ -913,12 +1001,10 @@ class Window(QDialog):
     
     def exitApp(self):
         logger.info("Application closed using the Exit button.")
-        sys.exit(0)
-        
+        sys.exit(0)  
                 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     main = Window()
     main.show()
-
     sys.exit(app.exec_())
