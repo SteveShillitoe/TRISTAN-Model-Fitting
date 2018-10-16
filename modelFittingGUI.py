@@ -39,9 +39,6 @@ listModel = []
 dataFileName = ''
 #Initialise global list that holds results of curve fitting
 optimisedParamaterList = []
-oldParameter1 =0.0
-oldParameter2 =0.0
-oldParameter3 =0.0
 
 ########################################
 ##              CONSTANTS             ##
@@ -79,53 +76,13 @@ logger = logging.getLogger(__name__)
 
 
 class Window(QDialog):
-    def __init__(self, parent=None):
-        """__init__ Creates the user interface. """
-        super(Window, self).__init__(parent)
-      
-        self.setWindowTitle(WINDOW_TITLE)
-        self.setWindowIcon(QIcon('TRISTAN LOGO.jpg'))
-        width, height = self.getScreenResolution()
-        self.setGeometry(width*0.05, height*0.25, width*0.9, height*0.5)
-        self.setWindowFlags(QtCore.Qt.WindowMinMaxButtonsHint |  QtCore.Qt.WindowCloseButtonHint)
-        
-        #Set up the graph to plot concentration data on
-        # an instance of a figure
-        self.figure = plt.figure(figsize=(5, 4), dpi=100)
-        # this is the Canvas Widget that displays the `figure`
-        # it takes the `figure` instance as a parameter to __init__
-        self.canvas = FigureCanvas(self.figure)
-
-        # this is the Navigation widget
-        # it takes the Canvas widget and a parent
-        self.toolbar = NavigationToolbar(self.canvas, self)
-
-        # Create a button and connect it to the `plot` method
-        self.btnLoadDisplayData = QPushButton('Load and display data.')
-        self.btnLoadDisplayData.setFont(QFont("Arial", weight=QFont.Bold))
-        self.btnLoadDisplayData.setToolTip('Open file dialog box')
-        self.btnLoadDisplayData.clicked.connect(self.loadDataFile)
-        self.lblDataFileName = QLabel('')
-        self.lblDataFileName.setFont(QFont("Arial", weight=QFont.Bold))
-        #Create dropdown lists for selection of ROI & AIF
-        self.lblROI = QLabel("Region of Interest:")
-        self.lblROI.setFont(QFont("Arial", weight=QFont.Bold))
-        self.lblROI.setAlignment(QtCore.Qt.AlignRight)
-        self.cmbROI = QComboBox()
-        self.cmbROI.setToolTip('Select Region of Interest')
-        self.cmbROI.setFont(QFont("Arial", weight=QFont.Bold))
-        self.lblROI.hide()
-        self.cmbROI.hide()
-        
-        #Set the layouts
+    def setupLayouts(self):
         #Start with an overall horizontal layout
-        #and place two vertical layouts within it
+        #and place 3 vertical layouts within it
         horizontalLayout = QHBoxLayout()
         verticalLayoutLeft = QVBoxLayout()
-        verticalLayoutLeft.sizeHint()
         verticalLayoutMiddle = QVBoxLayout()
         verticalLayoutRight = QVBoxLayout()
-        verticalLayoutRight.sizeHint()
         
         self.setLayout(horizontalLayout)
         self.setLayout(verticalLayoutLeft)
@@ -134,34 +91,33 @@ class Window(QDialog):
         horizontalLayout.addLayout(verticalLayoutLeft,2)
         horizontalLayout.addLayout(verticalLayoutMiddle,3)
         horizontalLayout.addLayout(verticalLayoutRight,2)
+        return verticalLayoutLeft, verticalLayoutMiddle, verticalLayoutRight
 
-        #Middle layout box holds the graph and associated toolbar
-        verticalLayoutMiddle.addWidget(self.toolbar)
-        verticalLayoutMiddle.addWidget(self.canvas)
-
-        #Left hand-side vertical layout holds the Load data file button
-        verticalSpacer = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
-        verticalLayoutLeft.addItem(verticalSpacer)
-        verticalLayoutLeft.addWidget(self.btnLoadDisplayData)
-        verticalLayoutLeft.addWidget(self.lblDataFileName)
-        verticalLayoutLeft.addItem(verticalSpacer)
-        #Below Load Data button add ROI list
-        ROI_HorizontalLayout = QHBoxLayout()
-        ROI_HorizontalLayout.addWidget(self.lblROI)
-        ROI_HorizontalLayout.addWidget(self.cmbROI)
-        verticalLayoutLeft.addLayout(ROI_HorizontalLayout)
+    def setupPlotArea(self, layout):
+        self.figure = plt.figure(figsize=(5, 4), dpi=100)
+        # this is the Canvas Widget that displays the `figure`
+        # it takes the `figure` instance as a parameter to __init__
+        self.canvas = FigureCanvas(self.figure)
         
-        #Create a group box and place it in the left-handside vertical layout
+        # this is the Navigation widget
+        # it takes the Canvas widget and a parent
+        self.toolbar = NavigationToolbar(self.canvas, self)
+        #Middle layout box holds the graph and associated toolbar
+        layout.addWidget(self.toolbar)
+        layout.addWidget(self.canvas)
+
+    def setupModelGroupBox(self, layout, verticalSpacer):
         self.groupBoxModel = QGroupBox('Model Fitting')
+        #Set alignment of group box label
         self.groupBoxModel.setAlignment(QtCore.Qt.AlignHCenter)
         self.groupBoxModel.setFont(QFont("Arial", weight=QFont.Bold))
         self.groupBoxModel.hide()
-        verticalLayoutLeft.addWidget(self.groupBoxModel)
-        verticalLayoutLeft.addItem(verticalSpacer)
-
-        #Create vertical layout to hold model selection dropdown list & model input parameter spinboxes
-        modelVerticalLayout = QVBoxLayout()
-        modelVerticalLayout.setAlignment(QtCore.Qt.AlignTop) 
+        layout.addWidget(self.groupBoxModel)
+        layout.addItem(verticalSpacer)
+        
+        #Create horizontal layouts, then 
+        #add them to a vertical layout, then
+        #the vertical layout to the group box
         modelHorizontalLayout2 = QHBoxLayout()
         modelHorizontalLayout3 = QHBoxLayout()
         modelHorizontalLayout4 = QHBoxLayout()
@@ -171,6 +127,8 @@ class Window(QDialog):
         modelHorizontalLayout7 = QHBoxLayout()
         modelHorizontalLayout8 = QHBoxLayout()
         modelHorizontalLayout9 = QHBoxLayout()
+        modelVerticalLayout = QVBoxLayout()
+        modelVerticalLayout.setAlignment(QtCore.Qt.AlignTop) 
         modelVerticalLayout.addLayout(modelHorizontalLayout2)
         modelVerticalLayout.addLayout(modelHorizontalLayout3)
         modelVerticalLayout.addLayout(modelHorizontalLayout4)
@@ -181,7 +139,7 @@ class Window(QDialog):
         modelVerticalLayout.addLayout(modelHorizontalLayout8)
         modelVerticalLayout.addLayout(modelHorizontalLayout9)
         self.groupBoxModel.setLayout(modelVerticalLayout)
-
+        
         #Create dropdown list to hold names of models
         self.modelLabel = QLabel("Model:")
         self.modelLabel.setAlignment(QtCore.Qt.AlignRight)
@@ -193,7 +151,7 @@ class Window(QDialog):
         self.cmbModels.currentIndexChanged.connect(self.configureGUIForEachModel)
         self.cmbModels.currentIndexChanged.connect(lambda: self.clearOptimisedParamaterList('cmbModels')) 
         self.cmbModels.activated.connect(lambda: self.plot('cmbModels'))
-
+        
         #Create dropdown lists for selection of AIF & VIF
         self.lblAIF = QLabel("Arterial Input Function:")
         self.lblAIF.setAlignment(QtCore.Qt.AlignRight)
@@ -224,7 +182,7 @@ class Window(QDialog):
         modelHorizontalLayout3.addWidget(self.cmbAIF)
         modelHorizontalLayout4.addWidget(self.lblVIF)
         modelHorizontalLayout4.addWidget(self.cmbVIF)
-
+        
         self.cboxDelay = QCheckBox('Delay', self)
         self.cboxConstaint = QCheckBox('Constraint', self)
         self.cboxConstaint.clicked.connect(self.setParameterSpinBoxesToConstraintValue)
@@ -266,10 +224,7 @@ class Window(QDialog):
         self.spinBoxParameter1.valueChanged.connect(lambda: self.plot('spinBoxParameter1')) 
         self.spinBoxParameter2.valueChanged.connect(lambda: self.plot('spinBoxParameter2')) 
         self.spinBoxParameter3.valueChanged.connect(lambda: self.plot('spinBoxParameter3'))
-        #self.spinBoxParameter1.valueChanged.connect(lambda: self.clearOptimisedParamaterList('spinBoxParameter1')) 
-        #self.spinBoxParameter2.valueChanged.connect(lambda: self.clearOptimisedParamaterList('spinBoxParameter2'))
-        #self.spinBoxParameter3.valueChanged.connect(lambda: self.clearOptimisedParamaterList('spinBoxParameter3'))
-
+        
         #Place spin boxes and their labels in horizontal layouts
         modelHorizontalLayout5.addWidget(self.labelParameter1)
         modelHorizontalLayout5.addWidget(self.spinBoxParameter1)
@@ -283,33 +238,73 @@ class Window(QDialog):
         self.btnFitModel.hide()
         modelHorizontalLayout8.addWidget(self.btnFitModel)
         self.btnFitModel.clicked.connect(self.runCurveFit)
-
+        
         self.btnSaveCSV = QPushButton('Save plots to CSV file')
         self.btnSaveCSV.setToolTip('Save the data plotted on the graph to a CSV file')
         self.btnSaveCSV.hide()
         modelHorizontalLayout9.addWidget(self.btnSaveCSV)
         self.btnSaveCSV.clicked.connect(self.saveCSVFile)
 
+    def setupLeftVerticalLayout(self, layout):
+        #Create Load Data File Button
+        self.btnLoadDisplayData = QPushButton('Load and display data.')
+        self.btnLoadDisplayData.setFont(QFont("Arial", weight=QFont.Bold))
+        self.btnLoadDisplayData.setToolTip('Open file dialog box to select the data file')
+        self.btnLoadDisplayData.setShortcut("Ctrl+L")
+        self.btnLoadDisplayData.setAutoDefault(False)
+        self.btnLoadDisplayData.resize(self.btnLoadDisplayData.minimumSizeHint())
+        self.btnLoadDisplayData.clicked.connect(self.loadDataFile)
+
+        #Create label to display the name of the loaded data file
+        self.lblDataFileName = QLabel('')
+        self.lblDataFileName.setFont(QFont("Arial", weight=QFont.Bold))
+
+        #Add Load data file button to the top of the vertical layout
+        verticalSpacer = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
+        layout.addItem(verticalSpacer)
+        layout.addWidget(self.btnLoadDisplayData)
+        layout.addWidget(self.lblDataFileName)
+        layout.addItem(verticalSpacer)
+
+        #Create dropdown list for selection of ROI
+        self.lblROI = QLabel("Region of Interest:")
+        self.lblROI.setFont(QFont("Arial", weight=QFont.Bold))
+        self.lblROI.setAlignment(QtCore.Qt.AlignRight)
+        self.cmbROI = QComboBox()
+        self.cmbROI.setToolTip('Select Region of Interest')
+        self.cmbROI.setFont(QFont("Arial", weight=QFont.Bold))
+        self.lblROI.hide()
+        self.cmbROI.hide()
+        
+        #Below Load Data button add ROI list
+        ROI_HorizontalLayout = QHBoxLayout()
+        ROI_HorizontalLayout.addWidget(self.lblROI)
+        ROI_HorizontalLayout.addWidget(self.cmbROI)
+        layout.addLayout(ROI_HorizontalLayout)
+        
+        #Create a group box, add controls 
+        #and place it in the left-handside vertical layout
+        self.setupModelGroupBox(layout, verticalSpacer)
+        
         self.btnSaveReport = QPushButton('Save Report in PDF Format')
         self.btnSaveReport.setFont(QFont("Arial", weight=QFont.Bold))
         self.btnSaveReport.hide()
         self.btnSaveReport.setToolTip('Insert an image of the graph opposite and associated data in a PDF file')
-        verticalLayoutLeft.addWidget(self.btnSaveReport, QtCore.Qt.AlignTop)
+        layout.addWidget(self.btnSaveReport, QtCore.Qt.AlignTop)
         self.btnSaveReport.clicked.connect(self.savePDFReport)
-
+        
         self.btnExit = QPushButton('Exit')
         self.btnExit.setFont(QFont("Arial", weight=QFont.Bold))
-        verticalLayoutLeft.addWidget(self.btnExit)
+        layout.addWidget(self.btnExit)
         self.btnExit.clicked.connect(self.exitApp)
+        layout.addStretch()
 
-        verticalLayoutLeft.addStretch()  #Aligns Save Report & Exit buttons to the top of verticalLayoutLeft
-        
-        #Create a group box and place it in the right-handside vertical layout
+    def setupRightVerticalLayout(self, layout):
         self.groupBoxResults = QGroupBox('Curve Fitting Results')
         self.groupBoxResults.setAlignment(QtCore.Qt.AlignHCenter)
         self.groupBoxResults.setFont(QFont("Arial", weight=QFont.Bold))
-        verticalLayoutRight.addWidget(self.groupBoxResults)
-        verticalLayoutRight.addItem(verticalSpacer)
+        layout.addWidget(self.groupBoxResults)
+        layout.addStretch()
         gridLayoutResults = QGridLayout()
         gridLayoutResults.setAlignment(QtCore.Qt.AlignTop) 
         self.groupBoxResults.setLayout(gridLayoutResults)
@@ -320,12 +315,15 @@ class Window(QDialog):
         self.lblParam1Name = QLabel("")
         self.lblParam1Value = QLabel("")
         self.lblParam1ConfInt = QLabel("")
+        self.lblParam1ConfInt.setAlignment(QtCore.Qt.AlignCenter)
         self.lblParam2Name = QLabel("")
         self.lblParam2Value = QLabel("")
         self.lblParam2ConfInt = QLabel("")
+        self.lblParam2ConfInt.setAlignment(QtCore.Qt.AlignCenter)
         self.lblParam3Name = QLabel("")
         self.lblParam3Value = QLabel("")
         self.lblParam3ConfInt = QLabel("")
+        self.lblParam3ConfInt.setAlignment(QtCore.Qt.AlignCenter)
         
         gridLayoutResults.addWidget(self.lblHeaderLeft, 1, 1)
         gridLayoutResults.addWidget(self.lblHeaderMiddle, 1, 3)
@@ -339,6 +337,29 @@ class Window(QDialog):
         gridLayoutResults.addWidget(self.lblParam3Name, 4, 1, QtCore.Qt.AlignTop)
         gridLayoutResults.addWidget(self.lblParam3Value, 4, 3, QtCore.Qt.AlignTop)
         gridLayoutResults.addWidget(self.lblParam3ConfInt, 4, 5, QtCore.Qt.AlignTop)
+
+    def __init__(self, parent=None):
+        """__init__ Creates the user interface. """
+        super(Window, self).__init__(parent)
+      
+        self.setWindowTitle(WINDOW_TITLE)
+        self.setWindowIcon(QIcon('TRISTAN LOGO.jpg'))
+        width, height = self.getScreenResolution()
+        self.setGeometry(width*0.05, height*0.25, width*0.9, height*0.5)
+        self.setWindowFlags(QtCore.Qt.WindowMinMaxButtonsHint |  QtCore.Qt.WindowCloseButtonHint)
+
+        #Setup the layouts, the containers for controls
+        verticalLayoutLeft, verticalLayoutMiddle, verticalLayoutRight = self.setupLayouts()
+        
+        #Add controls to the left-hand side layout
+        self.setupLeftVerticalLayout(verticalLayoutLeft)
+
+        #Set up the graph to plot concentration data on
+        # an instance of a figure
+        self.setupPlotArea(verticalLayoutMiddle)
+        
+        #Create a group box and place it in the right-handside vertical layout
+        self.setupRightVerticalLayout(verticalLayoutRight)
 
         logger.info("GUI created successfully.")
 
@@ -530,7 +551,6 @@ class Window(QDialog):
                 optimisedParamaterList[counter].append(round((numParams + sigma*tval), 5))
                 i+=1
             
-            
             logger.info('In calcParameterConfidenceIntervals, optimisedParamaterList = {}'.format(optimisedParamaterList))
             self.displayOptimumParamaterValuesOnGUI()
             
@@ -711,7 +731,6 @@ class Window(QDialog):
         except Exception as e:
             print('Error in function returnListOrgans: ' + str(e))
             logger.error('Error in function returnListOrgans: ' + str(e))
-        
     
     def initialiseParameterSpinBoxes(self):
         #Reset model parameter spinboxes with typical initial values for each model
@@ -747,7 +766,6 @@ class Window(QDialog):
         global oldParameter2 
         global oldParameter3
         try:
-            
             upperBound = TracerKineticModels.PARAMETER_UPPER_BOUND
      
             if self.cboxConstaint.isChecked():
@@ -893,7 +911,6 @@ class Window(QDialog):
         except Exception as e:
             print('Error in function getScreenResolution: ' + str(e) )
             logger.error('Error in function getScreenResolution: ' + str(e) )
-    
         
     def determineTextSize(self):
         """Determines the optimum size for labels on the matplotlib graph from
@@ -969,7 +986,6 @@ class Window(QDialog):
                     listModel = TracerKineticModels.modelSelector(modelName, arrayTimes, arrayAIFConcs, parameter1, parameter2, parameter3)
                     arrayModel =  np.array(listModel, dtype='float')
                     ax.plot(arrayTimes, arrayModel, 'g--', label= modelName + ' model')
-
             
             if VIF != 'Please Select':
                 arrayVIFConcs = np.array(concentrationData[VIF], dtype='float')
