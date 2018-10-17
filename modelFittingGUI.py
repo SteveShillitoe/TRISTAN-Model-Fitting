@@ -5,7 +5,7 @@ import numpy as np
 import pyautogui
 import logging
 
-from PyQt5.QtGui import QCursor, QIcon, QFont
+from PyQt5.QtGui import QCursor, QIcon, QFont, QPixmap
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtWidgets import QApplication, QDialog,  QApplication, QPushButton, \
      QVBoxLayout, QHBoxLayout, QGroupBox, QComboBox, QLabel, QDoubleSpinBox, \
@@ -78,6 +78,35 @@ logger = logging.getLogger(__name__)
 
 
 class Window(QDialog):
+    def __init__(self, parent=None):
+        """__init__ Creates the user interface. """
+        super(Window, self).__init__(parent)
+      
+        self.setWindowTitle(WINDOW_TITLE)
+        self.setWindowIcon(QIcon('TRISTAN LOGO.jpg'))
+        width, height = self.getScreenResolution()
+        self.setGeometry(width*0.05, height*0.25, width*0.9, height*0.5)
+        self.setWindowFlags(QtCore.Qt.WindowMinMaxButtonsHint |  QtCore.Qt.WindowCloseButtonHint)
+        
+        self.applyStyleSheet()
+       
+        #Setup the layouts, the containers for controls
+        verticalLayoutLeft, verticalLayoutMiddle, verticalLayoutRight = self.setupLayouts()
+        
+        #Add controls to the left-hand side vertical layout
+        self.setupLeftVerticalLayout(verticalLayoutLeft)
+
+        #Set up the graph to plot concentration data on
+        # the middle vertical layout
+        self.setupPlotArea(verticalLayoutMiddle)
+        
+        #Create a group box and place it in the right-handside vertical layout
+        #Also add a label to hold the TRISTAN Logo
+        self.setupRightVerticalLayout(verticalLayoutRight)
+
+        logger.info("GUI created successfully.")
+
+
     def setupLayouts(self):
         #Start with an overall horizontal layout
         #and place 3 vertical layouts within it
@@ -307,6 +336,9 @@ class Window(QDialog):
         self.groupBoxResults.setFont(QFont("Arial", weight=QFont.Bold))
         layout.addWidget(self.groupBoxResults)
         layout.addStretch()
+        #Horizontal layout box to hold TRISTAN LOGO
+        horizontalLogoLayout = QHBoxLayout()
+        layout.addLayout(horizontalLogoLayout)
         gridLayoutResults = QGridLayout()
         gridLayoutResults.setAlignment(QtCore.Qt.AlignTop) 
         self.groupBoxResults.setLayout(gridLayoutResults)
@@ -340,6 +372,12 @@ class Window(QDialog):
         gridLayoutResults.addWidget(self.lblParam3Value, 4, 3, QtCore.Qt.AlignTop)
         gridLayoutResults.addWidget(self.lblParam3ConfInt, 4, 5, QtCore.Qt.AlignTop)
 
+        #Add TRISTAN Logo to bottom of RHS vertical layout
+        labLogo = QLabel(self)
+        horizontalLogoLayout.addWidget(labLogo)
+        pixmap = QPixmap('logo-tristan.png')
+        labLogo.setPixmap(pixmap)
+
     def applyStyleSheet(self):
         return self.setStyleSheet("""
             QDialog{background-color: rgb(221, 255, 153)} 
@@ -355,31 +393,7 @@ class Window(QDialog):
             QLabel{ font: bold "Arial" }
             """)
 
-    def __init__(self, parent=None):
-        """__init__ Creates the user interface. """
-        super(Window, self).__init__(parent)
-      
-        self.setWindowTitle(WINDOW_TITLE)
-        self.setWindowIcon(QIcon('TRISTAN LOGO.jpg'))
-        width, height = self.getScreenResolution()
-        self.setGeometry(width*0.05, height*0.25, width*0.9, height*0.5)
-        self.setWindowFlags(QtCore.Qt.WindowMinMaxButtonsHint |  QtCore.Qt.WindowCloseButtonHint)
-        self.applyStyleSheet()
-       
-        #Setup the layouts, the containers for controls
-        verticalLayoutLeft, verticalLayoutMiddle, verticalLayoutRight = self.setupLayouts()
-        
-        #Add controls to the left-hand side layout
-        self.setupLeftVerticalLayout(verticalLayoutLeft)
-
-        #Set up the graph to plot concentration data on
-        # an instance of a figure
-        self.setupPlotArea(verticalLayoutMiddle)
-        
-        #Create a group box and place it in the right-handside vertical layout
-        self.setupRightVerticalLayout(verticalLayoutRight)
-
-        logger.info("GUI created successfully.")
+    
 
     #def returnErrorString(self):
     #    return 'Error: {}. {}, line: {}'.format(sys.exc_info()[0],
