@@ -340,6 +340,21 @@ class Window(QDialog):
         gridLayoutResults.addWidget(self.lblParam3Value, 4, 3, QtCore.Qt.AlignTop)
         gridLayoutResults.addWidget(self.lblParam3ConfInt, 4, 5, QtCore.Qt.AlignTop)
 
+    def applyStyleSheet(self):
+        return self.setStyleSheet("""
+            QDialog{background-color: rgb(221, 255, 153)} 
+            QPushButton {background-color: rgb(48, 153, 0)} 
+            QPushButton:pressed {background-color: rgb(24, 77, 0)}
+            QComboBox {
+                background: rgb(0, 204, 0);
+                border: 1px solid gray;
+                border-radius: 3px;
+                padding: 1px 18px 1px 3px;
+                min-width: 6em;}
+            QGroupBox{background-color: rgb(200, 255, 53)}
+            QLabel{ font: bold "Arial" }
+            """)
+
     def __init__(self, parent=None):
         """__init__ Creates the user interface. """
         super(Window, self).__init__(parent)
@@ -349,7 +364,8 @@ class Window(QDialog):
         width, height = self.getScreenResolution()
         self.setGeometry(width*0.05, height*0.25, width*0.9, height*0.5)
         self.setWindowFlags(QtCore.Qt.WindowMinMaxButtonsHint |  QtCore.Qt.WindowCloseButtonHint)
-
+        self.applyStyleSheet()
+       
         #Setup the layouts, the containers for controls
         verticalLayoutLeft, verticalLayoutMiddle, verticalLayoutRight = self.setupLayouts()
         
@@ -943,6 +959,7 @@ class Window(QDialog):
     def plot(self, callingFunction):
         try:
             global _listModel
+            #with plt.style.context('ggplot'):
             self.figure.clear()
             
             # create an axis
