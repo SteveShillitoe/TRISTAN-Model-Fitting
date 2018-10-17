@@ -18,7 +18,9 @@ import matplotlib.pyplot as plt
 from scipy.stats.distributions import  t
 
 #To remove unwanted default buttons in the Navigation Toolbar
-#create a subclass of NavigationToolbar that only defines the desired buttons
+#create a subclass of NavigationToolbar 
+#(from from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar)
+# that only defines the desired buttons
 class NavigationToolbar(NavigationToolbar):
     # only display the buttons we need
     toolitems = [t for t in NavigationToolbar.toolitems if
@@ -33,12 +35,12 @@ from PDFWriter import PDF
 #Initialise global dictionary to hold concentration data
 _concentrationData={}
 #Initialise global list to hold concentrations calculated using the selected model
-listModel = []
+_listModel = []
 #Initialise global string variable to hold the name of the data file.
 #Needs to be global for printing in the PDF report
-dataFileName = ''
+_dataFileName = ''
 #Initialise global list that holds results of curve fitting
-optimisedParamaterList = []
+_optimisedParamaterList = []
 
 ########################################
 ##              CONSTANTS             ##
@@ -372,18 +374,18 @@ class Window(QDialog):
         try:
             logger.info('Function displayOptimumParamaterValuesOnGUI called.')
             self.lblParam1Name.setText(self.labelParameter1.text())
-            self.lblParam1Value.setText(str(round(optimisedParamaterList[0][0], 5)))
-            confidenceStr = '[{}     {}]'.format(optimisedParamaterList[0][1], optimisedParamaterList[0][2])
+            self.lblParam1Value.setText(str(round(_optimisedParamaterList[0][0], 5)))
+            confidenceStr = '[{}     {}]'.format(_optimisedParamaterList[0][1], _optimisedParamaterList[0][2])
             self.lblParam1ConfInt.setText(confidenceStr) 
             self.lblParam2Name.setText(self.labelParameter2.text())
-            self.lblParam2Value.setText(str(round(optimisedParamaterList[1][0], 5)))
-            confidenceStr = '[{}     {}]'.format(optimisedParamaterList[1][1], optimisedParamaterList[1][2])
+            self.lblParam2Value.setText(str(round(_optimisedParamaterList[1][0], 5)))
+            confidenceStr = '[{}     {}]'.format(_optimisedParamaterList[1][1], _optimisedParamaterList[1][2])
             self.lblParam2ConfInt.setText(confidenceStr)
 
-            if len(optimisedParamaterList) == 3:
+            if len(_optimisedParamaterList) == 3:
                 self.lblParam3Name.setText(self.labelParameter3.text())
-                self.lblParam3Value.setText(str(round(optimisedParamaterList[2][0], 5)))
-                confidenceStr = '[{}     {}]'.format(optimisedParamaterList[2][1], optimisedParamaterList[2][2])
+                self.lblParam3Value.setText(str(round(_optimisedParamaterList[2][0], 5)))
+                confidenceStr = '[{}     {}]'.format(_optimisedParamaterList[2][1], _optimisedParamaterList[2][2])
                 self.lblParam3ConfInt.setText(confidenceStr)
         except Exception as e:
             print('Error in function displayOptimumParamaterValuesOnGUI: ' + str(e))
@@ -422,7 +424,7 @@ class Window(QDialog):
                 #write header row
                 writeCSV.writerow(['Time', ROI, AIF, modelName + ' model'])
                 for i, time in enumerate(_concentrationData['Time']):
-                    writeCSV.writerow([time, _concentrationData[ROI][i], _concentrationData[AIF][i], listModel[i]])
+                    writeCSV.writerow([time, _concentrationData[ROI][i], _concentrationData[AIF][i], _listModel[i]])
                 csvfile.close()
 
         except csv.Error:
@@ -441,7 +443,7 @@ class Window(QDialog):
     def clearOptimisedParamaterList(self, callingControl):
         try:
             logger.info('clearOptimisedParamaterList called from ' + callingControl)
-            optimisedParamaterList.clear()
+            _optimisedParamaterList.clear()
             self.clearOptimumParamaterValuesOnGUI()
         except Exception as e:
             print('Error in function clearOptimisedParamaterList: ' + str(e)) 
@@ -538,20 +540,20 @@ class Window(QDialog):
             tval = t.ppf(1.0-alpha/2., degsOfFreedom)
          
             #Remove results of previous curve fitting
-            optimisedParamaterList.clear()
-            #optimisedParamaterList is a list of lists. 
+            _optimisedParamaterList.clear()
+            #_optimisedParamaterList is a list of lists. 
             #Add an empty list for each parameter to hold its value and confidence limits
             for i in range(numParams):
-                optimisedParamaterList.append([])
+                _optimisedParamaterList.append([])
                
             for counter, numParams, var in zip(range(numDataPoints), optimumParams, np.diag(paramCovarianceMatrix)):
                 sigma = var**0.5
-                optimisedParamaterList[counter].append(numParams)
-                optimisedParamaterList[counter].append(round((numParams - sigma*tval), 5))
-                optimisedParamaterList[counter].append(round((numParams + sigma*tval), 5))
+                _optimisedParamaterList[counter].append(numParams)
+                _optimisedParamaterList[counter].append(round((numParams - sigma*tval), 5))
+                _optimisedParamaterList[counter].append(round((numParams + sigma*tval), 5))
                 i+=1
             
-            logger.info('In calcParameterConfidenceIntervals, optimisedParamaterList = {}'.format(optimisedParamaterList))
+            logger.info('In calcParameterConfidenceIntervals, _optimisedParamaterList = {}'.format(_optimisedParamaterList))
             self.displayOptimumParamaterValuesOnGUI()
             
         except ValueError as ve:
@@ -586,18 +588,18 @@ class Window(QDialog):
                 parameter2 = self.spinBoxParameter2.value()
                 parameter3 = self.spinBoxParameter3.value()
                 
-##                def createAndSavePDFReport(self, fileName, dataFileName, modelName, imageName, 
+##                def createAndSavePDFReport(self, fileName, _dataFileName, modelName, imageName, 
 #                               parameter1Text, parameter1Value,
 #                               parameter2Text, parameter2Value,
 #                               parameter3Text = None, parameter3Value = None, covarianceArray =[])
                 
                 QApplication.setOverrideCursor(QCursor(QtCore.Qt.WaitCursor))
                 if modelName ==  'One Compartment':
-                    pdf.createAndSavePDFReport(reportFileName, dataFileName, modelName, IMAGE_NAME, LABEL_PARAMETER_1A, parameter1, LABEL_PARAMETER_2B, parameter2, None, None, optimisedParamaterList)
+                    pdf.createAndSavePDFReport(reportFileName, _dataFileName, modelName, IMAGE_NAME, LABEL_PARAMETER_1A, parameter1, LABEL_PARAMETER_2B, parameter2, None, None, _optimisedParamaterList)
                 elif modelName ==  'Extended Tofts':
-                    pdf.createAndSavePDFReport(reportFileName, dataFileName, modelName, IMAGE_NAME, LABEL_PARAMETER_1A, parameter1, LABEL_PARAMETER_2A, parameter2, LABEL_PARAMETER_3A, parameter3, optimisedParamaterList)
+                    pdf.createAndSavePDFReport(reportFileName, _dataFileName, modelName, IMAGE_NAME, LABEL_PARAMETER_1A, parameter1, LABEL_PARAMETER_2A, parameter2, LABEL_PARAMETER_3A, parameter3, _optimisedParamaterList)
                 elif modelName == 'High-Flow Gadoxetate':
-                    pdf.createAndSavePDFReport(reportFileName, dataFileName, modelName, IMAGE_NAME, LABEL_PARAMETER_1B, parameter1, LABEL_PARAMETER_2A, parameter2, LABEL_PARAMETER_3B, parameter3, optimisedParamaterList)
+                    pdf.createAndSavePDFReport(reportFileName, _dataFileName, modelName, IMAGE_NAME, LABEL_PARAMETER_1B, parameter1, LABEL_PARAMETER_2A, parameter2, LABEL_PARAMETER_3B, parameter3, _optimisedParamaterList)
                 QApplication.restoreOverrideCursor()
 
                 #Delete image file
@@ -609,7 +611,7 @@ class Window(QDialog):
        
     def loadDataFile(self):
         global _concentrationData
-        global dataFileName
+        global _dataFileName
 
         #clear the global dictionary of previous data
         _concentrationData.clear()
@@ -620,9 +622,9 @@ class Window(QDialog):
         #get the data file in csv format
         #filter parameter set so that the user can only open a csv file
         try:
-            dataFileName, _ = QFileDialog.getOpenFileName(parent=self, caption="Select csv file", filter="*.csv")
-            if os.path.exists(dataFileName):
-                with open(dataFileName, newline='') as csvfile:
+            _dataFileName, _ = QFileDialog.getOpenFileName(parent=self, caption="Select csv file", filter="*.csv")
+            if os.path.exists(_dataFileName):
+                with open(_dataFileName, newline='') as csvfile:
                     line = csvfile.readline()
                     if line.count(',') < (MIN_NUM_COLUMNS_CSV_FILE - 1):
                         QMessageBox().warning(self, "CSV data file", "The CSV file must contain at least 3 columns of data separated by commas.  The first column must contain time data.", QMessageBox.Ok)
@@ -649,11 +651,11 @@ class Window(QDialog):
                             QMessageBox().warning(self, "CSV data file", "The first column must contain time data.", QMessageBox.Ok)
                             raise RuntimeError('The first column in the CSV file must contain time data.')    
 
-                    logger.info('CSV data file {} loaded'.format(dataFileName))
+                    logger.info('CSV data file {} loaded'.format(_dataFileName))
                     
                     #Extract data filename from the full data file path
-                    dataFileName = os.path.basename(dataFileName)
-                    self.lblDataFileName.setText('File ' + dataFileName + ' loaded')
+                    _dataFileName = os.path.basename(_dataFileName)
+                    self.lblDataFileName.setText('File ' + _dataFileName + ' loaded')
 
                     #Column headers form the keys in the dictionary called _concentrationData
                     for header in headers:
@@ -678,11 +680,11 @@ class Window(QDialog):
                 self.plot('loadDataFile')
 
         except csv.Error:
-            print('CSV Reader error in function loadDataFile: file %s, line %d: %s' % (dataFileName, readCSV.line_num, csv.Error))
-            logger.error('CSV Reader error in function loadDataFile: file %s, line %d: %s' % (dataFileName, readCSV.line_num, csv.Error))
+            print('CSV Reader error in function loadDataFile: file %s, line %d: %s' % (_dataFileName, readCSV.line_num, csv.Error))
+            logger.error('CSV Reader error in function loadDataFile: file %s, line %d: %s' % (_dataFileName, readCSV.line_num, csv.Error))
         except IOError:
-            print ('IOError in function loadDataFile: cannot open file' + dataFileName + ' or read its data')
-            logger.error ('IOError in function loadDataFile: cannot open file' + dataFileName + ' or read its data')
+            print ('IOError in function loadDataFile: cannot open file' + _dataFileName + ' or read its data')
+            logger.error ('IOError in function loadDataFile: cannot open file' + _dataFileName + ' or read its data')
         except RuntimeError as re:
             print('Runtime error in function loadDataFile: ' + str(re))
             logger.error('Runtime error in function loadDataFile: ' + str(re))
@@ -940,7 +942,7 @@ class Window(QDialog):
     
     def plot(self, callingFunction):
         try:
-            global listModel
+            global _listModel
             self.figure.clear()
             
             # create an axis
@@ -961,8 +963,8 @@ class Window(QDialog):
                 arrayROIConcs = np.array(_concentrationData[ROI], dtype='float')
                 ax.plot(arrayTimes, arrayROIConcs, 'b.-', label= ROI)
                 if modelName == 'Descriptive':
-                    listModel = TracerKineticModels.ROI_OnlyModel()
-                    arrayModel =  np.array(listModel, dtype='float')
+                    _listModel = TracerKineticModels.ROI_OnlyModel()
+                    arrayModel =  np.array(_listModel, dtype='float')
                     ax.plot(arrayTimes, arrayModel, 'g--', label= modelName + ' model')
 
             AIF = str(self.cmbAIF.currentText())
@@ -984,8 +986,8 @@ class Window(QDialog):
 
                 if VIF == 'Please Select':
                     logger.info('TracerKineticModels.modelSelector called when model ={} and parameters are {}, {}, {}'. format(modelName, parameter1, parameter2, parameter3))
-                    listModel = TracerKineticModels.modelSelector(modelName, arrayTimes, arrayAIFConcs, parameter1, parameter2, parameter3)
-                    arrayModel =  np.array(listModel, dtype='float')
+                    _listModel = TracerKineticModels.modelSelector(modelName, arrayTimes, arrayAIFConcs, parameter1, parameter2, parameter3)
+                    arrayModel =  np.array(_listModel, dtype='float')
                     ax.plot(arrayTimes, arrayModel, 'g--', label= modelName + ' model')
             
             if VIF != 'Please Select':
@@ -994,8 +996,8 @@ class Window(QDialog):
                 parameter1 = self.spinBoxParameter1.value()
                 parameter2 = self.spinBoxParameter2.value()
                 parameter3 = self.spinBoxParameter3.value()
-                listModel = TracerKineticModels.AIF_VIF_Model()
-                arrayModel =  np.array(listModel, dtype='float')
+                _listModel = TracerKineticModels.AIF_VIF_Model()
+                arrayModel =  np.array(_listModel, dtype='float')
                 ax.plot(arrayTimes, arrayModel, 'g--', label= modelName + ' model')
             
             if ROI != 'Please Select':  
