@@ -67,8 +67,8 @@ LOG_FILE_NAME = "ModelFitting.log"
 #######################################
 
 #Create and configure the logger
+#First delete the previous log file if there is one
 if os.path.exists(LOG_FILE_NAME):
-   #delete existing copy of PDF called reportFileName
    os.remove(LOG_FILE_NAME) 
 LOG_FORMAT = "%(levelname)s %(asctime)s - %(message)s"
 logging.basicConfig(filename=LOG_FILE_NAME, 
@@ -331,18 +331,20 @@ class Window(QDialog):
         layout.addStretch()
 
     def setupRightVerticalLayout(self, layout):
+        """Creates and adds controls to the right hand side vertical layout for the 
+        display of the results of curve fitting. """
+
+        #Create Group Box to contain labels displaying the results of curve fitting
         self.groupBoxResults = QGroupBox('Curve Fitting Results')
         self.groupBoxResults.setAlignment(QtCore.Qt.AlignHCenter)
         self.groupBoxResults.setFont(QFont("Arial", weight=QFont.Bold))
         layout.addWidget(self.groupBoxResults)
         layout.addStretch()
-        #Horizontal layout box to hold TRISTAN LOGO
-        horizontalLogoLayout = QHBoxLayout()
-        layout.addLayout(horizontalLogoLayout)
+        #Grid layout to be placed inside the group box
         gridLayoutResults = QGridLayout()
         gridLayoutResults.setAlignment(QtCore.Qt.AlignTop) 
         self.groupBoxResults.setLayout(gridLayoutResults)
-        
+
         self.lblHeaderLeft = QLabel("Parameter")
         self.lblHeaderMiddle = QLabel("Value")
         self.lblHeaderRight = QLabel("95% Confidence Interval")
@@ -372,26 +374,41 @@ class Window(QDialog):
         gridLayoutResults.addWidget(self.lblParam3Value, 4, 3, QtCore.Qt.AlignTop)
         gridLayoutResults.addWidget(self.lblParam3ConfInt, 4, 5, QtCore.Qt.AlignTop)
 
-        #Add TRISTAN Logo to bottom of RHS vertical layout
-        labLogo = QLabel(self)
-        horizontalLogoLayout.addWidget(labLogo)
-        pixmap = QPixmap('logo-tristan.png')
-        labLogo.setPixmap(pixmap)
+        #Create horizontal layout box to hold TRISTAN & University of Leeds Logos
+        horizontalLogoLayout = QHBoxLayout()
+        #Add horizontal layout to bottom of the vertical layout
+        layout.addLayout(horizontalLogoLayout)
+        #Display TRISTAN & University of Leeds Logos in labels
+        lblTRISTAN_Logo = QLabel(self)
+        lblUoL_Logo = QLabel(self)
+        pixmapTRISTAN = QPixmap('logo-tristan.png')
+        lblTRISTAN_Logo.setPixmap(pixmapTRISTAN)
+        pixmapUoL = QPixmap('uni-leeds-logo.jpg')
+        lblUoL_Logo.setPixmap(pixmapUoL)
+        #Add labels displaying logos to the horizontal layout, 
+        #Tristan on the LHS, UoL on the RHS
+        horizontalLogoLayout.addWidget(lblTRISTAN_Logo)
+        horizontalLogoLayout.addWidget(lblUoL_Logo)
 
     def applyStyleSheet(self):
-        return self.setStyleSheet("""
-            QDialog{background-color: rgb(221, 255, 153)} 
-            QPushButton {background-color: rgb(48, 153, 0)} 
-            QPushButton:pressed {background-color: rgb(24, 77, 0)}
-            QComboBox {
-                background: rgb(0, 204, 0);
-                border: 1px solid gray;
-                border-radius: 3px;
-                padding: 1px 18px 1px 3px;
-                min-width: 6em;}
-            QGroupBox{background-color: rgb(200, 255, 53)}
-            QLabel{ font: bold "Arial" }
-            """)
+        """Modifies the appearance of the GUI using CSS instructions"""
+        try:
+            self.setStyleSheet("""
+                QDialog{background-color: rgb(221, 255, 153)} 
+                QPushButton {background-color: rgb(48, 153, 0)} 
+                QPushButton:pressed {background-color: rgb(24, 77, 0)}
+                QComboBox {
+                    background: rgb(0, 204, 0);
+                    border: 1px solid gray;
+                    border-radius: 3px;
+                    padding: 1px 18px 1px 3px;
+                    min-width: 6em;}
+                QGroupBox{background-color: rgb(200, 255, 53)}
+                QLabel{ font: bold "Arial" }
+                """)
+        except Exception as e:
+            print('Error in function applyStyleSheet: ' + str(e))
+            logger.error('Error in function applyStyleSheet: ' + str(e))
 
     
 
