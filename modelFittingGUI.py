@@ -18,7 +18,7 @@ import matplotlib.pyplot as plt
 from scipy.stats.distributions import  t
 
 #To remove unwanted default buttons in the Navigation Toolbar
-#create a subclass of NavigationToolbar 
+#create a subclass of the NavigationToolbar class 
 #(from from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar)
 # that only defines the desired buttons
 class NavigationToolbar(NavigationToolbar):
@@ -28,6 +28,7 @@ class NavigationToolbar(NavigationToolbar):
 
 #Import module containing model definitions
 import TracerKineticModels
+import styleSheet
 
 #Import PDF report writer class
 from PDFWriter import PDF
@@ -76,11 +77,11 @@ logging.basicConfig(filename=LOG_FILE_NAME,
                     format=LOG_FORMAT)
 logger = logging.getLogger(__name__)
 
+class ModelFittingApp(QDialog):
 
-class Window(QDialog):
     def __init__(self, parent=None):
         """__init__ Creates the user interface. """
-        super(Window, self).__init__(parent)
+        super(ModelFittingApp, self).__init__(parent)
       
         self.setWindowTitle(WINDOW_TITLE)
         self.setWindowIcon(QIcon('TRISTAN LOGO.jpg'))
@@ -141,7 +142,6 @@ class Window(QDialog):
         self.groupBoxModel = QGroupBox('Model Fitting')
         #Set alignment of group box label
         self.groupBoxModel.setAlignment(QtCore.Qt.AlignHCenter)
-        self.groupBoxModel.setFont(QFont("Arial", weight=QFont.Bold))
         self.groupBoxModel.hide()
         layout.addWidget(self.groupBoxModel)
         layout.addItem(verticalSpacer)
@@ -279,7 +279,6 @@ class Window(QDialog):
     def setupLeftVerticalLayout(self, layout):
         #Create Load Data File Button
         self.btnLoadDisplayData = QPushButton('Load and display data.')
-        self.btnLoadDisplayData.setFont(QFont("Arial", weight=QFont.Bold))
         self.btnLoadDisplayData.setToolTip('Open file dialog box to select the data file')
         self.btnLoadDisplayData.setShortcut("Ctrl+L")
         self.btnLoadDisplayData.setAutoDefault(False)
@@ -288,8 +287,7 @@ class Window(QDialog):
 
         #Create label to display the name of the loaded data file
         self.lblDataFileName = QLabel('')
-        self.lblDataFileName.setFont(QFont("Arial", weight=QFont.Bold))
-
+        
         #Add Load data file button to the top of the vertical layout
         verticalSpacer = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
         layout.addItem(verticalSpacer)
@@ -299,11 +297,9 @@ class Window(QDialog):
 
         #Create dropdown list for selection of ROI
         self.lblROI = QLabel("Region of Interest:")
-        self.lblROI.setFont(QFont("Arial", weight=QFont.Bold))
         self.lblROI.setAlignment(QtCore.Qt.AlignRight)
         self.cmbROI = QComboBox()
         self.cmbROI.setToolTip('Select Region of Interest')
-        self.cmbROI.setFont(QFont("Arial", weight=QFont.Bold))
         self.lblROI.hide()
         self.cmbROI.hide()
         
@@ -318,14 +314,12 @@ class Window(QDialog):
         self.setupModelGroupBox(layout, verticalSpacer)
         
         self.btnSaveReport = QPushButton('Save Report in PDF Format')
-        self.btnSaveReport.setFont(QFont("Arial", weight=QFont.Bold))
         self.btnSaveReport.hide()
         self.btnSaveReport.setToolTip('Insert an image of the graph opposite and associated data in a PDF file')
         layout.addWidget(self.btnSaveReport, QtCore.Qt.AlignTop)
         self.btnSaveReport.clicked.connect(self.savePDFReport)
         
         self.btnExit = QPushButton('Exit')
-        self.btnExit.setFont(QFont("Arial", weight=QFont.Bold))
         layout.addWidget(self.btnExit)
         self.btnExit.clicked.connect(self.exitApp)
         layout.addStretch()
@@ -337,7 +331,6 @@ class Window(QDialog):
         #Create Group Box to contain labels displaying the results of curve fitting
         self.groupBoxResults = QGroupBox('Curve Fitting Results')
         self.groupBoxResults.setAlignment(QtCore.Qt.AlignHCenter)
-        self.groupBoxResults.setFont(QFont("Arial", weight=QFont.Bold))
         layout.addWidget(self.groupBoxResults)
         layout.addStretch()
         #Grid layout to be placed inside the group box
@@ -393,19 +386,8 @@ class Window(QDialog):
     def applyStyleSheet(self):
         """Modifies the appearance of the GUI using CSS instructions"""
         try:
-            self.setStyleSheet("""
-                QDialog{background-color: rgb(221, 255, 153)} 
-                QPushButton {background-color: rgb(48, 153, 0)} 
-                QPushButton:pressed {background-color: rgb(24, 77, 0)}
-                QComboBox {
-                    background: rgb(0, 204, 0);
-                    border: 1px solid gray;
-                    border-radius: 3px;
-                    padding: 1px 18px 1px 3px;
-                    min-width: 6em;}
-                QGroupBox{background-color: rgb(200, 255, 53)}
-                QLabel{ font: bold "Arial" }
-                """)
+            #self.setStyleSheet(styleSheet.TRISTAN_Green)
+            self.setStyleSheet(styleSheet.Blue_Scheme)
         except Exception as e:
             print('Error in function applyStyleSheet: ' + str(e))
             logger.error('Error in function applyStyleSheet: ' + str(e))
@@ -461,18 +443,20 @@ class Window(QDialog):
             modelName.replace(" ", "-")
             #Ask the user to specify the path & name of the CSV file. The name of the model is suggested as a default file name.
             CSVFileName, _ = QFileDialog.getSaveFileName(self, caption="Enter CSV file name", directory=DEFAULT_PLOT_DATA_FILE_PATH_NAME, filter="*.csv")
-            logger.info('Function saveCSVFile - csv file name = ' + CSVFileName)
+           
+           #Check that the user did not press Cancel on the create file dialog
+            if CSVFileName:
+                logger.info('Function saveCSVFile - csv file name = ' + CSVFileName)
             
-            ROI = str(self.cmbROI.currentText())
-            AIF = str(self.cmbAIF.currentText())
-
-            with open(CSVFileName, 'w',  newline='') as csvfile:
-                writeCSV = csv.writer(csvfile,  delimiter=',')
-                #write header row
-                writeCSV.writerow(['Time', ROI, AIF, modelName + ' model'])
-                for i, time in enumerate(_concentrationData['Time']):
-                    writeCSV.writerow([time, _concentrationData[ROI][i], _concentrationData[AIF][i], _listModel[i]])
-                csvfile.close()
+                ROI = str(self.cmbROI.currentText())
+                AIF = str(self.cmbAIF.currentText())
+                with open(CSVFileName, 'w',  newline='') as csvfile:
+                    writeCSV = csv.writer(csvfile,  delimiter=',')
+                    #write header row
+                    writeCSV.writerow(['Time', ROI, AIF, modelName + ' model'])
+                    for i, time in enumerate(_concentrationData['Time']):
+                         writeCSV.writerow([time, _concentrationData[ROI][i], _concentrationData[AIF][i], _listModel[i]])
+                    csvfile.close()
 
         except csv.Error:
             print('CSV Writer error in function saveCSVFile: file %s, line %d: %s' % (CSVFileName, WriteCSV.line_num, csv.Error))
@@ -1072,6 +1056,6 @@ class Window(QDialog):
                 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    main = Window()
+    main = ModelFittingApp()
     main.show()
     sys.exit(app.exec_())
