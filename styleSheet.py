@@ -4,7 +4,8 @@ TRISTAN_Green ="""
                 QPushButton {background-color: rgb(48, 153, 0);
                             text-align: centre;
                             font: bold "Arial"} 
-                QPushButton:pressed {background-color: rgb(24, 77, 0)}
+                QPushButton:pressed {background-color: rgb(24, 77, 0);
+                                    border-color: navy;}
                 QComboBox {
                     background: rgb(0, 204, 0);
                     border: 1px solid gray;
@@ -45,7 +46,9 @@ GREY_SCALE = """
                              border-radius: 5px;
                              text-align: centre;
                              font: bold "Arial";} 
-                QPushButton:hover {background-color: rgb(150, 150, 150);}
+                QPushButton:hover {background-color: rgb(150, 150, 150);
+                                   border-color: rgb(200, 51, 255);
+                                   }
                 QPushButton:pressed {background-color: rgb(112, 112, 112);}
                 QComboBox {
                     border: 1px solid gray;
@@ -53,6 +56,11 @@ GREY_SCALE = """
                     padding: 1px 18px 1px 3px;
                     min-width: 6em;
                     font: bold "Arial";}
+                
+                QComboBox:hover {
+                    background-color: rgb(150, 150, 150);
+                    border-color: rgb(200, 51, 255);}
+
                 QGroupBox{
                         background-color: rgb(217, 217, 217); 
                         border: 1px solid gray;

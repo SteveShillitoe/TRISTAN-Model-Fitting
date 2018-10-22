@@ -117,9 +117,6 @@ class ModelFittingApp(QDialog):
         verticalLayoutRight = QVBoxLayout()
         
         self.setLayout(horizontalLayout)
-        self.setLayout(verticalLayoutLeft)
-        self.setLayout(verticalLayoutMiddle)
-        self.setLayout(verticalLayoutRight)
         horizontalLayout.addLayout(verticalLayoutLeft,2)
         horizontalLayout.addLayout(verticalLayoutMiddle,3)
         horizontalLayout.addLayout(verticalLayoutRight,2)
@@ -216,7 +213,7 @@ class ModelFittingApp(QDialog):
         
         self.cboxDelay = QCheckBox('Delay', self)
         self.cboxConstaint = QCheckBox('Constraint', self)
-        self.cboxConstaint.clicked.connect(self.setParameterSpinBoxesToConstraintValue)
+        #self.cboxConstaint.clicked.connect(self.setParameterSpinBoxesToConstraintValue)
         self.cboxDelay.hide()
         self.cboxConstaint.hide()
         self.btnReset = QPushButton('Reset')
@@ -755,7 +752,8 @@ class ModelFittingApp(QDialog):
             organList.append('Please Select') #First item at the top of the drop-down list
             for key in _concentrationData:
                 if counter > 0:  #Ignore the first key because it will be the word 'time'
-                    organList.append(str(key))
+                    if key != 'model':
+                        organList.append(str(key))
                 counter+=1        
             return organList
         except RuntimeError as re:
