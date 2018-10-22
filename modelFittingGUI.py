@@ -51,14 +51,14 @@ REPORT_TITLE = 'Model-fitting of dynamic contrast-enhanced MRI'
 IMAGE_NAME = 'model.png'
 MIN_NUM_COLUMNS_CSV_FILE = 3
 DEFAULT_VALUE_Vp = 5.0
-DEFAULT_VALUE_Ve = 0.2
+DEFAULT_VALUE_Ve = 0.02
 DEFAULT_VALUE_Ktrans = 0.10
 DEFAULT_VALUE_Fp = 1
 DEFAULT_VALUE_Kce = 2
 DEFAULT_VALUE_Kbc = 0.3
 LABEL_PARAMETER_1A = 'Plasma Volume Fraction, \n Vp(%)'
 LABEL_PARAMETER_1B = 'Hepatocellular Uptake Rate, \n Kce (mL/100mL/min)'
-LABEL_PARAMETER_2A = 'Extracellular Vol Fraction, \n Ve (mL/mL of tissue)'
+LABEL_PARAMETER_2A = 'Extracellular Vol Fraction, \n Ve (%)'
 LABEL_PARAMETER_2B = 'Plasma Flow Rate, \n Fp (ml/min)'
 LABEL_PARAMETER_3A = 'Transfer Rate Constant, \n Ktrans (1/min)'
 LABEL_PARAMETER_3B = 'Biliary Efflux Rate, \n Kbc (mL/100mL/min)'
@@ -386,8 +386,7 @@ class ModelFittingApp(QDialog):
     def applyStyleSheet(self):
         """Modifies the appearance of the GUI using CSS instructions"""
         try:
-            #self.setStyleSheet(styleSheet.TRISTAN_Green)
-            self.setStyleSheet(styleSheet.Blue_Scheme)
+            self.setStyleSheet(styleSheet.GREY_SCALE)
         except Exception as e:
             print('Error in function applyStyleSheet: ' + str(e))
             logger.error('Error in function applyStyleSheet: ' + str(e))
@@ -822,9 +821,17 @@ class ModelFittingApp(QDialog):
                 self.spinBoxParameter3.blockSignals(False)
             else:
                 logger.info('Function setParameterSpinBoxesToConstraintValue called, parameter spinboxes reset to old values')
+                self.spinBoxParameter1.blockSignals(True)
+                self.spinBoxParameter2.blockSignals(True)
+                self.spinBoxParameter3.blockSignals(True)
+
                 self.spinBoxParameter1.setValue(oldParameter1)
                 self.spinBoxParameter2.setValue(oldParameter2)
                 self.spinBoxParameter3.setValue(oldParameter3)
+
+                self.spinBoxParameter1.blockSignals(False)
+                self.spinBoxParameter2.blockSignals(False)
+                self.spinBoxParameter3.blockSignals(False)
 
         except Exception as e:
             print('Error in function setParameterSpinBoxesToConstraintValue: ' + str(e) )

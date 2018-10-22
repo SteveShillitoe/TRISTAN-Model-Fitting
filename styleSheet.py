@@ -1,4 +1,4 @@
-"""This module contains style instructions for each control/widget using CSS notation"""
+"""This module contains style instructions using CSS notation for each control/widget """
 TRISTAN_Green ="""
                 QDialog{background-color: rgb(221, 255, 153)} 
                 QPushButton {background-color: rgb(48, 153, 0);
@@ -36,5 +36,33 @@ Blue_Scheme ="""
                         font: bold "Arial";}
                 QCheckBox{font: bold "Arial";}
                 """
-
+GREY_SCALE = """
+                QPushButton {
+                             background-color: rgb(191, 191, 191);
+                             border-width: 2px;
+                             border-style: solid;
+                             border-color: rgb(10, 10, 10);
+                             border-radius: 5px;
+                             text-align: centre;
+                             font: bold "Arial";} 
+                QPushButton:hover {background-color: rgb(150, 150, 150);}
+                QPushButton:pressed {background-color: rgb(112, 112, 112);}
+                QComboBox {
+                    border: 1px solid gray;
+                    border-radius: 3px;
+                    padding: 1px 18px 1px 3px;
+                    min-width: 6em;
+                    font: bold "Arial";}
+                QGroupBox{
+                        background-color: rgb(217, 217, 217); 
+                        border: 1px solid gray;
+                        border-radius: 5px;
+                        padding: 1em;
+                        margin-top: 1em; 
+                        font: bold "Arial";  }
+                QLabel{ font: bold "Arial"; }
+                QDoubleSpinBox{
+                        font: bold "Arial";}
+                QCheckBox{font: bold "Arial";}
+                """
 

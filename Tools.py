@@ -9,7 +9,10 @@ Created on Wed Mar 14 12:08:02 2018
 # Import libraries
 import numpy as np
 import sys
+import logging
 
+#Create logger
+logger = logging.getLogger(__name__)
 #####################################
 # Shifts array to the right by n elements 
 # and inserts n zeros at the beginning of the array
@@ -24,6 +27,7 @@ def arr_shift(A,n):
 # Performs convolution of (1/T)exp(-t/T) with a 
     
 def expconv(T, t, a):
+    logger.info("Tools.expconv called")
     try:
         if T==0:
             return(a)
@@ -45,8 +49,12 @@ def expconv(T, t, a):
         
         f[n-1] = f[n-2]
         return (f)
+    except RuntimeError as re:
+        print('Tools.expconv runtime error: ' + str(re))
+        logger.error('Tools.expconv runtime error: ' + str(re))
     except Exception as e:
         print('Tools.expconv: ' + str(e))
+        logger.error('Tools.expconv: ' + str(e) )
 
 #####################################
 # Performs deconvolution of C and ca_time where 

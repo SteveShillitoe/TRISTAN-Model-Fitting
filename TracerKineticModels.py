@@ -10,7 +10,9 @@ logger = logging.getLogger(__name__)
 ##          TracerKineticModels module    ###
 #############################################
 """This module contains functions that perform the calculation of concentration according
-to several tracer kinetic models.  The global list variable modelNames lists these models
+to several tracer kinetic models.  
+
+The global list variable modelNames lists these models
 for display in a dropdown list."""
 
 
@@ -51,6 +53,8 @@ def modelSelector(modelName, times, inputConcentration, parameter1, parameter2, 
 #        return listConcentrationsFromModel
         
 def extendedTofts(xData2DArray, Vp, Ve, Ktrans):
+    """This function contains the algorithm for calculating how concentration varies with time
+        using the Extended Tofts model"""
     try:
         logger.info('In function TracerKineticModels.extendedTofts with Vp={}, Ve={} and Ktrans={}'.format(Vp, Ve, Ktrans))
         #In order to use scipy.optimize.curve_fit, time and concentration must be
@@ -58,6 +62,8 @@ def extendedTofts(xData2DArray, Vp, Ve, Ktrans):
         #1 D arrays 
         times = xData2DArray[:,0]
         concentrations = xData2DArray[:,1]
+        #Convert Ve from % to ml/ml of tissue
+        #Ve = Ve/100
         #Calculate Intracellular transit time, Tc
         Tc = Ve/Ktrans
         listConcentrationsFromModel = []
@@ -69,6 +75,8 @@ def extendedTofts(xData2DArray, Vp, Ve, Ktrans):
         logger.error('Runtime error in function TracerKineticModels.extendedTofts:' + str(e) )
             
 def oneCompartment(xData2DArray, Vp, Fp):
+    """This function contains the algorithm for calculating how concentration varies with time
+        using the One Compartment model"""
     try:
         logger.info('In function TracerKineticModels.oneCompartment with Vp={} and Fp={}'.format(Vp, Fp))
         #In order to use scipy.optimize.curve_fit, time and concentration must be
@@ -76,6 +84,8 @@ def oneCompartment(xData2DArray, Vp, Fp):
         #1 D arrays
         times = xData2DArray[:,0]
         concentrations = xData2DArray[:,1]
+        #Convert Vp from % to ml/ml of tissue
+        #Vp = Vp/100
         #Calculate Intracellular transit time, Tc
         Tc = Vp/Fp
         listConcentrationsFromModel = []
@@ -88,6 +98,8 @@ def oneCompartment(xData2DArray, Vp, Fp):
         logger.error('Runtime error in function TracerKineticModels.oneCompartment:' + str(e) )
 
 def highFlowGadoxetate(xData2DArray, Kce, Ve, Kbc):
+    """This function contains the algorithm for calculating how concentration varies with time
+        using the High Flow Gadoxetate model"""
     try:
         logger.info('In function TracerKineticModels.highFlowGadoxetate with Kce={}, Ve={} and Kbc={}'.format(Kce, Ve, Kbc))
         
@@ -108,6 +120,8 @@ def highFlowGadoxetate(xData2DArray, Kce, Ve, Kbc):
         logger.error('Runtime error in function TracerKineticModels.highFlowGadoxetate:' + str(e) )
 
 def curveFit(modelName, times, inputConcentration, concROI, paramArray, constrain):
+    """This function calls the curve_fit function imported from scipy.optimize to fit any of
+    the models in this module to actual concentration/time data using non-linear least squares"""
     try:
         logger.info('In function TracerKineticModels.curveFit with model={}, parameters = {} and constrain={}'.format(modelName,paramArray, constrain) )
         if constrain == True:
