@@ -383,7 +383,7 @@ class ModelFittingApp(QDialog):
     def applyStyleSheet(self):
         """Modifies the appearance of the GUI using CSS instructions"""
         try:
-            self.setStyleSheet(styleSheet.GREY_SCALE)
+            self.setStyleSheet(styleSheet.TRISTAN_GREY)
         except Exception as e:
             print('Error in function applyStyleSheet: ' + str(e))
             logger.error('Error in function applyStyleSheet: ' + str(e))

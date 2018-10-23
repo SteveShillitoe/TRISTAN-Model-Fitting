@@ -15,7 +15,7 @@ TRISTAN_Green ="""
                 QGroupBox{background-color: rgb(200, 255, 53)}
                 QLabel{ font: bold "Arial" }
                 """
-Blue_Scheme ="""
+TRISTAN_BLUE ="""
                 QDialog{background-color: rgb(153, 221, 255);} 
                 QPushButton {
                              background-color: rgb(0, 153, 230);
@@ -37,7 +37,7 @@ Blue_Scheme ="""
                         font: bold "Arial";}
                 QCheckBox{font: bold "Arial";}
                 """
-GREY_SCALE = """
+TRISTAN_GREY = """
                 QPushButton {
                              background-color: rgb(191, 191, 191);
                              border-width: 2px;
@@ -46,10 +46,13 @@ GREY_SCALE = """
                              border-radius: 5px;
                              text-align: centre;
                              font: bold "Arial";} 
-                QPushButton:hover {background-color: rgb(150, 150, 150);
-                                   border-color: rgb(200, 51, 255);
-                                   }
+
+                QPushButton:hover {
+                                   background-color: rgb(175, 175, 175);
+                                   border-color: rgb(200, 51, 255);}
+
                 QPushButton:pressed {background-color: rgb(112, 112, 112);}
+
                 QComboBox {
                     border: 1px solid gray;
                     border-radius: 3px;
@@ -58,7 +61,7 @@ GREY_SCALE = """
                     font: bold "Arial";}
                 
                 QComboBox:hover {
-                    background-color: rgb(150, 150, 150);
+                    background-color: rgb(175, 175, 175);
                     border-color: rgb(200, 51, 255);}
 
                 QGroupBox{
@@ -68,9 +71,20 @@ GREY_SCALE = """
                         padding: 1em;
                         margin-top: 1em; 
                         font: bold "Arial";  }
+
                 QLabel{ font: bold "Arial"; }
-                QDoubleSpinBox{
-                        font: bold "Arial";}
+
+                QDoubleSpinBox{font: bold "Arial";}
+
+                QDoubleSpinBox:hover{
+                                     background-color: rgb(230, 230, 230);
+                                     border-color: rgb(200, 51, 200);}
+
                 QCheckBox{font: bold "Arial";}
+
+                QCheckBox:hover{
+                        background-color: rgb(175, 175, 175);
+                        border-color: rgb(200, 51, 255);}
+
                 """
 
