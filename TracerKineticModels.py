@@ -6,14 +6,10 @@ import logging
 #Create logger
 logger = logging.getLogger(__name__)
 
-#############################################
-##          TracerKineticModels module    ###
-#############################################
 """This module contains functions that perform the calculation of concentration according
 to several tracer kinetic models.  
 
-The global list variable modelNames lists these models
-for display in a dropdown list."""
+The list modelNames holds the names of these models for display in a dropdown list."""
 
 
 modelNames = ['Select a model','Extended Tofts','One Compartment','High-Flow Gadoxetate']
@@ -31,27 +27,11 @@ def modelSelector(modelName, times, inputConcentration, parameter1, parameter2, 
     elif modelName ==  'One Compartment':
         return oneCompartment(timeInputConc2DArray, parameter1, parameter2)
     elif modelName ==  'High-Flow Gadoxetate':
-        return highFlowGadoxetate(timeInputConc2DArray, parameter1, parameter2, parameter3)
-    elif modelName ==  'Descriptive':
-        return ROI_OnlyModel()
-    elif modelName ==  'AIF & VIF':
-        return AIF_VIF_Model()
+         return highFlowGadoxetate(timeInputConc2DArray, parameter1, parameter2, parameter3)
     
-
-#def ROI_OnlyModel():
-#        listConcentrationsFromModel = []
-#        for i in range(0,60):
-#            x = random.random()
-#            listConcentrationsFromModel.append(x)
-#        return listConcentrationsFromModel
-
-#def AIF_VIF_Model():
-#        listConcentrationsFromModel = []
-#        for i in range(0,60):
-#            x = random.random()
-#            listConcentrationsFromModel.append(x)
-#        return listConcentrationsFromModel
-        
+#Note: The input paramaters for the volume fractions and rate constants in
+# the following model function definitions are listed in the same order as they are 
+# displayed in the GUI from top (first) to bottom (last)        
 def extendedTofts(xData2DArray, Vp, Ve, Ktrans):
     """This function contains the algorithm for calculating how concentration varies with time
         using the Extended Tofts model"""
@@ -62,13 +42,14 @@ def extendedTofts(xData2DArray, Vp, Ve, Ktrans):
         #1 D arrays 
         times = xData2DArray[:,0]
         concentrations = xData2DArray[:,1]
-        #Convert Ve from % to ml/ml of tissue
+        #Convert Ve & Vp from % to ml/ml of tissue
         #Ve = Ve/100
+        #Vp = Vp/100
         #Calculate Intracellular transit time, Tc
         Tc = Ve/Ktrans
         listConcentrationsFromModel = []
         # expconv calculates convolution of ca and (1/Tc)exp(-t/Tc)
-        listConcentrationsFromModel = Vp*concentrations + Ve*tools.expconv(Tc, times, concentrations)
+        listConcentrationsFromModel = Vp*concentrations + Ve*tools.expconv(Tc, times, concentrations, 'Extended Tofts')
         return listConcentrationsFromModel
     except Exception as e:
         print('TracerKineticModels.extendedTofts: ' + str(e))
@@ -91,13 +72,13 @@ def oneCompartment(xData2DArray, Vp, Fp):
         listConcentrationsFromModel = []
 
         # expconv calculates convolution of ca and (1/Tc)exp(-t/Tc)
-        listConcentrationsFromModel = Vp*tools.expconv(Tc, times, concentrations)
+        listConcentrationsFromModel = Vp*tools.expconv(Tc, times, concentrations, 'One Compartment')
         return listConcentrationsFromModel
     except Exception as e:
         print('TracerKineticModels.oneCompartment: ' + str(e))
         logger.error('Runtime error in function TracerKineticModels.oneCompartment:' + str(e) )
 
-def highFlowGadoxetate(xData2DArray, Kce, Ve, Kbc):
+def highFlowGadoxetate(xData2DArray, Ve, Kce, Kbc):
     """This function contains the algorithm for calculating how concentration varies with time
         using the High Flow Gadoxetate model"""
     try:
@@ -108,12 +89,14 @@ def highFlowGadoxetate(xData2DArray, Kce, Ve, Kbc):
         #1 D arrays
         times = xData2DArray[:,0]
         concentrations = xData2DArray[:,1]
+        #Convert Ve from % to ml/ml of tissue
+        #Ve = Ve/100
         #Calculate Intracellular transit time, Tc
         Tc = (1-Ve)/Kbc
         listConcentrationsFromModel = []
 
         # expconv calculates convolution of ca and (1/Tc)exp(-t/Tc)
-        listConcentrationsFromModel = Ve*concentrations + Kce*Tc*tools.expconv(Tc, times, concentrations)
+        listConcentrationsFromModel = Ve*concentrations + Kce*Tc*tools.expconv(Tc, times, concentrations, 'High Flow Gadoxetate')
         return listConcentrationsFromModel
     except Exception as e:
         print('TracerKineticModels.highFlowGadoxetate: ' + str(e))

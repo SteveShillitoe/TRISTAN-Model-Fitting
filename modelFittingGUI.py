@@ -1,3 +1,23 @@
+"""This module is the start up item in the TRISTAN-Model-Fitting application. It defines the GUI 
+and the logic providing the application's functionality.
+
+   The TRISTAN-Model-Fitting application allows the user to:
+        1. Load a CSV file of concentration/time data.
+        2. Select a Region Of Interest (ROI) and display a plot of its concentration against
+            time.
+        3. The user can then select a model they would like to fit to the ROI data.
+        4. Depending on the model selected the user can then select an Arterial Input Function(AIF)
+            and/or a Venal Input Function (VIF) and display a plot of its concentration against time
+            on the same axes as the ROI.
+        5. After step 4 is performed, the selected model is used to create a time/concentration series
+           based on default values for the models input parameters.  This data series is also plotted 
+           on the above axes.
+        6. The default model parameters are displayed on the form and the user may vary them
+           and observe the effect on the curve generated in step 5.
+        7. By pressing the Fit Model button, the model is fitted to the ROI data and the resulting
+           values of the parameters are displayed on the screen.
+        8. """
+   
 import sys
 import csv
 import os.path
@@ -50,12 +70,12 @@ WINDOW_TITLE = 'Model-fitting of dynamic contrast-enhanced MRI'
 REPORT_TITLE = 'Model-fitting of dynamic contrast-enhanced MRI'
 IMAGE_NAME = 'model.png'
 MIN_NUM_COLUMNS_CSV_FILE = 3
-DEFAULT_VALUE_Vp = 5.0
-DEFAULT_VALUE_Ve = 0.02
+DEFAULT_VALUE_Vp = 0.1
+DEFAULT_VALUE_Ve = 0.2
 DEFAULT_VALUE_Ktrans = 0.10
 DEFAULT_VALUE_Fp = 1
-DEFAULT_VALUE_Kce = 2
-DEFAULT_VALUE_Kbc = 0.3
+DEFAULT_VALUE_Kce = 0.025
+DEFAULT_VALUE_Kbc = 0.003
 LABEL_PARAMETER_1A = 'Plasma Volume Fraction, \n Vp(%)'
 LABEL_PARAMETER_1B = 'Hepatocellular Uptake Rate, \n Kce (mL/100mL/min)'
 LABEL_PARAMETER_2A = 'Extracellular Vol Fraction, \n Ve (%)'
@@ -235,16 +255,19 @@ class ModelFittingApp(QDialog):
         self.labelParameter3.setWordWrap(True)
         self.spinBoxParameter1 = QDoubleSpinBox()
         self.spinBoxParameter1.setRange(-100, 1000)
-        self.spinBoxParameter1.setSingleStep(0.1)
+        self.spinBoxParameter1.setDecimals(3)
+        self.spinBoxParameter1.setSingleStep(0.001)
         self.spinBoxParameter1.setMinimumSize(self.spinBoxParameter1.minimumSizeHint())
         self.spinBoxParameter1.resize(self.spinBoxParameter1.sizeHint())
         self.spinBoxParameter2 = QDoubleSpinBox()
         self.spinBoxParameter2.setRange(-100, 1000)
-        self.spinBoxParameter2.setSingleStep(0.1)
+        self.spinBoxParameter2.setDecimals(3)
+        self.spinBoxParameter2.setSingleStep(0.001)
         self.spinBoxParameter2.resize(self.spinBoxParameter2.sizeHint())
         self.spinBoxParameter3 = QDoubleSpinBox()
-        self.spinBoxParameter3.setRange(-100, 1000)
-        self.spinBoxParameter3.setSingleStep(0.01)
+        self.spinBoxParameter3.setRange(-100.00, 1000.00)
+        self.spinBoxParameter3.setDecimals(3)
+        self.spinBoxParameter3.setSingleStep(0.001)
         self.spinBoxParameter3.resize(self.spinBoxParameter3.sizeHint())
         self.spinBoxParameter1.hide()
         self.spinBoxParameter2.hide()
@@ -516,23 +539,24 @@ class ModelFittingApp(QDialog):
             
             if modelName ==  'One Compartment':
                 parameter1 = self.spinBoxParameter1.value()
-                initialParametersArray.append(parameter1)
                 parameter2 = self.spinBoxParameter2.value()
+                initialParametersArray.append(parameter1)
                 initialParametersArray.append(parameter2)
-            elif modelName ==  'Extended Tofts':
+            #elif modelName ==  'Extended Tofts':
+            else:
                 parameter1 = self.spinBoxParameter1.value()
-                initialParametersArray.append(parameter1)
                 parameter2 = self.spinBoxParameter2.value()
-                initialParametersArray.append(parameter2)
                 parameter3 = self.spinBoxParameter3.value()
-                initialParametersArray.append(parameter3)
-            elif modelName == 'High-Flow Gadoxetate':
-                parameter2 = self.spinBoxParameter1.value()
-                initialParametersArray.append(parameter2)
-                parameter1 = self.spinBoxParameter2.value()
                 initialParametersArray.append(parameter1)
-                parameter3 = self.spinBoxParameter3.value()
+                initialParametersArray.append(parameter2)
                 initialParametersArray.append(parameter3)
+            #elif modelName == 'High-Flow Gadoxetate':
+            #    parameter1 = self.spinBoxParameter1.value()
+            #    parameter2 = self.spinBoxParameter2.value()
+            #    parameter3 = self.spinBoxParameter3.value()
+            #    initialParametersArray.append(parameter2)
+            #    initialParametersArray.append(parameter1)
+            #    initialParametersArray.append(parameter3)
                 
             ROI = str(self.cmbROI.currentText())
             AIF = str(self.cmbAIF.currentText())
@@ -551,8 +575,20 @@ class ModelFittingApp(QDialog):
             
             self.spinBoxParameter1.setValue(optimumParams[0])
             self.spinBoxParameter2.setValue(optimumParams[1])
-            if optimumParams.size == 3:
+            if modelName !=  'One Compartment':
                 self.spinBoxParameter3.setValue(optimumParams[2])
+
+            #if modelName ==  'One Compartment': 
+            #    self.spinBoxParameter1.setValue(optimumParams[0])#* 100Convert Volume fraction to %
+            #    self.spinBoxParameter2.setValue(optimumParams[1])
+            #elif modelName ==  'Extended Tofts':
+            #    self.spinBoxParameter1.setValue(optimumParams[0])#* 100Convert Volume fraction to %
+            #    self.spinBoxParameter2.setValue(optimumParams[1])#* 100Convert Volume fraction to %
+            #    self.spinBoxParameter3.setValue(optimumParams[2])
+            #elif modelName == 'High-Flow Gadoxetate':
+            #    self.spinBoxParameter1.setValue(optimumParams[0])#* 100Convert Volume fraction to %
+            #    self.spinBoxParameter2.setValue(optimumParams[1])
+            #    self.spinBoxParameter3.setValue(optimumParams[2])
 
             numDataPoints = arrayROIConcs.size
             numParams = len(initialParametersArray)
@@ -1012,14 +1048,14 @@ class ModelFittingApp(QDialog):
             if AIF != 'Please Select':
                 arrayAIFConcs = np.array(_concentrationData[AIF], dtype='float')
                 ax.plot(arrayTimes, arrayAIFConcs, 'r.-', label= AIF)
-                if modelName == 'High-Flow Gadoxetate':
-                    parameter1 = self.spinBoxParameter2.value()
-                    parameter2 = self.spinBoxParameter1.value()
-                    parameter3 = self.spinBoxParameter3.value()
-                else:
-                    parameter1 = self.spinBoxParameter1.value()
-                    parameter2 = self.spinBoxParameter2.value()
-                    parameter3 = self.spinBoxParameter3.value()
+                #if modelName == 'High-Flow Gadoxetate':
+                #    parameter1 = self.spinBoxParameter2.value()
+                #    parameter2 = self.spinBoxParameter1.value()
+                #    parameter3 = self.spinBoxParameter3.value()
+                #else:
+                parameter1 = self.spinBoxParameter1.value()
+                parameter2 = self.spinBoxParameter2.value()
+                parameter3 = self.spinBoxParameter3.value()
 
                 if VIF == 'Please Select':
                     logger.info('TracerKineticModels.modelSelector called when model ={} and parameters are {}, {}, {}'. format(modelName, parameter1, parameter2, parameter3))
@@ -1044,7 +1080,7 @@ class ModelFittingApp(QDialog):
                 ax.grid()
                 chartBox = ax.get_position()
                 ax.set_position([chartBox.x0*1.1, chartBox.y0, chartBox.width*0.9, chartBox.height])
-                ax.legend(loc='upper center', bbox_to_anchor=(1.0, 1.0), shadow=True, ncol=1, fontsize='x-large')
+                ax.legend(loc='upper center', bbox_to_anchor=(0.9, 1.0), shadow=True, ncol=1, fontsize='x-large')
                 # refresh canvas
                 self.canvas.draw()
             else:
