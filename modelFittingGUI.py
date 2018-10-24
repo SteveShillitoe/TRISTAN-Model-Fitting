@@ -69,6 +69,9 @@ _optimisedParamaterList = []
 WINDOW_TITLE = 'Model-fitting of dynamic contrast-enhanced MRI'
 REPORT_TITLE = 'Model-fitting of dynamic contrast-enhanced MRI'
 IMAGE_NAME = 'model.png'
+DEFAULT_REPORT_FILE_PATH_NAME = 'report.pdf'
+DEFAULT_PLOT_DATA_FILE_PATH_NAME = 'plot.csv'
+LOG_FILE_NAME = "TRISTAN.log"
 MIN_NUM_COLUMNS_CSV_FILE = 3
 DEFAULT_VALUE_Vp = 0.1
 DEFAULT_VALUE_Ve = 0.2
@@ -76,15 +79,12 @@ DEFAULT_VALUE_Ktrans = 0.10
 DEFAULT_VALUE_Fp = 1
 DEFAULT_VALUE_Kce = 0.025
 DEFAULT_VALUE_Kbc = 0.003
-LABEL_PARAMETER_1A = 'Plasma Volume Fraction, \n Vp(%)'
-LABEL_PARAMETER_1B = 'Hepatocellular Uptake Rate, \n Kce (mL/100mL/min)'
-LABEL_PARAMETER_2A = 'Extracellular Vol Fraction, \n Ve (%)'
-LABEL_PARAMETER_2B = 'Plasma Flow Rate, \n Fp (ml/min)'
-LABEL_PARAMETER_3A = 'Transfer Rate Constant, \n Ktrans (1/min)'
-LABEL_PARAMETER_3B = 'Biliary Efflux Rate, \n Kbc (mL/100mL/min)'
-DEFAULT_REPORT_FILE_PATH_NAME = 'report.pdf'
-DEFAULT_PLOT_DATA_FILE_PATH_NAME = 'plot.csv'
-LOG_FILE_NAME = "ModelFitting.log"
+LABEL_PARAMETER_Vp = 'Plasma Volume Fraction, \n Vp(%)'
+LABEL_PARAMETER_Kce = 'Hepatocellular Uptake Rate, \n Kce (mL/100mL/min)'
+LABEL_PARAMETER_Ve = 'Extracellular Vol Fraction, \n Ve (%)'
+LABEL_PARAMETER_Fp = 'Plasma Flow Rate, \n Fp (ml/min)'
+LABEL_PARAMETER_Ktrans = 'Transfer Rate Constant, \n Ktrans (1/min)'
+LABEL_PARAMETER_Kbc = 'Biliary Efflux Rate, \n Kbc (mL/100mL/min)'
 #######################################
 
 #Create and configure the logger
@@ -658,11 +658,11 @@ class ModelFittingApp(QDialog):
                 
                 QApplication.setOverrideCursor(QCursor(QtCore.Qt.WaitCursor))
                 if modelName ==  'One Compartment':
-                    pdf.createAndSavePDFReport(reportFileName, _dataFileName, modelName, IMAGE_NAME, LABEL_PARAMETER_1A, parameter1, LABEL_PARAMETER_2B, parameter2, None, None, _optimisedParamaterList)
+                    pdf.createAndSavePDFReport(reportFileName, _dataFileName, modelName, IMAGE_NAME, LABEL_PARAMETER_Vp, parameter1, LABEL_PARAMETER_Fp, parameter2, None, None, _optimisedParamaterList)
                 elif modelName ==  'Extended Tofts':
-                    pdf.createAndSavePDFReport(reportFileName, _dataFileName, modelName, IMAGE_NAME, LABEL_PARAMETER_1A, parameter1, LABEL_PARAMETER_2A, parameter2, LABEL_PARAMETER_3A, parameter3, _optimisedParamaterList)
+                    pdf.createAndSavePDFReport(reportFileName, _dataFileName, modelName, IMAGE_NAME, LABEL_PARAMETER_Vp, parameter1, LABEL_PARAMETER_Ve, parameter2, LABEL_PARAMETER_Ktrans, parameter3, _optimisedParamaterList)
                 elif modelName == 'High-Flow Gadoxetate':
-                    pdf.createAndSavePDFReport(reportFileName, _dataFileName, modelName, IMAGE_NAME, LABEL_PARAMETER_1B, parameter1, LABEL_PARAMETER_2A, parameter2, LABEL_PARAMETER_3B, parameter3, _optimisedParamaterList)
+                    pdf.createAndSavePDFReport(reportFileName, _dataFileName, modelName, IMAGE_NAME, LABEL_PARAMETER_Kce, parameter1, LABEL_PARAMETER_Ve, parameter2, LABEL_PARAMETER_Kbc, parameter3, _optimisedParamaterList)
                 QApplication.restoreOverrideCursor()
 
                 #Delete image file
@@ -882,7 +882,7 @@ class ModelFittingApp(QDialog):
             modelName = str(self.cmbModels.currentText())
             logger.info('Function configureGUIForEachModel called when model = ' + modelName)
             if modelName ==  'Extended Tofts':
-                self.labelParameter1.setText(LABEL_PARAMETER_1A)
+                self.labelParameter1.setText(LABEL_PARAMETER_Vp)
                 self.labelParameter1.show()
                 self.lblAIF.show()
                 self.cmbAIF.show()
@@ -891,12 +891,12 @@ class ModelFittingApp(QDialog):
                 self.spinBoxParameter1.show()
                 self.spinBoxParameter2.show()
                 self.spinBoxParameter3.show()
-                self.labelParameter2.setText(LABEL_PARAMETER_2A)
+                self.labelParameter2.setText(LABEL_PARAMETER_Ve)
                 self.labelParameter2.show()
-                self.labelParameter3.setText(LABEL_PARAMETER_3A)
+                self.labelParameter3.setText(LABEL_PARAMETER_Ktrans)
                 self.labelParameter3.show()
             elif modelName == 'High-Flow Gadoxetate':
-                self.labelParameter1.setText(LABEL_PARAMETER_2A)
+                self.labelParameter1.setText(LABEL_PARAMETER_Ve)
                 self.labelParameter1.show()
                 self.lblAIF.show()
                 self.cmbAIF.show()
@@ -905,12 +905,12 @@ class ModelFittingApp(QDialog):
                 self.spinBoxParameter1.show()
                 self.spinBoxParameter2.show()
                 self.spinBoxParameter3.show()
-                self.labelParameter2.setText(LABEL_PARAMETER_1B)
+                self.labelParameter2.setText(LABEL_PARAMETER_Kce)
                 self.labelParameter2.show()
-                self.labelParameter3.setText(LABEL_PARAMETER_3B)
+                self.labelParameter3.setText(LABEL_PARAMETER_Kbc)
                 self.labelParameter3.show()
             elif modelName ==  'One Compartment':
-                self.labelParameter1.setText(LABEL_PARAMETER_1A)
+                self.labelParameter1.setText(LABEL_PARAMETER_Vp)
                 self.labelParameter1.show()
                 self.lblAIF.show()
                 self.cmbAIF.show()
@@ -919,13 +919,13 @@ class ModelFittingApp(QDialog):
                 self.spinBoxParameter1.show()
                 self.spinBoxParameter2.show()
                 self.spinBoxParameter3.hide()
-                self.labelParameter2.setText(LABEL_PARAMETER_2B)
+                self.labelParameter2.setText(LABEL_PARAMETER_Fp)
                 self.labelParameter2.show()
                 self.labelParameter3.hide()
                 self.labelParameter3.clear()
                 self.spinBoxParameter2.setValue(DEFAULT_VALUE_Fp) #Default value
             elif modelName == 'Descriptive':
-                self.labelParameter1.setText(LABEL_PARAMETER_1A)
+                self.labelParameter1.setText(LABEL_PARAMETER_Vp)
                 self.labelParameter1.show()
                 self.lblAIF.hide()
                 self.cmbAIF.hide()
@@ -934,12 +934,12 @@ class ModelFittingApp(QDialog):
                 self.spinBoxParameter1.show()
                 self.spinBoxParameter2.show()
                 self.spinBoxParameter3.show()
-                self.labelParameter2.setText(LABEL_PARAMETER_2A)
+                self.labelParameter2.setText(LABEL_PARAMETER_Ve)
                 self.labelParameter2.show()
-                self.labelParameter3.setText(LABEL_PARAMETER_3A)
+                self.labelParameter3.setText(LABEL_PARAMETER_Ktrans)
                 self.labelParameter3.show()
             elif modelName == 'AIF & VIF':
-                self.labelParameter1.setText(LABEL_PARAMETER_1A)
+                self.labelParameter1.setText(LABEL_PARAMETER_Vp)
                 self.labelParameter1.show()
                 self.lblAIF.show()
                 self.cmbAIF.show()
@@ -948,9 +948,9 @@ class ModelFittingApp(QDialog):
                 self.spinBoxParameter1.show()
                 self.spinBoxParameter2.show()
                 self.spinBoxParameter3.show()
-                self.labelParameter2.setText(LABEL_PARAMETER_2A)
+                self.labelParameter2.setText(LABEL_PARAMETER_Ve)
                 self.labelParameter2.show()
-                self.labelParameter3.setText(LABEL_PARAMETER_3A)
+                self.labelParameter3.setText(LABEL_PARAMETER_Ktrans)
                 self.labelParameter3.show()
             else:  #No model is selected
                 self.lblAIF.hide()
