@@ -17,17 +17,25 @@ modelNames = ['Select a model','Extended Tofts','One Compartment','High-Flow Gad
 PARAMETER_UPPER_BOUND_VOL_FRACTION = 100.0
 PARAMETER_UPPER_BOUND_RATE = np.inf
 
-def modelSelector(modelName, times, inputConcentration, parameter1, parameter2, parameter3):
+def modelSelector(modelName, times, inputConcentration, parameterArray):
     """Function called in the GUI of the model fitting tool to select the function corresponding
         to each model"""
-    logger.info("In TracerKineticModels.modelSelector. Called with model {} and parameters {}, {}, {}".format(modelName, parameter1, parameter2, parameter3 ))
+    logger.info("In TracerKineticModels.modelSelector. Called with model {} and parameters {}".format(modelName, parameterArray))
     timeInputConc2DArray = np.column_stack((times, inputConcentration,))
     if modelName ==  'Extended Tofts':
+        parameter1 = parameterArray[0]
+        parameter2 = parameterArray[1]
+        parameter3 = parameterArray[2]
         return extendedTofts(timeInputConc2DArray, parameter1, parameter2, parameter3)
     elif modelName ==  'One Compartment':
+        parameter1 = parameterArray[0]
+        parameter2 = parameterArray[1]
         return oneCompartment(timeInputConc2DArray, parameter1, parameter2)
     elif modelName ==  'High-Flow Gadoxetate':
-         return highFlowGadoxetate(timeInputConc2DArray, parameter1, parameter2, parameter3)
+        parameter1 = parameterArray[0]
+        parameter2 = parameterArray[1]
+        parameter3 = parameterArray[2]
+        return highFlowGadoxetate(timeInputConc2DArray, parameter1, parameter2, parameter3)
     
 #Note: The input paramaters for the volume fractions and rate constants in
 # the following model function definitions are listed in the same order as they are 
@@ -37,14 +45,12 @@ def extendedTofts(xData2DArray, Vp, Ve, Ktrans):
         using the Extended Tofts model"""
     try:
         logger.info('In function TracerKineticModels.extendedTofts with Vp={}, Ve={} and Ktrans={}'.format(Vp, Ve, Ktrans))
+        print('Extended Tofts. Vp={}, Ve={} and Ktrans={}'.format(Vp, Ve, Ktrans))
         #In order to use scipy.optimize.curve_fit, time and concentration must be
         #combined into one function input parameter, a 2D array, then separated into individual
         #1 D arrays 
         times = xData2DArray[:,0]
         concentrations = xData2DArray[:,1]
-        #Convert Ve & Vp from % to ml/ml of tissue
-        #Ve = Ve/100
-        #Vp = Vp/100
         #Calculate Intracellular transit time, Tc
         Tc = Ve/Ktrans
         listConcentrationsFromModel = []
@@ -65,8 +71,6 @@ def oneCompartment(xData2DArray, Vp, Fp):
         #1 D arrays
         times = xData2DArray[:,0]
         concentrations = xData2DArray[:,1]
-        #Convert Vp from % to ml/ml of tissue
-        #Vp = Vp/100
         #Calculate Intracellular transit time, Tc
         Tc = Vp/Fp
         listConcentrationsFromModel = []
@@ -89,8 +93,6 @@ def highFlowGadoxetate(xData2DArray, Ve, Kce, Kbc):
         #1 D arrays
         times = xData2DArray[:,0]
         concentrations = xData2DArray[:,1]
-        #Convert Ve from % to ml/ml of tissue
-        #Ve = Ve/100
         #Calculate Intracellular transit time, Tc
         Tc = (1-Ve)/Kbc
         listConcentrationsFromModel = []

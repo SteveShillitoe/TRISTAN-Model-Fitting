@@ -73,15 +73,15 @@ DEFAULT_REPORT_FILE_PATH_NAME = 'report.pdf'
 DEFAULT_PLOT_DATA_FILE_PATH_NAME = 'plot.csv'
 LOG_FILE_NAME = "TRISTAN.log"
 MIN_NUM_COLUMNS_CSV_FILE = 3
-DEFAULT_VALUE_Vp = 0.1
-DEFAULT_VALUE_Ve = 0.2
+DEFAULT_VALUE_Vp = 10.0
+DEFAULT_VALUE_Ve = 20.0
 DEFAULT_VALUE_Ktrans = 0.10
 DEFAULT_VALUE_Fp = 1
 DEFAULT_VALUE_Kce = 0.025
 DEFAULT_VALUE_Kbc = 0.003
-LABEL_PARAMETER_Vp = 'Plasma Volume Fraction, \n Vp(%)'
+LABEL_PARAMETER_Vp = 'Plasma Volume Fraction,\n Vp'
 LABEL_PARAMETER_Kce = 'Hepatocellular Uptake Rate, \n Kce (mL/100mL/min)'
-LABEL_PARAMETER_Ve = 'Extracellular Vol Fraction, \n Ve (%)'
+LABEL_PARAMETER_Ve = 'Extracellular Vol Fraction,\n Ve'
 LABEL_PARAMETER_Fp = 'Plasma Flow Rate, \n Fp (ml/min)'
 LABEL_PARAMETER_Ktrans = 'Transfer Rate Constant, \n Ktrans (1/min)'
 LABEL_PARAMETER_Kbc = 'Biliary Efflux Rate, \n Kbc (mL/100mL/min)'
@@ -411,30 +411,68 @@ class ModelFittingApp(QDialog):
             print('Error in function applyStyleSheet: ' + str(e))
             logger.error('Error in function applyStyleSheet: ' + str(e))
 
-    
-
-    #def returnErrorString(self):
-    #    return 'Error: {}. {}, line: {}'.format(sys.exc_info()[0],
-    #                                     sys.exc_info()[1],
-    #                                     sys.exc_info()[2].tb_lineno)
 
     def displayOptimumParamaterValuesOnGUI(self):
+        """Displays the optimum parameter values resulting from curve fitting 
+        with their confidence limits on the right-hand side of the GUI."""
         try:
             logger.info('Function displayOptimumParamaterValuesOnGUI called.')
+
             self.lblParam1Name.setText(self.labelParameter1.text())
-            self.lblParam1Value.setText(str(round(_optimisedParamaterList[0][0], 5)))
-            confidenceStr = '[{}     {}]'.format(_optimisedParamaterList[0][1], _optimisedParamaterList[0][2])
+            parameterValue = (_optimisedParamaterList[0][0])
+            lowerLimit = _optimisedParamaterList[0][1]
+            upperLimit = _optimisedParamaterList[0][2]
+            if self.spinBoxParameter1.suffix() == '%':
+                suffix = '%'
+                parameterValue = parameterValue * 100.0
+                lowerLimit = lowerLimit * 100.0
+                upperLimit = upperLimit * 100.0
+            else:
+                suffix = ''
+            parameterValue = round(parameterValue, 5)
+            lowerLimit = round(lowerLimit, 5)
+            upperLimit = round(upperLimit, 5)
+            self.lblParam1Value.setText(str(parameterValue) + suffix)
+            confidenceStr = '[{}     {}]'.format(lowerLimit, upperLimit)
             self.lblParam1ConfInt.setText(confidenceStr) 
+
             self.lblParam2Name.setText(self.labelParameter2.text())
-            self.lblParam2Value.setText(str(round(_optimisedParamaterList[1][0], 5)))
-            confidenceStr = '[{}     {}]'.format(_optimisedParamaterList[1][1], _optimisedParamaterList[1][2])
-            self.lblParam2ConfInt.setText(confidenceStr)
+            parameterValue = (_optimisedParamaterList[1][0])
+            lowerLimit = _optimisedParamaterList[1][1]
+            upperLimit = _optimisedParamaterList[1][2]
+            if self.spinBoxParameter2.suffix() == '%':
+                suffix = '%'
+                parameterValue = parameterValue * 100.0
+                lowerLimit = lowerLimit * 100.0
+                upperLimit = upperLimit * 100.0
+            else:
+                suffix = ''
+            parameterValue = round(parameterValue, 5)
+            lowerLimit = round(lowerLimit, 5)
+            upperLimit = round(upperLimit, 5)
+            self.lblParam2Value.setText(str(parameterValue) + suffix)
+            confidenceStr = '[{}     {}]'.format(lowerLimit, upperLimit)
+            self.lblParam2ConfInt.setText(confidenceStr) 
 
             if len(_optimisedParamaterList) == 3:
                 self.lblParam3Name.setText(self.labelParameter3.text())
-                self.lblParam3Value.setText(str(round(_optimisedParamaterList[2][0], 5)))
-                confidenceStr = '[{}     {}]'.format(_optimisedParamaterList[2][1], _optimisedParamaterList[2][2])
+                parameterValue = (_optimisedParamaterList[2][0])
+                lowerLimit = _optimisedParamaterList[2][1]
+                upperLimit = _optimisedParamaterList[2][2]
+                if self.spinBoxParameter3.suffix() == '%':
+                    suffix = '%'
+                    parameterValue = parameterValue * 100.0
+                    lowerLimit = lowerLimit * 100.0
+                    upperLimit = upperLimit * 100.0
+                else:
+                    suffix = ''
+                parameterValue = round(parameterValue, 5)
+                lowerLimit = round(lowerLimit, 5)
+                upperLimit = round(upperLimit, 5)
+                self.lblParam3Value.setText(str(parameterValue) + suffix)
+                confidenceStr = '[{}     {}]'.format(lowerLimit, upperLimit)
                 self.lblParam3ConfInt.setText(confidenceStr)
+
         except Exception as e:
             print('Error in function displayOptimumParamaterValuesOnGUI: ' + str(e))
             logger.error('Error in function displayOptimumParamaterValuesOnGUI: ' + str(e))
@@ -451,6 +489,7 @@ class ModelFittingApp(QDialog):
             self.lblParam3Name.clear()
             self.lblParam3Value.clear()
             self.lblParam3ConfInt.clear()
+            
         except Exception as e:
             print('Error in function clearOptimumParamaterValuesOnGUI: ' + str(e))
             logger.error('Error in function clearOptimumParamaterValuesOnGUI: ' + str(e))
@@ -532,32 +571,33 @@ class ModelFittingApp(QDialog):
             print('Error in function displayFitModelSaveCSVButtons: ' + str(e))
             logger.error('Error in function displayFitModelSaveCSVButtons: ' + str(e))
 
+    def buildParameterArray(self):
+        """Forms a 1D array of model input parameters.  Volume fractions are converted 
+            from percentages to decimal fractions."""
+        initialParametersArray = []
+        parameter1 = self.spinBoxParameter1.value()
+        if self.spinBoxParameter1.suffix() == '%':
+            #This is a volume fraction so convert % to a decimal fraction
+            parameter1 = parameter1/100.0
+        initialParametersArray.append(parameter1)
+        
+        parameter2 = self.spinBoxParameter2.value()
+        if self.spinBoxParameter2.suffix() == '%':
+             #This is a volume fraction so convert % to a decimal fraction
+            parameter2 = parameter2/100.0
+        initialParametersArray.append(parameter2)
+        
+        if self.spinBoxParameter3.isHidden() == False:
+            parameter3 = self.spinBoxParameter3.value()
+            if self.spinBoxParameter3.suffix() == '%':
+                 #This is a volume fraction so convert % to a decimal fraction
+                parameter3 = parameter3/100.0
+            initialParametersArray.append(parameter3)
+        return initialParametersArray
+
     def runCurveFit(self):
         try:
-            modelName = str(self.cmbModels.currentText())
-            initialParametersArray = []
-            
-            if modelName ==  'One Compartment':
-                parameter1 = self.spinBoxParameter1.value()
-                parameter2 = self.spinBoxParameter2.value()
-                initialParametersArray.append(parameter1)
-                initialParametersArray.append(parameter2)
-            #elif modelName ==  'Extended Tofts':
-            else:
-                parameter1 = self.spinBoxParameter1.value()
-                parameter2 = self.spinBoxParameter2.value()
-                parameter3 = self.spinBoxParameter3.value()
-                initialParametersArray.append(parameter1)
-                initialParametersArray.append(parameter2)
-                initialParametersArray.append(parameter3)
-            #elif modelName == 'High-Flow Gadoxetate':
-            #    parameter1 = self.spinBoxParameter1.value()
-            #    parameter2 = self.spinBoxParameter2.value()
-            #    parameter3 = self.spinBoxParameter3.value()
-            #    initialParametersArray.append(parameter2)
-            #    initialParametersArray.append(parameter1)
-            #    initialParametersArray.append(parameter3)
-                
+            initialParametersArray = self.buildParameterArray()
             ROI = str(self.cmbROI.currentText())
             AIF = str(self.cmbAIF.currentText())
             arrayTimes = np.array(_concentrationData['Time'], dtype='float')
@@ -569,33 +609,28 @@ class ModelFittingApp(QDialog):
                 addConstraint = False
 
             #Call curve fitting routine
+            modelName = str(self.cmbModels.currentText())
+            print('Start of Curve Fitting.')
             logger.info('TracerKineticModels.curveFit called with model {}, parameters {} and Constraint = {}'.format(modelName, initialParametersArray, addConstraint))
             optimumParams, paramCovarianceMatrix = TracerKineticModels.curveFit(modelName, arrayTimes, arrayInputConcs, arrayROIConcs, initialParametersArray, addConstraint)
             logger.info('TracerKineticModels.curveFit returned optimum parameters {} with confidence levels {}'.format(optimumParams, paramCovarianceMatrix))
+            print('End of Curve Fitting.')
+            if self.spinBoxParameter1.suffix() == '%':
+                self.spinBoxParameter1.setValue(optimumParams[0]* 100) #Convert Volume fraction to %
+            else:
+                self.spinBoxParameter1.setValue(optimumParams[0])
+            if self.spinBoxParameter2.suffix() == '%':
+                self.spinBoxParameter2.setValue(optimumParams[1]* 100) #Convert Volume fraction to %
+            else:
+                self.spinBoxParameter2.setValue(optimumParams[1])
+            if self.spinBoxParameter3.isHidden() == False:
+                if self.spinBoxParameter3.suffix() == '%':
+                    self.spinBoxParameter3.setValue(optimumParams[2]* 100) #Convert Volume fraction to %
+                else:
+                    self.spinBoxParameter3.setValue(optimumParams[2])
             
-            self.spinBoxParameter1.setValue(optimumParams[0])
-            self.spinBoxParameter2.setValue(optimumParams[1])
-            if modelName !=  'One Compartment':
-                self.spinBoxParameter3.setValue(optimumParams[2])
-
-            #if modelName ==  'One Compartment': 
-            #    self.spinBoxParameter1.setValue(optimumParams[0])#* 100Convert Volume fraction to %
-            #    self.spinBoxParameter2.setValue(optimumParams[1])
-            #elif modelName ==  'Extended Tofts':
-            #    self.spinBoxParameter1.setValue(optimumParams[0])#* 100Convert Volume fraction to %
-            #    self.spinBoxParameter2.setValue(optimumParams[1])#* 100Convert Volume fraction to %
-            #    self.spinBoxParameter3.setValue(optimumParams[2])
-            #elif modelName == 'High-Flow Gadoxetate':
-            #    self.spinBoxParameter1.setValue(optimumParams[0])#* 100Convert Volume fraction to %
-            #    self.spinBoxParameter2.setValue(optimumParams[1])
-            #    self.spinBoxParameter3.setValue(optimumParams[2])
-
             numDataPoints = arrayROIConcs.size
             numParams = len(initialParametersArray)
-            #logger.info('Function calcParameterConfidenceIntervals called with numDataPoints = {} '
-            # ' and numParams= {}'.format(numDataPoints, numParams))
-            #self.calcParameterConfidenceIntervals(numDataPoints, numParams, optimumParams, estimatedCovarianceArray)
-            
             alpha = 0.05 #95% confidence interval = 100*(1-alpha)
             degsOfFreedom = max(0, numDataPoints - numParams) #Number of degrees of freedom
 
@@ -802,6 +837,13 @@ class ModelFittingApp(QDialog):
     def initialiseParameterSpinBoxes(self):
         #Reset model parameter spinboxes with typical initial values for each model
         try:
+            #Remove suffixes from all spinboxes 
+            self.spinBoxParameter1.setSuffix('')
+            self.spinBoxParameter2.setSuffix('')
+            self.spinBoxParameter3.setSuffix('')
+
+            #Block signals from spinboxes, so that setting initial values
+            #does not trigger an event.
             self.spinBoxParameter1.blockSignals(True)
             self.spinBoxParameter2.blockSignals(True)
             self.spinBoxParameter3.blockSignals(True)
@@ -810,14 +852,18 @@ class ModelFittingApp(QDialog):
             logger.info('Function initialiseParameterSpinBoxes called when model = ' + modelName)
             if modelName ==  'Extended Tofts':
                 self.spinBoxParameter1.setValue(DEFAULT_VALUE_Vp)
+                self.spinBoxParameter1.setSuffix('%')
                 self.spinBoxParameter2.setValue(DEFAULT_VALUE_Ve)
+                self.spinBoxParameter2.setSuffix('%')
                 self.spinBoxParameter3.setValue(DEFAULT_VALUE_Ktrans)
             elif modelName == 'High-Flow Gadoxetate':
                 self.spinBoxParameter1.setValue(DEFAULT_VALUE_Ve)
+                self.spinBoxParameter1.setSuffix('%')
                 self.spinBoxParameter2.setValue(DEFAULT_VALUE_Kce)
                 self.spinBoxParameter3.setValue(DEFAULT_VALUE_Kbc)
             elif modelName ==  'One Compartment':
                 self.spinBoxParameter1.setValue(DEFAULT_VALUE_Vp)
+                self.spinBoxParameter1.setSuffix('%')
                 self.spinBoxParameter2.setValue(DEFAULT_VALUE_Fp)
 
             self.spinBoxParameter1.blockSignals(False)
@@ -877,8 +923,8 @@ class ModelFittingApp(QDialog):
             self.cboxConstaint.show()
             self.cboxConstaint.setChecked(False)
             self.btnReset.show()
-            self.initialiseParameterSpinBoxes() #Typical initial values for each model
             self.clearOptimumParamaterValuesOnGUI() #Remove results of curve fitting of the previous model
+            self.initialiseParameterSpinBoxes() #Typical initial values for each model
             modelName = str(self.cmbModels.currentText())
             logger.info('Function configureGUIForEachModel called when model = ' + modelName)
             if modelName ==  'Extended Tofts':
@@ -1048,18 +1094,15 @@ class ModelFittingApp(QDialog):
             if AIF != 'Please Select':
                 arrayAIFConcs = np.array(_concentrationData[AIF], dtype='float')
                 ax.plot(arrayTimes, arrayAIFConcs, 'r.-', label= AIF)
-                #if modelName == 'High-Flow Gadoxetate':
-                #    parameter1 = self.spinBoxParameter2.value()
-                #    parameter2 = self.spinBoxParameter1.value()
-                #    parameter3 = self.spinBoxParameter3.value()
-                #else:
+               
                 parameter1 = self.spinBoxParameter1.value()
                 parameter2 = self.spinBoxParameter2.value()
                 parameter3 = self.spinBoxParameter3.value()
 
                 if VIF == 'Please Select':
                     logger.info('TracerKineticModels.modelSelector called when model ={} and parameters are {}, {}, {}'. format(modelName, parameter1, parameter2, parameter3))
-                    _listModel = TracerKineticModels.modelSelector(modelName, arrayTimes, arrayAIFConcs, parameter1, parameter2, parameter3)
+                    parameterArray = self.buildParameterArray()
+                    _listModel = TracerKineticModels.modelSelector(modelName, arrayTimes, arrayAIFConcs, parameterArray)
                     arrayModel =  np.array(_listModel, dtype='float')
                     ax.plot(arrayTimes, arrayModel, 'g--', label= modelName + ' model')
             
