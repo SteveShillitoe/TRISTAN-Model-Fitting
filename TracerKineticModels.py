@@ -14,7 +14,7 @@ The list modelNames holds the names of these models for display in a dropdown li
 
 modelNames = ['Select a model','Extended Tofts','One Compartment','High-Flow Gadoxetate']
 
-PARAMETER_UPPER_BOUND_VOL_FRACTION = 100.0
+PARAMETER_UPPER_BOUND_VOL_FRACTION = 1.0
 PARAMETER_UPPER_BOUND_RATE = np.inf
 
 def modelSelector(modelName, times, inputConcentration, parameterArray):
@@ -22,19 +22,16 @@ def modelSelector(modelName, times, inputConcentration, parameterArray):
         to each model"""
     logger.info("In TracerKineticModels.modelSelector. Called with model {} and parameters {}".format(modelName, parameterArray))
     timeInputConc2DArray = np.column_stack((times, inputConcentration,))
-    if modelName ==  'Extended Tofts':
-        parameter1 = parameterArray[0]
-        parameter2 = parameterArray[1]
+    parameter1 = parameterArray[0]
+    parameter2 = parameterArray[1]
+    if len(parameterArray) == 3:
         parameter3 = parameterArray[2]
+
+    if modelName ==  'Extended Tofts':
         return extendedTofts(timeInputConc2DArray, parameter1, parameter2, parameter3)
     elif modelName ==  'One Compartment':
-        parameter1 = parameterArray[0]
-        parameter2 = parameterArray[1]
         return oneCompartment(timeInputConc2DArray, parameter1, parameter2)
     elif modelName ==  'High-Flow Gadoxetate':
-        parameter1 = parameterArray[0]
-        parameter2 = parameterArray[1]
-        parameter3 = parameterArray[2]
         return highFlowGadoxetate(timeInputConc2DArray, parameter1, parameter2, parameter3)
     
 #Note: The input paramaters for the volume fractions and rate constants in

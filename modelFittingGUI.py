@@ -419,56 +419,67 @@ class ModelFittingApp(QDialog):
             logger.info('Function displayOptimumParamaterValuesOnGUI called.')
 
             self.lblParam1Name.setText(self.labelParameter1.text())
-            parameterValue = (_optimisedParamaterList[0][0])
-            lowerLimit = _optimisedParamaterList[0][1]
-            upperLimit = _optimisedParamaterList[0][2]
+            parameterValue = round(_optimisedParamaterList[0][0], 5)
+            lowerLimit = round(_optimisedParamaterList[0][1], 5)
+            upperLimit = round(_optimisedParamaterList[0][2], 5)
+            
             if self.spinBoxParameter1.suffix() == '%':
                 suffix = '%'
                 parameterValue = parameterValue * 100.0
-                lowerLimit = lowerLimit * 100.0
-                upperLimit = upperLimit * 100.0
+                lowerLimit = round(lowerLimit * 100.0, 3)
+                upperLimit = round(upperLimit * 100.0, 3)
+                
+                #For display in the PDF report, overwrite decimal volume fraction values in  _optimisedParamaterList
+                #with the % equivalent
+                _optimisedParamaterList[0][0] = parameterValue
+                _optimisedParamaterList[0][1] = lowerLimit
+                _optimisedParamaterList[0][2] = upperLimit
             else:
                 suffix = ''
-            parameterValue = round(parameterValue, 5)
-            lowerLimit = round(lowerLimit, 5)
-            upperLimit = round(upperLimit, 5)
+            
             self.lblParam1Value.setText(str(parameterValue) + suffix)
             confidenceStr = '[{}     {}]'.format(lowerLimit, upperLimit)
             self.lblParam1ConfInt.setText(confidenceStr) 
 
             self.lblParam2Name.setText(self.labelParameter2.text())
-            parameterValue = (_optimisedParamaterList[1][0])
-            lowerLimit = _optimisedParamaterList[1][1]
-            upperLimit = _optimisedParamaterList[1][2]
+            parameterValue = round(_optimisedParamaterList[1][0], 5)
+            lowerLimit = round(_optimisedParamaterList[1][1], 5)
+            upperLimit = round(_optimisedParamaterList[1][2], 5)
             if self.spinBoxParameter2.suffix() == '%':
                 suffix = '%'
                 parameterValue = parameterValue * 100.0
                 lowerLimit = lowerLimit * 100.0
                 upperLimit = upperLimit * 100.0
+                #For display in the PDF report, overwrite decimal volume fraction values in  _optimisedParamaterList
+                #with the % equivalent
+                _optimisedParamaterList[1][0] = parameterValue
+                _optimisedParamaterList[1][1] = lowerLimit
+                _optimisedParamaterList[1][2] = upperLimit
             else:
                 suffix = ''
-            parameterValue = round(parameterValue, 5)
-            lowerLimit = round(lowerLimit, 5)
-            upperLimit = round(upperLimit, 5)
+            
             self.lblParam2Value.setText(str(parameterValue) + suffix)
             confidenceStr = '[{}     {}]'.format(lowerLimit, upperLimit)
             self.lblParam2ConfInt.setText(confidenceStr) 
 
             if len(_optimisedParamaterList) == 3:
                 self.lblParam3Name.setText(self.labelParameter3.text())
-                parameterValue = (_optimisedParamaterList[2][0])
-                lowerLimit = _optimisedParamaterList[2][1]
-                upperLimit = _optimisedParamaterList[2][2]
+                parameterValue = round(_optimisedParamaterList[2][0], 5)
+                lowerLimit = round(_optimisedParamaterList[2][1], 5)
+                upperLimit = round(_optimisedParamaterList[2][2], 5)
                 if self.spinBoxParameter3.suffix() == '%':
                     suffix = '%'
                     parameterValue = parameterValue * 100.0
                     lowerLimit = lowerLimit * 100.0
                     upperLimit = upperLimit * 100.0
+                    #For display in the PDF report, overwrite decimal volume fraction values in  _optimisedParamaterList
+                    #with the % equivalent
+                    _optimisedParamaterList[2][0] = parameterValue
+                    _optimisedParamaterList[2][1] = lowerLimit
+                    _optimisedParamaterList[2][2] = upperLimit
                 else:
                     suffix = ''
-                parameterValue = round(parameterValue, 5)
-                lowerLimit = round(lowerLimit, 5)
-                upperLimit = round(upperLimit, 5)
+                
                 self.lblParam3Value.setText(str(parameterValue) + suffix)
                 confidenceStr = '[{}     {}]'.format(lowerLimit, upperLimit)
                 self.lblParam3ConfInt.setText(confidenceStr)
