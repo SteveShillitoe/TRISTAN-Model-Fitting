@@ -50,13 +50,15 @@ class PDF(FPDF):
     def createAndSavePDFReport(self, fileName, dataFileName, modelName, imageName, 
                                parameter1Text, parameter1Value,
                                parameter2Text, parameter2Value,
-                               parameter3Text = None, parameter3Value = None, covarianceArray =[]):
+                               parameter3Text = None, parameter3Value = None, 
+                               confidenceLimitsArray =[], curveFittingDone=True):
         try:
             logger.info('Function PDFWriter.createAndSavePDFReport called with filename={}, \
             dataFileName={}, modelName={}, imageName={}, parameter1Text={}, parameter1Value={},\
-                 parameter2Text={}, parameter2Value={},parameter3Text ={}, parameter3Value ={}' \
+                 parameter2Text={}, parameter2Value={},parameter3Text ={}, parameter3Value ={}, \
+                 curveFittingDone = {}' \
              .format(fileName, dataFileName, modelName, imageName,parameter1Text, parameter1Value,
-             parameter2Text, parameter2Value,parameter3Text, parameter3Value))
+             parameter2Text, parameter2Value,parameter3Text, parameter3Value, curveFittingDone))
             self.add_page() #First Page in Portrait format, A4
             self.set_font('Arial', 'BU', 12)
             self.write(5, modelName + ' model.\n')
@@ -69,7 +71,7 @@ class PDF(FPDF):
             else:
                 numRowsData = 2
 
-            logger.info('In Function PDFWriter.createAndSavePDFReport printing results table with numRowsData ={} from {}'.format(numRowsData, covarianceArray))
+            logger.info('In Function PDFWriter.createAndSavePDFReport printing results table with numRowsData ={} from {}'.format(numRowsData, confidenceLimitsArray))
             
             # Effective page width, or just effectivePageWidth
             effectivePageWidth = self.w - 2*self.l_margin
@@ -87,8 +89,8 @@ class PDF(FPDF):
             #Row 1
             self.cell(col_width*3,textHeight*2, parameter1Text.replace('\n', ''), border=1)
             self.cell(col_width,textHeight*2, str(round(parameter1Value,5)), border=1)
-            if len(covarianceArray) > 0:
-                confidenceStr = '[{}     {}]'.format(covarianceArray[0][1], covarianceArray[0][2])
+            if len(confidenceLimitsArray) > 0 and curveFittingDone == True:
+                confidenceStr = '[{}     {}]'.format(confidenceLimitsArray[0][1], confidenceLimitsArray[0][2])
             else:
                 confidenceStr = 'N/A'
             self.cell(col_width*2,textHeight*2, confidenceStr, border=1)
@@ -96,8 +98,8 @@ class PDF(FPDF):
             #Row 2
             self.cell(col_width*3,textHeight*2, parameter2Text.replace('\n', ''), border=1)
             self.cell(col_width,textHeight*2, str(round(parameter2Value,5)), border=1)
-            if len(covarianceArray) > 0:
-                confidenceStr = '[{}     {}]'.format(covarianceArray[1][1], covarianceArray[1][2])
+            if len(confidenceLimitsArray) > 0 and curveFittingDone == True:
+                confidenceStr = '[{}     {}]'.format(confidenceLimitsArray[1][1], confidenceLimitsArray[1][2])
             else:
                 confidenceStr = 'N/A'
             self.cell(col_width*2,textHeight*2, confidenceStr, border=1)
@@ -106,8 +108,8 @@ class PDF(FPDF):
                 #Row 3
                 self.cell(col_width*3,textHeight*2, parameter3Text.replace('\n', ''), border=1)
                 self.cell(col_width,textHeight*2, str(round(parameter3Value,5)), border=1)
-                if len(covarianceArray) > 0:
-                    confidenceStr = '[{}     {}]'.format(covarianceArray[2][1], covarianceArray[2][2])
+                if len(confidenceLimitsArray) > 0 and curveFittingDone == True:
+                    confidenceStr = '[{}     {}]'.format(confidenceLimitsArray[2][1], confidenceLimitsArray[2][2])
                 else:
                     confidenceStr = 'N/A'
                 self.cell(col_width*2,textHeight*2, confidenceStr, border=1)

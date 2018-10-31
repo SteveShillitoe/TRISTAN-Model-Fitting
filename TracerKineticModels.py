@@ -42,7 +42,7 @@ def extendedTofts(xData2DArray, Vp, Ve, Ktrans):
         using the Extended Tofts model"""
     try:
         logger.info('In function TracerKineticModels.extendedTofts with Vp={}, Ve={} and Ktrans={}'.format(Vp, Ve, Ktrans))
-        print('Extended Tofts. Vp={}, Ve={} and Ktrans={}'.format(Vp, Ve, Ktrans))
+        #print('Extended Tofts. Vp={}, Ve={} and Ktrans={}'.format(Vp, Ve, Ktrans))
         #In order to use scipy.optimize.curve_fit, time and concentration must be
         #combined into one function input parameter, a 2D array, then separated into individual
         #1 D arrays 
