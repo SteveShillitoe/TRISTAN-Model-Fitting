@@ -145,16 +145,6 @@ def curveFit(modelName, times, inputConcentration, concROI, paramArray, constrai
 ##      check_finite=True, bounds=(-inf, inf), method=None, jac=None, **kwargs)[source]    
 ##  See
 ##   https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.curve_fit.html
-
-
-##    def patlakModel(self, Vp, Ve, Ktrans, objectGUI):
-##        print('patlakModel model selected')
-##        objectGUI.spinBoxKtrans.setEnabled(True)
-##        listConcentrationsFromModel = []
-##        for i in range(0,60):
-##            x = random.random()
-##            listConcentrationsFromModel.append(x)
-##        return listConcentrationsFromModel
 ##    
     
    

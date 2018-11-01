@@ -130,7 +130,6 @@ class ModelFittingApp(QDialog):
 
         logger.info("GUI created successfully.")
 
-
     def setupLayouts(self):
         #Start with an overall horizontal layout
         #and place 3 vertical layouts within it
@@ -170,6 +169,7 @@ class ModelFittingApp(QDialog):
         #add them to a vertical layout, then
         #the vertical layout to the group box
         modelHorizontalLayout2 = QHBoxLayout()
+        modelHorizontalLayoutWieghtFactorLabel = QHBoxLayout()
         modelHorizontalLayout3 = QHBoxLayout()
         modelHorizontalLayout4 = QHBoxLayout()
         modelHorizontalLayoutReset = QHBoxLayout()
@@ -181,6 +181,7 @@ class ModelFittingApp(QDialog):
         modelVerticalLayout = QVBoxLayout()
         modelVerticalLayout.setAlignment(QtCore.Qt.AlignTop) 
         modelVerticalLayout.addLayout(modelHorizontalLayout2)
+        modelVerticalLayout.addLayout(modelHorizontalLayoutWieghtFactorLabel)
         modelVerticalLayout.addLayout(modelHorizontalLayout3)
         modelVerticalLayout.addLayout(modelHorizontalLayout4)
         modelVerticalLayout.addLayout(modelHorizontalLayoutReset)
@@ -203,19 +204,39 @@ class ModelFittingApp(QDialog):
         self.cmbModels.currentIndexChanged.connect(lambda: self.clearOptimisedParamaterList('cmbModels')) 
         self.cmbModels.activated.connect(lambda:  self.plot('cmbModels'))
 
+        self.lblWieghtFactorExplanation = QLabel("Use the spinboxes on the right-hand side\n to select the weighting of AIR and VIR") 
+        self.lblWieghtFactorExplanation.hide()
+        self.lblWieghtFactorExplanation.setWordWrap(True)
         #Create dropdown lists for selection of AIF & VIF
         self.lblAIF = QLabel("Arterial Input Function:")
-        #self.lblAIF.setAlignment(QtCore.Qt.AlignRight)
         self.cmbAIF = QComboBox()
         self.cmbAIF.setToolTip('Select Arterial Input Function')
         self.lblVIF = QLabel("Venal Input Function:")
-        #self.lblVIF.setAlignment(QtCore.Qt.AlignRight)
         self.cmbVIF = QComboBox()
+        #These 2 spinboxes will hold the wieghing factors for AIR & VIR
+        #in the dual inlet versions of the models
+        self.spinBoxWeightFactorAIR = QDoubleSpinBox()
+        self.spinBoxWeightFactorAIR.setRange(0.0, 1.0)
+        self.spinBoxWeightFactorAIR.setDecimals(2)
+        self.spinBoxWeightFactorAIR.setSingleStep(0.01)
+        self.spinBoxWeightFactorAIR.setValue(0.5)
+        self.spinBoxWeightFactorVIR = QDoubleSpinBox()
+        self.spinBoxWeightFactorVIR.setRange(0.0, 1.0)
+        self.spinBoxWeightFactorVIR.setDecimals(2)
+        self.spinBoxWeightFactorVIR.setSingleStep(0.01)
+        self.spinBoxWeightFactorVIR.setValue(0.5)
+        self.spinBoxWeightFactorVIR.hide()
+        self.spinBoxWeightFactorAIR.hide()
+
+        self.spinBoxWeightFactorVIR.valueChanged.connect(lambda: self.spinBoxWeightFactorAIR.setValue(1.0 -float(self.spinBoxWeightFactorVIR.value()))) 
+        self.spinBoxWeightFactorAIR.valueChanged.connect(lambda: self.spinBoxWeightFactorVIR.setValue(1.0 -float(self.spinBoxWeightFactorAIR.value()))) 
+
         self.cmbVIF.setToolTip('Select Venal Input Function')
         self.cmbROI.activated.connect(lambda:  self.plot('cmbROI'))
         self.cmbROI.currentIndexChanged.connect(self.displayModelFittingGroupBox)
         self.cmbAIF.activated.connect(lambda: self.plot('cmbAIF'))
         self.cmbAIF.currentIndexChanged.connect(self.displayFitModelSaveCSVButtons)
+        self.cmbVIF.currentIndexChanged .connect(self.displayWieghtFactorSpinBoxes)
         self.cmbVIF.activated.connect(lambda: self.plot('cmbVIF'))
         self.lblAIF.hide()
         self.cmbAIF.hide()
@@ -229,10 +250,13 @@ class ModelFittingApp(QDialog):
         modelHorizontalLayout2.insertStretch (0, 2)
         modelHorizontalLayout2.addWidget(self.modelLabel)
         modelHorizontalLayout2.addWidget(self.cmbModels)
+        modelHorizontalLayoutWieghtFactorLabel.addWidget(self.lblWieghtFactorExplanation)
         modelHorizontalLayout3.addWidget(self.lblAIF)
         modelHorizontalLayout3.addWidget(self.cmbAIF)
+        modelHorizontalLayout3.addWidget(self.spinBoxWeightFactorAIR)
         modelHorizontalLayout4.addWidget(self.lblVIF)
         modelHorizontalLayout4.addWidget(self.cmbVIF)
+        modelHorizontalLayout4.addWidget(self.spinBoxWeightFactorVIR)
         
         self.cboxDelay = QCheckBox('Delay', self)
         self.cboxConstaint = QCheckBox('Constraint', self)
@@ -582,6 +606,16 @@ class ModelFittingApp(QDialog):
         except Exception as e:
             print('Error in function displayModelFittingGroupBox: ' + str(e)) 
             logger.error('Error in function displayModelFittingGroupBox: ' + str(e))
+
+    def displayWieghtFactorSpinBoxes(self):
+        if str(self.cmbVIF.currentText()) == 'Please Select':
+            self.lblWieghtFactorExplanation.hide()
+            self.spinBoxWeightFactorVIR.hide()
+            self.spinBoxWeightFactorAIR.hide()
+        else:
+            self.lblWieghtFactorExplanation.show()
+            self.spinBoxWeightFactorVIR.show()
+            self.spinBoxWeightFactorAIR.show()
 
     def displayFitModelSaveCSVButtons(self):
         try:
@@ -987,7 +1021,8 @@ class ModelFittingApp(QDialog):
                 self.cmbAIF.hide()
                 self.lblVIF.hide()
                 self.cmbVIF.hide()
-                
+                self.spinBoxWeightFactorVIR.hide()
+                self.spinBoxWeightFactorAIR.hide()
                 self.cboxDelay.hide()
                 self.cboxConstaint.hide()
                 self.btnReset.hide()
