@@ -602,26 +602,31 @@ class ModelFittingApp(QDialog):
     def buildParameterArray(self):
         """Forms a 1D array of model input parameters.  Volume fractions are converted 
             from percentages to decimal fractions."""
-        initialParametersArray = []
-        parameter1 = self.spinBoxParameter1.value()
-        if self.spinBoxParameter1.suffix() == '%':
-            #This is a volume fraction so convert % to a decimal fraction
-            parameter1 = parameter1/100.0
-        initialParametersArray.append(parameter1)
+        try:
+            logger.info('Function buildParameterArray called.')
+            initialParametersArray = []
+            parameter1 = self.spinBoxParameter1.value()
+            if self.spinBoxParameter1.suffix() == '%':
+                #This is a volume fraction so convert % to a decimal fraction
+                parameter1 = parameter1/100.0
+            initialParametersArray.append(parameter1)
         
-        parameter2 = self.spinBoxParameter2.value()
-        if self.spinBoxParameter2.suffix() == '%':
-             #This is a volume fraction so convert % to a decimal fraction
-            parameter2 = parameter2/100.0
-        initialParametersArray.append(parameter2)
-        
-        if self.spinBoxParameter3.isHidden() == False:
-            parameter3 = self.spinBoxParameter3.value()
-            if self.spinBoxParameter3.suffix() == '%':
+            parameter2 = self.spinBoxParameter2.value()
+            if self.spinBoxParameter2.suffix() == '%':
                  #This is a volume fraction so convert % to a decimal fraction
-                parameter3 = parameter3/100.0
-            initialParametersArray.append(parameter3)
-        return initialParametersArray
+                parameter2 = parameter2/100.0
+            initialParametersArray.append(parameter2)
+        
+            if self.spinBoxParameter3.isHidden() == False:
+                parameter3 = self.spinBoxParameter3.value()
+                if self.spinBoxParameter3.suffix() == '%':
+                     #This is a volume fraction so convert % to a decimal fraction
+                    parameter3 = parameter3/100.0
+                initialParametersArray.append(parameter3)
+            return initialParametersArray
+        except Exception as e:
+            print('Error in function buildParameterArray with model ' + str(e))
+            logger.error('Error in function buildParameterArray with model '  + str(e))
 
     def runCurveFit(self):
         global _boolCurveFittingDone
@@ -816,8 +821,8 @@ class ModelFittingApp(QDialog):
                 csvfile.close()
 
                 self.configureGUIAfterLoadingData()
-                #plot function called here in case we need to clear a graph showing data from a previous data file
-                self.plot('loadDataFile')
+                #clear the plot in case it is showing data from a previous data file
+                self.figure.clear()
 
         except csv.Error:
             print('CSV Reader error in function loadDataFile: file %s, line %d: %s' % (_dataFileName, readCSV.line_num, csv.Error))
@@ -865,6 +870,7 @@ class ModelFittingApp(QDialog):
             self.cmbVIF.addItems(organArray)
             self.lblROI.show()
             self.cmbROI.show()
+
             logger.info('Function configureGUIAfterLoadingData called and the following organ list loaded: {}'.format(organArray))
         except RuntimeError as re:
             print('runtime error in function configureGUIAfterLoadingData: ' + str(re) )
@@ -941,18 +947,20 @@ class ModelFittingApp(QDialog):
             self.btnSaveReport.show()
             self.clearOptimumParamaterValuesOnGUI() #Remove results of curve fitting of the previous model
             self.initialiseParameterSpinBoxes() #Typical initial values for each model
+            #Show controls common to all models
+            self.lblAIF.show()
+            self.cmbAIF.show()
+            self.lblVIF.show()
+            self.cmbVIF.show()
+            self.spinBoxParameter1.show()
+            self.spinBoxParameter2.show()
+            self.spinBoxParameter3.show()
             modelName = str(self.cmbModels.currentText())
             logger.info('Function configureGUIForEachModel called when model = ' + modelName)
+            #Configure parameter spinbox labels for each model
             if modelName ==  'Extended Tofts':
                 self.labelParameter1.setText(LABEL_PARAMETER_Vp)
                 self.labelParameter1.show()
-                self.lblAIF.show()
-                self.cmbAIF.show()
-                self.lblVIF.hide()
-                self.cmbVIF.hide()
-                self.spinBoxParameter1.show()
-                self.spinBoxParameter2.show()
-                self.spinBoxParameter3.show()
                 self.labelParameter2.setText(LABEL_PARAMETER_Ve)
                 self.labelParameter2.show()
                 self.labelParameter3.setText(LABEL_PARAMETER_Ktrans)
@@ -960,13 +968,6 @@ class ModelFittingApp(QDialog):
             elif modelName == 'High-Flow Gadoxetate':
                 self.labelParameter1.setText(LABEL_PARAMETER_Ve)
                 self.labelParameter1.show()
-                self.lblAIF.show()
-                self.cmbAIF.show()
-                self.lblVIF.hide()
-                self.cmbVIF.hide()
-                self.spinBoxParameter1.show()
-                self.spinBoxParameter2.show()
-                self.spinBoxParameter3.show()
                 self.labelParameter2.setText(LABEL_PARAMETER_Kce)
                 self.labelParameter2.show()
                 self.labelParameter3.setText(LABEL_PARAMETER_Kbc)
@@ -974,18 +975,13 @@ class ModelFittingApp(QDialog):
             elif modelName ==  'One Compartment':
                 self.labelParameter1.setText(LABEL_PARAMETER_Vp)
                 self.labelParameter1.show()
-                self.lblAIF.show()
-                self.cmbAIF.show()
-                self.lblVIF.hide()
-                self.cmbVIF.hide()
-                self.spinBoxParameter1.show()
-                self.spinBoxParameter2.show()
-                self.spinBoxParameter3.hide()
                 self.labelParameter2.setText(LABEL_PARAMETER_Fp)
                 self.labelParameter2.show()
+                
+                #Hide this spinbox & label as this model does not have a third parameter
+                self.spinBoxParameter3.hide() 
                 self.labelParameter3.hide()
                 self.labelParameter3.clear()
-                self.spinBoxParameter2.setValue(DEFAULT_VALUE_Fp) #Default value
             else:  #No model is selected
                 self.lblAIF.hide()
                 self.cmbAIF.hide()
@@ -1051,7 +1047,7 @@ class ModelFittingApp(QDialog):
     def plot(self, callingFunction):
         try:
             global _listModel
-            #with plt.style.context('ggplot'):
+
             self.figure.clear()
             
             # create an axis
@@ -1071,40 +1067,32 @@ class ModelFittingApp(QDialog):
             if ROI != 'Please Select':
                 arrayROIConcs = np.array(_concentrationData[ROI], dtype='float')
                 ax.plot(arrayTimes, arrayROIConcs, 'b.-', label= ROI)
-                if modelName == 'Descriptive':
-                    _listModel = TracerKineticModels.ROI_OnlyModel()
-                    arrayModel =  np.array(_listModel, dtype='float')
-                    ax.plot(arrayTimes, arrayModel, 'g--', label= modelName + ' model')
 
             AIF = str(self.cmbAIF.currentText())
             VIF = str(self.cmbVIF.currentText())
+            
 
             logger.info('Function plot called from ' + callingFunction + ' when ROI={}, AIF={} and VIF={}'.format(ROI, AIF, VIF))
 
             if AIF != 'Please Select':
                 arrayAIFConcs = np.array(_concentrationData[AIF], dtype='float')
                 ax.plot(arrayTimes, arrayAIFConcs, 'r.-', label= AIF)
-               
-                parameter1 = self.spinBoxParameter1.value()
-                parameter2 = self.spinBoxParameter2.value()
-                parameter3 = self.spinBoxParameter3.value()
+                parameterArray = self.buildParameterArray()
 
                 if VIF == 'Please Select':
-                    logger.info('TracerKineticModels.modelSelector called when model ={} and parameters are {}, {}, {}'. format(modelName, parameter1, parameter2, parameter3))
-                    parameterArray = self.buildParameterArray()
+                    logger.info('TracerKineticModels.modelSelector called when model ={} and parameter array = {}'. format(modelName, parameterArray))
+                
+                    #Use a AIR input only version of the model
                     _listModel = TracerKineticModels.modelSelector(modelName, arrayTimes, arrayAIFConcs, parameterArray)
                     arrayModel =  np.array(_listModel, dtype='float')
                     ax.plot(arrayTimes, arrayModel, 'g--', label= modelName + ' model')
-            
-            if VIF != 'Please Select':
-                arrayVIFConcs = np.array(_concentrationData[VIF], dtype='float')
-                ax.plot(arrayTimes, arrayVIFConcs, 'k.-', label= VIF)
-                parameter1 = self.spinBoxParameter1.value()
-                parameter2 = self.spinBoxParameter2.value()
-                parameter3 = self.spinBoxParameter3.value()
-                _listModel = TracerKineticModels.AIF_VIF_Model()
-                arrayModel =  np.array(_listModel, dtype='float')
-                ax.plot(arrayTimes, arrayModel, 'g--', label= modelName + ' model')
+                else:
+                    arrayVIFConcs = np.array(_concentrationData[VIF], dtype='float')
+                    ax.plot(arrayTimes, arrayVIFConcs, 'k.-', label= VIF)
+                    #Use a duplex version of the model
+                    _listModel = TracerKineticModels.modelSelector(modelName, arrayTimes, arrayAIFConcs, parameterArray)
+                    arrayModel =  np.array(_listModel, dtype='float')
+                    ax.plot(arrayTimes, arrayModel, 'g--', label= modelName + ' model')
             
             if ROI != 'Please Select':  
                 ax.set_xlabel('Time (mins)', fontsize=xyAxisLabelSize)
