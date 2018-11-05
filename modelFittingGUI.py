@@ -204,7 +204,7 @@ class ModelFittingApp(QDialog):
         self.cmbModels.currentIndexChanged.connect(lambda: self.clearOptimisedParamaterList('cmbModels')) 
         self.cmbModels.activated.connect(lambda:  self.plot('cmbModels'))
 
-        self.lblWieghtFactorExplanation = QLabel("Use the spinboxes on the right-hand side\n to select the weighting of AIR and VIR") 
+        self.lblWieghtFactorExplanation = QLabel("Use the spinboxes on the right-hand side\nto select the weightings of AIR and VIR") 
         self.lblWieghtFactorExplanation.hide()
         self.lblWieghtFactorExplanation.setWordWrap(True)
         #Create dropdown lists for selection of AIF & VIF
@@ -230,13 +230,15 @@ class ModelFittingApp(QDialog):
 
         self.spinBoxWeightFactorVIR.valueChanged.connect(lambda: self.spinBoxWeightFactorAIR.setValue(1.0 -float(self.spinBoxWeightFactorVIR.value()))) 
         self.spinBoxWeightFactorAIR.valueChanged.connect(lambda: self.spinBoxWeightFactorVIR.setValue(1.0 -float(self.spinBoxWeightFactorAIR.value()))) 
+        self.spinBoxWeightFactorVIR.valueChanged.connect(lambda: self.plot('spinBoxWeightFactorVIR')) 
+        self.spinBoxWeightFactorAIR.valueChanged.connect(lambda: self.plot('spinBoxWeightFactorAIR'))  
 
         self.cmbVIF.setToolTip('Select Venal Input Function')
         self.cmbROI.activated.connect(lambda:  self.plot('cmbROI'))
         self.cmbROI.currentIndexChanged.connect(self.displayModelFittingGroupBox)
         self.cmbAIF.activated.connect(lambda: self.plot('cmbAIF'))
         self.cmbAIF.currentIndexChanged.connect(self.displayFitModelSaveCSVButtons)
-        self.cmbVIF.currentIndexChanged .connect(self.displayWieghtFactorSpinBoxes)
+        self.cmbVIF.currentIndexChanged.connect(self.displayWieghtFactorSpinBoxes)
         self.cmbVIF.activated.connect(lambda: self.plot('cmbVIF'))
         self.lblAIF.hide()
         self.cmbAIF.hide()
@@ -657,6 +659,19 @@ class ModelFittingApp(QDialog):
                      #This is a volume fraction so convert % to a decimal fraction
                     parameter3 = parameter3/100.0
                 initialParametersArray.append(parameter3)
+            else:
+                initialParametersArray.append(0.0)
+
+            if self.spinBoxWeightFactorAIR.isHidden() == True:
+                initialParametersArray.append(1.0)
+            else:
+                initialParametersArray.append(self.spinBoxWeightFactorAIR.value())
+
+            if self.spinBoxWeightFactorVIR.isHidden() == True:
+                initialParametersArray.append(0.0)
+            else:
+                initialParametersArray.append(self.spinBoxWeightFactorVIR.value())
+
             return initialParametersArray
         except Exception as e:
             print('Error in function buildParameterArray with model ' + str(e))
@@ -1116,16 +1131,21 @@ class ModelFittingApp(QDialog):
 
                 if VIF == 'Please Select':
                     logger.info('TracerKineticModels.modelSelector called when model ={} and parameter array = {}'. format(modelName, parameterArray))
-                
+                    dualInput = False
+                    dummyArray = np.zeros(shape=(1,2))
                     #Use a AIR input only version of the model
-                    _listModel = TracerKineticModels.modelSelector(modelName, arrayTimes, arrayAIFConcs, parameterArray)
+                    _listModel = TracerKineticModels.modelSelector(modelName, arrayTimes, dualInput,
+                                             arrayAIFConcs, dummyArray, parameterArray)
                     arrayModel =  np.array(_listModel, dtype='float')
                     ax.plot(arrayTimes, arrayModel, 'g--', label= modelName + ' model')
                 else:
                     arrayVIFConcs = np.array(_concentrationData[VIF], dtype='float')
                     ax.plot(arrayTimes, arrayVIFConcs, 'k.-', label= VIF)
                     #Use a duplex version of the model
-                    _listModel = TracerKineticModels.modelSelector(modelName, arrayTimes, arrayAIFConcs, parameterArray)
+                    dualInput = True
+                    #modelName, times, boolDualInlet, AIFConcentration, VIFConcentration, parameterArray
+                    _listModel = TracerKineticModels.modelSelector(modelName, arrayTimes, dualInput,
+                           arrayAIFConcs, arrayVIFConcs, parameterArray)
                     arrayModel =  np.array(_listModel, dtype='float')
                     ax.plot(arrayTimes, arrayModel, 'g--', label= modelName + ' model')
             

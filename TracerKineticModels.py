@@ -17,39 +17,61 @@ modelNames = ['Select a model','Extended Tofts','One Compartment','High-Flow Gad
 PARAMETER_UPPER_BOUND_VOL_FRACTION = 1.0
 PARAMETER_UPPER_BOUND_RATE = np.inf
 
-def modelSelector(modelName, times, inputConcentration, parameterArray):
+def modelSelector(modelName, times, boolDualInlet, AIFConcentration, VIFConcentration, parameterArray):
     """Function called in the GUI of the model fitting tool to select the function corresponding
         to each model"""
     logger.info("In TracerKineticModels.modelSelector. Called with model {} and parameters {}".format(modelName, parameterArray))
-    timeInputConc2DArray = np.column_stack((times, inputConcentration,))
+    if boolDualInlet == True:
+        timeInputConc2DArray = np.column_stack((times, AIFConcentration, VIFConcentration))
+    else:
+        timeInputConc2DArray = np.column_stack((times, AIFConcentration))
+
     parameter1 = parameterArray[0]
     parameter2 = parameterArray[1]
-    if len(parameterArray) == 3:
-        parameter3 = parameterArray[2]
+    parameter3 = parameterArray[2]
+    fractionAIF = parameterArray[3]
+    fractionVIF = parameterArray[4]
 
     if modelName ==  'Extended Tofts':
-        return extendedTofts(timeInputConc2DArray, parameter1, parameter2, parameter3)
+        return extendedTofts(timeInputConc2DArray, parameter1, parameter2, 
+              parameter3, fractionAIF, fractionVIF)
     elif modelName ==  'One Compartment':
-        return oneCompartment(timeInputConc2DArray, parameter1, parameter2)
+        return oneCompartment(timeInputConc2DArray, parameter1, parameter2, 
+              parameter3, fractionAIF, fractionVIF)
     elif modelName ==  'High-Flow Gadoxetate':
-        return highFlowGadoxetate(timeInputConc2DArray, parameter1, parameter2, parameter3)
+        return highFlowGadoxetate(timeInputConc2DArray, parameter1, parameter2, parameter3,
+              fractionAIF, fractionVIF)
     
 #Note: The input paramaters for the volume fractions and rate constants in
 # the following model function definitions are listed in the same order as they are 
-# displayed in the GUI from top (first) to bottom (last)        
-def extendedTofts(xData2DArray, Vp, Ve, Ktrans):
+# displayed in the GUI from top (first) to bottom (last)
+        
+def extendedTofts(xData2DArray, Vp, Ve, Ktrans, fAIF, fVIF):
     """This function contains the algorithm for calculating how concentration varies with time
         using the Extended Tofts model"""
     try:
-        logger.info('In function TracerKineticModels.extendedTofts with Vp={}, Ve={} and Ktrans={}'.format(Vp, Ve, Ktrans))
+        logger.info('In function TracerKineticModels.extendedTofts with Vp={}, Ve={},Ktrans={}, fA={} and fV={}'.format(Vp, Ve, Ktrans, fAIF, fVIF))
         #print('Extended Tofts. Vp={}, Ve={} and Ktrans={}'.format(Vp, Ve, Ktrans))
         #In order to use scipy.optimize.curve_fit, time and concentration must be
         #combined into one function input parameter, a 2D array, then separated into individual
         #1 D arrays 
         times = xData2DArray[:,0]
-        concentrations = xData2DArray[:,1]
+        AIFconcentrations = xData2DArray[:,1]
+
+        #Test the number of columns in the time/concentration(s) array
+        #to determine if we are dealing with just AIF or AIF & VIR
+        numCols = xData2DArray.shape[1]
+        if numCols == 2:
+            concentrations = AIFconcentrations
+            #print('Single Extended Tofts. concs={}'.format(concentrations))
+        elif numCols == 3:
+            VIFconcentrations = xData2DArray[:,2]
+            concentrations = (fAIF * AIFconcentrations) + (fVIF * VIFconcentrations)
+            #print('Dual Extended Tofts. fa={}, fv={}, concs={}'.format(fAIF, fVIF, concentrations))
+           
         #Calculate Intracellular transit time, Tc
         Tc = Ve/Ktrans
+        
         listConcentrationsFromModel = []
         # expconv calculates convolution of ca and (1/Tc)exp(-t/Tc)
         listConcentrationsFromModel = Vp*concentrations + Ve*tools.expconv(Tc, times, concentrations, 'Extended Tofts')
@@ -58,7 +80,7 @@ def extendedTofts(xData2DArray, Vp, Ve, Ktrans):
         print('TracerKineticModels.extendedTofts: ' + str(e))
         logger.error('Runtime error in function TracerKineticModels.extendedTofts:' + str(e) )
             
-def oneCompartment(xData2DArray, Vp, Fp):
+def oneCompartment(xData2DArray, Vp, Fp, dummyParam, fAIF, fVIF):
     """This function contains the algorithm for calculating how concentration varies with time
         using the One Compartment model"""
     try:
@@ -67,7 +89,17 @@ def oneCompartment(xData2DArray, Vp, Fp):
         #combined into one function input parameter, a 2D array, then separated into individual
         #1 D arrays
         times = xData2DArray[:,0]
-        concentrations = xData2DArray[:,1]
+        AIFconcentrations = xData2DArray[:,1]
+        
+        #Test the number of columns in the time/concentration(s) array
+        #to determine if we are dealing with just AIF or AIF & VIR
+        numCols = xData2DArray.shape[1]
+        if numCols == 2:
+            concentrations = AIFconcentrations
+        elif numCols == 3:
+            VIFconcentrations = xData2DArray[:,2]
+            concentrations = (fAIF * AIFconcentrations) + (fVIF * VIFconcentrations)
+        
         #Calculate Intracellular transit time, Tc
         Tc = Vp/Fp
         listConcentrationsFromModel = []
@@ -79,7 +111,7 @@ def oneCompartment(xData2DArray, Vp, Fp):
         print('TracerKineticModels.oneCompartment: ' + str(e))
         logger.error('Runtime error in function TracerKineticModels.oneCompartment:' + str(e) )
 
-def highFlowGadoxetate(xData2DArray, Ve, Kce, Kbc):
+def highFlowGadoxetate(xData2DArray, Ve, Kce, Kbc, fAIF, fVIF):
     """This function contains the algorithm for calculating how concentration varies with time
         using the High Flow Gadoxetate model"""
     try:
@@ -89,7 +121,17 @@ def highFlowGadoxetate(xData2DArray, Ve, Kce, Kbc):
         #combined into one function input parameter, a 2D array, then separated into individual
         #1 D arrays
         times = xData2DArray[:,0]
-        concentrations = xData2DArray[:,1]
+        AIFconcentrations = xData2DArray[:,1]
+        
+        #Test the number of columns in the time/concentration(s) array
+        #to determine if we are dealing with just AIF or AIF & VIR
+        numCols = xData2DArray.shape[1]
+        if numCols == 2:
+            concentrations = AIFconcentrations
+        elif numCols == 3:
+            VIFconcentrations = xData2DArray[:,2]
+            concentrations = (fAIF * AIFconcentrations) + (fVIF * VIFconcentrations)
+
         #Calculate Intracellular transit time, Tc
         Tc = (1-Ve)/Kbc
         listConcentrationsFromModel = []
