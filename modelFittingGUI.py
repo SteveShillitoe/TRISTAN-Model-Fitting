@@ -505,7 +505,7 @@ class ModelFittingApp(QDialog):
             confidenceStr = '[{}     {}]'.format(lowerLimit, upperLimit)
             self.lblParam2ConfInt.setText(confidenceStr) 
 
-            if len(_optimisedParamaterList) == 3:
+            if self.spinBoxParameter3.isHidden() == False:
                 self.lblParam3Name.setText(self.labelParameter3.text())
                 parameterValue = round(_optimisedParamaterList[2][0], 3)
                 lowerLimit = round(_optimisedParamaterList[2][1], 5)
@@ -662,14 +662,12 @@ class ModelFittingApp(QDialog):
             else:
                 initialParametersArray.append(0.0)
 
-            if self.spinBoxWeightFactorAIR.isHidden() == True:
-                initialParametersArray.append(1.0)
-            else:
+            #Only add the wieght factors for AIF & VIF if a VIF has been selected
+            #and the weight factor spinboxes are therefore visible.
+            if self.spinBoxWeightFactorAIR.isHidden() == False:
                 initialParametersArray.append(self.spinBoxWeightFactorAIR.value())
 
-            if self.spinBoxWeightFactorVIR.isHidden() == True:
-                initialParametersArray.append(0.0)
-            else:
+            if self.spinBoxWeightFactorVIR.isHidden() == False:
                 initialParametersArray.append(self.spinBoxWeightFactorVIR.value())
 
             return initialParametersArray
@@ -677,34 +675,57 @@ class ModelFittingApp(QDialog):
             print('Error in function buildParameterArray with model ' + str(e))
             logger.error('Error in function buildParameterArray with model '  + str(e))
 
+    def blockSpinBoxSignals(self, boolBlockSignal):
+        self.spinBoxParameter1.blockSignals(boolBlockSignal)
+        self.spinBoxParameter2.blockSignals(boolBlockSignal)
+        self.spinBoxParameter3.blockSignals(boolBlockSignal)
+        self.spinBoxWeightFactorVIR.blockSignals(boolBlockSignal)
+        self.spinBoxWeightFactorAIR.blockSignals(boolBlockSignal)
+
     def runCurveFit(self):
         global _boolCurveFittingDone
         try:
             initialParametersArray = self.buildParameterArray()
+
+            #Get name of region of interest, arterial and venal input functions
             ROI = str(self.cmbROI.currentText())
             AIF = str(self.cmbAIF.currentText())
+            VIF = str(self.cmbVIF.currentText())
+
+            #Get arrays of data corresponding to the above 3 regions 
+            #and the time over which the measurements were made.
             arrayTimes = np.array(_concentrationData['Time'], dtype='float')
             arrayROIConcs = np.array(_concentrationData[ROI], dtype='float')
-            arrayInputConcs = np.array(_concentrationData[AIF], dtype='float')
+            arrayAIFConcs = np.array(_concentrationData[AIF], dtype='float')
+            if VIF != 'Please Select':
+                boolDualInput = True
+                arrayVIFConcs = np.array(_concentrationData[VIF], dtype='float')
+            else:
+                #Create empty dummy array to act as place holder in TracerKineticModels.curveFit 
+                #function call 
+                arrayVIFConcs = []
+                boolDualInput = False
+            
             if self.cboxConstaint.isChecked():
                 addConstraint = True
             else:
                 addConstraint = False
 
-            #Call curve fitting routine
+            #Get the name of the model to be fitted to the ROI curve
             modelName = str(self.cmbModels.currentText())
             #print('Start of Curve Fitting.')
+            #Call curve fitting routine
             logger.info('TracerKineticModels.curveFit called with model {}, parameters {} and Constraint = {}'.format(modelName, initialParametersArray, addConstraint))
-            optimumParams, paramCovarianceMatrix = TracerKineticModels.curveFit(modelName, arrayTimes, arrayInputConcs, arrayROIConcs, initialParametersArray, addConstraint)
-            _boolCurveFittingDone = True
+            optimumParams, paramCovarianceMatrix = TracerKineticModels.curveFit(modelName, arrayTimes, 
+                 arrayAIFConcs, arrayVIFConcs, arrayROIConcs, initialParametersArray, addConstraint, boolDualInput)
+       
+            _boolCurveFittingDone = True 
             logger.info('TracerKineticModels.curveFit returned optimum parameters {} with confidence levels {}'.format(optimumParams, paramCovarianceMatrix))
             #print('End of Curve Fitting.')
             
             #Block signals from spinboxes, so that setting initial values
             #does not trigger an event.
-            self.spinBoxParameter1.blockSignals(True)
-            self.spinBoxParameter2.blockSignals(True)
-            self.spinBoxParameter3.blockSignals(True)
+            self.blockSpinBoxSignals(True)
             
             if self.spinBoxParameter1.suffix() == '%':
                 self.spinBoxParameter1.setValue(optimumParams[0]* 100) #Convert Volume fraction to %
@@ -719,10 +740,13 @@ class ModelFittingApp(QDialog):
                     self.spinBoxParameter3.setValue(optimumParams[2]* 100) #Convert Volume fraction to %
                 else:
                     self.spinBoxParameter3.setValue(optimumParams[2])
+            if self.spinBoxWeightFactorAIR.isHidden() == False:
+                self.spinBoxWeightFactorAIR.setValue(optimumParams[3])
+            if self.spinBoxWeightFactorVIR.isHidden() == False:
+                self.spinBoxWeightFactorVIR.setValue(optimumParams[4])
             
-            self.spinBoxParameter1.blockSignals(False)
-            self.spinBoxParameter2.blockSignals(False)
-            self.spinBoxParameter3.blockSignals(False)
+            self.blockSpinBoxSignals(False)
+
             self.plot('runCurveFit')
 
             numDataPoints = arrayROIConcs.size
@@ -957,9 +981,7 @@ class ModelFittingApp(QDialog):
 
             #Block signals from spinboxes, so that setting initial values
             #does not trigger an event.
-            self.spinBoxParameter1.blockSignals(True)
-            self.spinBoxParameter2.blockSignals(True)
-            self.spinBoxParameter3.blockSignals(True)
+            self.blockSpinBoxSignals(True)
             
             modelName = str(self.cmbModels.currentText())
             logger.info('Function initialiseParameterSpinBoxes called when model = ' + modelName)
@@ -979,9 +1001,7 @@ class ModelFittingApp(QDialog):
                 self.spinBoxParameter1.setSuffix('%')
                 self.spinBoxParameter2.setValue(DEFAULT_VALUE_Fp)
 
-            self.spinBoxParameter1.blockSignals(False)
-            self.spinBoxParameter2.blockSignals(False)
-            self.spinBoxParameter3.blockSignals(False)
+            self.blockSpinBoxSignals(False)
         except Exception as e:
             print('Error in function initialiseParameterSpinBoxes: ' + str(e) )
             logger.error('Error in function initialiseParameterSpinBoxes: ' + str(e) )
@@ -1109,7 +1129,7 @@ class ModelFittingApp(QDialog):
             #Set size of the x,y axis tick labels
             ax.tick_params(axis='both', which='major', labelsize=tickLabelSize)
 
-            #Get model data
+            #Get the name of the model 
             modelName = str(self.cmbModels.currentText())
             
             arrayTimes = np.array(_concentrationData['Time'], dtype='float')
@@ -1120,7 +1140,6 @@ class ModelFittingApp(QDialog):
 
             AIF = str(self.cmbAIF.currentText())
             VIF = str(self.cmbVIF.currentText())
-            
 
             logger.info('Function plot called from ' + callingFunction + ' when ROI={}, AIF={} and VIF={}'.format(ROI, AIF, VIF))
 
@@ -1130,24 +1149,18 @@ class ModelFittingApp(QDialog):
                 parameterArray = self.buildParameterArray()
 
                 if VIF == 'Please Select':
-                    logger.info('TracerKineticModels.modelSelector called when model ={} and parameter array = {}'. format(modelName, parameterArray))
-                    dualInput = False
-                    dummyArray = np.zeros(shape=(1,2))
-                    #Use a AIR input only version of the model
-                    _listModel = TracerKineticModels.modelSelector(modelName, arrayTimes, dualInput,
-                                             arrayAIFConcs, dummyArray, parameterArray)
-                    arrayModel =  np.array(_listModel, dtype='float')
-                    ax.plot(arrayTimes, arrayModel, 'g--', label= modelName + ' model')
+                    boolDualInput = False
+                    arrayVIFConcs = []
                 else:
+                    boolDualInput = True
                     arrayVIFConcs = np.array(_concentrationData[VIF], dtype='float')
                     ax.plot(arrayTimes, arrayVIFConcs, 'k.-', label= VIF)
-                    #Use a duplex version of the model
-                    dualInput = True
-                    #modelName, times, boolDualInlet, AIFConcentration, VIFConcentration, parameterArray
-                    _listModel = TracerKineticModels.modelSelector(modelName, arrayTimes, dualInput,
-                           arrayAIFConcs, arrayVIFConcs, parameterArray)
-                    arrayModel =  np.array(_listModel, dtype='float')
-                    ax.plot(arrayTimes, arrayModel, 'g--', label= modelName + ' model')
+                    
+                logger.info('TracerKineticModels.modelSelector called when model ={} and parameter array = {}'. format(modelName, parameterArray))        
+                _listModel = TracerKineticModels.modelSelector(modelName, arrayTimes, 
+                        arrayAIFConcs, parameterArray, boolDualInput, arrayVIFConcs)
+                arrayModel =  np.array(_listModel, dtype='float')
+                ax.plot(arrayTimes, arrayModel, 'g--', label= modelName + ' model')
             
             if ROI != 'Please Select':  
                 ax.set_xlabel('Time (mins)', fontsize=xyAxisLabelSize)
@@ -1160,7 +1173,7 @@ class ModelFittingApp(QDialog):
                 # refresh canvas
                 self.canvas.draw()
             else:
-                # draw the graph on the canvas
+                # draw a blank graph on the canvas
                 self.canvas.draw()
             
         except Exception as e:

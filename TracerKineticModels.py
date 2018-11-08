@@ -1,5 +1,6 @@
 import Tools as tools
 from scipy.optimize import curve_fit
+from lmfit import Model, Parameters
 import numpy as np
 import logging
 
@@ -17,105 +18,145 @@ modelNames = ['Select a model','Extended Tofts','One Compartment','High-Flow Gad
 PARAMETER_UPPER_BOUND_VOL_FRACTION = 1.0
 PARAMETER_UPPER_BOUND_RATE = np.inf
 
-def modelSelector(modelName, times, boolDualInlet, AIFConcentration, VIFConcentration, parameterArray):
+def modelSelector(modelName, times, AIFConcentration, parameterArray, boolDualInput, VIFConcentration=[]):
     """Function called in the GUI of the model fitting tool to select the function corresponding
         to each model"""
     logger.info("In TracerKineticModels.modelSelector. Called with model {} and parameters {}".format(modelName, parameterArray))
-    if boolDualInlet == True:
-        timeInputConc2DArray = np.column_stack((times, AIFConcentration, VIFConcentration))
-    else:
-        timeInputConc2DArray = np.column_stack((times, AIFConcentration))
-
+    
     parameter1 = parameterArray[0]
     parameter2 = parameterArray[1]
     parameter3 = parameterArray[2]
-    fractionAIF = parameterArray[3]
-    fractionVIF = parameterArray[4]
+    if boolDualInput == True:
+        timeInputConcs2DArray = np.column_stack((times, AIFConcentration, VIFConcentration))
+        fractionAIF = parameterArray[3]
+        fractionVIF = parameterArray[4]
+    else:
+        timeInputConcs2DArray = np.column_stack((times, AIFConcentration))
 
     if modelName ==  'Extended Tofts':
-        return extendedTofts(timeInputConc2DArray, parameter1, parameter2, 
+        if boolDualInput == True:
+            return extendedTofts_DualInput(timeInputConcs2DArray, parameter1, parameter2, 
               parameter3, fractionAIF, fractionVIF)
+        else:
+            return extendedTofts_SingleInput(timeInputConcs2DArray, parameter1, parameter2, 
+              parameter3)
     elif modelName ==  'One Compartment':
-        return oneCompartment(timeInputConc2DArray, parameter1, parameter2, 
-              parameter3, fractionAIF, fractionVIF)
-    elif modelName ==  'High-Flow Gadoxetate':
-        return highFlowGadoxetate(timeInputConc2DArray, parameter1, parameter2, parameter3,
+        if boolDualInput == True:
+            return oneCompartment_DualInput(timeInputConcs2DArray, parameter1, parameter2, 
               fractionAIF, fractionVIF)
-    
+        else:
+            return oneCompartment_SingleInput(timeInputConcs2DArray, parameter1, parameter2)
+    elif modelName ==  'High-Flow Gadoxetate':
+        if boolDualInput == True:
+            return highFlowGadoxetate_DualInput(timeInputConcs2DArray, parameter1, parameter2, 
+              parameter3, fractionAIF, fractionVIF)
+        else:
+            return highFlowGadoxetate_SingleInput(timeInputConcs2DArray, parameter1, parameter2, 
+              parameter3)
+
 #Note: The input paramaters for the volume fractions and rate constants in
 # the following model function definitions are listed in the same order as they are 
-# displayed in the GUI from top (first) to bottom (last)
-        
-def extendedTofts(xData2DArray, Vp, Ve, Ktrans, fAIF, fVIF):
+# displayed in the GUI from top (first) to bottom (last) 
+#       
+def extendedTofts_SingleInput(xData2DArray, Vp, Ve, Ktrans):
     """This function contains the algorithm for calculating how concentration varies with time
-        using the Extended Tofts model"""
+        using the Extended Tofts model""" 
     try:
-        logger.info('In function TracerKineticModels.extendedTofts with Vp={}, Ve={},Ktrans={}, fA={} and fV={}'.format(Vp, Ve, Ktrans, fAIF, fVIF))
+        logger.info('In function TracerKineticModels.extendedTofts_SingleInput with Vp={}, Ve={} & Ktrans={}'.format(Vp, Ve, Ktrans))
         #print('Extended Tofts. Vp={}, Ve={} and Ktrans={}'.format(Vp, Ve, Ktrans))
         #In order to use scipy.optimize.curve_fit, time and concentration must be
         #combined into one function input parameter, a 2D array, then separated into individual
         #1 D arrays 
         times = xData2DArray[:,0]
         AIFconcentrations = xData2DArray[:,1]
+        
+        #Calculate Intracellular transit time, Tc
+        Tc = Ve/Ktrans
+        
+        listConcentrationsFromModel = []
+        # expconv calculates convolution of ca and (1/Tc)exp(-t/Tc)
+        listConcentrationsFromModel = Vp*AIFconcentrations + Ve*tools.expconv(Tc, times, AIFconcentrations, 'Extended Tofts')
+        return listConcentrationsFromModel
+    except Exception as e:
+        print('TracerKineticModels.extendedTofts_SingleInput: ' + str(e))
+        logger.error('Runtime error in function TracerKineticModels.extendedTofts_SingleInput:' + str(e) )
 
-        #Test the number of columns in the time/concentration(s) array
-        #to determine if we are dealing with just AIF or AIF & VIR
-        numCols = xData2DArray.shape[1]
-        if numCols == 2:
-            concentrations = AIFconcentrations
-            #print('Single Extended Tofts. concs={}'.format(concentrations))
-        elif numCols == 3:
-            VIFconcentrations = xData2DArray[:,2]
-            concentrations = (fAIF * AIFconcentrations) + (fVIF * VIFconcentrations)
-            #print('Dual Extended Tofts. fa={}, fv={}, concs={}'.format(fAIF, fVIF, concentrations))
+def extendedTofts_DualInput(xData2DArray, Vp, Ve, Ktrans, fAIF, fVIF):
+    """This function contains the algorithm for calculating how concentration varies with time
+        using the Extended Tofts model""" 
+    try:
+        logger.info('In function TracerKineticModels.extendedTofts_DualInput with Vp={}, Ve={},Ktrans={}, fA={} and fV={}'.format(Vp, Ve, Ktrans, fAIF, fVIF))
+        #print('Extended Tofts. Vp={}, Ve={} and Ktrans={}'.format(Vp, Ve, Ktrans))
+        #In order to use scipy.optimize.curve_fit, time and concentration must be
+        #combined into one function input parameter, a 2D array, then separated into individual
+        #1 D arrays 
+        times = xData2DArray[:,0]
+        AIFconcentrations = xData2DArray[:,1]
+        VIFconcentrations = xData2DArray[:,2]
            
         #Calculate Intracellular transit time, Tc
         Tc = Ve/Ktrans
         
         listConcentrationsFromModel = []
         # expconv calculates convolution of ca and (1/Tc)exp(-t/Tc)
-        listConcentrationsFromModel = Vp*concentrations + Ve*tools.expconv(Tc, times, concentrations, 'Extended Tofts')
+        listConcentrationsFromModel = Vp*((fAIF * AIFconcentrations) + (fVIF * VIFconcentrations)) \
+            + Ve*tools.expconv(Tc, times, ((fAIF * AIFconcentrations) + (fVIF * VIFconcentrations)), 'Extended Tofts')
         return listConcentrationsFromModel
     except Exception as e:
-        print('TracerKineticModels.extendedTofts: ' + str(e))
-        logger.error('Runtime error in function TracerKineticModels.extendedTofts:' + str(e) )
+        print('TracerKineticModels.extendedTofts_DualInput: ' + str(e))
+        logger.error('Runtime error in function TracerKineticModels.extendedTofts_DualInput:' + str(e) )
             
-def oneCompartment(xData2DArray, Vp, Fp, dummyParam, fAIF, fVIF):
+def oneCompartment_SingleInput(xData2DArray, Vp, Fp):
     """This function contains the algorithm for calculating how concentration varies with time
         using the One Compartment model"""
     try:
-        logger.info('In function TracerKineticModels.oneCompartment with Vp={} and Fp={}'.format(Vp, Fp))
+        logger.info('In function TracerKineticModels.oneCompartment_SingleInput with Vp={} and Fp={}'.format(Vp, Fp))
         #In order to use scipy.optimize.curve_fit, time and concentration must be
         #combined into one function input parameter, a 2D array, then separated into individual
         #1 D arrays
         times = xData2DArray[:,0]
         AIFconcentrations = xData2DArray[:,1]
-        
-        #Test the number of columns in the time/concentration(s) array
-        #to determine if we are dealing with just AIF or AIF & VIR
-        numCols = xData2DArray.shape[1]
-        if numCols == 2:
-            concentrations = AIFconcentrations
-        elif numCols == 3:
-            VIFconcentrations = xData2DArray[:,2]
-            concentrations = (fAIF * AIFconcentrations) + (fVIF * VIFconcentrations)
         
         #Calculate Intracellular transit time, Tc
         Tc = Vp/Fp
         listConcentrationsFromModel = []
 
         # expconv calculates convolution of ca and (1/Tc)exp(-t/Tc)
-        listConcentrationsFromModel = Vp*tools.expconv(Tc, times, concentrations, 'One Compartment')
+        listConcentrationsFromModel = Vp*tools.expconv(Tc, times, AIFconcentrations, 'One Compartment')
         return listConcentrationsFromModel
     except Exception as e:
-        print('TracerKineticModels.oneCompartment: ' + str(e))
-        logger.error('Runtime error in function TracerKineticModels.oneCompartment:' + str(e) )
+        print('TracerKineticModels.oneCompartment_SingleInput: ' + str(e))
+        logger.error('Runtime error in function TracerKineticModels.oneCompartment_SingleInput:' + str(e) )
 
-def highFlowGadoxetate(xData2DArray, Ve, Kce, Kbc, fAIF, fVIF):
+def oneCompartment_DualInput(xData2DArray, Vp, Fp, fAIF, fVIF):
+    """This function contains the algorithm for calculating how concentration varies with time
+        using the One Compartment model"""
+    try:
+        logger.info('In function TracerKineticModels.oneCompartment_DualInput with Vp={} and Fp={}'.format(Vp, Fp))
+        #In order to use scipy.optimize.curve_fit, time and concentration must be
+        #combined into one function input parameter, a 2D array, then separated into individual
+        #1 D arrays
+        times = xData2DArray[:,0]
+        AIFconcentrations = xData2DArray[:,1]
+        VIFconcentrations = xData2DArray[:,2]
+        
+        #Calculate Intracellular transit time, Tc
+        Tc = Vp/Fp
+        listConcentrationsFromModel = []
+
+        # expconv calculates convolution of ca and (1/Tc)exp(-t/Tc)
+        listConcentrationsFromModel = Vp*tools.expconv(Tc, times, 
+                 ((fAIF * AIFconcentrations) + (fVIF * VIFconcentrations)), 'One Compartment')
+        return listConcentrationsFromModel
+    except Exception as e:
+        print('TracerKineticModels.oneCompartment_DualInput: ' + str(e))
+        logger.error('Runtime error in function TracerKineticModels.oneCompartment_DualInput:' + str(e) )
+
+def highFlowGadoxetate_SingleInput(xData2DArray, Ve, Kce, Kbc):
     """This function contains the algorithm for calculating how concentration varies with time
         using the High Flow Gadoxetate model"""
     try:
-        logger.info('In function TracerKineticModels.highFlowGadoxetate with Kce={}, Ve={} and Kbc={}'.format(Kce, Ve, Kbc))
+        logger.info('In function TracerKineticModels.highFlowGadoxetate_DualInput with Kce={}, Ve={} and Kbc={}'.format(Kce, Ve, Kbc))
         
         #In order to use scipy.optimize.curve_fit, time and concentration must be
         #combined into one function input parameter, a 2D array, then separated into individual
@@ -123,71 +164,108 @@ def highFlowGadoxetate(xData2DArray, Ve, Kce, Kbc, fAIF, fVIF):
         times = xData2DArray[:,0]
         AIFconcentrations = xData2DArray[:,1]
         
-        #Test the number of columns in the time/concentration(s) array
-        #to determine if we are dealing with just AIF or AIF & VIR
-        numCols = xData2DArray.shape[1]
-        if numCols == 2:
-            concentrations = AIFconcentrations
-        elif numCols == 3:
-            VIFconcentrations = xData2DArray[:,2]
-            concentrations = (fAIF * AIFconcentrations) + (fVIF * VIFconcentrations)
-
         #Calculate Intracellular transit time, Tc
         Tc = (1-Ve)/Kbc
         listConcentrationsFromModel = []
 
         # expconv calculates convolution of ca and (1/Tc)exp(-t/Tc)
-        listConcentrationsFromModel = Ve*concentrations + Kce*Tc*tools.expconv(Tc, times, concentrations, 'High Flow Gadoxetate')
+        listConcentrationsFromModel = Ve*AIFconcentrations + Kce*Tc*tools.expconv(Tc, times, AIFconcentrations, 'High Flow Gadoxetate')
         return listConcentrationsFromModel
     except Exception as e:
-        print('TracerKineticModels.highFlowGadoxetate: ' + str(e))
-        logger.error('Runtime error in function TracerKineticModels.highFlowGadoxetate:' + str(e) )
+        print('TracerKineticModels.highFlowGadoxetate_SingleInput: ' + str(e))
+        logger.error('Runtime error in function TracerKineticModels.highFlowGadoxetate_SingleInput:' + str(e) )
+    
 
-def curveFit(modelName, times, inputConcentration, concROI, paramArray, constrain):
+def highFlowGadoxetate_DualInput(xData2DArray, Ve, Kce, Kbc, fAIF, fVIF):
+    """This function contains the algorithm for calculating how concentration varies with time
+        using the High Flow Gadoxetate model"""
+    try:
+        logger.info('In function TracerKineticModels.highFlowGadoxetate_DualInput with Kce={}, Ve={} and Kbc={}'.format(Kce, Ve, Kbc))
+        
+        #In order to use scipy.optimize.curve_fit, time and concentration must be
+        #combined into one function input parameter, a 2D array, then separated into individual
+        #1 D arrays
+        times = xData2DArray[:,0]
+        AIFconcentrations = xData2DArray[:,1]
+        VIFconcentrations = xData2DArray[:,2]
+        
+        #Calculate Intracellular transit time, Tc
+        Tc = (1-Ve)/Kbc
+        listConcentrationsFromModel = []
+
+        # expconv calculates convolution of ca and (1/Tc)exp(-t/Tc)
+        listConcentrationsFromModel = Ve*((fAIF * AIFconcentrations) + (fVIF * VIFconcentrations)) \
+                + Kce*Tc*tools.expconv(Tc, times, ((fAIF * AIFconcentrations) + (fVIF * VIFconcentrations)), 'High Flow Gadoxetate')
+        return listConcentrationsFromModel
+    except Exception as e:
+        print('TracerKineticModels.highFlowGadoxetate_DualInput: ' + str(e))
+        logger.error('Runtime error in function TracerKineticModels.highFlowGadoxetate_DualInput:' + str(e) )
+    
+
+def curveFit(modelName, times, AIFConcs, VIFConcs, concROI, paramArray, constrain, boolDualInput):
     """This function calls the curve_fit function imported from scipy.optimize to fit any of
     the models in this module to actual concentration/time data using non-linear least squares"""
     try:
         logger.info('Function TracerKineticModels.curveFit called with model={}, parameters = {} and constrain={}'.format(modelName,paramArray, constrain) )
-
-        timeInputConc2DArray = np.column_stack((times, inputConcentration,))
-        if constrain == True:
-            if modelName ==  'Extended Tofts':
-                return curve_fit(extendedTofts, timeInputConc2DArray, concROI, paramArray, 
-                                  bounds=(0,[PARAMETER_UPPER_BOUND_VOL_FRACTION, 
+        if modelName ==  'Extended Tofts':
+            if boolDualInput == True:
+                    timeInputConcs2DArray = np.column_stack((times, AIFConcs, VIFConcs))
+                    if constrain == True:
+                        return curve_fit(extendedTofts_DualInput, timeInputConcs2DArray, concROI, 
+                                  paramArray, bounds=(0,[PARAMETER_UPPER_BOUND_VOL_FRACTION, 
                                              PARAMETER_UPPER_BOUND_VOL_FRACTION,
                                              PARAMETER_UPPER_BOUND_RATE]))
-            elif modelName ==  'One Compartment':
-                return curve_fit(oneCompartment, timeInputConc2DArray, concROI, paramArray,
-                                bounds=(0,[PARAMETER_UPPER_BOUND_VOL_FRACTION,
-                                                PARAMETER_UPPER_BOUND_RATE]))
-            elif modelName ==  'High-Flow Gadoxetate':
-                return curve_fit(highFlowGadoxetate, timeInputConc2DArray, concROI, paramArray, 
-                                 bounds=(0.000001,[PARAMETER_UPPER_BOUND_VOL_FRACTION, 
-                                            PARAMETER_UPPER_BOUND_RATE,
-                                            PARAMETER_UPPER_BOUND_RATE]))
-        else:  #No Constraints
-            if modelName ==  'Extended Tofts':
-                return curve_fit(extendedTofts, timeInputConc2DArray, concROI, paramArray, bounds=(-np.inf, np.inf))
-            elif modelName ==  'One Compartment':
-                return curve_fit(oneCompartment, timeInputConc2DArray, concROI, paramArray, bounds=(-np.inf, np.inf))
-            elif modelName ==  'High-Flow Gadoxetate':
-                return curve_fit(highFlowGadoxetate, timeInputConc2DArray, concROI, paramArray, bounds=(-np.inf, np.inf))
+                    else:
+                        return curve_fit(extendedTofts_DualInput, timeInputConcs2DArray, concROI, 
+                                         paramArray)
+            else:
+                    timeInputConcs2DArray = np.column_stack((times, AIFConcs))
+                    if constrain == True:
+                        return curve_fit(extendedTofts_SingleInput, timeInputConcs2DArray, concROI, 
+                                  paramArray, bounds=(0,[PARAMETER_UPPER_BOUND_VOL_FRACTION, 
+                                             PARAMETER_UPPER_BOUND_VOL_FRACTION,
+                                             PARAMETER_UPPER_BOUND_RATE]))
+                    else:
+                        return curve_fit(extendedTofts_SingleInput, timeInputConcs2DArray, concROI, 
+                                         paramArray)
+
+
+        #timeInputConcs2DArray = np.column_stack((times, AIFConcs, VIFConcs))
+        #if constrain == True:
+        #    if modelName ==  'Extended Tofts':
+        #        return curve_fit(extendedTofts, timeInputConcs2DArray, concROI, paramArray, 
+        #                          bounds=(0,[PARAMETER_UPPER_BOUND_VOL_FRACTION, 
+        #                                     PARAMETER_UPPER_BOUND_VOL_FRACTION,
+        #                                     PARAMETER_UPPER_BOUND_RATE]))
+        #    elif modelName ==  'One Compartment':
+        #        return curve_fit(oneCompartment, timeInputConcs2DArray, concROI, paramArray,
+        #                        bounds=(0,[PARAMETER_UPPER_BOUND_VOL_FRACTION,
+        #                                        PARAMETER_UPPER_BOUND_RATE]))
+        #    elif modelName ==  'High-Flow Gadoxetate':
+        #        return curve_fit(highFlowGadoxetate, timeInputConcs2DArray, concROI, paramArray, 
+        #                         bounds=(0.000001,[PARAMETER_UPPER_BOUND_VOL_FRACTION, 
+        #                                    PARAMETER_UPPER_BOUND_RATE,
+        #                                    PARAMETER_UPPER_BOUND_RATE]))
+        #else:  #No Constraints
+        #    if modelName ==  'Extended Tofts':
+        #        return curve_fit(extendedTofts, timeInputConcs2DArray, concROI, paramArray, bounds=(-np.inf, np.inf))
+        #    elif modelName ==  'One Compartment':
+        #        return curve_fit(oneCompartment, timeInputConcs2DArray, concROI, paramArray, bounds=(-np.inf, np.inf))
+        #    elif modelName ==  'High-Flow Gadoxetate':
+        #        return curve_fit(highFlowGadoxetate, timeInputConcs2DArray, concROI, paramArray, bounds=(-np.inf, np.inf))
             
     except ValueError as ve:
         print ('TracerKineticModels.curveFit Value Error: ' + str(ve))
     except RuntimeError as re:
         print('TracerKineticModels.curveFit runtime error: ' + str(re))
     except Exception as e:
-        print('TracerKineticModels.curveFit: ' + str(e))
-    
-
-        
+        print('TracerKineticModels.curveFit: ' + str(e))        
 ##  For more information on 
-##      scipy.optimize.curve_fit(f, xdata, ydata, p0=None, sigma=None, absolute_sigma=False,
-##      check_finite=True, bounds=(-inf, inf), method=None, jac=None, **kwargs)[source]    
-##  See
-##   https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.curve_fit.html
-##    
+#      scipy.optimize.curve_fit(f, xdata, ydata, p0=None, sigma=None, absolute_sigma=False,
+#      check_finite=True, bounds=(-inf, inf), method=None, jac=None, **kwargs)[source]    
+#  See
+#   https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.curve_fit.html
+#    
     
    
 
