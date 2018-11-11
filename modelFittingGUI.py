@@ -659,8 +659,6 @@ class ModelFittingApp(QDialog):
                      #This is a volume fraction so convert % to a decimal fraction
                     parameter3 = parameter3/100.0
                 initialParametersArray.append(parameter3)
-            else:
-                initialParametersArray.append(0.0)
 
             #Only add the wieght factors for AIF & VIF if a VIF has been selected
             #and the weight factor spinboxes are therefore visible.
@@ -740,11 +738,16 @@ class ModelFittingApp(QDialog):
                     self.spinBoxParameter3.setValue(optimumParams[2]* 100) #Convert Volume fraction to %
                 else:
                     self.spinBoxParameter3.setValue(optimumParams[2])
-            if self.spinBoxWeightFactorAIR.isHidden() == False:
-                self.spinBoxWeightFactorAIR.setValue(optimumParams[3])
-            if self.spinBoxWeightFactorVIR.isHidden() == False:
-                self.spinBoxWeightFactorVIR.setValue(optimumParams[4])
-            
+                if self.spinBoxWeightFactorAIR.isHidden() == False:
+                    self.spinBoxWeightFactorAIR.setValue(optimumParams[3])
+                if self.spinBoxWeightFactorVIR.isHidden() == False:
+                    self.spinBoxWeightFactorVIR.setValue(optimumParams[4])
+            else:
+                if self.spinBoxWeightFactorAIR.isHidden() == False:
+                    self.spinBoxWeightFactorAIR.setValue(optimumParams[2])
+                if self.spinBoxWeightFactorVIR.isHidden() == False:
+                    self.spinBoxWeightFactorVIR.setValue(optimumParams[3])
+
             self.blockSpinBoxSignals(False)
 
             self.plot('runCurveFit')

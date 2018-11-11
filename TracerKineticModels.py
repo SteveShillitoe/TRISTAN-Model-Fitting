@@ -25,16 +25,17 @@ def modelSelector(modelName, times, AIFConcentration, parameterArray, boolDualIn
     
     parameter1 = parameterArray[0]
     parameter2 = parameterArray[1]
-    parameter3 = parameterArray[2]
+    
     if boolDualInput == True:
         timeInputConcs2DArray = np.column_stack((times, AIFConcentration, VIFConcentration))
-        fractionAIF = parameterArray[3]
-        fractionVIF = parameterArray[4]
     else:
         timeInputConcs2DArray = np.column_stack((times, AIFConcentration))
 
     if modelName ==  'Extended Tofts':
+        parameter3 = parameterArray[2]
         if boolDualInput == True:
+            fractionAIF = parameterArray[3]
+            fractionVIF = parameterArray[4]
             return extendedTofts_DualInput(timeInputConcs2DArray, parameter1, parameter2, 
               parameter3, fractionAIF, fractionVIF)
         else:
@@ -42,11 +43,16 @@ def modelSelector(modelName, times, AIFConcentration, parameterArray, boolDualIn
               parameter3)
     elif modelName ==  'One Compartment':
         if boolDualInput == True:
+            fractionAIF = parameterArray[2]
+            fractionVIF = parameterArray[3]
             return oneCompartment_DualInput(timeInputConcs2DArray, parameter1, parameter2, 
               fractionAIF, fractionVIF)
         else:
             return oneCompartment_SingleInput(timeInputConcs2DArray, parameter1, parameter2)
     elif modelName ==  'High-Flow Gadoxetate':
+        parameter3 = parameterArray[2]
+        fractionAIF = parameterArray[3]
+        fractionVIF = parameterArray[4]
         if boolDualInput == True:
             return highFlowGadoxetate_DualInput(timeInputConcs2DArray, parameter1, parameter2, 
               parameter3, fractionAIF, fractionVIF)
@@ -207,9 +213,14 @@ def curveFit(modelName, times, AIFConcs, VIFConcs, concROI, paramArray, constrai
     the models in this module to actual concentration/time data using non-linear least squares"""
     try:
         logger.info('Function TracerKineticModels.curveFit called with model={}, parameters = {} and constrain={}'.format(modelName,paramArray, constrain) )
+        
+        if boolDualInput == True:
+            timeInputConcs2DArray = np.column_stack((times, AIFConcs, VIFConcs))
+        else:
+            timeInputConcs2DArray = np.column_stack((times, AIFConcs))
+
         if modelName ==  'Extended Tofts':
             if boolDualInput == True:
-                    timeInputConcs2DArray = np.column_stack((times, AIFConcs, VIFConcs))
                     if constrain == True:
                         return curve_fit(extendedTofts_DualInput, timeInputConcs2DArray, concROI, 
                                   paramArray, bounds=(0,[PARAMETER_UPPER_BOUND_VOL_FRACTION, 
@@ -219,7 +230,6 @@ def curveFit(modelName, times, AIFConcs, VIFConcs, concROI, paramArray, constrai
                         return curve_fit(extendedTofts_DualInput, timeInputConcs2DArray, concROI, 
                                          paramArray)
             else:
-                    timeInputConcs2DArray = np.column_stack((times, AIFConcs))
                     if constrain == True:
                         return curve_fit(extendedTofts_SingleInput, timeInputConcs2DArray, concROI, 
                                   paramArray, bounds=(0,[PARAMETER_UPPER_BOUND_VOL_FRACTION, 
@@ -228,32 +238,45 @@ def curveFit(modelName, times, AIFConcs, VIFConcs, concROI, paramArray, constrai
                     else:
                         return curve_fit(extendedTofts_SingleInput, timeInputConcs2DArray, concROI, 
                                          paramArray)
+        elif modelName ==  'One Compartment':
+            if boolDualInput == True:
+                    if constrain == True:
+                        return curve_fit(oneCompartment_DualInput, timeInputConcs2DArray, concROI, 
+                                  paramArray, bounds=(0,[PARAMETER_UPPER_BOUND_VOL_FRACTION, 
+                                             PARAMETER_UPPER_BOUND_VOL_FRACTION,
+                                             PARAMETER_UPPER_BOUND_RATE]))
+                    else:
+                        return curve_fit(oneCompartment_DualInput, timeInputConcs2DArray, concROI, 
+                                         paramArray)
+            else:
+                    if constrain == True:
+                        return curve_fit(oneCompartment_SingleInput, timeInputConcs2DArray, concROI, 
+                                  paramArray, bounds=(0,[PARAMETER_UPPER_BOUND_VOL_FRACTION, 
+                                             PARAMETER_UPPER_BOUND_VOL_FRACTION,
+                                             PARAMETER_UPPER_BOUND_RATE]))
+                    else:
+                        return curve_fit(oneCompartment_SingleInput, timeInputConcs2DArray, concROI, 
+                                         paramArray)   
+        elif modelName ==  'High-Flow Gadoxetate':
+            if boolDualInput == True:
+                    if constrain == True:
+                        return curve_fit(highFlowGadoxetate_DualInput, timeInputConcs2DArray, concROI, 
+                                  paramArray, bounds=(0,[PARAMETER_UPPER_BOUND_VOL_FRACTION, 
+                                             PARAMETER_UPPER_BOUND_VOL_FRACTION,
+                                             PARAMETER_UPPER_BOUND_RATE]))
+                    else:
+                        return curve_fit(highFlowGadoxetate_DualInput, timeInputConcs2DArray, concROI, 
+                                         paramArray)
+            else:
+                    if constrain == True:
+                        return curve_fit(highFlowGadoxetate_SingleInput, timeInputConcs2DArray, concROI, 
+                                  paramArray, bounds=(0,[PARAMETER_UPPER_BOUND_VOL_FRACTION, 
+                                             PARAMETER_UPPER_BOUND_VOL_FRACTION,
+                                             PARAMETER_UPPER_BOUND_RATE]))
+                    else:
+                        return curve_fit(highFlowGadoxetate_SingleInput, timeInputConcs2DArray, concROI, 
+                                         paramArray)   
 
-
-        #timeInputConcs2DArray = np.column_stack((times, AIFConcs, VIFConcs))
-        #if constrain == True:
-        #    if modelName ==  'Extended Tofts':
-        #        return curve_fit(extendedTofts, timeInputConcs2DArray, concROI, paramArray, 
-        #                          bounds=(0,[PARAMETER_UPPER_BOUND_VOL_FRACTION, 
-        #                                     PARAMETER_UPPER_BOUND_VOL_FRACTION,
-        #                                     PARAMETER_UPPER_BOUND_RATE]))
-        #    elif modelName ==  'One Compartment':
-        #        return curve_fit(oneCompartment, timeInputConcs2DArray, concROI, paramArray,
-        #                        bounds=(0,[PARAMETER_UPPER_BOUND_VOL_FRACTION,
-        #                                        PARAMETER_UPPER_BOUND_RATE]))
-        #    elif modelName ==  'High-Flow Gadoxetate':
-        #        return curve_fit(highFlowGadoxetate, timeInputConcs2DArray, concROI, paramArray, 
-        #                         bounds=(0.000001,[PARAMETER_UPPER_BOUND_VOL_FRACTION, 
-        #                                    PARAMETER_UPPER_BOUND_RATE,
-        #                                    PARAMETER_UPPER_BOUND_RATE]))
-        #else:  #No Constraints
-        #    if modelName ==  'Extended Tofts':
-        #        return curve_fit(extendedTofts, timeInputConcs2DArray, concROI, paramArray, bounds=(-np.inf, np.inf))
-        #    elif modelName ==  'One Compartment':
-        #        return curve_fit(oneCompartment, timeInputConcs2DArray, concROI, paramArray, bounds=(-np.inf, np.inf))
-        #    elif modelName ==  'High-Flow Gadoxetate':
-        #        return curve_fit(highFlowGadoxetate, timeInputConcs2DArray, concROI, paramArray, bounds=(-np.inf, np.inf))
-            
     except ValueError as ve:
         print ('TracerKineticModels.curveFit Value Error: ' + str(ve))
     except RuntimeError as re:
