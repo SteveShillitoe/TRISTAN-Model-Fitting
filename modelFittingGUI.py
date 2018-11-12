@@ -1,4 +1,4 @@
-"""This module is the start up item in the TRISTAN-Model-Fitting application. It defines the GUI 
+"""This module is the start up module in the TRISTAN-Model-Fitting application. It defines the GUI 
 and the logic providing the application's functionality.
 
    The TRISTAN-Model-Fitting application allows the user to:
@@ -37,12 +37,13 @@ import matplotlib.pyplot as plt
 
 from scipy.stats.distributions import  t
 
-#To remove unwanted default buttons in the Navigation Toolbar
-#create a subclass of the NavigationToolbar class 
-#(from from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar)
-# that only defines the desired buttons
 class NavigationToolbar(NavigationToolbar):
-    # only display the buttons we need
+    """
+    Removes unwanted default buttons in the Navigation Toolbar by creating
+    a subclass of the NavigationToolbar class from from 
+    matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
+    that only defines the desired buttons
+    """
     toolitems = [t for t in NavigationToolbar.toolitems if
                  t[0] in ('Home', 'Pan', 'Zoom', 'Save')]
 
@@ -101,9 +102,30 @@ logging.basicConfig(filename=LOG_FILE_NAME,
 logger = logging.getLogger(__name__)
 
 class ModelFittingApp(QDialog):
-
+    """This class defines the TRISTAN Model Fitting software 
+       based on a QDialog window.
+       This includes seting up the GUI and defining the methods 
+       that are executed when events associated with widgets on
+       the GUI are executed."""
+    
     def __init__(self, parent=None):
-        """__init__ Creates the user interface. """
+        """Creates the GUI. Controls on the GUI are grouped into 3 vertical
+           layout panals placed on a horizontal layout panal.
+           The appearance of the widgets is determined by CSS 
+           commands in the module styleSheet.py. 
+           
+           The left-handside vertical layout panal holds widgets for the 
+           input of data & the selection of the model to fit to the data.
+           
+           The middle vertical layout panal holds the graph displaying the
+           data and the fitted model.
+           
+           The right-hand vertical layout panal displays parameter data and
+           their confidence limits pertaining to the model fit. 
+           
+           This method coordinates the calling of methods that set up the 
+           widgets on the 3 vertical layout panals."""
+
         super(ModelFittingApp, self).__init__(parent)
       
         self.setWindowTitle(WINDOW_TITLE)
@@ -114,10 +136,10 @@ class ModelFittingApp(QDialog):
         
         self.applyStyleSheet()
        
-        #Setup the layouts, the containers for controls
+        #Setup the layouts, the containers for widgets
         verticalLayoutLeft, verticalLayoutMiddle, verticalLayoutRight = self.setupLayouts()
         
-        #Add controls to the left-hand side vertical layout
+        #Add widgets to the left-hand side vertical layout
         self.setupLeftVerticalLayout(verticalLayoutLeft)
 
         #Set up the graph to plot concentration data on
@@ -131,8 +153,12 @@ class ModelFittingApp(QDialog):
         logger.info("GUI created successfully.")
 
     def setupLayouts(self):
-        #Start with an overall horizontal layout
-        #and place 3 vertical layouts within it
+        """Places a horizontal layout on the window
+           and places 3 vertical layouts on the horizontal layout.
+           
+           Returns the 3 vertical layouts to be used by other methods
+           that place widgets on them."""
+
         horizontalLayout = QHBoxLayout()
         verticalLayoutLeft = QVBoxLayout()
         verticalLayoutMiddle = QVBoxLayout()
@@ -144,30 +170,78 @@ class ModelFittingApp(QDialog):
         horizontalLayout.addLayout(verticalLayoutRight,2)
         return verticalLayoutLeft, verticalLayoutMiddle, verticalLayoutRight
 
-    def setupPlotArea(self, layout):
-        self.figure = plt.figure(figsize=(5, 4), dpi=100)
-        # this is the Canvas Widget that displays the `figure`
-        # it takes the `figure` instance as a parameter to __init__
-        self.canvas = FigureCanvas(self.figure)
+    def setupLeftVerticalLayout(self, layout):
+        """
+        Creates widgets and places them on the left-handside vertical layout. 
+        """
+        #Create Load Data File Button
+        self.btnLoadDisplayData = QPushButton('Load and display data.')
+        self.btnLoadDisplayData.setToolTip('Open file dialog box to select the data file')
+        self.btnLoadDisplayData.setShortcut("Ctrl+L")
+        self.btnLoadDisplayData.setAutoDefault(False)
+        self.btnLoadDisplayData.resize(self.btnLoadDisplayData.minimumSizeHint())
+        #Method loadDataFile is executed in the clicked event of this button
+        self.btnLoadDisplayData.clicked.connect(self.loadDataFile)
+
+        #Create label to display the name of the loaded data file
+        self.lblDataFileName = QLabel('')
         
-        # this is the Navigation widget
-        # it takes the Canvas widget and a parent
-        self.toolbar = NavigationToolbar(self.canvas, self)
-        #Middle layout box holds the graph and associated toolbar
-        layout.addWidget(self.toolbar)
-        layout.addWidget(self.canvas)
+        #Add a vertical spacer to the top of vertical layout to ensure
+        #the top of the Load Data button is level with the MATPLOTLIB toolbar 
+        #in the central vertical layout.
+        verticalSpacer = QtWidgets.QSpacerItem(20, 60, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
+        layout.addItem(verticalSpacer)
+        #Add Load data file button to the top of the vertical layout
+        layout.addWidget(self.btnLoadDisplayData)
+        layout.addWidget(self.lblDataFileName)
+        layout.addItem(verticalSpacer)
+
+        #Create dropdown list for selection of ROI
+        self.lblROI = QLabel("Region of Interest:")
+        self.lblROI.setAlignment(QtCore.Qt.AlignRight)
+        self.cmbROI = QComboBox()
+        self.cmbROI.setToolTip('Select Region of Interest')
+        self.lblROI.hide()
+        self.cmbROI.hide()
+        
+        #Below Load Data button add ROI list.  It is placed in a 
+        #horizontal layout together with its label, so they are
+        #aligned in the same row.
+        ROI_HorizontalLayout = QHBoxLayout()
+        ROI_HorizontalLayout.addWidget(self.lblROI)
+        ROI_HorizontalLayout.addWidget(self.cmbROI)
+        layout.addLayout(ROI_HorizontalLayout)
+        
+        #Create a group box to group together widgets associated with
+        #the model selected. 
+        #It is placed in the left-handside vertical layout
+        self.setupModelGroupBox(layout, verticalSpacer)
+        
+        self.btnSaveReport = QPushButton('Save Report in PDF Format')
+        self.btnSaveReport.hide()
+        self.btnSaveReport.setToolTip('Insert an image of the graph opposite and associated data in a PDF file')
+        layout.addWidget(self.btnSaveReport, QtCore.Qt.AlignTop)
+        self.btnSaveReport.clicked.connect(self.savePDFReport)
+        
+        self.btnExit = QPushButton('Exit')
+        layout.addWidget(self.btnExit)
+        self.btnExit.clicked.connect(self.exitApp)
+        layout.addStretch()
 
     def setupModelGroupBox(self, layout, verticalSpacer):
+        """Creates a group box to hold widgets associated with the 
+        selection of a model and for inputing/displaying that model's
+        parameter data."""
         self.groupBoxModel = QGroupBox('Model Fitting')
-        #Set alignment of group box label
         self.groupBoxModel.setAlignment(QtCore.Qt.AlignHCenter)
+        #The group box is hidden until a ROI is selected.
         self.groupBoxModel.hide()
         layout.addWidget(self.groupBoxModel)
         layout.addItem(verticalSpacer)
         
-        #Create horizontal layouts, then 
-        #add them to a vertical layout, then
-        #the vertical layout to the group box
+        #Create horizontal layouts, one row of widgets to 
+        #each horizontal layout. Then add them to a vertical layout, 
+        #then add the vertical layout to the group box
         modelHorizontalLayout2 = QHBoxLayout()
         modelHorizontalLayoutWieghtFactorLabel = QHBoxLayout()
         modelHorizontalLayout3 = QHBoxLayout()
@@ -178,7 +252,6 @@ class ModelFittingApp(QDialog):
         modelHorizontalLayout7 = QHBoxLayout()
         modelHorizontalLayout8 = QHBoxLayout()
         modelHorizontalLayout9 = QHBoxLayout()
-        modelVerticalLayout = QVBoxLayout()
         modelVerticalLayout.setAlignment(QtCore.Qt.AlignTop) 
         modelVerticalLayout.addLayout(modelHorizontalLayout2)
         modelVerticalLayout.addLayout(modelHorizontalLayoutWieghtFactorLabel)
@@ -196,8 +269,8 @@ class ModelFittingApp(QDialog):
         self.modelLabel = QLabel("Model:")
         self.modelLabel.setAlignment(QtCore.Qt.AlignRight)
         self.cmbModels = QComboBox()
-        #Populate the combo box with names of models in the modelNames list
         self.cmbModels.setToolTip('Select a model to fit to the data')
+        #Populate the combo box with names of models in the modelNames list
         self.cmbModels.addItems(TracerKineticModels.modelNames)
         self.cmbModels.setCurrentIndex(0) #Display "Select a Model"
         self.cmbModels.currentIndexChanged.connect(self.configureGUIForEachModel)
@@ -234,11 +307,17 @@ class ModelFittingApp(QDialog):
         self.spinBoxWeightFactorAIR.valueChanged.connect(lambda: self.plot('spinBoxWeightFactorAIR'))  
 
         self.cmbVIF.setToolTip('Select Venal Input Function')
+        #When a ROI is selected plot its concentration data on the graph.
         self.cmbROI.activated.connect(lambda:  self.plot('cmbROI'))
+        #When a ROI is selected, then make the Model groupbox and the widgets
+        #contains visible.
         self.cmbROI.currentIndexChanged.connect(self.displayModelFittingGroupBox)
+        #When an AIF is selected plot its concentration data on the graph.
         self.cmbAIF.activated.connect(lambda: self.plot('cmbAIF'))
+        #When an AIF is selected display the Fit Model and Save plot CVS buttons.
         self.cmbAIF.currentIndexChanged.connect(self.displayFitModelSaveCSVButtons)
         self.cmbVIF.currentIndexChanged.connect(self.displayWieghtFactorSpinBoxes)
+        #When a VIF is selected plot its concentration data on the graph.
         self.cmbVIF.activated.connect(lambda: self.plot('cmbVIF'))
         self.lblAIF.hide()
         self.cmbAIF.hide()
@@ -248,7 +327,7 @@ class ModelFittingApp(QDialog):
         self.cmbAIF.setSizeAdjustPolicy(QComboBox.AdjustToContents)
         self.cmbVIF.setSizeAdjustPolicy(QComboBox.AdjustToContents)
         
-        #Add lists and their labels to the horizontal layouts
+        #Add combo boxes and their labels to the horizontal layouts
         modelHorizontalLayout2.insertStretch (0, 2)
         modelHorizontalLayout2.addWidget(self.modelLabel)
         modelHorizontalLayout2.addWidget(self.cmbModels)
@@ -268,6 +347,7 @@ class ModelFittingApp(QDialog):
         self.btnReset.setToolTip('Reset parameters to their default values.')
         self.btnReset.hide()
         self.btnReset.clicked.connect(self.initialiseParameterSpinBoxes)
+        #If parameters reset to their default values, replot the concentration and model data
         self.btnReset.clicked.connect(lambda: self.plot('Reset Button'))
         modelHorizontalLayoutReset.addWidget(self.cboxDelay)
         modelHorizontalLayoutReset.addWidget(self.cboxConstaint)
@@ -284,13 +364,13 @@ class ModelFittingApp(QDialog):
         self.spinBoxParameter1 = QDoubleSpinBox()
         self.spinBoxParameter1.setRange(-100, 1000)
         self.spinBoxParameter1.setDecimals(3)
-        self.spinBoxParameter1.setSingleStep(0.001)
+        self.spinBoxParameter1.setSingleStep(0.01)
         self.spinBoxParameter1.setMinimumSize(self.spinBoxParameter1.minimumSizeHint())
         self.spinBoxParameter1.resize(self.spinBoxParameter1.sizeHint())
         self.spinBoxParameter2 = QDoubleSpinBox()
         self.spinBoxParameter2.setRange(-100, 1000)
         self.spinBoxParameter2.setDecimals(3)
-        self.spinBoxParameter2.setSingleStep(0.001)
+        self.spinBoxParameter2.setSingleStep(0.01)
         self.spinBoxParameter2.resize(self.spinBoxParameter2.sizeHint())
         self.spinBoxParameter3 = QDoubleSpinBox()
         self.spinBoxParameter3.setRange(-100.00, 1000.00)
@@ -300,9 +380,12 @@ class ModelFittingApp(QDialog):
         self.spinBoxParameter1.hide()
         self.spinBoxParameter2.hide()
         self.spinBoxParameter3.hide()
+        #If a parameter value is changed, replot the concentration and model data
         self.spinBoxParameter1.valueChanged.connect(lambda: self.plot('spinBoxParameter1')) 
         self.spinBoxParameter2.valueChanged.connect(lambda: self.plot('spinBoxParameter2')) 
         self.spinBoxParameter3.valueChanged.connect(lambda: self.plot('spinBoxParameter3'))
+        #Set a global boolean variable, _boolCurveFittingDone to false to indicate that 
+        #the value of a model parameter has been changed manually rather than by curve fitting
         self.spinBoxParameter1.valueChanged.connect(self.setCurveFittingNotDoneBoolean) 
         self.spinBoxParameter2.valueChanged.connect(self.setCurveFittingNotDoneBoolean) 
         self.spinBoxParameter3.valueChanged.connect(self.setCurveFittingNotDoneBoolean)
@@ -327,68 +410,45 @@ class ModelFittingApp(QDialog):
         modelHorizontalLayout9.addWidget(self.btnSaveCSV)
         self.btnSaveCSV.clicked.connect(self.saveCSVFile)
 
-    def setCurveFittingNotDoneBoolean(self):
-        global _boolCurveFittingDone
-        _boolCurveFittingDone=False
+    def displayModelFittingGroupBox(self):
+        """Shows the model fitting group box if a ROI is selected. 
+        Otherwise hides the model fitting group box. """
+        try:
+            ROI = str(self.cmbROI.currentText())
+            if ROI != 'Please Select':
+                self.groupBoxModel.show()
+                self.btnSaveReport.show()
+                logger.info("Function displayModelFittingGroupBox called. Model group box and Save Report button shown when ROI = {}".format(ROI))
+            else:
+                self.groupBoxModel.hide()
+                self.cmbAIF.setCurrentIndex(0)
+                self.cmbModels.setCurrentIndex(0)
+                self.btnSaveReport.hide()
+                logger.info("Function displayModelFittingGroupBox called. Model group box and Save Report button hidden.")
+        except Exception as e:
+            print('Error in function displayModelFittingGroupBox: ' + str(e)) 
+            logger.error('Error in function displayModelFittingGroupBox: ' + str(e))
 
-    def setupLeftVerticalLayout(self, layout):
-        #Create Load Data File Button
-        self.btnLoadDisplayData = QPushButton('Load and display data.')
-        self.btnLoadDisplayData.setToolTip('Open file dialog box to select the data file')
-        self.btnLoadDisplayData.setShortcut("Ctrl+L")
-        self.btnLoadDisplayData.setAutoDefault(False)
-        self.btnLoadDisplayData.resize(self.btnLoadDisplayData.minimumSizeHint())
-        self.btnLoadDisplayData.clicked.connect(self.loadDataFile)
-
-        #Create label to display the name of the loaded data file
-        self.lblDataFileName = QLabel('')
+    def setupPlotArea(self, layout):
+        """Adds widgets for the display of the graph onto the middle vertical layout."""
+        self.figure = plt.figure(figsize=(5, 4), dpi=100)
+        # this is the Canvas Widget that displays the `figure`
+        # it takes the `figure` instance as a parameter to its __init__
+        self.canvas = FigureCanvas(self.figure)
         
-       #Add a vertical spacer to the top of vertical layout to ensure
-       #the top of the Load Data button is level with the MATPLOTLIB toolbar 
-       #the central vertical layout.
-        verticalSpacer = QtWidgets.QSpacerItem(20, 60, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
-        layout.addItem(verticalSpacer)
-        #Add Load data file button to the top of the vertical layout
-        layout.addWidget(self.btnLoadDisplayData)
-        layout.addWidget(self.lblDataFileName)
-        layout.addItem(verticalSpacer)
-
-        #Create dropdown list for selection of ROI
-        self.lblROI = QLabel("Region of Interest:")
-        self.lblROI.setAlignment(QtCore.Qt.AlignRight)
-        self.cmbROI = QComboBox()
-        self.cmbROI.setToolTip('Select Region of Interest')
-        self.lblROI.hide()
-        self.cmbROI.hide()
-        
-        #Below Load Data button add ROI list
-        ROI_HorizontalLayout = QHBoxLayout()
-        ROI_HorizontalLayout.addWidget(self.lblROI)
-        ROI_HorizontalLayout.addWidget(self.cmbROI)
-        layout.addLayout(ROI_HorizontalLayout)
-        
-        #Create a group box, add controls 
-        #and place it in the left-handside vertical layout
-        self.setupModelGroupBox(layout, verticalSpacer)
-        
-        self.btnSaveReport = QPushButton('Save Report in PDF Format')
-        self.btnSaveReport.hide()
-        self.btnSaveReport.setToolTip('Insert an image of the graph opposite and associated data in a PDF file')
-        layout.addWidget(self.btnSaveReport, QtCore.Qt.AlignTop)
-        self.btnSaveReport.clicked.connect(self.savePDFReport)
-        
-        self.btnExit = QPushButton('Exit')
-        layout.addWidget(self.btnExit)
-        self.btnExit.clicked.connect(self.exitApp)
-        layout.addStretch()
+        # this is the Navigation widget
+        # it takes the Canvas widget as a parent
+        self.toolbar = NavigationToolbar(self.canvas, self)
+        layout.addWidget(self.toolbar)
+        layout.addWidget(self.canvas)
 
     def setupRightVerticalLayout(self, layout):
-        """Creates and adds controls to the right hand side vertical layout for the 
+        """Creates and adds widgets to the right hand side vertical layout for the 
         display of the results of curve fitting. """
 
-       #Add a vertical spacer to the top of vertical layout to ensure
-       #the top of the group box is level with the MATPLOTLIB toolbar 
-       #the central vertical layout.
+        #Add a vertical spacer to the top of vertical layout to ensure
+        #the top of the group box is level with the MATPLOTLIB toolbar 
+        #the central vertical layout.
         verticalSpacer = QtWidgets.QSpacerItem(20, 35, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
         layout.addItem(verticalSpacer)
         #Create Group Box to contain labels displaying the results of curve fitting
@@ -454,10 +514,19 @@ class ModelFittingApp(QDialog):
             print('Error in function applyStyleSheet: ' + str(e))
             logger.error('Error in function applyStyleSheet: ' + str(e))
 
+    def setCurveFittingNotDoneBoolean(self):
+        """Sets global boolean _boolCurveFittingDone to false if the 
+        plot of the model curve is changed by manually changing the values of 
+        model input parameters rather than by running curve fitting."""
+        global _boolCurveFittingDone
+        _boolCurveFittingDone=False
 
     def displayOptimumParamaterValuesOnGUI(self):
         """Displays the optimum parameter values resulting from curve fitting 
-        with their confidence limits on the right-hand side of the GUI."""
+        with their confidence limits on the right-hand side of the GUI. These
+        values are stored in the global list _optimisedParamaterList
+        
+        Where appropriate decimal fractions are converted to %"""
         try:
             logger.info('Function displayOptimumParamaterValuesOnGUI called.')
 
@@ -467,6 +536,7 @@ class ModelFittingApp(QDialog):
             upperLimit = round(_optimisedParamaterList[0][2], 5)
             
             if self.spinBoxParameter1.suffix() == '%':
+                #convert from decimal fraction to %
                 suffix = '%'
                 parameterValue = round(parameterValue * 100.0, 3)
                 lowerLimit = round(lowerLimit * 100.0, 3)
@@ -532,6 +602,9 @@ class ModelFittingApp(QDialog):
             logger.error('Error in function displayOptimumParamaterValuesOnGUI: ' + str(e))
 
     def clearOptimumParamaterValuesOnGUI(self):
+        """Clears the contents of the labels on the right handside of the GUI.
+        That is the parameter values and their confidence limits resulting 
+        from curve fitting. """
         try:
             logger.info('Function clearOptimumParamaterValuesOnGUI called.')
             self.lblParam1Name.clear()
@@ -549,6 +622,7 @@ class ModelFittingApp(QDialog):
             logger.error('Error in function clearOptimumParamaterValuesOnGUI: ' + str(e))
     
     def saveCSVFile(self):
+        """Saves in CSV format the data in the plot on the GUI """ 
         try:
             logger.info('Function saveCSVFile called.')
             modelName = str(self.cmbModels.currentText())
@@ -584,6 +658,8 @@ class ModelFittingApp(QDialog):
             logger.error('Error in function saveCSVFile: ' + str(e) + ' at line in CSV file ', WriteCSV.line_num)
 
     def clearOptimisedParamaterList(self, callingControl):
+        """Clears results of curve fitting from the GUI and from the global list
+        _optimisedParamaterList """
         try:
             logger.info('clearOptimisedParamaterList called from ' + callingControl)
             _optimisedParamaterList.clear()
@@ -591,23 +667,6 @@ class ModelFittingApp(QDialog):
         except Exception as e:
             print('Error in function clearOptimisedParamaterList: ' + str(e)) 
             logger.error('Error in function clearOptimisedParamaterList: ' + str(e))
-
-    def displayModelFittingGroupBox(self):
-        try:
-            ROI = str(self.cmbROI.currentText())
-            if ROI != 'Please Select':
-                self.groupBoxModel.show()
-                self.btnSaveReport.show()
-                logger.info("Function displayModelFittingGroupBox called. Model group box and Save Report button shown when ROI = {}".format(ROI))
-            else:
-                self.groupBoxModel.hide()
-                self.cmbAIF.setCurrentIndex(0)
-                self.cmbModels.setCurrentIndex(0)
-                self.btnSaveReport.hide()
-                logger.info("Function displayModelFittingGroupBox called. Model group box and Save Report button hidden.")
-        except Exception as e:
-            print('Error in function displayModelFittingGroupBox: ' + str(e)) 
-            logger.error('Error in function displayModelFittingGroupBox: ' + str(e))
 
     def displayWieghtFactorSpinBoxes(self):
         if str(self.cmbVIF.currentText()) == 'Please Select':
@@ -620,6 +679,8 @@ class ModelFittingApp(QDialog):
             self.spinBoxWeightFactorAIR.show()
 
     def displayFitModelSaveCSVButtons(self):
+        """Displays the Fit Model and Save CSV buttons if both a ROI & AIF 
+        are selected.  Otherwise hides them."""
         try:
             ROI = str(self.cmbROI.currentText())
             AIF = str(self.cmbAIF.currentText())
@@ -674,6 +735,9 @@ class ModelFittingApp(QDialog):
             logger.error('Error in function buildParameterArray with model '  + str(e))
 
     def blockSpinBoxSignals(self, boolBlockSignal):
+        """Blocks signals from spinboxes that fire events.  
+       Thus allowing spinbox values to be set programmatically without causing
+       a method connected to an event to be executed."""
         self.spinBoxParameter1.blockSignals(boolBlockSignal)
         self.spinBoxParameter2.blockSignals(boolBlockSignal)
         self.spinBoxParameter3.blockSignals(boolBlockSignal)
@@ -681,6 +745,10 @@ class ModelFittingApp(QDialog):
         self.spinBoxWeightFactorAIR.blockSignals(boolBlockSignal)
 
     def runCurveFit(self):
+        """Runs curve fitting to fit AIF (and VIF) data to the ROI curve.
+        Also, takes results from curve fitting (optimal parameter values) and 
+        determines their confidence limits.
+        """
         global _boolCurveFittingDone
         try:
             initialParametersArray = self.buildParameterArray()
@@ -711,7 +779,6 @@ class ModelFittingApp(QDialog):
 
             #Get the name of the model to be fitted to the ROI curve
             modelName = str(self.cmbModels.currentText())
-            #print('Start of Curve Fitting.')
             #Call curve fitting routine
             logger.info('TracerKineticModels.curveFit called with model {}, parameters {} and Constraint = {}'.format(modelName, initialParametersArray, addConstraint))
             optimumParams, paramCovarianceMatrix = TracerKineticModels.curveFit(modelName, arrayTimes, 
@@ -719,10 +786,9 @@ class ModelFittingApp(QDialog):
        
             _boolCurveFittingDone = True 
             logger.info('TracerKineticModels.curveFit returned optimum parameters {} with confidence levels {}'.format(optimumParams, paramCovarianceMatrix))
-            #print('End of Curve Fitting.')
             
-            #Block signals from spinboxes, so that setting initial values
-            #does not trigger an event.
+            #Block signals from spinboxes, so that setting values
+            #returned from curve fitting does not trigger an event.
             self.blockSpinBoxSignals(True)
             
             if self.spinBoxParameter1.suffix() == '%':
@@ -752,6 +818,9 @@ class ModelFittingApp(QDialog):
 
             self.plot('runCurveFit')
 
+            #Determine confidence limits.
+            #Data in global _optimisedParamaterList used in creation of the PDF report
+            #and to display results on the GUI.
             numDataPoints = arrayROIConcs.size
             numParams = len(initialParametersArray)
             alpha = 0.05 #95% confidence interval = 100*(1-alpha)
@@ -785,6 +854,7 @@ class ModelFittingApp(QDialog):
             logger.error('Error in function runCurveFit with model ' + modelName + ': ' + str(e))
     
     def savePDFReport(self):
+        """Creates and saves a report of the plot on the GUI."""
         try:
             pdf = PDF(REPORT_TITLE) 
             
@@ -831,12 +901,13 @@ class ModelFittingApp(QDialog):
             logger.error('Error in function savePDFReport: ' + str(e))
        
     def loadDataFile(self):
+        """Loads the contents of a CSV file containing time and concentration data
+        into memory"""
         global _concentrationData
         global _dataFileName
 
         #clear the global dictionary of previous data
         _concentrationData.clear()
-
         
         self.hideAllControlsOnGUI()
         
@@ -914,7 +985,7 @@ class ModelFittingApp(QDialog):
             logger.error('Error in function loadDataFile: ' + str(e) + ' at line in CSV file ', readCSV.line_num)
 
     def hideAllControlsOnGUI(self):
-        """Hides/clears all the controls on left-hand side of the application 
+        """Hides/clears all the widgets on left-hand side of the application 
         except for the Load & Display Data and Exit buttons.  
         It is called before a data file is loaded in case the Cancel button on the dialog
         is clicked.  This prevents the scenario where buttons are displayed but there is no
@@ -931,6 +1002,9 @@ class ModelFittingApp(QDialog):
         self.btnSaveCSV.hide()
 
     def configureGUIAfterLoadingData(self):
+        """After successfully loading a datafile, this method loads a list of
+        organs into ROI, AIF & VIF drop-down lists and displays 
+        the ROI drop-down list. """
         try:
             #Data file loaded OK, so set up the GUI
             #Reset and enable dropdown list of models
@@ -938,6 +1012,8 @@ class ModelFittingApp(QDialog):
             self.cmbAIF.clear()
             self.cmbVIF.clear()
             
+            #Create a list of organs for which concentrations are
+            #provided in the data input file.  See loadDataFile method.
             organArray = []
             organArray = self.returnListOrgans()
             
@@ -1009,17 +1085,16 @@ class ModelFittingApp(QDialog):
             print('Error in function initialiseParameterSpinBoxes: ' + str(e) )
             logger.error('Error in function initialiseParameterSpinBoxes: ' + str(e) )
 
-
     def configureGUIForEachModel(self):
         try:
-            self.cboxDelay.show()
+            #self.cboxDelay.show()
             self.cboxConstaint.show()
             self.cboxConstaint.setChecked(False)
             self.btnReset.show()
             self.btnSaveReport.show()
             self.clearOptimumParamaterValuesOnGUI() #Remove results of curve fitting of the previous model
             self.initialiseParameterSpinBoxes() #Typical initial values for each model
-            #Show controls common to all models
+            #Show widgets common to all models
             self.lblAIF.show()
             self.cmbAIF.show()
             self.lblVIF.show()

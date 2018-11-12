@@ -66,7 +66,7 @@ def modelSelector(modelName, times, AIFConcentration, parameterArray, boolDualIn
 #       
 def extendedTofts_SingleInput(xData2DArray, Vp, Ve, Ktrans):
     """This function contains the algorithm for calculating how concentration varies with time
-        using the Extended Tofts model""" 
+        using the Extended Tofts model when it takes just an arterial input.""" 
     try:
         logger.info('In function TracerKineticModels.extendedTofts_SingleInput with Vp={}, Ve={} & Ktrans={}'.format(Vp, Ve, Ktrans))
         #print('Extended Tofts. Vp={}, Ve={} and Ktrans={}'.format(Vp, Ve, Ktrans))
@@ -89,7 +89,7 @@ def extendedTofts_SingleInput(xData2DArray, Vp, Ve, Ktrans):
 
 def extendedTofts_DualInput(xData2DArray, Vp, Ve, Ktrans, fAIF, fVIF):
     """This function contains the algorithm for calculating how concentration varies with time
-        using the Extended Tofts model""" 
+        using the Extended Tofts model when it takes both an arterial and a venal input.""" 
     try:
         logger.info('In function TracerKineticModels.extendedTofts_DualInput with Vp={}, Ve={},Ktrans={}, fA={} and fV={}'.format(Vp, Ve, Ktrans, fAIF, fVIF))
         #print('Extended Tofts. Vp={}, Ve={} and Ktrans={}'.format(Vp, Ve, Ktrans))
@@ -103,6 +103,7 @@ def extendedTofts_DualInput(xData2DArray, Vp, Ve, Ktrans, fAIF, fVIF):
         #Calculate Intracellular transit time, Tc
         Tc = Ve/Ktrans
         
+        
         listConcentrationsFromModel = []
         # expconv calculates convolution of ca and (1/Tc)exp(-t/Tc)
         listConcentrationsFromModel = Vp*((fAIF * AIFconcentrations) + (fVIF * VIFconcentrations)) \
@@ -114,7 +115,7 @@ def extendedTofts_DualInput(xData2DArray, Vp, Ve, Ktrans, fAIF, fVIF):
             
 def oneCompartment_SingleInput(xData2DArray, Vp, Fp):
     """This function contains the algorithm for calculating how concentration varies with time
-        using the One Compartment model"""
+        using the One Compartment model when it takes just an arterial input"""
     try:
         logger.info('In function TracerKineticModels.oneCompartment_SingleInput with Vp={} and Fp={}'.format(Vp, Fp))
         #In order to use scipy.optimize.curve_fit, time and concentration must be
@@ -136,7 +137,7 @@ def oneCompartment_SingleInput(xData2DArray, Vp, Fp):
 
 def oneCompartment_DualInput(xData2DArray, Vp, Fp, fAIF, fVIF):
     """This function contains the algorithm for calculating how concentration varies with time
-        using the One Compartment model"""
+        using the One Compartment model when it takes both an arterial and a venal input"""
     try:
         logger.info('In function TracerKineticModels.oneCompartment_DualInput with Vp={} and Fp={}'.format(Vp, Fp))
         #In order to use scipy.optimize.curve_fit, time and concentration must be
@@ -160,7 +161,7 @@ def oneCompartment_DualInput(xData2DArray, Vp, Fp, fAIF, fVIF):
 
 def highFlowGadoxetate_SingleInput(xData2DArray, Ve, Kce, Kbc):
     """This function contains the algorithm for calculating how concentration varies with time
-        using the High Flow Gadoxetate model"""
+        using the High Flow Gadoxetate model when it takes just an arterial input"""
     try:
         logger.info('In function TracerKineticModels.highFlowGadoxetate_DualInput with Kce={}, Ve={} and Kbc={}'.format(Kce, Ve, Kbc))
         
@@ -184,7 +185,7 @@ def highFlowGadoxetate_SingleInput(xData2DArray, Ve, Kce, Kbc):
 
 def highFlowGadoxetate_DualInput(xData2DArray, Ve, Kce, Kbc, fAIF, fVIF):
     """This function contains the algorithm for calculating how concentration varies with time
-        using the High Flow Gadoxetate model"""
+        using the High Flow Gadoxetate model when it takes both an arterial and a venal input"""
     try:
         logger.info('In function TracerKineticModels.highFlowGadoxetate_DualInput with Kce={}, Ve={} and Kbc={}'.format(Kce, Ve, Kbc))
         
