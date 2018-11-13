@@ -1,10 +1,13 @@
+"""This module creates and saves a report of a model fitting session in PDF. 
+In addition to a table of model parameter data, this report contains an image
+of the concentration/time plot at the time the createAndSavePDFReport method
+was called.
+
+This is done using the functionality in the FPDF library.
+
+"""
 import datetime
 from fpdf import FPDF
-import os.path
-import errno
-from PyQt5 import QtWidgets, QtCore
-from PyQt5.QtWidgets import QDialog
-
 import logging
 
 #Create logger
@@ -14,30 +17,32 @@ logger = logging.getLogger(__name__)
 #displayed in the footer of the PDF report.
 currentDateTime = str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
 
-'''
-The header and footer methods in FPDF render the page header and footer.
-It is automatically called by add_page and close and should not be called directly by the application.
-The implementation in FPDF is empty, so we have to subclass it and override the method to define the required functionality.
-'''
-class PDF(FPDF):
 
+#header and footer methods in FPDF render the page header and footer.
+#They are automatically called by add_page and close and should not be called 
+#directly by the application.  The implementation in FPDF is empty, 
+#so we have to subclass it and override the method to define the required functionality.
+class PDF(FPDF):
     def __init__(self, title):
         super().__init__() #Inherit functionality from the __init__ method of class FPDF
         self.title = title  #Then add a local property
         logger.info('In module ' + __name__ + '. Created an instance of class PDF.')
 
     def header(self):
+        """Prints a header at the top of every page of the report.
+        It includes the TRISTAN Logo and the title of the report. """
         # Logo
-        #self.image('logo_pb.png', 10, 8, 33)
+        self.image('TRISTAN LOGO.jpg', 10, 8, 33, 10)
         # Arial bold 15
         self.set_font('Arial', 'BU', 15)
         # Title
         self.cell(w=0, h=0,  txt =self.title,  align = 'C')
         # Line break
-        self.ln(5)
+        self.ln(10)
 
-    # Page footer
     def footer(self):
+        """Prints a footer at the bottom of every page of the report.
+        It includes the page number and date/time when the report was created. """
         # Position at 1.5 cm from bottom
         self.set_y(-15)
         # Arial italic 8
@@ -52,6 +57,11 @@ class PDF(FPDF):
                                parameter2Text, parameter2Value,
                                parameter3Text = None, parameter3Value = None, 
                                confidenceLimitsArray =[], curveFittingDone=True):
+        """Creates and saves a copy of a curve fitting report.
+        It includes the name of the file containing the data to be plotted and the name
+        of the model used for curve fitting.  A table of input parameters, their values
+        and their confidence limits is displayed above an image of the concentration/time
+        plot."""
         try:
             logger.info('Function PDFWriter.createAndSavePDFReport called with filename={}, \
             dataFileName={}, modelName={}, imageName={}, parameter1Text={}, parameter1Value={},\
