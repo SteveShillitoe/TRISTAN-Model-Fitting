@@ -159,7 +159,13 @@ class ModelFittingApp(QDialog):
            and places 3 vertical layouts on the horizontal layout.
            
            Returns the 3 vertical layouts to be used by other methods
-           that place widgets on them."""
+           that place widgets on them.
+           
+           Returns
+           -------
+                Three vertical layouts that have been added to a 
+                horizontal layout.
+           """
 
         horizontalLayout = QHBoxLayout()
         verticalLayoutLeft = QVBoxLayout()
@@ -701,7 +707,12 @@ class ModelFittingApp(QDialog):
 
     def buildParameterArray(self):
         """Forms a 1D array of model input parameters.  Volume fractions are converted 
-            from percentages to decimal fractions."""
+            from percentages to decimal fractions.
+            
+            Returns
+            -------
+                A list of model input parameter values.
+            """
         try:
             logger.info('Function buildParameterArray called.')
             initialParametersArray = []
@@ -739,18 +750,99 @@ class ModelFittingApp(QDialog):
 
     def blockSpinBoxSignals(self, boolBlockSignal):
         """Blocks signals from spinboxes that fire events.  
-       Thus allowing spinbox values to be set programmatically without causing
-       a method connected to an event to be executed."""
+           Thus allowing spinbox values to be set programmatically 
+           without causing a method connected to one of their events to be executed."""
         self.spinBoxParameter1.blockSignals(boolBlockSignal)
         self.spinBoxParameter2.blockSignals(boolBlockSignal)
         self.spinBoxParameter3.blockSignals(boolBlockSignal)
         self.spinBoxWeightFactorVIR.blockSignals(boolBlockSignal)
         self.spinBoxWeightFactorAIR.blockSignals(boolBlockSignal)
 
+    def setParameterSpinBoxesWithOptimumValues(self, optimumParams):
+        """Sets model parameter spinboxes to calculated optimum model parameter values.
+        
+        Input Parameters
+        ----------------
+            optimumParams - Array of optimum model input parameter values.
+        
+        """
+
+        #Block signals from spinboxes, so that setting values
+        #returned from curve fitting does not trigger an event. 
+        self.blockSpinBoxSignals(True)
+        
+        if self.spinBoxParameter1.suffix() == '%':
+            self.spinBoxParameter1.setValue(optimumParams[0]* 100) #Convert Volume fraction to %
+        else:
+            self.spinBoxParameter1.setValue(optimumParams[0])
+        if self.spinBoxParameter2.suffix() == '%':
+            self.spinBoxParameter2.setValue(optimumParams[1]* 100) #Convert Volume fraction to %
+        else:
+            self.spinBoxParameter2.setValue(optimumParams[1])
+        if self.spinBoxParameter3.isHidden() == False:
+            if self.spinBoxParameter3.suffix() == '%':
+                self.spinBoxParameter3.setValue(optimumParams[2]* 100) #Convert Volume fraction to %
+            else:
+                self.spinBoxParameter3.setValue(optimumParams[2])
+            if self.spinBoxWeightFactorAIR.isHidden() == False:
+                self.spinBoxWeightFactorAIR.setValue(optimumParams[3])
+            if self.spinBoxWeightFactorVIR.isHidden() == False:
+                self.spinBoxWeightFactorVIR.setValue(optimumParams[4])
+        else:
+            if self.spinBoxWeightFactorAIR.isHidden() == False:
+                self.spinBoxWeightFactorAIR.setValue(optimumParams[2])
+            if self.spinBoxWeightFactorVIR.isHidden() == False:
+                self.spinBoxWeightFactorVIR.setValue(optimumParams[3])
+        
+        self.blockSpinBoxSignals(False)
+
+    def calculate95ConfidenceLimits(self, numDataPoints, numParams, optimumParams, paramCovarianceMatrix):
+        """Calculates the 95% confidence limits of optimum parameter values 
+        resulting from curve fitting. Results are stored in 
+        global _optimisedParamaterList that is used in the creation of the PDF report
+        and to display results on the GUI.
+        
+        Input Parameters
+        ----------------
+        numDataPoints -  Number of data points to which the model is fitted.
+                Taken as the number of elements in the array of ROI data.
+        numParams - Number of model input parameters.
+        optimumParams - Array of optimum model input parameter values 
+                        resulting from curve fitting.
+        paramCovarianceMatrix - The estimated covariance of the values in optimumParams. 
+                        calculated during curve fitting.
+        """
+
+        alpha = 0.05 #95% confidence interval = 100*(1-alpha)
+        degsOfFreedom = max(0, numDataPoints - numParams) #Number of degrees of freedom
+        
+        #student-t value for the degrees of freedom and the confidence level
+        tval = t.ppf(1.0-alpha/2., degsOfFreedom)
+        
+        #Remove results of previous curve fitting
+        _optimisedParamaterList.clear()
+        #_optimisedParamaterList is a list of lists. 
+        #Add an empty list for each parameter to hold its value and confidence limits
+        for i in range(numParams):
+            _optimisedParamaterList.append([])
+           
+        for counter, numParams, var in zip(range(numDataPoints), optimumParams, np.diag(paramCovarianceMatrix)):
+            sigma = var**0.5
+            _optimisedParamaterList[counter].append(numParams)
+            _optimisedParamaterList[counter].append(round((numParams - sigma*tval), 5))
+            _optimisedParamaterList[counter].append(round((numParams + sigma*tval), 5))
+            i+=1
+        logger.info('In calculate95ConfidenceLimits, _optimisedParamaterList = {}'.format(_optimisedParamaterList))
+            
+
     def runCurveFit(self):
-        """Runs curve fitting to fit AIF (and VIF) data to the ROI curve.
+        """Performs curve fitting to fit AIF (and VIF) data to the ROI curve.
+        Then displays the optimum model input parameters on the GUI and calls 
+        the plot function to display the line of best fit on the graph on the GUI
+        when these parameter values are input to the selected model.
         Also, takes results from curve fitting (optimal parameter values) and 
-        determines their confidence limits.
+        determines their 95% confidence limits which are stored in the global list
+        _optimisedParamaterList.
         """
         global _boolCurveFittingDone
         try:
@@ -766,6 +858,7 @@ class ModelFittingApp(QDialog):
             arrayTimes = np.array(_concentrationData['Time'], dtype='float')
             arrayROIConcs = np.array(_concentrationData[ROI], dtype='float')
             arrayAIFConcs = np.array(_concentrationData[AIF], dtype='float')
+
             if VIF != 'Please Select':
                 boolDualInput = True
                 arrayVIFConcs = np.array(_concentrationData[VIF], dtype='float')
@@ -790,63 +883,19 @@ class ModelFittingApp(QDialog):
             _boolCurveFittingDone = True 
             logger.info('TracerKineticModels.curveFit returned optimum parameters {} with confidence levels {}'.format(optimumParams, paramCovarianceMatrix))
             
-            #Block signals from spinboxes, so that setting values
-            #returned from curve fitting does not trigger an event.
-            self.blockSpinBoxSignals(True)
-            
-            if self.spinBoxParameter1.suffix() == '%':
-                self.spinBoxParameter1.setValue(optimumParams[0]* 100) #Convert Volume fraction to %
-            else:
-                self.spinBoxParameter1.setValue(optimumParams[0])
-            if self.spinBoxParameter2.suffix() == '%':
-                self.spinBoxParameter2.setValue(optimumParams[1]* 100) #Convert Volume fraction to %
-            else:
-                self.spinBoxParameter2.setValue(optimumParams[1])
-            if self.spinBoxParameter3.isHidden() == False:
-                if self.spinBoxParameter3.suffix() == '%':
-                    self.spinBoxParameter3.setValue(optimumParams[2]* 100) #Convert Volume fraction to %
-                else:
-                    self.spinBoxParameter3.setValue(optimumParams[2])
-                if self.spinBoxWeightFactorAIR.isHidden() == False:
-                    self.spinBoxWeightFactorAIR.setValue(optimumParams[3])
-                if self.spinBoxWeightFactorVIR.isHidden() == False:
-                    self.spinBoxWeightFactorVIR.setValue(optimumParams[4])
-            else:
-                if self.spinBoxWeightFactorAIR.isHidden() == False:
-                    self.spinBoxWeightFactorAIR.setValue(optimumParams[2])
-                if self.spinBoxWeightFactorVIR.isHidden() == False:
-                    self.spinBoxWeightFactorVIR.setValue(optimumParams[3])
+            #Display results of curve fitting  
+            #(optimum model parameter values) on GUI.
+            self.setParameterSpinBoxesWithOptimumValues(optimumParams)
 
-            self.blockSpinBoxSignals(False)
-
+            #Plot the best curve on the graph
             self.plot('runCurveFit')
 
-            #Determine confidence limits.
-            #Data in global _optimisedParamaterList used in creation of the PDF report
-            #and to display results on the GUI.
+            #Determine 95% confidence limits.
             numDataPoints = arrayROIConcs.size
             numParams = len(initialParametersArray)
-            alpha = 0.05 #95% confidence interval = 100*(1-alpha)
-            degsOfFreedom = max(0, numDataPoints - numParams) #Number of degrees of freedom
-
-            #student-t value for the degrees of freedom and the confidence level
-            tval = t.ppf(1.0-alpha/2., degsOfFreedom)
-         
-            #Remove results of previous curve fitting
-            _optimisedParamaterList.clear()
-            #_optimisedParamaterList is a list of lists. 
-            #Add an empty list for each parameter to hold its value and confidence limits
-            for i in range(numParams):
-                _optimisedParamaterList.append([])
-               
-            for counter, numParams, var in zip(range(numDataPoints), optimumParams, np.diag(paramCovarianceMatrix)):
-                sigma = var**0.5
-                _optimisedParamaterList[counter].append(numParams)
-                _optimisedParamaterList[counter].append(round((numParams - sigma*tval), 5))
-                _optimisedParamaterList[counter].append(round((numParams + sigma*tval), 5))
-                i+=1
+            self.calculate95ConfidenceLimits(numDataPoints, numParams, 
+                                    optimumParams, paramCovarianceMatrix)
             
-            logger.info('In calcParameterConfidenceIntervals, _optimisedParamaterList = {}'.format(_optimisedParamaterList))
             self.displayOptimumParamaterValuesOnGUI()
             
         except ValueError as ve:
@@ -907,7 +956,14 @@ class ModelFittingApp(QDialog):
        
     def loadDataFile(self):
         """Loads the contents of a CSV file containing time and concentration data
-        into memory"""
+        into a dictionary of lists. The key is the name of the organ or 'time' and 
+        the corresponding value is a list of concentrations 
+        (or times when the key is 'time')
+        
+        The following validation is applied to the data file:
+            -The CSV file must contain at least 3 columns of data separated by commas.
+            -The first row of the CSV file must be a header row with column names.
+            -The first column in the CSV file must contain time data."""
         global _concentrationData
         global _dataFileName
 
@@ -916,9 +972,9 @@ class ModelFittingApp(QDialog):
         
         self.hideAllControlsOnGUI()
         
-        #get the data file in csv format
-        #filter parameter set so that the user can only open a csv file
         try:
+            #get the data file in csv format
+            #filter parameter set so that the user can only open a csv file
             _dataFileName, _ = QFileDialog.getOpenFileName(parent=self, caption="Select csv file", filter="*.csv")
             if os.path.exists(_dataFileName):
                 with open(_dataFileName, newline='') as csvfile:
@@ -1043,7 +1099,12 @@ class ModelFittingApp(QDialog):
         """Builds a list of organs from the headers in the CSV data file. 
         The CSV data file comprises columns of concentration data for a
         set of organs.  Each column of concentration data is labeled by
-        header giving the name of organ."""
+        header giving the name of organ.
+        
+        Returns
+        -------
+            A list of organs for which there is concentration data.
+        """
         try:
             logger.info('Function returnListOrgans called')
             organList =[]
@@ -1173,7 +1234,12 @@ class ModelFittingApp(QDialog):
             logger.error('Error in function configureGUIForEachModel: ' + str(e) )
             
     def getScreenResolution(self):
-        """Determines the screen resolution of the device running this software."""
+        """Determines the screen resolution of the device running this software.
+        
+        Returns
+        -------
+            Returns the width & height of the device screen in pixels.
+        """
         try:
             width, height = pyautogui.size()
             logger.info('Function getScreenResolution called. Screen width = {}, height = {}.'.format(width, height))
@@ -1183,8 +1249,13 @@ class ModelFittingApp(QDialog):
             logger.error('Error in function getScreenResolution: ' + str(e) )
         
     def determineTextSize(self):
-        """Determines the optimum size for labels on the matplotlib graph from
-            the screen resolution"""
+        """Determines the optimum size for the title & labels on the 
+           matplotlib graph from the screen resolution.
+           
+           Returns
+           -------
+              tick label size, xy axis label size & title size
+           """
         try:
             logger.info('Function determineTextSize called.')
             width, _ = self.getScreenResolution()
@@ -1209,7 +1280,14 @@ class ModelFittingApp(QDialog):
     
     def plot(self, nameCallingFunction):
         """Plots the concentration against time curves for the ROI, AIF, VIF.  
-        Also, the concentration/time curve predicted by the selected model."""
+        Also, the concentration/time curve predicted by the selected model.
+        
+        Input Parameter
+        ----------------
+        nameCallingFunction - Name of the function or widget from whose event 
+        this function is called. This information is used in logging and error
+        handling.
+        """
         try:
             global _listModel
 

@@ -61,7 +61,30 @@ class PDF(FPDF):
         It includes the name of the file containing the data to be plotted and the name
         of the model used for curve fitting.  A table of input parameters, their values
         and their confidence limits is displayed above an image of the concentration/time
-        plot."""
+        plot.
+        
+        Input Parameters
+        ----------------
+        fileName - file path and name of the PDF report.
+        dataFileName - file path and name of the CSV file containing the 
+            time/concentration data that has been analysed.
+        modelName - Name of the model used to curve fit the time/concentration data.
+        imageName - Name of the PNG file holding an image of the plot of time/concentration
+            data on the GUI.
+        parameter1Text - Name of the first model input parameter.
+        parameter1Value - Value of the first model input parameter.
+        parameter2Text - Name of the second model input parameter.
+        parameter2Value - Value of the second model input parameter.
+        parameter3Text - Name of the third model input parameter.
+        parameter3Value - Value of the third model input parameter.
+        The third model input parameter is optional.
+        confidenceLimitsArray - Optional array of lower and upper confidence limits 
+            for each model input parameter.
+        curveFittingDone - Optional boolean that indicates if curve fitting has just 
+            performed (value=True), so there will be a set of confidence limits. 
+            Or if the user has been manually setting the values of the model input
+            parameters (value = False).
+        """
         try:
             logger.info('Function PDFWriter.createAndSavePDFReport called with filename={}, \
             dataFileName={}, modelName={}, imageName={}, parameter1Text={}, parameter1Value={},\
@@ -69,6 +92,7 @@ class PDF(FPDF):
                  curveFittingDone = {}' \
              .format(fileName, dataFileName, modelName, imageName,parameter1Text, parameter1Value,
              parameter2Text, parameter2Value,parameter3Text, parameter3Value, curveFittingDone))
+            
             self.add_page() #First Page in Portrait format, A4
             self.set_font('Arial', 'BU', 12)
             self.write(5, modelName + ' model.\n')
@@ -127,8 +151,10 @@ class PDF(FPDF):
 
             self.write(10, '\n') #line break
 
-            self.image(imageName, x = None, y = None, w = 170, h = 130, type = '', link = '') #Add image to PDF
-            self.output(fileName, 'F')  #Save PDF
+            #Add an image of the plot to the report
+            self.image(imageName, x = None, y = None, w = 170, h = 130, type = '', link = '') 
+            #Save report PDF
+            self.output(fileName, 'F')  
         except Exception as e:
             print('PDFWriter.createAndSavePDFReport: ' + str(e)) 
             logger.error('PDFWriter.createAndSavePDFReport: ' + str(e)) 

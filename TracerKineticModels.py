@@ -1,31 +1,74 @@
+"""This module contains functions that calculate the variation of concentration
+with time according to several tracer kinetic models.  
+
+The list modelNames holds the names of these models for display in a dropdown list.
+
+The function modelSelector coordinates the execution of the appropriate function 
+according to the model selected on the GUI.
+
+For each model there are two functions.  A single input version (AIF only) and
+a dual input version (AIF & VIF).
+
+The function, curveFit calls the curve_fit function imported from scipy.optimize 
+to fit any of the models in this module to actual concentration/time data 
+using non-linear least squares.  
+"""
+
 import Tools as tools
 from scipy.optimize import curve_fit
-from lmfit import Model, Parameters
 import numpy as np
 import logging
 
 #Create logger
 logger = logging.getLogger(__name__)
 
-"""This module contains functions that perform the calculation of concentration according
-to several tracer kinetic models.  
 
-The list modelNames holds the names of these models for display in a dropdown list."""
-
-
+#List of names of models for display in a dropdown list.
 modelNames = ['Select a model','Extended Tofts','One Compartment','High-Flow Gadoxetate']
 
+#Constants
 PARAMETER_UPPER_BOUND_VOL_FRACTION = 1.0
 PARAMETER_UPPER_BOUND_RATE = np.inf
 
-def modelSelector(modelName, times, AIFConcentration, parameterArray, boolDualInput, VIFConcentration=[]):
-    """Function called in the GUI of the model fitting tool to select the function corresponding
-        to each model"""
+def modelSelector(modelName, times, AIFConcentration, parameterArray, boolDualInput, 
+                  VIFConcentration=[]):
+    """Function called in the GUI of the model fitting tool to select the 
+    function corresponding to each model.
+
+    Input Parameters
+    ----------------
+        modelName - Name of the model taken from the selected value in the  
+            model name drop-down list on the GUI.  Used to select the 
+            function corresponding to that model.
+
+        time - NumPy Array of time values stored as floats. Created from a 
+            Python list.
+
+        AIFConcentration - NumPy Array of concentration values stored as floats. 
+            Created from a Python list.  These concentrations are the Arterial
+            Input Function input to the model.
+
+        parameterArray - list of model input parameter values.
+
+        boolDualInput - boolean indicating if the input to the model is 
+            single(=False) AIF only or dual(=True) AIF & VIR.
+
+        VIFConcentration - Optional NumPy Array of concentration values stored as floats. 
+            Created from a Python list.  These concentrations are the Venal
+            Input Function input to the model.
+
+        Returns
+        ------
+        Returns the return value from the selected model function that is a list of
+        concentrations calculated at the times in the array time.
+        """
     logger.info("In TracerKineticModels.modelSelector. Called with model {} and parameters {}".format(modelName, parameterArray))
     
     parameter1 = parameterArray[0]
     parameter2 = parameterArray[1]
     
+    #time and concentration arrays must be stacked into one input variable
+    #to meet the requirements of the SciPy library curve fitting function.
     if boolDualInput == True:
         timeInputConcs2DArray = np.column_stack((times, AIFConcentration, VIFConcentration))
     else:
@@ -66,10 +109,22 @@ def modelSelector(modelName, times, AIFConcentration, parameterArray, boolDualIn
 #       
 def extendedTofts_SingleInput(xData2DArray, Vp, Ve, Ktrans):
     """This function contains the algorithm for calculating how concentration varies with time
-        using the Extended Tofts model when it takes just an arterial input.""" 
+        using the Extended Tofts model when it takes just an arterial input.
+        
+        Input Parameters
+        ----------------
+            xData2DArray - time and AIF concentration 1D arrays stacked into one 2D array.
+            Vp - Plasma Volume Fraction (decimal fraction).
+            Ve - Extracellular Volume Fraction (decimal fraction).
+            Ktrans - Transfer Rate Constant, (1/min).
+
+        Returns
+        -------
+        listConcentrationsFromModel - list of calculated concentrations at each of the 
+            time points in array 'time'.
+        """ 
     try:
         logger.info('In function TracerKineticModels.extendedTofts_SingleInput with Vp={}, Ve={} & Ktrans={}'.format(Vp, Ve, Ktrans))
-        #print('Extended Tofts. Vp={}, Ve={} and Ktrans={}'.format(Vp, Ve, Ktrans))
         #In order to use scipy.optimize.curve_fit, time and concentration must be
         #combined into one function input parameter, a 2D array, then separated into individual
         #1 D arrays 
@@ -89,7 +144,21 @@ def extendedTofts_SingleInput(xData2DArray, Vp, Ve, Ktrans):
 
 def extendedTofts_DualInput(xData2DArray, Vp, Ve, Ktrans, fAIF, fVIF):
     """This function contains the algorithm for calculating how concentration varies with time
-        using the Extended Tofts model when it takes both an arterial and a venal input.""" 
+        using the Extended Tofts model when it takes both an arterial and a venal input.
+        
+        Input Parameters
+        ----------------
+            xData2DArray - time, AIF & VIF concentration 1D arrays stacked into one 2D array.
+            Vp - Plasma Volume Fraction (decimal fraction).
+            Ve - Extracellular Volume Fraction (decimal fraction).
+            Ktrans - Transfer Rate Constant, (1/min).
+            fAIF - Arterial flow factor (decimal fraction).
+
+        Returns
+        -------
+        listConcentrationsFromModel - list of calculated concentrations at each of the 
+            time points in array 'time'.
+        """ 
     try:
         logger.info('In function TracerKineticModels.extendedTofts_DualInput with Vp={}, Ve={},Ktrans={}, fA={} and fV={}'.format(Vp, Ve, Ktrans, fAIF, fVIF))
         #print('Extended Tofts. Vp={}, Ve={} and Ktrans={}'.format(Vp, Ve, Ktrans))
@@ -115,7 +184,19 @@ def extendedTofts_DualInput(xData2DArray, Vp, Ve, Ktrans, fAIF, fVIF):
             
 def oneCompartment_SingleInput(xData2DArray, Vp, Fp):
     """This function contains the algorithm for calculating how concentration varies with time
-        using the One Compartment model when it takes just an arterial input"""
+        using the One Compartment model when it takes just an arterial input.
+        
+        Input Parameters
+        ----------------
+            xData2DArray - time and AIF concentration 1D arrays stacked into one 2D array.
+            Vp - Plasma Volume Fraction (decimal fraction).
+            Fp - Plasma Flow Rate, (ml/min).
+
+        Returns
+        -------
+        listConcentrationsFromModel - list of calculated concentrations at each of the 
+            time points in array 'time'.
+        """
     try:
         logger.info('In function TracerKineticModels.oneCompartment_SingleInput with Vp={} and Fp={}'.format(Vp, Fp))
         #In order to use scipy.optimize.curve_fit, time and concentration must be
@@ -137,7 +218,20 @@ def oneCompartment_SingleInput(xData2DArray, Vp, Fp):
 
 def oneCompartment_DualInput(xData2DArray, Vp, Fp, fAIF, fVIF):
     """This function contains the algorithm for calculating how concentration varies with time
-        using the One Compartment model when it takes both an arterial and a venal input"""
+        using the One Compartment model when it takes both an arterial and a venal input.
+        
+        Input Parameters
+        ----------------
+            xData2DArray - time, AIF & VIF concentration 1D arrays stacked into one 2D array.
+            Vp - Plasma Volume Fraction (decimal fraction).
+            Fp - Plasma Flow Rate, (ml/min).
+            fAIF - Arterial flow factor (decimal fraction).
+
+        Returns
+        -------
+        listConcentrationsFromModel - list of calculated concentrations at each of the 
+            time points in array 'time'.
+        """
     try:
         logger.info('In function TracerKineticModels.oneCompartment_DualInput with Vp={} and Fp={}'.format(Vp, Fp))
         #In order to use scipy.optimize.curve_fit, time and concentration must be
@@ -161,7 +255,21 @@ def oneCompartment_DualInput(xData2DArray, Vp, Fp, fAIF, fVIF):
 
 def highFlowGadoxetate_SingleInput(xData2DArray, Ve, Kce, Kbc):
     """This function contains the algorithm for calculating how concentration varies with time
-        using the High Flow Gadoxetate model when it takes just an arterial input"""
+        using the High Flow Gadoxetate model when it takes just an arterial input.
+        
+        Input Parameters
+        ----------------
+            xData2DArray - time and AIF concentration 1D arrays stacked into one 2D array
+            Ve - Extracellular Volume Fraction (decimal fraction)
+            Kce - Hepatocellular Uptake Rate,(mL/100m L/min)
+            Kbc - Biliary Efflux Rate (mL/100mL/min)
+
+        Returns
+        -------
+        listConcentrationsFromModel - list of calculated concentrations at each of the 
+            time points in array 'time'.
+        
+        """
     try:
         logger.info('In function TracerKineticModels.highFlowGadoxetate_DualInput with Kce={}, Ve={} and Kbc={}'.format(Kce, Ve, Kbc))
         
@@ -185,7 +293,22 @@ def highFlowGadoxetate_SingleInput(xData2DArray, Ve, Kce, Kbc):
 
 def highFlowGadoxetate_DualInput(xData2DArray, Ve, Kce, Kbc, fAIF, fVIF):
     """This function contains the algorithm for calculating how concentration varies with time
-        using the High Flow Gadoxetate model when it takes both an arterial and a venal input"""
+        using the High Flow Gadoxetate model when it takes both an arterial and a venal input.
+        
+        Input Parameters
+        ----------------
+            xData2DArray - time, AIF & VIF concentration 1D arrays stacked into one 2D array
+            Ve - Extracellular Volume Fraction (decimal fraction)
+            Kce - Hepatocellular Uptake Rate,(mL/100m L/min)
+            Kbc - Biliary Efflux Rate (mL/100mL/min)
+            fAIF - Arterial flow factor (decimal fraction).
+
+        Returns
+        -------
+        listConcentrationsFromModel - list of calculated concentrations at each of the 
+            time points in array 'time'.
+        
+        """
     try:
         logger.info('In function TracerKineticModels.highFlowGadoxetate_DualInput with Kce={}, Ve={} and Kbc={}'.format(Kce, Ve, Kbc))
         
@@ -209,9 +332,50 @@ def highFlowGadoxetate_DualInput(xData2DArray, Ve, Kce, Kbc, fAIF, fVIF):
         logger.error('Runtime error in function TracerKineticModels.highFlowGadoxetate_DualInput:' + str(e) )
     
 
-def curveFit(modelName, times, AIFConcs, VIFConcs, concROI, paramArray, constrain, boolDualInput):
-    """This function calls the curve_fit function imported from scipy.optimize to fit any of
-    the models in this module to actual concentration/time data using non-linear least squares"""
+def curveFit(modelName, times, AIFConcs, VIFConcs, concROI, paramArray, constrain, 
+             boolDualInput):
+    """This function calls the curve_fit function imported from scipy.optimize 
+    to fit a model in this module to actual Region of Interest (ROI)
+    concentration/time data using non-linear least squares.  
+    During curve fitting, it allows parameter
+    values to be constrained by imposing an upper and lower limit on their values.
+    
+    Input Parameters
+    ----------------
+        modelName - Name of the model taken from the selected value in the  
+            model name drop-down list on the GUI.  Used to select the 
+            function corresponding to that model.
+
+        time - NumPy Array of time values stored as floats. Created from a 
+            Python list.
+
+        AIFConcs - NumPy Array of concentration values stored as floats. 
+            Created from a Python list.  These concentrations are the Arterial
+            Input Function input to the model.
+
+        VIFConcs - NumPy Array of concentration values stored as floats. 
+            Created from a Python list.  These concentrations are the Venal
+            Input Function input to the model.
+
+        concROI - NumPy Array of concentration values stored as floats. 
+            Created from a Python list.  These concentrations belong to
+            the Region of Interest (ROI).
+
+        paramArray - list of model input parameter values.
+
+        constrain - Boolean that indicates if a contraint should be 
+            applied to the input parameters during curve fitting.
+
+        boolDualInput - boolean indicating if the input to the model is 
+            single(=False) AIF only or dual(=True) AIF & VIR.
+
+        Returns
+        ------
+        optimumParams - An array of optimum values of the model input parameters
+                that achieve the best curve fit.
+        paramCovarianceMatrix - The estimated covariance of the values in optimumParams.
+            Used to calculate 95% confidence limits.
+    """
     try:
         logger.info('Function TracerKineticModels.curveFit called with model={}, parameters = {} and constrain={}'.format(modelName,paramArray, constrain) )
         

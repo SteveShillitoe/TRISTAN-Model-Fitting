@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
+Library of mathematical functions.
 Created on Wed Mar 14 12:08:02 2018
 
 @author: Sirisha Tadimalla
