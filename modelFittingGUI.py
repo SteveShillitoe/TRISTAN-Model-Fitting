@@ -745,13 +745,14 @@ class ModelFittingApp(QDialog):
 
             return initialParametersArray
         except Exception as e:
-            print('Error in function buildParameterArray with model ' + str(e))
-            logger.error('Error in function buildParameterArray with model '  + str(e))
+            print('Error in function buildParameterArray ' + str(e))
+            logger.error('Error in function buildParameterArray '  + str(e))
 
     def blockSpinBoxSignals(self, boolBlockSignal):
         """Blocks signals from spinboxes that fire events.  
            Thus allowing spinbox values to be set programmatically 
            without causing a method connected to one of their events to be executed."""
+        logger.info('Function blockSpinBoxSignals called.')
         self.spinBoxParameter1.blockSignals(boolBlockSignal)
         self.spinBoxParameter2.blockSignals(boolBlockSignal)
         self.spinBoxParameter3.blockSignals(boolBlockSignal)
@@ -759,42 +760,46 @@ class ModelFittingApp(QDialog):
         self.spinBoxWeightFactorAIR.blockSignals(boolBlockSignal)
 
     def setParameterSpinBoxesWithOptimumValues(self, optimumParams):
-        """Sets model parameter spinboxes to calculated optimum model parameter values.
+        """Sets the value displayed in the model parameter spinboxes 
+           to the calculated optimum model parameter values.
         
         Input Parameters
         ----------------
             optimumParams - Array of optimum model input parameter values.
-        
         """
-
-        #Block signals from spinboxes, so that setting values
-        #returned from curve fitting does not trigger an event. 
-        self.blockSpinBoxSignals(True)
+        try:
+            logger.info('Function setParameterSpinBoxesWithOptimumValues called with optimumParams = {}'.format(optimumParams))
+            #Block signals from spinboxes, so that setting values
+            #returned from curve fitting does not trigger an event. 
+            self.blockSpinBoxSignals(True)
         
-        if self.spinBoxParameter1.suffix() == '%':
-            self.spinBoxParameter1.setValue(optimumParams[0]* 100) #Convert Volume fraction to %
-        else:
-            self.spinBoxParameter1.setValue(optimumParams[0])
-        if self.spinBoxParameter2.suffix() == '%':
-            self.spinBoxParameter2.setValue(optimumParams[1]* 100) #Convert Volume fraction to %
-        else:
-            self.spinBoxParameter2.setValue(optimumParams[1])
-        if self.spinBoxParameter3.isHidden() == False:
-            if self.spinBoxParameter3.suffix() == '%':
-                self.spinBoxParameter3.setValue(optimumParams[2]* 100) #Convert Volume fraction to %
+            if self.spinBoxParameter1.suffix() == '%':
+                self.spinBoxParameter1.setValue(optimumParams[0]* 100) #Convert Volume fraction to %
             else:
-                self.spinBoxParameter3.setValue(optimumParams[2])
-            if self.spinBoxWeightFactorAIR.isHidden() == False:
-                self.spinBoxWeightFactorAIR.setValue(optimumParams[3])
-            if self.spinBoxWeightFactorVIR.isHidden() == False:
-                self.spinBoxWeightFactorVIR.setValue(optimumParams[4])
-        else:
-            if self.spinBoxWeightFactorAIR.isHidden() == False:
-                self.spinBoxWeightFactorAIR.setValue(optimumParams[2])
-            if self.spinBoxWeightFactorVIR.isHidden() == False:
-                self.spinBoxWeightFactorVIR.setValue(optimumParams[3])
+                self.spinBoxParameter1.setValue(optimumParams[0])
+            if self.spinBoxParameter2.suffix() == '%':
+                self.spinBoxParameter2.setValue(optimumParams[1]* 100) #Convert Volume fraction to %
+            else:
+                self.spinBoxParameter2.setValue(optimumParams[1])
+            if self.spinBoxParameter3.isHidden() == False:
+                if self.spinBoxParameter3.suffix() == '%':
+                    self.spinBoxParameter3.setValue(optimumParams[2]* 100) #Convert Volume fraction to %
+                else:
+                    self.spinBoxParameter3.setValue(optimumParams[2])
+                if self.spinBoxWeightFactorAIR.isHidden() == False:
+                    self.spinBoxWeightFactorAIR.setValue(optimumParams[3])
+                if self.spinBoxWeightFactorVIR.isHidden() == False:
+                    self.spinBoxWeightFactorVIR.setValue(optimumParams[4])
+            else:
+                if self.spinBoxWeightFactorAIR.isHidden() == False:
+                    self.spinBoxWeightFactorAIR.setValue(optimumParams[2])
+                if self.spinBoxWeightFactorVIR.isHidden() == False:
+                    self.spinBoxWeightFactorVIR.setValue(optimumParams[3])
         
-        self.blockSpinBoxSignals(False)
+            self.blockSpinBoxSignals(False)
+        except Exception as e:
+            print('Error in function setParameterSpinBoxesWithOptimumValues ' + str(e))
+            logger.error('Error in function setParameterSpinBoxesWithOptimumValues '  + str(e))
 
     def calculate95ConfidenceLimits(self, numDataPoints, numParams, optimumParams, paramCovarianceMatrix):
         """Calculates the 95% confidence limits of optimum parameter values 
@@ -812,28 +817,32 @@ class ModelFittingApp(QDialog):
         paramCovarianceMatrix - The estimated covariance of the values in optimumParams. 
                         calculated during curve fitting.
         """
-
-        alpha = 0.05 #95% confidence interval = 100*(1-alpha)
-        degsOfFreedom = max(0, numDataPoints - numParams) #Number of degrees of freedom
+        try:
+            logger.info('Function calculate95ConfidenceLimits called: numDataPoints ={}, numParams={}, optimumParams={}, paramCovarianceMatrix={}'
+                        .format(numDataPoints, numParams, optimumParams, paramCovarianceMatrix))
+            alpha = 0.05 #95% confidence interval = 100*(1-alpha)
+            degsOfFreedom = max(0, numDataPoints - numParams) #Number of degrees of freedom
         
-        #student-t value for the degrees of freedom and the confidence level
-        tval = t.ppf(1.0-alpha/2., degsOfFreedom)
+            #student-t value for the degrees of freedom and the confidence level
+            tval = t.ppf(1.0-alpha/2., degsOfFreedom)
         
-        #Remove results of previous curve fitting
-        _optimisedParamaterList.clear()
-        #_optimisedParamaterList is a list of lists. 
-        #Add an empty list for each parameter to hold its value and confidence limits
-        for i in range(numParams):
-            _optimisedParamaterList.append([])
+            #Remove results of previous curve fitting
+            _optimisedParamaterList.clear()
+            #_optimisedParamaterList is a list of lists. 
+            #Add an empty list for each parameter to hold its value and confidence limits
+            for i in range(numParams):
+                _optimisedParamaterList.append([])
            
-        for counter, numParams, var in zip(range(numDataPoints), optimumParams, np.diag(paramCovarianceMatrix)):
-            sigma = var**0.5
-            _optimisedParamaterList[counter].append(numParams)
-            _optimisedParamaterList[counter].append(round((numParams - sigma*tval), 5))
-            _optimisedParamaterList[counter].append(round((numParams + sigma*tval), 5))
-            i+=1
-        logger.info('In calculate95ConfidenceLimits, _optimisedParamaterList = {}'.format(_optimisedParamaterList))
-            
+            for counter, numParams, var in zip(range(numDataPoints), optimumParams, np.diag(paramCovarianceMatrix)):
+                sigma = var**0.5
+                _optimisedParamaterList[counter].append(numParams)
+                _optimisedParamaterList[counter].append(round((numParams - sigma*tval), 5))
+                _optimisedParamaterList[counter].append(round((numParams + sigma*tval), 5))
+                i+=1
+            logger.info('In calculate95ConfidenceLimits, _optimisedParamaterList = {}'.format(_optimisedParamaterList))
+        except Exception as e:
+            print('Error in function calculate95ConfidenceLimits ' + str(e))
+            logger.error('Error in function calculate95ConfidenceLimits '  + str(e))  
 
     def runCurveFit(self):
         """Performs curve fitting to fit AIF (and VIF) data to the ROI curve.
@@ -863,8 +872,8 @@ class ModelFittingApp(QDialog):
                 boolDualInput = True
                 arrayVIFConcs = np.array(_concentrationData[VIF], dtype='float')
             else:
-                #Create empty dummy array to act as place holder in TracerKineticModels.curveFit 
-                #function call 
+                #Create empty dummy array to act as place holder in  
+                #TracerKineticModels.curveFit function call 
                 arrayVIFConcs = []
                 boolDualInput = False
             
