@@ -77,28 +77,25 @@ def modelSelector(modelName, times, AIFConcentration, parameterArray, boolDualIn
     if modelName ==  'Extended Tofts':
         parameter3 = parameterArray[2]
         if boolDualInput == True:
-            fractionAIF = parameterArray[3]
-            fractionVIF = parameterArray[4]
+            arterialFlowFraction = parameterArray[3]
             return extendedTofts_DualInput(timeInputConcs2DArray, parameter1, parameter2, 
-              parameter3, fractionAIF, fractionVIF)
+              parameter3, arterialFlowFraction)
         else:
             return extendedTofts_SingleInput(timeInputConcs2DArray, parameter1, parameter2, 
               parameter3)
     elif modelName ==  'One Compartment':
         if boolDualInput == True:
-            fractionAIF = parameterArray[2]
-            fractionVIF = parameterArray[3]
+            arterialFlowFraction = parameterArray[2]
             return oneCompartment_DualInput(timeInputConcs2DArray, parameter1, parameter2, 
-              fractionAIF, fractionVIF)
+              arterialFlowFraction)
         else:
             return oneCompartment_SingleInput(timeInputConcs2DArray, parameter1, parameter2)
     elif modelName ==  'High-Flow Gadoxetate':
         parameter3 = parameterArray[2]
-        fractionAIF = parameterArray[3]
-        fractionVIF = parameterArray[4]
         if boolDualInput == True:
+            arterialFlowFraction = parameterArray[3]
             return highFlowGadoxetate_DualInput(timeInputConcs2DArray, parameter1, parameter2, 
-              parameter3, fractionAIF, fractionVIF)
+              parameter3, arterialFlowFraction)
         else:
             return highFlowGadoxetate_SingleInput(timeInputConcs2DArray, parameter1, parameter2, 
               parameter3)
@@ -142,7 +139,7 @@ def extendedTofts_SingleInput(xData2DArray, Vp, Ve, Ktrans):
         print('TracerKineticModels.extendedTofts_SingleInput: ' + str(e))
         logger.error('Runtime error in function TracerKineticModels.extendedTofts_SingleInput:' + str(e) )
 
-def extendedTofts_DualInput(xData2DArray, Vp, Ve, Ktrans, fAIF, fVIF):
+def extendedTofts_DualInput(xData2DArray, Vp, Ve, Ktrans, fAFF):
     """This function contains the algorithm for calculating how concentration varies with time
         using the Extended Tofts model when it takes both an arterial and a venal input.
         
@@ -152,7 +149,7 @@ def extendedTofts_DualInput(xData2DArray, Vp, Ve, Ktrans, fAIF, fVIF):
             Vp - Plasma Volume Fraction (decimal fraction).
             Ve - Extracellular Volume Fraction (decimal fraction).
             Ktrans - Transfer Rate Constant, (1/min).
-            fAIF - Arterial flow factor (decimal fraction).
+            fAFF - Arterial flow factor (decimal fraction).
 
         Returns
         -------
@@ -160,7 +157,7 @@ def extendedTofts_DualInput(xData2DArray, Vp, Ve, Ktrans, fAIF, fVIF):
             time points in array 'time'.
         """ 
     try:
-        logger.info('In function TracerKineticModels.extendedTofts_DualInput with Vp={}, Ve={},Ktrans={}, fA={} and fV={}'.format(Vp, Ve, Ktrans, fAIF, fVIF))
+        logger.info('In function TracerKineticModels.extendedTofts_DualInput with Vp={}, Ve={},Ktrans={}, fA={} '.format(Vp, Ve, Ktrans, fAFF))
         #print('Extended Tofts. Vp={}, Ve={} and Ktrans={}'.format(Vp, Ve, Ktrans))
         #In order to use scipy.optimize.curve_fit, time and concentration must be
         #combined into one function input parameter, a 2D array, then separated into individual
@@ -171,12 +168,13 @@ def extendedTofts_DualInput(xData2DArray, Vp, Ve, Ktrans, fAIF, fVIF):
            
         #Calculate Intracellular transit time, Tc
         Tc = Ve/Ktrans
-        
+        #Calculate Venal Flow Factor
+        fVFF = 1 - fAFF
         
         listConcentrationsFromModel = []
         # expconv calculates convolution of ca and (1/Tc)exp(-t/Tc)
-        listConcentrationsFromModel = Vp*((fAIF * AIFconcentrations) + (fVIF * VIFconcentrations)) \
-            + Ve*tools.expconv(Tc, times, ((fAIF * AIFconcentrations) + (fVIF * VIFconcentrations)), 'Extended Tofts')
+        listConcentrationsFromModel = Vp*((fAFF * AIFconcentrations) + (fVFF * VIFconcentrations)) \
+            + Ve*tools.expconv(Tc, times, ((fAFF * AIFconcentrations) + (fVFF * VIFconcentrations)), 'Extended Tofts')
         return listConcentrationsFromModel
     except Exception as e:
         print('TracerKineticModels.extendedTofts_DualInput: ' + str(e))
@@ -216,7 +214,7 @@ def oneCompartment_SingleInput(xData2DArray, Vp, Fp):
         print('TracerKineticModels.oneCompartment_SingleInput: ' + str(e))
         logger.error('Runtime error in function TracerKineticModels.oneCompartment_SingleInput:' + str(e) )
 
-def oneCompartment_DualInput(xData2DArray, Vp, Fp, fAIF, fVIF):
+def oneCompartment_DualInput(xData2DArray, Vp, Fp, fAFF):
     """This function contains the algorithm for calculating how concentration varies with time
         using the One Compartment model when it takes both an arterial and a venal input.
         
@@ -225,7 +223,7 @@ def oneCompartment_DualInput(xData2DArray, Vp, Fp, fAIF, fVIF):
             xData2DArray - time, AIF & VIF concentration 1D arrays stacked into one 2D array.
             Vp - Plasma Volume Fraction (decimal fraction).
             Fp - Plasma Flow Rate, (ml/min).
-            fAIF - Arterial flow factor (decimal fraction).
+            fAFF - Arterial flow factor (decimal fraction).
 
         Returns
         -------
@@ -243,11 +241,13 @@ def oneCompartment_DualInput(xData2DArray, Vp, Fp, fAIF, fVIF):
         
         #Calculate Intracellular transit time, Tc
         Tc = Vp/Fp
+
+        fVFF = 1 - fAFF
         listConcentrationsFromModel = []
 
         # expconv calculates convolution of ca and (1/Tc)exp(-t/Tc)
         listConcentrationsFromModel = Vp*tools.expconv(Tc, times, 
-                 ((fAIF * AIFconcentrations) + (fVIF * VIFconcentrations)), 'One Compartment')
+                 ((fAFF * AIFconcentrations) + (fVFF * VIFconcentrations)), 'One Compartment')
         return listConcentrationsFromModel
     except Exception as e:
         print('TracerKineticModels.oneCompartment_DualInput: ' + str(e))
@@ -291,7 +291,7 @@ def highFlowGadoxetate_SingleInput(xData2DArray, Ve, Kce, Kbc):
         logger.error('Runtime error in function TracerKineticModels.highFlowGadoxetate_SingleInput:' + str(e) )
     
 
-def highFlowGadoxetate_DualInput(xData2DArray, Ve, Kce, Kbc, fAIF, fVIF):
+def highFlowGadoxetate_DualInput(xData2DArray, Ve, Kce, Kbc, fAFF):
     """This function contains the algorithm for calculating how concentration varies with time
         using the High Flow Gadoxetate model when it takes both an arterial and a venal input.
         
@@ -301,7 +301,7 @@ def highFlowGadoxetate_DualInput(xData2DArray, Ve, Kce, Kbc, fAIF, fVIF):
             Ve - Extracellular Volume Fraction (decimal fraction)
             Kce - Hepatocellular Uptake Rate,(mL/100m L/min)
             Kbc - Biliary Efflux Rate (mL/100mL/min)
-            fAIF - Arterial flow factor (decimal fraction).
+            fAFF - Arterial flow factor (decimal fraction).
 
         Returns
         -------
@@ -321,11 +321,13 @@ def highFlowGadoxetate_DualInput(xData2DArray, Ve, Kce, Kbc, fAIF, fVIF):
         
         #Calculate Intracellular transit time, Tc
         Tc = (1-Ve)/Kbc
+        #Calculate Venal Flow Factor
+        fVFF = 1 - fAFF
         listConcentrationsFromModel = []
 
         # expconv calculates convolution of ca and (1/Tc)exp(-t/Tc)
-        listConcentrationsFromModel = Ve*((fAIF * AIFconcentrations) + (fVIF * VIFconcentrations)) \
-                + Kce*Tc*tools.expconv(Tc, times, ((fAIF * AIFconcentrations) + (fVIF * VIFconcentrations)), 'High Flow Gadoxetate')
+        listConcentrationsFromModel = Ve*((fAFF * AIFconcentrations) + (fVFF * VIFconcentrations)) \
+                + Kce*Tc*tools.expconv(Tc, times, ((fAFF * AIFconcentrations) + (fVFF * VIFconcentrations)), 'High Flow Gadoxetate')
         return listConcentrationsFromModel
     except Exception as e:
         print('TracerKineticModels.highFlowGadoxetate_DualInput: ' + str(e))

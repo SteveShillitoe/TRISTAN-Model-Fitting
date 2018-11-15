@@ -2,7 +2,9 @@
 It defines the GUI and the logic providing the application's functionality.
 
    The TRISTAN-Model-Fitting application allows the user to:
-        1. Load a CSV file of concentration/time data.
+        1. Load a CSV file of concentration/time data.  In addition to a column of time data, this
+            file must contain at least 2 columns of concentration data for two organs.  There is no
+            upper limit on the number of organs for which concentration data may be 
         2. Select a Region Of Interest (ROI) and display a plot of its concentration against
             time.
         3. The user can then select a model they would like to fit to the ROI data.
@@ -85,6 +87,7 @@ DEFAULT_VALUE_Ktrans = 0.10
 DEFAULT_VALUE_Fp = 1
 DEFAULT_VALUE_Kce = 0.025
 DEFAULT_VALUE_Kbc = 0.003
+DEFAULT_VALUE_Fa = 40.0 #Arterial Flow Fraction
 LABEL_PARAMETER_Vp = 'Plasma Volume Fraction,\n Vp'
 LABEL_PARAMETER_Kce = 'Hepatocellular Uptake Rate, \n Kce (mL/100mL/min)'
 LABEL_PARAMETER_Ve = 'Extracellular Vol Fraction,\n Ve'
@@ -251,7 +254,7 @@ class ModelFittingApp(QDialog):
         #each horizontal layout. Then add them to a vertical layout, 
         #then add the vertical layout to the group box
         modelHorizontalLayout2 = QHBoxLayout()
-        modelHorizontalLayoutWieghtFactorLabel = QHBoxLayout()
+        modelHorizontalLayoutArterialFlowFactor = QHBoxLayout()
         modelHorizontalLayout3 = QHBoxLayout()
         modelHorizontalLayout4 = QHBoxLayout()
         modelHorizontalLayoutReset = QHBoxLayout()
@@ -263,10 +266,10 @@ class ModelFittingApp(QDialog):
         modelVerticalLayout = QVBoxLayout()
         modelVerticalLayout.setAlignment(QtCore.Qt.AlignTop) 
         modelVerticalLayout.addLayout(modelHorizontalLayout2)
-        modelVerticalLayout.addLayout(modelHorizontalLayoutWieghtFactorLabel)
         modelVerticalLayout.addLayout(modelHorizontalLayout3)
         modelVerticalLayout.addLayout(modelHorizontalLayout4)
         modelVerticalLayout.addLayout(modelHorizontalLayoutReset)
+        modelVerticalLayout.addLayout(modelHorizontalLayoutArterialFlowFactor)
         modelVerticalLayout.addLayout(modelHorizontalLayout5)
         modelVerticalLayout.addLayout(modelHorizontalLayout6)
         modelVerticalLayout.addLayout(modelHorizontalLayout7)
@@ -286,35 +289,13 @@ class ModelFittingApp(QDialog):
         self.cmbModels.currentIndexChanged.connect(lambda: self.clearOptimisedParamaterList('cmbModels')) 
         self.cmbModels.activated.connect(lambda:  self.plot('cmbModels'))
 
-        self.lblWieghtFactorExplanation = QLabel("Use the spinboxes on the right-hand side\nto select the weightings of AIR and VIR") 
-        self.lblWieghtFactorExplanation.hide()
-        self.lblWieghtFactorExplanation.setWordWrap(True)
         #Create dropdown lists for selection of AIF & VIF
         self.lblAIF = QLabel("Arterial Input Function:")
         self.cmbAIF = QComboBox()
         self.cmbAIF.setToolTip('Select Arterial Input Function')
         self.lblVIF = QLabel("Venal Input Function:")
         self.cmbVIF = QComboBox()
-        #These 2 spinboxes will hold the wieghing factors for AIR & VIR
-        #in the dual inlet versions of the models
-        self.spinBoxWeightFactorAIR = QDoubleSpinBox()
-        self.spinBoxWeightFactorAIR.setRange(0.0, 1.0)
-        self.spinBoxWeightFactorAIR.setDecimals(2)
-        self.spinBoxWeightFactorAIR.setSingleStep(0.01)
-        self.spinBoxWeightFactorAIR.setValue(0.5)
-        self.spinBoxWeightFactorVIR = QDoubleSpinBox()
-        self.spinBoxWeightFactorVIR.setRange(0.0, 1.0)
-        self.spinBoxWeightFactorVIR.setDecimals(2)
-        self.spinBoxWeightFactorVIR.setSingleStep(0.01)
-        self.spinBoxWeightFactorVIR.setValue(0.5)
-        self.spinBoxWeightFactorVIR.hide()
-        self.spinBoxWeightFactorAIR.hide()
-
-        self.spinBoxWeightFactorVIR.valueChanged.connect(lambda: self.spinBoxWeightFactorAIR.setValue(1.0 -float(self.spinBoxWeightFactorVIR.value()))) 
-        self.spinBoxWeightFactorAIR.valueChanged.connect(lambda: self.spinBoxWeightFactorVIR.setValue(1.0 -float(self.spinBoxWeightFactorAIR.value()))) 
-        self.spinBoxWeightFactorVIR.valueChanged.connect(lambda: self.plot('spinBoxWeightFactorVIR')) 
-        self.spinBoxWeightFactorAIR.valueChanged.connect(lambda: self.plot('spinBoxWeightFactorAIR'))  
-
+       
         self.cmbVIF.setToolTip('Select Venal Input Function')
         #When a ROI is selected plot its concentration data on the graph.
         self.cmbROI.activated.connect(lambda:  self.plot('cmbROI'))
@@ -325,7 +306,7 @@ class ModelFittingApp(QDialog):
         self.cmbAIF.activated.connect(lambda: self.plot('cmbAIF'))
         #When an AIF is selected display the Fit Model and Save plot CVS buttons.
         self.cmbAIF.currentIndexChanged.connect(self.displayFitModelSaveCSVButtons)
-        self.cmbVIF.currentIndexChanged.connect(self.displayWieghtFactorSpinBoxes)
+        self.cmbVIF.currentIndexChanged.connect(self.displayArterialFlowFactorSpinBox)
         #When a VIF is selected plot its concentration data on the graph.
         self.cmbVIF.activated.connect(lambda: self.plot('cmbVIF'))
         self.lblAIF.hide()
@@ -340,13 +321,10 @@ class ModelFittingApp(QDialog):
         modelHorizontalLayout2.insertStretch (0, 2)
         modelHorizontalLayout2.addWidget(self.modelLabel)
         modelHorizontalLayout2.addWidget(self.cmbModels)
-        modelHorizontalLayoutWieghtFactorLabel.addWidget(self.lblWieghtFactorExplanation)
         modelHorizontalLayout3.addWidget(self.lblAIF)
         modelHorizontalLayout3.addWidget(self.cmbAIF)
-        modelHorizontalLayout3.addWidget(self.spinBoxWeightFactorAIR)
         modelHorizontalLayout4.addWidget(self.lblVIF)
         modelHorizontalLayout4.addWidget(self.cmbVIF)
-        modelHorizontalLayout4.addWidget(self.spinBoxWeightFactorVIR)
         
         self.cboxDelay = QCheckBox('Delay', self)
         self.cboxConstaint = QCheckBox('Constraint', self)
@@ -364,12 +342,21 @@ class ModelFittingApp(QDialog):
         
         #Create spinboxes and their labels
         #Label text set in function configureGUIForEachModel when the model is selected
+        self.lblArterialFlowFactor = QLabel("Arterial Flow Factor:") 
         self.labelParameter1 = QLabel("")
         self.labelParameter2 = QLabel("")
         self.labelParameter3 = QLabel("")
         self.labelParameter1.setWordWrap(True)
         self.labelParameter2.setWordWrap(True)
         self.labelParameter3.setWordWrap(True)
+        self.spinBoxArterialFlowFactor = QDoubleSpinBox()
+        self.spinBoxArterialFlowFactor.setRange(0, 100)
+        self.spinBoxArterialFlowFactor.setDecimals(2)
+        self.spinBoxArterialFlowFactor.setSingleStep(0.01)
+        self.spinBoxArterialFlowFactor.setValue(DEFAULT_VALUE_Fa)
+        self.spinBoxArterialFlowFactor.setSuffix('%')
+        self.spinBoxArterialFlowFactor.setMinimumSize(self.spinBoxArterialFlowFactor.minimumSizeHint())
+        self.spinBoxArterialFlowFactor.resize(self.spinBoxArterialFlowFactor.sizeHint())
         self.spinBoxParameter1 = QDoubleSpinBox()
         self.spinBoxParameter1.setRange(-100, 1000)
         self.spinBoxParameter1.setDecimals(3)
@@ -386,20 +373,27 @@ class ModelFittingApp(QDialog):
         self.spinBoxParameter3.setDecimals(3)
         self.spinBoxParameter3.setSingleStep(0.001)
         self.spinBoxParameter3.resize(self.spinBoxParameter3.sizeHint())
+        self.lblArterialFlowFactor.hide()
+        self.spinBoxArterialFlowFactor.hide()
         self.spinBoxParameter1.hide()
         self.spinBoxParameter2.hide()
         self.spinBoxParameter3.hide()
+
         #If a parameter value is changed, replot the concentration and model data
+        self.spinBoxArterialFlowFactor.valueChanged.connect(lambda: self.plot('spinBoxArterialFlowFactor')) 
         self.spinBoxParameter1.valueChanged.connect(lambda: self.plot('spinBoxParameter1')) 
         self.spinBoxParameter2.valueChanged.connect(lambda: self.plot('spinBoxParameter2')) 
         self.spinBoxParameter3.valueChanged.connect(lambda: self.plot('spinBoxParameter3'))
         #Set a global boolean variable, _boolCurveFittingDone to false to indicate that 
         #the value of a model parameter has been changed manually rather than by curve fitting
+        self.spinBoxArterialFlowFactor.valueChanged.connect(self.setCurveFittingNotDoneBoolean) 
         self.spinBoxParameter1.valueChanged.connect(self.setCurveFittingNotDoneBoolean) 
         self.spinBoxParameter2.valueChanged.connect(self.setCurveFittingNotDoneBoolean) 
         self.spinBoxParameter3.valueChanged.connect(self.setCurveFittingNotDoneBoolean)
         
         #Place spin boxes and their labels in horizontal layouts
+        modelHorizontalLayoutArterialFlowFactor.addWidget(self.lblArterialFlowFactor)
+        modelHorizontalLayoutArterialFlowFactor.addWidget(self.spinBoxArterialFlowFactor)
         modelHorizontalLayout5.addWidget(self.labelParameter1)
         modelHorizontalLayout5.addWidget(self.spinBoxParameter1)
         modelHorizontalLayout6.addWidget(self.labelParameter2)
@@ -485,6 +479,10 @@ class ModelFittingApp(QDialog):
         self.lblParam3Value = QLabel("")
         self.lblParam3ConfInt = QLabel("")
         self.lblParam3ConfInt.setAlignment(QtCore.Qt.AlignCenter)
+        self.lblAFFName = QLabel("")
+        self.lblAFFValue = QLabel("")
+        self.lblAFFConfInt = QLabel("")
+        self.lblAFFConfInt.setAlignment(QtCore.Qt.AlignCenter)
         
         gridLayoutResults.addWidget(self.lblHeaderLeft, 1, 1)
         gridLayoutResults.addWidget(self.lblHeaderMiddle, 1, 3)
@@ -498,6 +496,9 @@ class ModelFittingApp(QDialog):
         gridLayoutResults.addWidget(self.lblParam3Name, 4, 1, QtCore.Qt.AlignTop)
         gridLayoutResults.addWidget(self.lblParam3Value, 4, 3, QtCore.Qt.AlignTop)
         gridLayoutResults.addWidget(self.lblParam3ConfInt, 4, 5, QtCore.Qt.AlignTop)
+        gridLayoutResults.addWidget(self.lblAFFName, 5, 1, QtCore.Qt.AlignTop)
+        gridLayoutResults.addWidget(self.lblAFFValue, 5, 3, QtCore.Qt.AlignTop)
+        gridLayoutResults.addWidget(self.lblAFFConfInt, 5, 5, QtCore.Qt.AlignTop)
 
         #Create horizontal layout box to hold TRISTAN & University of Leeds Logos
         horizontalLogoLayout = QHBoxLayout()
@@ -541,21 +542,21 @@ class ModelFittingApp(QDialog):
 
             self.lblParam1Name.setText(self.labelParameter1.text())
             parameterValue = round(_optimisedParamaterList[0][0], 3)
-            lowerLimit = round(_optimisedParamaterList[0][1], 5)
-            upperLimit = round(_optimisedParamaterList[0][2], 5)
+            lowerLimit = round(_optimisedParamaterList[0][1], 3)
+            upperLimit = round(_optimisedParamaterList[0][2], 3)
             
             if self.spinBoxParameter1.suffix() == '%':
                 #convert from decimal fraction to %
                 suffix = '%'
-                parameterValue = round(parameterValue * 100.0, 3)
-                lowerLimit = round(lowerLimit * 100.0, 3)
-                upperLimit = round(upperLimit * 100.0, 3)
+                parameterValue = parameterValue * 100.0
+                lowerLimit = lowerLimit * 100.0
+                upperLimit = upperLimit * 100.0
                 
                 #For display in the PDF report, overwrite decimal volume fraction values in  _optimisedParamaterList
                 #with the % equivalent
-                _optimisedParamaterList[0][0] = parameterValue
-                _optimisedParamaterList[0][1] = lowerLimit
-                _optimisedParamaterList[0][2] = upperLimit
+                _optimisedParamaterList[0][0] = round(parameterValue, 3)
+                _optimisedParamaterList[0][1] = round(lowerLimit, 3)
+                _optimisedParamaterList[0][2] = round(upperLimit, 3)
             else:
                 suffix = ''
             
@@ -565,18 +566,18 @@ class ModelFittingApp(QDialog):
 
             self.lblParam2Name.setText(self.labelParameter2.text())
             parameterValue = round(_optimisedParamaterList[1][0], 3)
-            lowerLimit = round(_optimisedParamaterList[1][1], 5)
-            upperLimit = round(_optimisedParamaterList[1][2], 5)
+            lowerLimit = round(_optimisedParamaterList[1][1], 3)
+            upperLimit = round(_optimisedParamaterList[1][2], 3)
             if self.spinBoxParameter2.suffix() == '%':
                 suffix = '%'
-                parameterValue = round(parameterValue * 100.0, 3)
+                parameterValue = parameterValue * 100.0
                 lowerLimit = lowerLimit * 100.0
                 upperLimit = upperLimit * 100.0
                 #For display in the PDF report, overwrite decimal volume fraction values in  _optimisedParamaterList
                 #with the % equivalent
-                _optimisedParamaterList[1][0] = parameterValue
-                _optimisedParamaterList[1][1] = lowerLimit
-                _optimisedParamaterList[1][2] = upperLimit
+                _optimisedParamaterList[1][0] = round(parameterValue,3)
+                _optimisedParamaterList[1][1] = round(lowerLimit,3)
+                _optimisedParamaterList[1][2] = round(upperLimit,3)
             else:
                 suffix = ''
             
@@ -587,24 +588,47 @@ class ModelFittingApp(QDialog):
             if self.spinBoxParameter3.isHidden() == False:
                 self.lblParam3Name.setText(self.labelParameter3.text())
                 parameterValue = round(_optimisedParamaterList[2][0], 3)
-                lowerLimit = round(_optimisedParamaterList[2][1], 5)
-                upperLimit = round(_optimisedParamaterList[2][2], 5)
+                lowerLimit = round(_optimisedParamaterList[2][1], 3)
+                upperLimit = round(_optimisedParamaterList[2][2], 3)
+                nextIndex = 3
                 if self.spinBoxParameter3.suffix() == '%':
                     suffix = '%'
-                    parameterValue = round(parameterValue * 100.0, 3)
+                    parameterValue = parameterValue * 100.0
                     lowerLimit = lowerLimit * 100.0
                     upperLimit = upperLimit * 100.0
                     #For display in the PDF report, overwrite decimal volume fraction values in  _optimisedParamaterList
                     #with the % equivalent
-                    _optimisedParamaterList[2][0] = parameterValue
-                    _optimisedParamaterList[2][1] = lowerLimit
-                    _optimisedParamaterList[2][2] = upperLimit
+                    _optimisedParamaterList[2][0] = round(parameterValue, 3)
+                    _optimisedParamaterList[2][1] = round(lowerLimit, 3)
+                    _optimisedParamaterList[2][2] = round(upperLimit, 3)
                 else:
                     suffix = ''
                 
                 self.lblParam3Value.setText(str(parameterValue) + suffix)
                 confidenceStr = '[{}     {}]'.format(lowerLimit, upperLimit)
                 self.lblParam3ConfInt.setText(confidenceStr)
+            else:
+                nextIndex = 2
+                
+            if self.spinBoxArterialFlowFactor.isHidden() == False:
+                self.lblAFFName.setText(self.lblArterialFlowFactor.text())
+                parameterValue = _optimisedParamaterList[nextIndex][0]
+                lowerLimit = _optimisedParamaterList[nextIndex][1]
+                upperLimit = _optimisedParamaterList[nextIndex][2]
+                suffix = '%'
+                parameterValue = round(parameterValue * 100.0, 3)
+                lowerLimit = round(lowerLimit * 100.0, 3)
+                upperLimit = round(upperLimit * 100.0, 3)
+                #For display in the PDF report, overwrite decimal volume fraction values in  _optimisedParamaterList
+                #with the % equivalent
+                _optimisedParamaterList[nextIndex][0] = parameterValue
+                _optimisedParamaterList[nextIndex][1] = lowerLimit
+                _optimisedParamaterList[nextIndex][2] = upperLimit
+               
+                self.lblAFFValue.setText(str(parameterValue) + suffix)
+                confidenceStr = '[{}     {}]'.format(lowerLimit, upperLimit)
+                self.lblAFFConfInt.setText(confidenceStr)
+
 
         except Exception as e:
             print('Error in function displayOptimumParamaterValuesOnGUI: ' + str(e))
@@ -625,6 +649,9 @@ class ModelFittingApp(QDialog):
             self.lblParam3Name.clear()
             self.lblParam3Value.clear()
             self.lblParam3ConfInt.clear()
+            self.lblAFFName.clear()
+            self.lblAFFValue.clear()
+            self.lblAFFConfInt.clear()
             
         except Exception as e:
             print('Error in function clearOptimumParamaterValuesOnGUI: ' + str(e))
@@ -677,15 +704,13 @@ class ModelFittingApp(QDialog):
             print('Error in function clearOptimisedParamaterList: ' + str(e)) 
             logger.error('Error in function clearOptimisedParamaterList: ' + str(e))
 
-    def displayWieghtFactorSpinBoxes(self):
+    def displayArterialFlowFactorSpinBox(self):
         if str(self.cmbVIF.currentText()) == 'Please Select':
-            self.lblWieghtFactorExplanation.hide()
-            self.spinBoxWeightFactorVIR.hide()
-            self.spinBoxWeightFactorAIR.hide()
+            self.lblArterialFlowFactor.hide()
+            self.spinBoxArterialFlowFactor.hide()
         else:
-            self.lblWieghtFactorExplanation.show()
-            self.spinBoxWeightFactorVIR.show()
-            self.spinBoxWeightFactorAIR.show()
+            self.lblArterialFlowFactor.show()
+            self.spinBoxArterialFlowFactor.show()
 
     def displayFitModelSaveCSVButtons(self):
         """Displays the Fit Model and Save CSV buttons if both a ROI & AIF 
@@ -735,13 +760,11 @@ class ModelFittingApp(QDialog):
                     parameter3 = parameter3/100.0
                 initialParametersArray.append(parameter3)
 
-            #Only add the wieght factors for AIF & VIF if a VIF has been selected
-            #and the weight factor spinboxes are therefore visible.
-            if self.spinBoxWeightFactorAIR.isHidden() == False:
-                initialParametersArray.append(self.spinBoxWeightFactorAIR.value())
-
-            if self.spinBoxWeightFactorVIR.isHidden() == False:
-                initialParametersArray.append(self.spinBoxWeightFactorVIR.value())
+            #Only add the Arterial Flow Factor if a VIF has been selected
+            #and the Arterial Flow Factor spinbox is therefore visible.
+            if self.spinBoxArterialFlowFactor.isHidden() == False:
+                arterialFlowFactor = self.spinBoxArterialFlowFactor.value()/100
+                initialParametersArray.append(arterialFlowFactor)
 
             return initialParametersArray
         except Exception as e:
@@ -753,11 +776,10 @@ class ModelFittingApp(QDialog):
            Thus allowing spinbox values to be set programmatically 
            without causing a method connected to one of their events to be executed."""
         logger.info('Function blockSpinBoxSignals called.')
+        self.spinBoxArterialFlowFactor.blockSignals(boolBlockSignal)
         self.spinBoxParameter1.blockSignals(boolBlockSignal)
         self.spinBoxParameter2.blockSignals(boolBlockSignal)
         self.spinBoxParameter3.blockSignals(boolBlockSignal)
-        self.spinBoxWeightFactorVIR.blockSignals(boolBlockSignal)
-        self.spinBoxWeightFactorAIR.blockSignals(boolBlockSignal)
 
     def setParameterSpinBoxesWithOptimumValues(self, optimumParams):
         """Sets the value displayed in the model parameter spinboxes 
@@ -782,20 +804,17 @@ class ModelFittingApp(QDialog):
             else:
                 self.spinBoxParameter2.setValue(optimumParams[1])
             if self.spinBoxParameter3.isHidden() == False:
+                nextIndex = 3
                 if self.spinBoxParameter3.suffix() == '%':
                     self.spinBoxParameter3.setValue(optimumParams[2]* 100) #Convert Volume fraction to %
                 else:
                     self.spinBoxParameter3.setValue(optimumParams[2])
-                if self.spinBoxWeightFactorAIR.isHidden() == False:
-                    self.spinBoxWeightFactorAIR.setValue(optimumParams[3])
-                if self.spinBoxWeightFactorVIR.isHidden() == False:
-                    self.spinBoxWeightFactorVIR.setValue(optimumParams[4])
             else:
-                if self.spinBoxWeightFactorAIR.isHidden() == False:
-                    self.spinBoxWeightFactorAIR.setValue(optimumParams[2])
-                if self.spinBoxWeightFactorVIR.isHidden() == False:
-                    self.spinBoxWeightFactorVIR.setValue(optimumParams[3])
-        
+                nextIndex = 2
+
+            if self.spinBoxArterialFlowFactor.isHidden() == False:
+                self.spinBoxArterialFlowFactor.setValue(optimumParams[nextIndex]* 100) #Convert decimal fraction to %
+            
             self.blockSpinBoxSignals(False)
         except Exception as e:
             print('Error in function setParameterSpinBoxesWithOptimumValues ' + str(e))
@@ -1140,6 +1159,7 @@ class ModelFittingApp(QDialog):
             #Block signals from spinboxes, so that setting initial values
             #does not trigger an event.
             self.blockSpinBoxSignals(True)
+            self.spinBoxArterialFlowFactor.setValue(DEFAULT_VALUE_Fa)
             
             modelName = str(self.cmbModels.currentText())
             logger.info('Function initialiseParameterSpinBoxes called when model = ' + modelName)
