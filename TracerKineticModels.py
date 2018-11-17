@@ -22,13 +22,34 @@ import logging
 #Create logger
 logger = logging.getLogger(__name__)
 
+#Dictionary of model names - short name:long name pairs
+
+modelDict = {'Select a model':'Select a model',
+                   '2-2CFM':'2 Inlet - Two Compartment Filtration Model',
+                   'HF2-2CFM':'High Flow 2 Inlet - Two Compartment Filtration Model',
+                   'HF1-2CFM':'High Flow 1 Inlet - Two Compartment Filtration Model',
+                   'HF1-2CFM-FixVe':'High Flow 1 Inlet - Two Compartment Filtration Model - Fixed Extracellular Vol Fraction'}
+
+modelImageDict = {'2-2CFM':'DualInletTwoCompartmentGadoxetateModel.png',
+                   'HF2-2CFM':'HighFlowDualInletTwoCompartmentGadoxetateModel.png',
+                   'HF1-2CFM':'HighFlowSingleInletTwoCompartmentGadoxetateModel.png',
+                   'HF1-2CFM-FixVe':'HighFlowSingleInletTwoCompartmentGadoxetateModel_fixedve.png'}
 
 #List of names of models for display in a dropdown list.
-modelNames = ['Select a model','Extended Tofts','One Compartment','High-Flow Gadoxetate']
+#modelNames = ['Select a model','Extended Tofts','One Compartment','High-Flow Gadoxetate']
 
 #Constants
 PARAMETER_UPPER_BOUND_VOL_FRACTION = 1.0
 PARAMETER_UPPER_BOUND_RATE = np.inf
+
+def returnListModels():
+    return list(modelDict.keys())
+
+def returnLongModelName(shortModelName):
+    return modelDict.get(shortModelName)
+
+def returnModelImageName(shortModelName):
+    return modelImageDict.get(shortModelName)
 
 def modelSelector(modelName, times, AIFConcentration, parameterArray, boolDualInput, 
                   VIFConcentration=[]):

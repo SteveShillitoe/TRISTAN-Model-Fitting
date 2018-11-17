@@ -283,8 +283,10 @@ class ModelFittingApp(QDialog):
         self.cmbModels = QComboBox()
         self.cmbModels.setToolTip('Select a model to fit to the data')
         #Populate the combo box with names of models in the modelNames list
-        self.cmbModels.addItems(TracerKineticModels.modelNames)
+        #self.cmbModels.addItems(TracerKineticModels.modelNames)
+        self.cmbModels.addItems(TracerKineticModels.returnListModels())
         self.cmbModels.setCurrentIndex(0) #Display "Select a Model"
+        self.cmbModels.currentIndexChanged.connect(self.displayModelImage)
         self.cmbModels.currentIndexChanged.connect(self.configureGUIForEachModel)
         self.cmbModels.currentIndexChanged.connect(lambda: self.clearOptimisedParamaterList('cmbModels')) 
         self.cmbModels.activated.connect(lambda:  self.plot('cmbModels'))
@@ -454,6 +456,11 @@ class ModelFittingApp(QDialog):
         #the central vertical layout.
         verticalSpacer = QSpacerItem(20, 35, QSizePolicy.Minimum, QSizePolicy.Minimum)
         layout.addItem(verticalSpacer)
+
+        self.lblModelImage = QLabel(self)
+        self.lblModelName = QLabel('')
+        layout.addWidget(self.lblModelImage)
+        layout.addWidget(self.lblModelName)
         #Create Group Box to contain labels displaying the results of curve fitting
         self.groupBoxResults = QGroupBox('Curve Fitting Results')
         self.groupBoxResults.setAlignment(QtCore.Qt.AlignHCenter)
@@ -523,6 +530,30 @@ class ModelFittingApp(QDialog):
         except Exception as e:
             print('Error in function applyStyleSheet: ' + str(e))
             logger.error('Error in function applyStyleSheet: ' + str(e))
+
+    def displayModelImage(self):
+        """This method takes the name of the model from the drop-down list 
+            on the left-hand side of the GUI and displays the corresponding
+            image depicting the model and the full name of the model at the
+            top of the right-hand side of the GUI."""
+        try:
+            logger.info('Function displayModelImage called.')
+            shortModelName = str(self.cmbModels.currentText())
+        
+            if shortModelName != 'Select a model':
+                modelImageName = TracerKineticModels.returnModelImageName(shortModelName)
+                pixmapModelImage = QPixmap(modelImageName)
+                self.lblModelImage.setPixmap(pixmapModelImage)
+
+                longModelName = TracerKineticModels.returnLongModelName(shortModelName)
+                self.lblModelName.setText(longModelName)
+            else:
+                self.lblModelImage.clear()
+                self.lblModelName.setText('')
+
+        except Exception as e:
+            print('Error in function displayModelImage: ' + str(e)) 
+            logger.error('Error in function displayModelImage: ' + str(e))  
 
     def setCurveFittingNotDoneBoolean(self):
         """Sets global boolean _boolCurveFittingDone to false if the 
@@ -960,6 +991,7 @@ class ModelFittingApp(QDialog):
                 parameter1 = self.spinBoxParameter1.value()
                 parameter2 = self.spinBoxParameter2.value()
                 parameter3 = self.spinBoxParameter3.value()
+                arterialFlowFractionValue = self.spinBoxArterialFlowFactor.value()
                 
 ##                def createAndSavePDFReport(self, fileName, _dataFileName, modelName, imageName, 
 #                               parameter1Text, parameter1Value,
@@ -1238,8 +1270,6 @@ class ModelFittingApp(QDialog):
                 self.cmbAIF.hide()
                 self.lblVIF.hide()
                 self.cmbVIF.hide()
-                self.spinBoxWeightFactorVIR.hide()
-                self.spinBoxWeightFactorAIR.hide()
                 self.cboxDelay.hide()
                 self.cboxConstaint.hide()
                 self.btnReset.hide()
