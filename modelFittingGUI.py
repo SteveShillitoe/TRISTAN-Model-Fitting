@@ -456,9 +456,13 @@ class ModelFittingApp(QDialog):
         #the central vertical layout.
         verticalSpacer = QSpacerItem(20, 35, QSizePolicy.Minimum, QSizePolicy.Minimum)
         layout.addItem(verticalSpacer)
+        layout.addItem(verticalSpacer)
 
         self.lblModelImage = QLabel(self)
+        self.lblModelImage.setAlignment(QtCore.Qt.AlignCenter)
         self.lblModelName = QLabel('')
+        self.lblModelName.setAlignment(QtCore.Qt.AlignCenter)
+        self.lblModelName.setWordWrap(True)
         layout.addWidget(self.lblModelImage)
         layout.addWidget(self.lblModelName)
         #Create Group Box to contain labels displaying the results of curve fitting
@@ -543,6 +547,10 @@ class ModelFittingApp(QDialog):
             if shortModelName != 'Select a model':
                 modelImageName = TracerKineticModels.returnModelImageName(shortModelName)
                 pixmapModelImage = QPixmap(modelImageName)
+                pMapWidth = pixmapModelImage.width() * 1.35
+                pMapHeight = pixmapModelImage.height() * 1.35
+                pixmapModelImage = pixmapModelImage.scaled(pMapWidth, pMapHeight, 
+                      QtCore.Qt.KeepAspectRatio, QtCore.Qt.SmoothTransformation)
                 self.lblModelImage.setPixmap(pixmapModelImage)
 
                 longModelName = TracerKineticModels.returnLongModelName(shortModelName)

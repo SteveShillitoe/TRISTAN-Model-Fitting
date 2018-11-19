@@ -28,7 +28,7 @@ modelDict = {'Select a model':'Select a model',
                    '2-2CFM':'2 Inlet - Two Compartment Filtration Model',
                    'HF2-2CFM':'High Flow 2 Inlet - Two Compartment Filtration Model',
                    'HF1-2CFM':'High Flow 1 Inlet - Two Compartment Filtration Model',
-                   'HF1-2CFM-FixVe':'High Flow 1 Inlet - Two Compartment Filtration Model - Fixed Extracellular Vol Fraction'}
+                   'HF1-2CFM-FixVe':'High Flow 1 Inlet - Two Compartment Filtration Model\n - Fixed Extracellular Vol Fraction'}
 
 modelImageDict = {'2-2CFM':'DualInletTwoCompartmentGadoxetateModel.png',
                    'HF2-2CFM':'HighFlowDualInletTwoCompartmentGadoxetateModel.png',
