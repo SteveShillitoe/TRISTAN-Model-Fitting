@@ -82,18 +82,30 @@ DEFAULT_PLOT_DATA_FILE_PATH_NAME = 'plot.csv'
 LOG_FILE_NAME = "TRISTAN.log"
 MIN_NUM_COLUMNS_CSV_FILE = 3
 DEFAULT_VALUE_Vp = 10.0
-DEFAULT_VALUE_Ve = 20.0
+DEFAULT_VALUE_Vh = 75.0
+DEFAULT_VALUE_Ve = 23.0
+DEFAULT_VALUE_Vb = 2.0
 DEFAULT_VALUE_Ktrans = 0.10
-DEFAULT_VALUE_Fp = 1
+DEFAULT_VALUE_Fp = 0.0001
 DEFAULT_VALUE_Kce = 0.025
 DEFAULT_VALUE_Kbc = 0.003
+DEFAULT_VALUE_Kbh = 0.00075
+DEFAULT_VALUE_Khe = 0.01875
 DEFAULT_VALUE_Fa = 40.0 #Arterial Flow Fraction
 LABEL_PARAMETER_Vp = 'Plasma Volume Fraction,\n Vp'
+LABEL_PARAMETER_Vh = 'Hepatocyte volume fraction,\n Vh'
+LABEL_PARAMETER_Vb = 'Intrahepatic bile duct volume fraction,\n Vb'
 LABEL_PARAMETER_Kce = 'Hepatocellular Uptake Rate, \n Kce (mL/100mL/min)'
 LABEL_PARAMETER_Ve = 'Extracellular Vol Fraction,\n Ve'
-LABEL_PARAMETER_Fp = 'Plasma Flow Rate, \n Fp (ml/min)'
+LABEL_PARAMETER_Fp = 'Total Plasma Inflow, \n Fp (mL/min/mL)'
 LABEL_PARAMETER_Ktrans = 'Transfer Rate Constant, \n Ktrans (1/min)'
-LABEL_PARAMETER_Kbc = 'Biliary Efflux Rate, \n Kbc (mL/100mL/min)'
+LABEL_PARAMETER_Kbh = 'Biliary Efflux Rate, \n Kbh (mL/min/mL)'
+LABEL_PARAMETER_Khe = 'Hepatocyte uptake rate, \n Khe (mL/min/mL)'
+
+# Fp: Total plasma inflow (mL/min/mL) <0:0.01> (0.0001)
+# fa: Arterial flow fraction <0:1> (0.4)
+# khe: Hepatocyte uptake rate (mL/min/mL) <0:0.1> (0.01875)
+# kbh: Biliary efflux rate (mL/min/mL) <0:0.01> (0.00075)
 #######################################
 
 #Create and configure the logger
@@ -261,6 +273,7 @@ class ModelFittingApp(QDialog):
         modelHorizontalLayout5 = QHBoxLayout()
         modelHorizontalLayout6 = QHBoxLayout()
         modelHorizontalLayout7 = QHBoxLayout()
+        modelHorizontalLayoutPara4 = QHBoxLayout()
         modelHorizontalLayout8 = QHBoxLayout()
         modelHorizontalLayout9 = QHBoxLayout()
         modelVerticalLayout = QVBoxLayout()
@@ -273,6 +286,7 @@ class ModelFittingApp(QDialog):
         modelVerticalLayout.addLayout(modelHorizontalLayout5)
         modelVerticalLayout.addLayout(modelHorizontalLayout6)
         modelVerticalLayout.addLayout(modelHorizontalLayout7)
+        modelVerticalLayout.addLayout(modelHorizontalLayoutPara4)
         modelVerticalLayout.addLayout(modelHorizontalLayout8)
         modelVerticalLayout.addLayout(modelHorizontalLayout9)
         self.groupBoxModel.setLayout(modelVerticalLayout)
@@ -284,7 +298,7 @@ class ModelFittingApp(QDialog):
         self.cmbModels.setToolTip('Select a model to fit to the data')
         #Populate the combo box with names of models in the modelNames list
         #self.cmbModels.addItems(TracerKineticModels.modelNames)
-        self.cmbModels.addItems(TracerKineticModels.returnListModels())
+        self.cmbModels.addItems(TracerKineticModels.getListModels())
         self.cmbModels.setCurrentIndex(0) #Display "Select a Model"
         self.cmbModels.currentIndexChanged.connect(self.displayModelImage)
         self.cmbModels.currentIndexChanged.connect(self.configureGUIForEachModel)
@@ -344,13 +358,16 @@ class ModelFittingApp(QDialog):
         
         #Create spinboxes and their labels
         #Label text set in function configureGUIForEachModel when the model is selected
-        self.lblArterialFlowFactor = QLabel("Arterial Flow Factor:") 
+        self.lblArterialFlowFactor = QLabel("Arterial Flow Fraction:") 
         self.labelParameter1 = QLabel("")
         self.labelParameter2 = QLabel("")
         self.labelParameter3 = QLabel("")
+        self.labelParameter4 = QLabel("")
         self.labelParameter1.setWordWrap(True)
         self.labelParameter2.setWordWrap(True)
         self.labelParameter3.setWordWrap(True)
+        self.labelParameter4.setWordWrap(True)
+
         self.spinBoxArterialFlowFactor = QDoubleSpinBox()
         self.spinBoxArterialFlowFactor.setRange(0, 100)
         self.spinBoxArterialFlowFactor.setDecimals(2)
@@ -359,39 +376,40 @@ class ModelFittingApp(QDialog):
         self.spinBoxArterialFlowFactor.setSuffix('%')
         self.spinBoxArterialFlowFactor.setMinimumSize(self.spinBoxArterialFlowFactor.minimumSizeHint())
         self.spinBoxArterialFlowFactor.resize(self.spinBoxArterialFlowFactor.sizeHint())
+
         self.spinBoxParameter1 = QDoubleSpinBox()
-        self.spinBoxParameter1.setRange(-100, 1000)
-        self.spinBoxParameter1.setDecimals(3)
-        self.spinBoxParameter1.setSingleStep(0.01)
         self.spinBoxParameter1.setMinimumSize(self.spinBoxParameter1.minimumSizeHint())
         self.spinBoxParameter1.resize(self.spinBoxParameter1.sizeHint())
+
         self.spinBoxParameter2 = QDoubleSpinBox()
-        self.spinBoxParameter2.setRange(-100, 1000)
-        self.spinBoxParameter2.setDecimals(3)
-        self.spinBoxParameter2.setSingleStep(0.01)
         self.spinBoxParameter2.resize(self.spinBoxParameter2.sizeHint())
+
         self.spinBoxParameter3 = QDoubleSpinBox()
-        self.spinBoxParameter3.setRange(-100.00, 1000.00)
-        self.spinBoxParameter3.setDecimals(3)
-        self.spinBoxParameter3.setSingleStep(0.001)
         self.spinBoxParameter3.resize(self.spinBoxParameter3.sizeHint())
+
+        self.spinBoxParameter4 = QDoubleSpinBox()
+        self.spinBoxParameter4.resize(self.spinBoxParameter4.sizeHint())
+
         self.lblArterialFlowFactor.hide()
         self.spinBoxArterialFlowFactor.hide()
         self.spinBoxParameter1.hide()
         self.spinBoxParameter2.hide()
         self.spinBoxParameter3.hide()
+        self.spinBoxParameter4.hide()
 
         #If a parameter value is changed, replot the concentration and model data
         self.spinBoxArterialFlowFactor.valueChanged.connect(lambda: self.plot('spinBoxArterialFlowFactor')) 
         self.spinBoxParameter1.valueChanged.connect(lambda: self.plot('spinBoxParameter1')) 
         self.spinBoxParameter2.valueChanged.connect(lambda: self.plot('spinBoxParameter2')) 
         self.spinBoxParameter3.valueChanged.connect(lambda: self.plot('spinBoxParameter3'))
+        self.spinBoxParameter4.valueChanged.connect(lambda: self.plot('spinBoxParameter4'))
         #Set a global boolean variable, _boolCurveFittingDone to false to indicate that 
         #the value of a model parameter has been changed manually rather than by curve fitting
         self.spinBoxArterialFlowFactor.valueChanged.connect(self.setCurveFittingNotDoneBoolean) 
         self.spinBoxParameter1.valueChanged.connect(self.setCurveFittingNotDoneBoolean) 
         self.spinBoxParameter2.valueChanged.connect(self.setCurveFittingNotDoneBoolean) 
         self.spinBoxParameter3.valueChanged.connect(self.setCurveFittingNotDoneBoolean)
+        self.spinBoxParameter4.valueChanged.connect(self.setCurveFittingNotDoneBoolean)
         
         #Place spin boxes and their labels in horizontal layouts
         modelHorizontalLayoutArterialFlowFactor.addWidget(self.lblArterialFlowFactor)
@@ -402,6 +420,8 @@ class ModelFittingApp(QDialog):
         modelHorizontalLayout6.addWidget(self.spinBoxParameter2)
         modelHorizontalLayout7.addWidget(self.labelParameter3)
         modelHorizontalLayout7.addWidget(self.spinBoxParameter3)
+        modelHorizontalLayoutPara4.addWidget(self.labelParameter4)
+        modelHorizontalLayoutPara4.addWidget(self.spinBoxParameter4)
         
         self.btnFitModel = QPushButton('Fit Model')
         self.btnFitModel.setToolTip('Use non-linear least squares to fit the selected model to the data')
@@ -545,15 +565,16 @@ class ModelFittingApp(QDialog):
             shortModelName = str(self.cmbModels.currentText())
         
             if shortModelName != 'Select a model':
-                modelImageName = TracerKineticModels.returnModelImageName(shortModelName)
+                modelImageName = TracerKineticModels.getModelImageName(shortModelName)
                 pixmapModelImage = QPixmap(modelImageName)
+                #Increase the size of the model image
                 pMapWidth = pixmapModelImage.width() * 1.35
                 pMapHeight = pixmapModelImage.height() * 1.35
                 pixmapModelImage = pixmapModelImage.scaled(pMapWidth, pMapHeight, 
                       QtCore.Qt.KeepAspectRatio, QtCore.Qt.SmoothTransformation)
                 self.lblModelImage.setPixmap(pixmapModelImage)
 
-                longModelName = TracerKineticModels.returnLongModelName(shortModelName)
+                longModelName = TracerKineticModels.getLongModelName(shortModelName)
                 self.lblModelName.setText(longModelName)
             else:
                 self.lblModelImage.clear()
@@ -1195,6 +1216,8 @@ class ModelFittingApp(QDialog):
             self.spinBoxParameter1.setSuffix('')
             self.spinBoxParameter2.setSuffix('')
             self.spinBoxParameter3.setSuffix('')
+            self.spinBoxParameter4.setSuffix('')
+            self.spinBoxParameter1.setEnabled(True)
 
             #Block signals from spinboxes, so that setting initial values
             #does not trigger an event.
@@ -1203,21 +1226,69 @@ class ModelFittingApp(QDialog):
             
             modelName = str(self.cmbModels.currentText())
             logger.info('Function initialiseParameterSpinBoxes called when model = ' + modelName)
-            if modelName ==  'Extended Tofts':
-                self.spinBoxParameter1.setValue(DEFAULT_VALUE_Vp)
-                self.spinBoxParameter1.setSuffix('%')
-                self.spinBoxParameter2.setValue(DEFAULT_VALUE_Ve)
-                self.spinBoxParameter2.setSuffix('%')
-                self.spinBoxParameter3.setValue(DEFAULT_VALUE_Ktrans)
-            elif modelName == 'High-Flow Gadoxetate':
+            if modelName == '2-2CFM':
+                self.spinBoxParameter1.setDecimals(2)
+                self.spinBoxParameter1.setRange(0, 100)
+                self.spinBoxParameter1.setSingleStep(0.1)
                 self.spinBoxParameter1.setValue(DEFAULT_VALUE_Ve)
                 self.spinBoxParameter1.setSuffix('%')
-                self.spinBoxParameter2.setValue(DEFAULT_VALUE_Kce)
-                self.spinBoxParameter3.setValue(DEFAULT_VALUE_Kbc)
-            elif modelName ==  'One Compartment':
-                self.spinBoxParameter1.setValue(DEFAULT_VALUE_Vp)
-                self.spinBoxParameter1.setSuffix('%')
+
+                self.spinBoxParameter2.setDecimals(4)
+                self.spinBoxParameter2.setRange(0, 0.01)
+                self.spinBoxParameter2.setSingleStep(0.0001)
                 self.spinBoxParameter2.setValue(DEFAULT_VALUE_Fp)
+
+                self.spinBoxParameter3.setDecimals(5)
+                self.spinBoxParameter3.setRange(0.0, 0.1)
+                self.spinBoxParameter3.setSingleStep(0.00001)
+                self.spinBoxParameter3.setValue(DEFAULT_VALUE_Khe)
+                
+                self.spinBoxParameter4.setDecimals(5)
+                self.spinBoxParameter4.setRange(0.0, 0.1)
+                self.spinBoxParameter4.setSingleStep(0.00001)
+                self.spinBoxParameter4.setValue(DEFAULT_VALUE_Kbh)
+                
+            elif modelName == 'HF2-2CFM':
+                self.spinBoxParameter1.setDecimals(2)
+                self.spinBoxParameter1.setRange(0, 100)
+                self.spinBoxParameter1.setValue(DEFAULT_VALUE_Ve)
+                self.spinBoxParameter1.setSuffix('%')
+                self.spinBoxParameter2.setValue(DEFAULT_VALUE_Khe)
+                self.spinBoxParameter2.setRange(0, 0.1)
+                self.spinBoxParameter3.setValue(DEFAULT_VALUE_Kbh)
+                self.spinBoxParameter3.setRange(0, 0.1)
+            elif modelName == 'HF1-2CFM':
+                self.spinBoxParameter1.setDecimals(2)
+                self.spinBoxParameter1.setValue(DEFAULT_VALUE_Ve)
+                self.spinBoxParameter1.setSuffix('%')
+                self.spinBoxParameter2.setValue(DEFAULT_VALUE_Khe)
+                self.spinBoxParameter2.setRange(0, 0.1)
+                self.spinBoxParameter3.setValue(DEFAULT_VALUE_Kbh)
+                self.spinBoxParameter3.setRange(0, 0.1)
+            elif modelName == 'HF1-2CFM-FixVe':
+                self.spinBoxParameter1.setDecimals(2)
+                self.spinBoxParameter1.setValue(DEFAULT_VALUE_Ve)
+                self.spinBoxParameter1.setEnabled(False)
+                self.spinBoxParameter1.setSuffix('%')
+                self.spinBoxParameter2.setValue(DEFAULT_VALUE_Khe)
+                self.spinBoxParameter2.setRange(0, 0.1)
+                self.spinBoxParameter3.setValue(DEFAULT_VALUE_Kbh)
+                self.spinBoxParameter3.setRange(0, 0.1)
+            #Models no longer used
+            #elif modelName ==  'Extended Tofts':
+            #    self.spinBoxParameter1.setValue(DEFAULT_VALUE_Ve)
+            #    self.spinBoxParameter1.setSuffix('%')
+            #    self.spinBoxParameter2.setValue(DEFAULT_VALUE_Fp)
+            #    self.spinBoxParameter3.setValue(DEFAULT_VALUE_Ktrans)
+            #elif modelName == 'High-Flow Gadoxetate':
+            #    self.spinBoxParameter1.setValue(DEFAULT_VALUE_Ve)
+            #    self.spinBoxParameter1.setSuffix('%')
+            #    self.spinBoxParameter2.setValue(DEFAULT_VALUE_Kce)
+            #    self.spinBoxParameter3.setValue(DEFAULT_VALUE_Kbc)
+            #elif modelName ==  'One Compartment':
+            #    self.spinBoxParameter1.setValue(DEFAULT_VALUE_Vp)
+            #    self.spinBoxParameter1.setSuffix('%')
+            #    self.spinBoxParameter2.setValue(DEFAULT_VALUE_Fp)
 
             self.blockSpinBoxSignals(False)
         except Exception as e:
@@ -1248,8 +1319,50 @@ class ModelFittingApp(QDialog):
             self.spinBoxParameter1.show()
             self.spinBoxParameter2.show()
             self.spinBoxParameter3.show()
+            
             #Configure parameter spinbox labels for each model
-            if modelName ==  'Extended Tofts':
+            if modelName == '2-2CFM':
+                self.labelParameter1.setText(LABEL_PARAMETER_Ve)
+                self.labelParameter1.show()
+                self.labelParameter2.setText(LABEL_PARAMETER_Fp)
+                self.labelParameter2.show()
+                self.labelParameter3.setText(LABEL_PARAMETER_Khe)
+                self.labelParameter3.show()
+                self.labelParameter4.setText(LABEL_PARAMETER_Kbh)
+                self.labelParameter4.show()
+                self.spinBoxParameter4.show()
+            elif modelName == 'HF2-2CFM':
+                self.labelParameter1.setText(LABEL_PARAMETER_Ve)
+                self.labelParameter1.show()
+                self.labelParameter2.setText(LABEL_PARAMETER_Khe)
+                self.labelParameter2.show()
+                self.labelParameter3.setText(LABEL_PARAMETER_Kbh)
+                self.labelParameter3.show()
+                self.labelParameter4.hide()
+                self.spinBoxParameter4.hide()
+            elif modelName == 'HF1-2CFM':
+                self.labelParameter1.setText(LABEL_PARAMETER_Ve)
+                self.labelParameter1.show()
+                self.labelParameter2.setText(LABEL_PARAMETER_Khe)
+                self.labelParameter2.show()
+                self.labelParameter3.setText(LABEL_PARAMETER_Kbh)
+                self.labelParameter3.show()
+                self.labelParameter4.hide()
+                self.spinBoxParameter4.hide()
+                self.lblVIF.hide()
+                self.cmbVIF.hide()
+            elif modelName == 'HF1-2CFM-FixVe':
+                self.labelParameter1.setText(LABEL_PARAMETER_Ve)
+                self.labelParameter1.show()
+                self.labelParameter2.setText(LABEL_PARAMETER_Khe)
+                self.labelParameter2.show()
+                self.labelParameter3.setText(LABEL_PARAMETER_Kbh)
+                self.labelParameter3.show()
+                self.labelParameter4.hide()
+                self.spinBoxParameter4.hide()
+                self.lblVIF.hide()
+                self.cmbVIF.hide()
+            elif modelName ==  'Extended Tofts':
                 self.labelParameter1.setText(LABEL_PARAMETER_Vp)
                 self.labelParameter1.show()
                 self.labelParameter2.setText(LABEL_PARAMETER_Ve)

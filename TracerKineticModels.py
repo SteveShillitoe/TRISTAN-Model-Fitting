@@ -42,13 +42,13 @@ modelImageDict = {'2-2CFM':'DualInletTwoCompartmentGadoxetateModel.png',
 PARAMETER_UPPER_BOUND_VOL_FRACTION = 1.0
 PARAMETER_UPPER_BOUND_RATE = np.inf
 
-def returnListModels():
+def getListModels():
     return list(modelDict.keys())
 
-def returnLongModelName(shortModelName):
+def getLongModelName(shortModelName):
     return modelDict.get(shortModelName)
 
-def returnModelImageName(shortModelName):
+def getModelImageName(shortModelName):
     return modelImageDict.get(shortModelName)
 
 def modelSelector(modelName, times, AIFConcentration, parameterArray, boolDualInput, 
