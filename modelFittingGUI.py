@@ -359,6 +359,7 @@ class ModelFittingApp(QDialog):
         #Create spinboxes and their labels
         #Label text set in function configureGUIForEachModel when the model is selected
         self.lblArterialFlowFactor = QLabel("Arterial Flow Fraction:") 
+        self.lblArterialFlowFactor.hide()
         self.labelParameter1 = QLabel("")
         self.labelParameter2 = QLabel("")
         self.labelParameter3 = QLabel("")
@@ -374,24 +375,13 @@ class ModelFittingApp(QDialog):
         self.spinBoxArterialFlowFactor.setSingleStep(0.01)
         self.spinBoxArterialFlowFactor.setValue(DEFAULT_VALUE_Fa)
         self.spinBoxArterialFlowFactor.setSuffix('%')
-        self.spinBoxArterialFlowFactor.setMinimumSize(self.spinBoxArterialFlowFactor.minimumSizeHint())
-        self.spinBoxArterialFlowFactor.resize(self.spinBoxArterialFlowFactor.sizeHint())
-
-        self.spinBoxParameter1 = QDoubleSpinBox()
-        self.spinBoxParameter1.setMinimumSize(self.spinBoxParameter1.minimumSizeHint())
-        self.spinBoxParameter1.resize(self.spinBoxParameter1.sizeHint())
-
-        self.spinBoxParameter2 = QDoubleSpinBox()
-        self.spinBoxParameter2.resize(self.spinBoxParameter2.sizeHint())
-
-        self.spinBoxParameter3 = QDoubleSpinBox()
-        self.spinBoxParameter3.resize(self.spinBoxParameter3.sizeHint())
-
-        self.spinBoxParameter4 = QDoubleSpinBox()
-        self.spinBoxParameter4.resize(self.spinBoxParameter4.sizeHint())
-
-        self.lblArterialFlowFactor.hide()
         self.spinBoxArterialFlowFactor.hide()
+        
+        self.spinBoxParameter1 = QDoubleSpinBox()
+        self.spinBoxParameter2 = QDoubleSpinBox()
+        self.spinBoxParameter3 = QDoubleSpinBox()
+        self.spinBoxParameter4 = QDoubleSpinBox()
+        
         self.spinBoxParameter1.hide()
         self.spinBoxParameter2.hide()
         self.spinBoxParameter3.hide()
@@ -801,6 +791,13 @@ class ModelFittingApp(QDialog):
         try:
             logger.info('Function buildParameterArray called.')
             initialParametersArray = []
+
+            #Only add the Arterial Flow Factor if a VIF has been selected
+            #and the Arterial Flow Factor spinbox is therefore visible.
+            if self.spinBoxArterialFlowFactor.isHidden() == False:
+                arterialFlowFactor = self.spinBoxArterialFlowFactor.value()/100
+                initialParametersArray.append(arterialFlowFactor)
+
             parameter1 = self.spinBoxParameter1.value()
             if self.spinBoxParameter1.suffix() == '%':
                 #This is a volume fraction so convert % to a decimal fraction
@@ -820,11 +817,12 @@ class ModelFittingApp(QDialog):
                     parameter3 = parameter3/100.0
                 initialParametersArray.append(parameter3)
 
-            #Only add the Arterial Flow Factor if a VIF has been selected
-            #and the Arterial Flow Factor spinbox is therefore visible.
-            if self.spinBoxArterialFlowFactor.isHidden() == False:
-                arterialFlowFactor = self.spinBoxArterialFlowFactor.value()/100
-                initialParametersArray.append(arterialFlowFactor)
+            if self.spinBoxParameter4.isHidden() == False:
+                parameter4 = self.spinBoxParameter4.value()
+                if self.spinBoxParameter4.suffix() == '%':
+                     #This is a volume fraction so convert % to a decimal fraction
+                    parameter4 = parameter4/100.0
+                initialParametersArray.append(parameter4)
 
             return initialParametersArray
         except Exception as e:
@@ -1212,12 +1210,9 @@ class ModelFittingApp(QDialog):
     def initialiseParameterSpinBoxes(self):
         """Reset model parameter spinboxes with typical initial values for each model"""
         try:
-            #Remove suffixes from all spinboxes 
+            #Remove suffixes from the first spinboxes 
             self.spinBoxParameter1.setSuffix('')
-            self.spinBoxParameter2.setSuffix('')
-            self.spinBoxParameter3.setSuffix('')
-            self.spinBoxParameter4.setSuffix('')
-            self.spinBoxParameter1.setEnabled(True)
+            self.spinBoxParameter1.setEnabled(True) #May have been disabled by HF1-2CFM-FixVe model
 
             #Block signals from spinboxes, so that setting initial values
             #does not trigger an event.
@@ -1251,29 +1246,54 @@ class ModelFittingApp(QDialog):
             elif modelName == 'HF2-2CFM':
                 self.spinBoxParameter1.setDecimals(2)
                 self.spinBoxParameter1.setRange(0, 100)
+                self.spinBoxParameter1.setSingleStep(0.1)
                 self.spinBoxParameter1.setValue(DEFAULT_VALUE_Ve)
                 self.spinBoxParameter1.setSuffix('%')
+
+                self.spinBoxParameter2.setDecimals(5)
+                self.spinBoxParameter2.setRange(0.0, 0.1)
+                self.spinBoxParameter2.setSingleStep(0.00001)
                 self.spinBoxParameter2.setValue(DEFAULT_VALUE_Khe)
-                self.spinBoxParameter2.setRange(0, 0.1)
+                
+                self.spinBoxParameter3.setDecimals(5)
+                self.spinBoxParameter3.setRange(0.0, 0.1)
+                self.spinBoxParameter3.setSingleStep(0.00001)
                 self.spinBoxParameter3.setValue(DEFAULT_VALUE_Kbh)
-                self.spinBoxParameter3.setRange(0, 0.1)
+
             elif modelName == 'HF1-2CFM':
                 self.spinBoxParameter1.setDecimals(2)
+                self.spinBoxParameter1.setRange(0, 100)
+                self.spinBoxParameter1.setSingleStep(0.1)
                 self.spinBoxParameter1.setValue(DEFAULT_VALUE_Ve)
                 self.spinBoxParameter1.setSuffix('%')
+
+                self.spinBoxParameter2.setDecimals(5)
+                self.spinBoxParameter2.setRange(0.0, 0.1)
+                self.spinBoxParameter2.setSingleStep(0.00001)
                 self.spinBoxParameter2.setValue(DEFAULT_VALUE_Khe)
-                self.spinBoxParameter2.setRange(0, 0.1)
+                
+                self.spinBoxParameter3.setDecimals(5)
+                self.spinBoxParameter3.setRange(0.0, 0.1)
+                self.spinBoxParameter3.setSingleStep(0.00001)
                 self.spinBoxParameter3.setValue(DEFAULT_VALUE_Kbh)
-                self.spinBoxParameter3.setRange(0, 0.1)
+
             elif modelName == 'HF1-2CFM-FixVe':
-                self.spinBoxParameter1.setDecimals(2)
-                self.spinBoxParameter1.setValue(DEFAULT_VALUE_Ve)
                 self.spinBoxParameter1.setEnabled(False)
+                self.spinBoxParameter1.setDecimals(2)
+                self.spinBoxParameter1.setRange(0, 100)
+                self.spinBoxParameter1.setSingleStep(0.1)
+                self.spinBoxParameter1.setValue(DEFAULT_VALUE_Ve)
                 self.spinBoxParameter1.setSuffix('%')
+
+                self.spinBoxParameter2.setDecimals(5)
+                self.spinBoxParameter2.setRange(0.0, 0.1)
+                self.spinBoxParameter2.setSingleStep(0.00001)
                 self.spinBoxParameter2.setValue(DEFAULT_VALUE_Khe)
-                self.spinBoxParameter2.setRange(0, 0.1)
+                
+                self.spinBoxParameter3.setDecimals(5)
+                self.spinBoxParameter3.setRange(0.0, 0.1)
+                self.spinBoxParameter3.setSingleStep(0.00001)
                 self.spinBoxParameter3.setValue(DEFAULT_VALUE_Kbh)
-                self.spinBoxParameter3.setRange(0, 0.1)
             #Models no longer used
             #elif modelName ==  'Extended Tofts':
             #    self.spinBoxParameter1.setValue(DEFAULT_VALUE_Ve)
@@ -1362,30 +1382,31 @@ class ModelFittingApp(QDialog):
                 self.spinBoxParameter4.hide()
                 self.lblVIF.hide()
                 self.cmbVIF.hide()
-            elif modelName ==  'Extended Tofts':
-                self.labelParameter1.setText(LABEL_PARAMETER_Vp)
-                self.labelParameter1.show()
-                self.labelParameter2.setText(LABEL_PARAMETER_Ve)
-                self.labelParameter2.show()
-                self.labelParameter3.setText(LABEL_PARAMETER_Ktrans)
-                self.labelParameter3.show()
-            elif modelName == 'High-Flow Gadoxetate':
-                self.labelParameter1.setText(LABEL_PARAMETER_Ve)
-                self.labelParameter1.show()
-                self.labelParameter2.setText(LABEL_PARAMETER_Kce)
-                self.labelParameter2.show()
-                self.labelParameter3.setText(LABEL_PARAMETER_Kbc)
-                self.labelParameter3.show()
-            elif modelName ==  'One Compartment':
-                self.labelParameter1.setText(LABEL_PARAMETER_Vp)
-                self.labelParameter1.show()
-                self.labelParameter2.setText(LABEL_PARAMETER_Fp)
-                self.labelParameter2.show()
+            # Models no longer used
+            #elif modelName ==  'Extended Tofts':
+            #    self.labelParameter1.setText(LABEL_PARAMETER_Vp)
+            #    self.labelParameter1.show()
+            #    self.labelParameter2.setText(LABEL_PARAMETER_Ve)
+            #    self.labelParameter2.show()
+            #    self.labelParameter3.setText(LABEL_PARAMETER_Ktrans)
+            #    self.labelParameter3.show()
+            #elif modelName == 'High-Flow Gadoxetate':
+            #    self.labelParameter1.setText(LABEL_PARAMETER_Ve)
+            #    self.labelParameter1.show()
+            #    self.labelParameter2.setText(LABEL_PARAMETER_Kce)
+            #    self.labelParameter2.show()
+            #    self.labelParameter3.setText(LABEL_PARAMETER_Kbc)
+            #    self.labelParameter3.show()
+            #elif modelName ==  'One Compartment':
+            #    self.labelParameter1.setText(LABEL_PARAMETER_Vp)
+            #    self.labelParameter1.show()
+            #    self.labelParameter2.setText(LABEL_PARAMETER_Fp)
+            #    self.labelParameter2.show()
                 
-                #Hide this spinbox & label as this model does not have a third parameter
-                self.spinBoxParameter3.hide() 
-                self.labelParameter3.hide()
-                self.labelParameter3.clear()
+            #    #Hide this spinbox & label as this model does not have a third parameter
+            #    self.spinBoxParameter3.hide() 
+            #    self.labelParameter3.hide()
+            #    self.labelParameter3.clear()
             else:  #No model is selected
                 self.lblAIF.hide()
                 self.cmbAIF.hide()
@@ -1394,18 +1415,19 @@ class ModelFittingApp(QDialog):
                 self.cboxDelay.hide()
                 self.cboxConstaint.hide()
                 self.btnReset.hide()
-                self.spinBoxParameter3.hide()
                 self.spinBoxParameter1.hide()
                 self.spinBoxParameter2.hide()
                 self.spinBoxParameter3.hide()
-                self.labelParameter1.hide()
-                self.labelParameter2.hide()
-                self.labelParameter3.hide()
+                self.spinBoxParameter4.hide()
+                self.spinBoxArterialFlowFactor.hide()
                 self.labelParameter1.clear()
                 self.labelParameter2.clear()
                 self.labelParameter3.clear()
+                self.labelParameter4.clear()
+                self.lblArterialFlowFactor.hide()
                 
                 self.cmbAIF.setCurrentIndex(0)
+                self.cmbVIF.setCurrentIndex(0)
                 self.btnFitModel.hide()
                 self.btnSaveReport.hide()
                 self.btnSaveCSV.hide()
@@ -1502,16 +1524,14 @@ class ModelFittingApp(QDialog):
                 parameterArray = self.buildParameterArray()
 
                 if VIF == 'Please Select':
-                    boolDualInput = False
                     arrayVIFConcs = []
                 else:
-                    boolDualInput = True
                     arrayVIFConcs = np.array(_concentrationData[VIF], dtype='float')
                     ax.plot(arrayTimes, arrayVIFConcs, 'k.-', label= VIF)
                     
                 logger.info('TracerKineticModels.modelSelector called when model ={} and parameter array = {}'. format(modelName, parameterArray))        
                 _listModel = TracerKineticModels.modelSelector(modelName, arrayTimes, 
-                        arrayAIFConcs, parameterArray, boolDualInput, arrayVIFConcs)
+                        arrayAIFConcs, parameterArray, arrayVIFConcs)
                 arrayModel =  np.array(_listModel, dtype='float')
                 ax.plot(arrayTimes, arrayModel, 'g--', label= modelName + ' model')
             

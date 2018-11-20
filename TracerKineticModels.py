@@ -51,8 +51,7 @@ def getLongModelName(shortModelName):
 def getModelImageName(shortModelName):
     return modelImageDict.get(shortModelName)
 
-def modelSelector(modelName, times, AIFConcentration, parameterArray, boolDualInput, 
-                  VIFConcentration=[]):
+def modelSelector(modelName, times, AIFConcentration, parameterArray, VIFConcentration=[]):
     """Function called in the GUI of the model fitting tool to select the 
     function corresponding to each model.
 
@@ -85,46 +84,110 @@ def modelSelector(modelName, times, AIFConcentration, parameterArray, boolDualIn
         """
     logger.info("In TracerKineticModels.modelSelector. Called with model {} and parameters {}".format(modelName, parameterArray))
     
-    parameter1 = parameterArray[0]
-    parameter2 = parameterArray[1]
-    
-    #time and concentration arrays must be stacked into one input variable
-    #to meet the requirements of the SciPy library curve fitting function.
-    if boolDualInput == True:
-        timeInputConcs2DArray = np.column_stack((times, AIFConcentration, VIFConcentration))
-    else:
-        timeInputConcs2DArray = np.column_stack((times, AIFConcentration))
+    ##time and concentration arrays must be stacked into one input variable
+    ##to meet the requirements of the SciPy library curve fitting function.
+    #if boolDualInput == True:
+    #    timeInputConcs2DArray = np.column_stack((times, AIFConcentration, VIFConcentration))
+    #else:
+    #    timeInputConcs2DArray = np.column_stack((times, AIFConcentration))
 
-    if modelName ==  'Extended Tofts':
-        parameter3 = parameterArray[2]
-        if boolDualInput == True:
-            arterialFlowFraction = parameterArray[3]
-            return extendedTofts_DualInput(timeInputConcs2DArray, parameter1, parameter2, 
-              parameter3, arterialFlowFraction)
-        else:
-            return extendedTofts_SingleInput(timeInputConcs2DArray, parameter1, parameter2, 
-              parameter3)
-    elif modelName ==  'One Compartment':
-        if boolDualInput == True:
-            arterialFlowFraction = parameterArray[2]
-            return oneCompartment_DualInput(timeInputConcs2DArray, parameter1, parameter2, 
-              arterialFlowFraction)
-        else:
-            return oneCompartment_SingleInput(timeInputConcs2DArray, parameter1, parameter2)
-    elif modelName ==  'High-Flow Gadoxetate':
-        parameter3 = parameterArray[2]
-        if boolDualInput == True:
-            arterialFlowFraction = parameterArray[3]
-            return highFlowGadoxetate_DualInput(timeInputConcs2DArray, parameter1, parameter2, 
-              parameter3, arterialFlowFraction)
-        else:
-            return highFlowGadoxetate_SingleInput(timeInputConcs2DArray, parameter1, parameter2, 
-              parameter3)
+    if modelName == '2-2CFM':
+        timeInputConcs2DArray = np.column_stack((times, AIFConcentration, VIFConcentration))
+        arterialFlowFraction = parameterArray[0]
+        Ve = parameterArray[1]
+        Fp = parameterArray[2]
+        Khe = parameterArray[3]
+        Kbh = parameterArray[4]
+        return dualInputTwoCompartmentFiltrationModel(timeInputConcs2DArray, arterialFlowFraction,
+            Ve, Fp, Khe, Kbh)
+    #elif modelName ==  'Extended Tofts':
+    #    parameter3 = parameterArray[2]
+    #    if boolDualInput == True:
+    #        arterialFlowFraction = parameterArray[3]
+    #        return extendedTofts_DualInput(timeInputConcs2DArray, parameter1, parameter2, 
+    #          parameter3, arterialFlowFraction)
+    #    else:
+    #        return extendedTofts_SingleInput(timeInputConcs2DArray, parameter1, parameter2, 
+    #          parameter3)
+    #elif modelName ==  'One Compartment':
+    #    if boolDualInput == True:
+    #        arterialFlowFraction = parameterArray[2]
+    #        return oneCompartment_DualInput(timeInputConcs2DArray, parameter1, parameter2, 
+    #          arterialFlowFraction)
+    #    else:
+    #        return oneCompartment_SingleInput(timeInputConcs2DArray, parameter1, parameter2)
+    #elif modelName ==  'High-Flow Gadoxetate':
+    #    parameter3 = parameterArray[2]
+    #    if boolDualInput == True:
+    #        arterialFlowFraction = parameterArray[3]
+    #        return highFlowGadoxetate_DualInput(timeInputConcs2DArray, parameter1, parameter2, 
+    #          parameter3, arterialFlowFraction)
+    #    else:
+    #        return highFlowGadoxetate_SingleInput(timeInputConcs2DArray, parameter1, parameter2, 
+    #          parameter3)
 
 #Note: The input paramaters for the volume fractions and rate constants in
 # the following model function definitions are listed in the same order as they are 
 # displayed in the GUI from top (first) to bottom (last) 
-#       
+# 
+def dualInputTwoCompartmentFiltrationModel(xData2DArray, fAFF, Ve, Fp, Khe, Kbh):
+    """This function contains the algorithm for calculating how concentration varies with time
+            using the Dual Input Two Compartment Filtration Model model.
+        
+            Input Parameters
+            ----------------
+                xData2DArray - time and AIF concentration 1D arrays stacked into one 2D array.
+                Vp - Plasma Volume Fraction (decimal fraction).
+                Fp - 
+                Khe - 
+                Kbe - 
+
+            Returns
+            -------
+            listConcentrationsFromModel - list of calculated concentrations at each of the 
+                time points in array 'time'.
+            """ 
+    try:
+        logger.info('In function TracerKineticModels.dualInputTwoCompartmentFiltrationModel ' +
+          'with fAFF={}, Ve={}, Fp={}, Khe={} & Kbh={}'.format(fAFF, Ve, Fp, Khe, Kbh))
+
+        #In order to use scipy.optimize.curve_fit, time and concentration must be
+        #combined into one function input parameter, a 2D array, then separated into individual
+        #1 D arrays 
+        times = xData2DArray[:,0]
+        AIFconcentrations = xData2DArray[:,1]
+        VIFconcentrations = xData2DArray[:,2]
+    
+        #Calculate Venal Flow Factor, fVFF
+        fVFF = 1 - fAFF
+
+        #Determine an overall concentration
+        combinedConcentration = Fp*(fAFF*AIFconcentrations + fVFF*VIFconcentrations)
+      
+        #Calculate Intracellular transit time, Th
+        Th = (1-Ve)/Kbh
+        Te = Ve/(Fp + Khe)
+    
+        alpha = np.sqrt( ((1/Te + 1/Th)/2)**2 - 1/(Te*Th) )
+        beta = (1/Th - 1/Te)/2
+        gamma = (1/Th + 1/Te)/2
+    
+        Tc1 = 1/(gamma-alpha)
+        Tc2 = 1/(gamma+alpha)
+    
+        listConcentrationsFromModel = []
+        ce = (1/(2*Ve))*( (1+beta/alpha)*Tc1*tools.expconv(Tc1,times,combinedConcentration,'dualInputTwoCompartmentFiltrationModel - 1') 
+             + (1-beta/alpha)*Tc2*tools.expconv(Tc2,times,combinedConcentration,'dualInputTwoCompartmentFiltrationModel - 2') )
+        
+        listConcentrationsFromModel = Ve*ce + Khe*Th*tools.expconv(Th,times,ce,'dualInputTwoCompartmentFiltrationModel - 3')
+    
+        return(listConcentrationsFromModel)
+    except Exception as e:
+            print('Error - TracerKineticModels.TracerKineticModels.dualInputTwoCompartmentFiltrationModel: ' + str(e))
+            logger.error('TracerKineticModels.dualInputTwoCompartmentFiltrationModel:' + str(e) )
+ 
+
+
 def extendedTofts_SingleInput(xData2DArray, Vp, Ve, Ktrans):
     """This function contains the algorithm for calculating how concentration varies with time
         using the Extended Tofts model when it takes just an arterial input.
