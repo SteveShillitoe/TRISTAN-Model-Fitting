@@ -81,31 +81,33 @@ DEFAULT_REPORT_FILE_PATH_NAME = 'report.pdf'
 DEFAULT_PLOT_DATA_FILE_PATH_NAME = 'plot.csv'
 LOG_FILE_NAME = "TRISTAN.log"
 MIN_NUM_COLUMNS_CSV_FILE = 3
+#Model 1: 2-2CFM
+DEFAULT_VALUE_Ve_2_2CFM = 20.0
+DEFAULT_VALUE_Fp_2_2CFM = 1.0
+DEFAULT_VALUE_Kbh_2_2CFM = 0.017
+DEFAULT_VALUE_Khe_2_2CFM = 0.22
+#Other models
+DEFAULT_VALUE_Ve = 23.0
+DEFAULT_VALUE_Kbh = 0.0918
+DEFAULT_VALUE_Khe = 2.358
+DEFAULT_VALUE_Fp = 0.0001
 DEFAULT_VALUE_Vp = 10.0
 DEFAULT_VALUE_Vh = 75.0
-DEFAULT_VALUE_Ve = 23.0
 DEFAULT_VALUE_Vb = 2.0
 DEFAULT_VALUE_Ktrans = 0.10
-DEFAULT_VALUE_Fp = 0.0001
 DEFAULT_VALUE_Kce = 0.025
 DEFAULT_VALUE_Kbc = 0.003
-DEFAULT_VALUE_Kbh = 0.00075
-DEFAULT_VALUE_Khe = 0.01875
-DEFAULT_VALUE_Fa = 40.0 #Arterial Flow Fraction
+DEFAULT_VALUE_Fa = 17.0 #Arterial Flow Fraction
+
 LABEL_PARAMETER_Vp = 'Plasma Volume Fraction,\n Vp'
-LABEL_PARAMETER_Vh = 'Hepatocyte volume fraction,\n Vh'
-LABEL_PARAMETER_Vb = 'Intrahepatic bile duct volume fraction,\n Vb'
+LABEL_PARAMETER_Vh = 'Hepatocyte Volume Fraction,\n Vh'
+LABEL_PARAMETER_Vb = 'Intrahepatic Bile Duct Volume Fraction,\n Vb'
 LABEL_PARAMETER_Kce = 'Hepatocellular Uptake Rate, \n Kce (mL/100mL/min)'
 LABEL_PARAMETER_Ve = 'Extracellular Vol Fraction,\n Ve'
 LABEL_PARAMETER_Fp = 'Total Plasma Inflow, \n Fp (mL/min/mL)'
 LABEL_PARAMETER_Ktrans = 'Transfer Rate Constant, \n Ktrans (1/min)'
 LABEL_PARAMETER_Kbh = 'Biliary Efflux Rate, \n Kbh (mL/min/mL)'
-LABEL_PARAMETER_Khe = 'Hepatocyte uptake rate, \n Khe (mL/min/mL)'
-
-# Fp: Total plasma inflow (mL/min/mL) <0:0.01> (0.0001)
-# fa: Arterial flow fraction <0:1> (0.4)
-# khe: Hepatocyte uptake rate (mL/min/mL) <0:0.1> (0.01875)
-# kbh: Biliary efflux rate (mL/min/mL) <0:0.01> (0.00075)
+LABEL_PARAMETER_Khe = 'Hepatocyte Uptake Rate, \n Khe (mL/min/mL)'
 #######################################
 
 #Create and configure the logger
@@ -306,7 +308,7 @@ class ModelFittingApp(QDialog):
         self.cmbModels.activated.connect(lambda:  self.plot('cmbModels'))
 
         #Create dropdown lists for selection of AIF & VIF
-        self.lblAIF = QLabel("Arterial Input Function:")
+        self.lblAIF = QLabel('Arterial Input Function:')
         self.cmbAIF = QComboBox()
         self.cmbAIF.setToolTip('Select Arterial Input Function')
         self.lblVIF = QLabel("Venal Input Function:")
@@ -358,7 +360,7 @@ class ModelFittingApp(QDialog):
         
         #Create spinboxes and their labels
         #Label text set in function configureGUIForEachModel when the model is selected
-        self.lblArterialFlowFactor = QLabel("Arterial Flow Fraction:") 
+        self.lblArterialFlowFactor = QLabel("Arterial Flow Fraction, fa:") 
         self.lblArterialFlowFactor.hide()
         self.labelParameter1 = QLabel("")
         self.labelParameter2 = QLabel("")
@@ -488,6 +490,10 @@ class ModelFittingApp(QDialog):
         self.lblHeaderLeft = QLabel("Parameter")
         self.lblHeaderMiddle = QLabel("Value")
         self.lblHeaderRight = QLabel("95% Confidence Interval")
+        self.lblAFFName = QLabel("")
+        self.lblAFFValue = QLabel("")
+        self.lblAFFConfInt = QLabel("")
+        self.lblAFFConfInt.setAlignment(QtCore.Qt.AlignCenter)
         self.lblParam1Name = QLabel("")
         self.lblParam1Value = QLabel("")
         self.lblParam1ConfInt = QLabel("")
@@ -500,26 +506,31 @@ class ModelFittingApp(QDialog):
         self.lblParam3Value = QLabel("")
         self.lblParam3ConfInt = QLabel("")
         self.lblParam3ConfInt.setAlignment(QtCore.Qt.AlignCenter)
-        self.lblAFFName = QLabel("")
-        self.lblAFFValue = QLabel("")
-        self.lblAFFConfInt = QLabel("")
-        self.lblAFFConfInt.setAlignment(QtCore.Qt.AlignCenter)
+        self.lblParam4Name = QLabel("")
+        self.lblParam4Value = QLabel("")
+        self.lblParam4ConfInt = QLabel("")
+        self.lblParam4ConfInt.setAlignment(QtCore.Qt.AlignCenter)
+        
         
         gridLayoutResults.addWidget(self.lblHeaderLeft, 1, 1)
         gridLayoutResults.addWidget(self.lblHeaderMiddle, 1, 3)
         gridLayoutResults.addWidget(self.lblHeaderRight, 1, 5)
-        gridLayoutResults.addWidget(self.lblParam1Name, 2, 1, QtCore.Qt.AlignTop)
-        gridLayoutResults.addWidget(self.lblParam1Value, 2, 3, QtCore.Qt.AlignTop)
-        gridLayoutResults.addWidget(self.lblParam1ConfInt, 2, 5, QtCore.Qt.AlignTop)
-        gridLayoutResults.addWidget(self.lblParam2Name, 3, 1, QtCore.Qt.AlignTop)
-        gridLayoutResults.addWidget(self.lblParam2Value, 3, 3, QtCore.Qt.AlignTop)
-        gridLayoutResults.addWidget(self.lblParam2ConfInt, 3, 5, QtCore.Qt.AlignTop)
-        gridLayoutResults.addWidget(self.lblParam3Name, 4, 1, QtCore.Qt.AlignTop)
-        gridLayoutResults.addWidget(self.lblParam3Value, 4, 3, QtCore.Qt.AlignTop)
-        gridLayoutResults.addWidget(self.lblParam3ConfInt, 4, 5, QtCore.Qt.AlignTop)
-        gridLayoutResults.addWidget(self.lblAFFName, 5, 1, QtCore.Qt.AlignTop)
-        gridLayoutResults.addWidget(self.lblAFFValue, 5, 3, QtCore.Qt.AlignTop)
-        gridLayoutResults.addWidget(self.lblAFFConfInt, 5, 5, QtCore.Qt.AlignTop)
+        gridLayoutResults.addWidget(self.lblAFFName, 2, 1, QtCore.Qt.AlignTop)
+        gridLayoutResults.addWidget(self.lblAFFValue, 2, 3, QtCore.Qt.AlignTop)
+        gridLayoutResults.addWidget(self.lblAFFConfInt, 2, 5, QtCore.Qt.AlignTop)
+        gridLayoutResults.addWidget(self.lblParam1Name, 3, 1, QtCore.Qt.AlignTop)
+        gridLayoutResults.addWidget(self.lblParam1Value, 3, 3, QtCore.Qt.AlignTop)
+        gridLayoutResults.addWidget(self.lblParam1ConfInt, 3, 5, QtCore.Qt.AlignTop)
+        gridLayoutResults.addWidget(self.lblParam2Name, 4, 1, QtCore.Qt.AlignTop)
+        gridLayoutResults.addWidget(self.lblParam2Value, 4, 3, QtCore.Qt.AlignTop)
+        gridLayoutResults.addWidget(self.lblParam2ConfInt, 4, 5, QtCore.Qt.AlignTop)
+        gridLayoutResults.addWidget(self.lblParam3Name, 5, 1, QtCore.Qt.AlignTop)
+        gridLayoutResults.addWidget(self.lblParam3Value, 5, 3, QtCore.Qt.AlignTop)
+        gridLayoutResults.addWidget(self.lblParam3ConfInt, 5, 5, QtCore.Qt.AlignTop)
+        gridLayoutResults.addWidget(self.lblParam4Name, 6, 1, QtCore.Qt.AlignTop)
+        gridLayoutResults.addWidget(self.lblParam4Value, 6, 3, QtCore.Qt.AlignTop)
+        gridLayoutResults.addWidget(self.lblParam4ConfInt, 6, 5, QtCore.Qt.AlignTop)
+        
 
         #Create horizontal layout box to hold TRISTAN & University of Leeds Logos
         horizontalLogoLayout = QHBoxLayout()
@@ -589,11 +600,32 @@ class ModelFittingApp(QDialog):
         Where appropriate decimal fractions are converted to %"""
         try:
             logger.info('Function displayOptimumParamaterValuesOnGUI called.')
-
+            if self.spinBoxArterialFlowFactor.isHidden() == False:
+                self.lblAFFName.setText(self.lblArterialFlowFactor.text())
+                parameterValue = _optimisedParamaterList[0][0]
+                lowerLimit = _optimisedParamaterList[0][1]
+                upperLimit = _optimisedParamaterList[0][2]
+                suffix = '%'
+                parameterValue = round(parameterValue * 100.0, 3)
+                lowerLimit = round(lowerLimit * 100.0, 3)
+                upperLimit = round(upperLimit * 100.0, 3)
+                #For display in the PDF report, overwrite decimal volume fraction values in  _optimisedParamaterList
+                #with the % equivalent
+                _optimisedParamaterList[0][0] = parameterValue
+                _optimisedParamaterList[0][1] = lowerLimit
+                _optimisedParamaterList[0][2] = upperLimit
+               
+                self.lblAFFValue.setText(str(parameterValue) + suffix)
+                confidenceStr = '[{}     {}]'.format(lowerLimit, upperLimit)
+                self.lblAFFConfInt.setText(confidenceStr)
+                nextIndex=1
+            else:
+                nextIndex = 0
+            
             self.lblParam1Name.setText(self.labelParameter1.text())
-            parameterValue = round(_optimisedParamaterList[0][0], 3)
-            lowerLimit = round(_optimisedParamaterList[0][1], 3)
-            upperLimit = round(_optimisedParamaterList[0][2], 3)
+            parameterValue = round(_optimisedParamaterList[nextIndex][0], 3)
+            lowerLimit = round(_optimisedParamaterList[nextIndex][1], 3)
+            upperLimit = round(_optimisedParamaterList[nextIndex][2], 3)
             
             if self.spinBoxParameter1.suffix() == '%':
                 #convert from decimal fraction to %
@@ -604,20 +636,23 @@ class ModelFittingApp(QDialog):
                 
                 #For display in the PDF report, overwrite decimal volume fraction values in  _optimisedParamaterList
                 #with the % equivalent
-                _optimisedParamaterList[0][0] = round(parameterValue, 3)
-                _optimisedParamaterList[0][1] = round(lowerLimit, 3)
-                _optimisedParamaterList[0][2] = round(upperLimit, 3)
+                _optimisedParamaterList[nextIndex][0] = round(parameterValue, 3)
+                _optimisedParamaterList[nextIndex][1] = round(lowerLimit, 3)
+                _optimisedParamaterList[nextIndex][2] = round(upperLimit, 3)
             else:
                 suffix = ''
             
+            nextIndex +=1
             self.lblParam1Value.setText(str(parameterValue) + suffix)
             confidenceStr = '[{}     {}]'.format(lowerLimit, upperLimit)
             self.lblParam1ConfInt.setText(confidenceStr) 
 
             self.lblParam2Name.setText(self.labelParameter2.text())
-            parameterValue = round(_optimisedParamaterList[1][0], 3)
-            lowerLimit = round(_optimisedParamaterList[1][1], 3)
-            upperLimit = round(_optimisedParamaterList[1][2], 3)
+            parameterValue = round(_optimisedParamaterList[nextIndex][0], 3)
+            lowerLimit = round(_optimisedParamaterList[nextIndex][1], 3)
+            upperLimit = round(_optimisedParamaterList[nextIndex][2], 3)
+
+
             if self.spinBoxParameter2.suffix() == '%':
                 suffix = '%'
                 parameterValue = parameterValue * 100.0
@@ -625,22 +660,23 @@ class ModelFittingApp(QDialog):
                 upperLimit = upperLimit * 100.0
                 #For display in the PDF report, overwrite decimal volume fraction values in  _optimisedParamaterList
                 #with the % equivalent
-                _optimisedParamaterList[1][0] = round(parameterValue,3)
-                _optimisedParamaterList[1][1] = round(lowerLimit,3)
-                _optimisedParamaterList[1][2] = round(upperLimit,3)
+                _optimisedParamaterList[nextIndex][0] = round(parameterValue,3)
+                _optimisedParamaterList[nextIndex][1] = round(lowerLimit,3)
+                _optimisedParamaterList[nextIndex][2] = round(upperLimit,3)
             else:
                 suffix = ''
             
+            nextIndex += 1
             self.lblParam2Value.setText(str(parameterValue) + suffix)
             confidenceStr = '[{}     {}]'.format(lowerLimit, upperLimit)
             self.lblParam2ConfInt.setText(confidenceStr) 
 
             if self.spinBoxParameter3.isHidden() == False:
                 self.lblParam3Name.setText(self.labelParameter3.text())
-                parameterValue = round(_optimisedParamaterList[2][0], 3)
-                lowerLimit = round(_optimisedParamaterList[2][1], 3)
-                upperLimit = round(_optimisedParamaterList[2][2], 3)
-                nextIndex = 3
+                parameterValue = round(_optimisedParamaterList[nextIndex][0], 3)
+                lowerLimit = round(_optimisedParamaterList[nextIndex][1], 3)
+                upperLimit = round(_optimisedParamaterList[nextIndex][2], 3)
+                nextIndex += 1
                 if self.spinBoxParameter3.suffix() == '%':
                     suffix = '%'
                     parameterValue = parameterValue * 100.0
@@ -648,38 +684,39 @@ class ModelFittingApp(QDialog):
                     upperLimit = upperLimit * 100.0
                     #For display in the PDF report, overwrite decimal volume fraction values in  _optimisedParamaterList
                     #with the % equivalent
-                    _optimisedParamaterList[2][0] = round(parameterValue, 3)
-                    _optimisedParamaterList[2][1] = round(lowerLimit, 3)
-                    _optimisedParamaterList[2][2] = round(upperLimit, 3)
+                    _optimisedParamaterList[nextIndex][0] = round(parameterValue, 3)
+                    _optimisedParamaterList[nextIndex][1] = round(lowerLimit, 3)
+                    _optimisedParamaterList[nextIndex][2] = round(upperLimit, 3)
                 else:
                     suffix = ''
                 
                 self.lblParam3Value.setText(str(parameterValue) + suffix)
                 confidenceStr = '[{}     {}]'.format(lowerLimit, upperLimit)
                 self.lblParam3ConfInt.setText(confidenceStr)
-            else:
-                nextIndex = 2
+
+            if self.spinBoxParameter4.isHidden() == False:
+                self.lblParam4Name.setText(self.labelParameter4.text())
+                parameterValue = round(_optimisedParamaterList[nextIndex][0], 4)
+                lowerLimit = round(_optimisedParamaterList[nextIndex][1], 3)
+                upperLimit = round(_optimisedParamaterList[nextIndex][2], 3)
+                nextIndex += 1
+                if self.spinBoxParameter4.suffix() == '%':
+                    suffix = '%'
+                    parameterValue = parameterValue * 100.0
+                    lowerLimit = lowerLimit * 100.0
+                    upperLimit = upperLimit * 100.0
+                    #For display in the PDF report, overwrite decimal volume fraction values in  _optimisedParamaterList
+                    #with the % equivalent
+                    _optimisedParamaterList[nextIndex][0] = round(parameterValue, 3)
+                    _optimisedParamaterList[nextIndex][1] = round(lowerLimit, 3)
+                    _optimisedParamaterList[nextIndex][2] = round(upperLimit, 3)
+                else:
+                    suffix = ''
                 
-            if self.spinBoxArterialFlowFactor.isHidden() == False:
-                self.lblAFFName.setText(self.lblArterialFlowFactor.text())
-                parameterValue = _optimisedParamaterList[nextIndex][0]
-                lowerLimit = _optimisedParamaterList[nextIndex][1]
-                upperLimit = _optimisedParamaterList[nextIndex][2]
-                suffix = '%'
-                parameterValue = round(parameterValue * 100.0, 3)
-                lowerLimit = round(lowerLimit * 100.0, 3)
-                upperLimit = round(upperLimit * 100.0, 3)
-                #For display in the PDF report, overwrite decimal volume fraction values in  _optimisedParamaterList
-                #with the % equivalent
-                _optimisedParamaterList[nextIndex][0] = parameterValue
-                _optimisedParamaterList[nextIndex][1] = lowerLimit
-                _optimisedParamaterList[nextIndex][2] = upperLimit
-               
-                self.lblAFFValue.setText(str(parameterValue) + suffix)
+                self.lblParam4Value.setText(str(parameterValue) + suffix)
                 confidenceStr = '[{}     {}]'.format(lowerLimit, upperLimit)
-                self.lblAFFConfInt.setText(confidenceStr)
-
-
+                self.lblParam4ConfInt.setText(confidenceStr)
+            
         except Exception as e:
             print('Error in function displayOptimumParamaterValuesOnGUI: ' + str(e))
             logger.error('Error in function displayOptimumParamaterValuesOnGUI: ' + str(e))
@@ -699,6 +736,9 @@ class ModelFittingApp(QDialog):
             self.lblParam3Name.clear()
             self.lblParam3Value.clear()
             self.lblParam3ConfInt.clear()
+            self.lblParam4Name.clear()
+            self.lblParam4Value.clear()
+            self.lblParam4ConfInt.clear()
             self.lblAFFName.clear()
             self.lblAFFValue.clear()
             self.lblAFFConfInt.clear()
@@ -838,6 +878,7 @@ class ModelFittingApp(QDialog):
         self.spinBoxParameter1.blockSignals(boolBlockSignal)
         self.spinBoxParameter2.blockSignals(boolBlockSignal)
         self.spinBoxParameter3.blockSignals(boolBlockSignal)
+        self.spinBoxParameter4.blockSignals(boolBlockSignal)
 
     def setParameterSpinBoxesWithOptimumValues(self, optimumParams):
         """Sets the value displayed in the model parameter spinboxes 
@@ -852,27 +893,38 @@ class ModelFittingApp(QDialog):
             #Block signals from spinboxes, so that setting values
             #returned from curve fitting does not trigger an event. 
             self.blockSpinBoxSignals(True)
-        
-            if self.spinBoxParameter1.suffix() == '%':
-                self.spinBoxParameter1.setValue(optimumParams[0]* 100) #Convert Volume fraction to %
-            else:
-                self.spinBoxParameter1.setValue(optimumParams[0])
-            if self.spinBoxParameter2.suffix() == '%':
-                self.spinBoxParameter2.setValue(optimumParams[1]* 100) #Convert Volume fraction to %
-            else:
-                self.spinBoxParameter2.setValue(optimumParams[1])
-            if self.spinBoxParameter3.isHidden() == False:
-                nextIndex = 3
-                if self.spinBoxParameter3.suffix() == '%':
-                    self.spinBoxParameter3.setValue(optimumParams[2]* 100) #Convert Volume fraction to %
-                else:
-                    self.spinBoxParameter3.setValue(optimumParams[2])
-            else:
-                nextIndex = 2
-
-            if self.spinBoxArterialFlowFactor.isHidden() == False:
-                self.spinBoxArterialFlowFactor.setValue(optimumParams[nextIndex]* 100) #Convert decimal fraction to %
             
+            if self.spinBoxArterialFlowFactor.isHidden() == False:
+                self.spinBoxArterialFlowFactor.setValue(optimumParams[0]* 100) #Convert decimal fraction to %
+                nextIndex = 1
+            else:
+                nextIndex = 0
+
+            if self.spinBoxParameter1.suffix() == '%':
+                self.spinBoxParameter1.setValue(optimumParams[nextIndex]* 100) #Convert Volume fraction to %
+            else:
+                self.spinBoxParameter1.setValue(optimumParams[nextIndex])
+            nextIndex += 1
+
+            if self.spinBoxParameter2.suffix() == '%':
+                self.spinBoxParameter2.setValue(optimumParams[nextIndex]* 100) #Convert Volume fraction to %
+            else:
+                self.spinBoxParameter2.setValue(optimumParams[nextIndex])
+            nextIndex += 1
+
+            if self.spinBoxParameter3.isHidden() == False:
+                if self.spinBoxParameter3.suffix() == '%':
+                    self.spinBoxParameter3.setValue(optimumParams[nextIndex]* 100) #Convert Volume fraction to %
+                else:
+                    self.spinBoxParameter3.setValue(optimumParams[nextIndex])
+                nextIndex += 1
+
+            if self.spinBoxParameter4.isHidden() == False:
+                if self.spinBoxParameter4.suffix() == '%':
+                    self.spinBoxParameter4.setValue(optimumParams[nextIndex]* 100) #Convert Volume fraction to %
+                else:
+                    self.spinBoxParameter4.setValue(optimumParams[nextIndex])
+       
             self.blockSpinBoxSignals(False)
         except Exception as e:
             print('Error in function setParameterSpinBoxesWithOptimumValues ' + str(e))
@@ -941,18 +993,17 @@ class ModelFittingApp(QDialog):
 
             #Get arrays of data corresponding to the above 3 regions 
             #and the time over which the measurements were made.
-            arrayTimes = np.array(_concentrationData['Time'], dtype='float')
+            arrayTimes = np.array(_concentrationData['time'], dtype='float')
             arrayROIConcs = np.array(_concentrationData[ROI], dtype='float')
             arrayAIFConcs = np.array(_concentrationData[AIF], dtype='float')
 
             if VIF != 'Please Select':
-                boolDualInput = True
                 arrayVIFConcs = np.array(_concentrationData[VIF], dtype='float')
             else:
                 #Create empty dummy array to act as place holder in  
                 #TracerKineticModels.curveFit function call 
                 arrayVIFConcs = []
-                boolDualInput = False
+              
             
             if self.cboxConstaint.isChecked():
                 addConstraint = True
@@ -964,7 +1015,7 @@ class ModelFittingApp(QDialog):
             #Call curve fitting routine
             logger.info('TracerKineticModels.curveFit called with model {}, parameters {} and Constraint = {}'.format(modelName, initialParametersArray, addConstraint))
             optimumParams, paramCovarianceMatrix = TracerKineticModels.curveFit(modelName, arrayTimes, 
-                 arrayAIFConcs, arrayVIFConcs, arrayROIConcs, initialParametersArray, addConstraint, boolDualInput)
+                 arrayAIFConcs, arrayVIFConcs, arrayROIConcs, initialParametersArray, addConstraint)
        
             _boolCurveFittingDone = True 
             logger.info('TracerKineticModels.curveFit returned optimum parameters {} with confidence levels {}'.format(optimumParams, paramCovarianceMatrix))
@@ -1074,11 +1125,11 @@ class ModelFittingApp(QDialog):
                     csvfile.seek(0)
                     
                     #Check for a header row in the CSV file
-                    sniffer = csv.Sniffer()
-                    has_header = csv.Sniffer().has_header(csvfile.read(16384))
-                    if has_header == False:
-                        QMessageBox().warning(self, "CSV data file", "The first row of the CSV file must be a header row with column names", QMessageBox.Ok)
-                        raise RuntimeError('The CSV file must have a header row')
+                    #sniffer = csv.Sniffer()
+                    #has_header = csv.Sniffer().has_header(csvfile.read(16384))
+                    #if has_header == False:
+                    #    QMessageBox().warning(self, "CSV data file", "The first row of the CSV file must be a header row with column names", QMessageBox.Ok)
+                    #    raise RuntimeError('The CSV file must have a header row')
                     
                     #go back to top of the file
                     csvfile.seek(0)
@@ -1099,7 +1150,7 @@ class ModelFittingApp(QDialog):
 
                     #Column headers form the keys in the dictionary called _concentrationData
                     for header in headers:
-                        _concentrationData[header.title()]=[]
+                        _concentrationData[header.title().lower()]=[]
                     #Also add a 'model' key to hold a list of concentrations generated by a model
                     _concentrationData['model'] = []
 
@@ -1111,8 +1162,9 @@ class ModelFittingApp(QDialog):
                         for key in _concentrationData:
                             #Iterate over columns in the selected row
                             if key != 'model':
-                                if colNum == 0:
-                                    _concentrationData[key].append(int(row[colNum]))
+                                if colNum == 0: 
+                                    #time column
+                                    _concentrationData[key].append(float(row[colNum])/60.0)
                                 else:
                                     _concentrationData[key].append(float(row[colNum]))
                                 colNum+=1           
@@ -1223,25 +1275,25 @@ class ModelFittingApp(QDialog):
             logger.info('Function initialiseParameterSpinBoxes called when model = ' + modelName)
             if modelName == '2-2CFM':
                 self.spinBoxParameter1.setDecimals(2)
-                self.spinBoxParameter1.setRange(0, 100)
+                self.spinBoxParameter1.setRange(0, 100.0)
                 self.spinBoxParameter1.setSingleStep(0.1)
-                self.spinBoxParameter1.setValue(DEFAULT_VALUE_Ve)
+                self.spinBoxParameter1.setValue(DEFAULT_VALUE_Ve_2_2CFM)
                 self.spinBoxParameter1.setSuffix('%')
 
                 self.spinBoxParameter2.setDecimals(4)
-                self.spinBoxParameter2.setRange(0, 0.01)
-                self.spinBoxParameter2.setSingleStep(0.0001)
-                self.spinBoxParameter2.setValue(DEFAULT_VALUE_Fp)
+                self.spinBoxParameter2.setRange(0, 100.0)
+                self.spinBoxParameter2.setSingleStep(0.1)
+                self.spinBoxParameter2.setValue(DEFAULT_VALUE_Fp_2_2CFM)
 
                 self.spinBoxParameter3.setDecimals(5)
-                self.spinBoxParameter3.setRange(0.0, 0.1)
-                self.spinBoxParameter3.setSingleStep(0.00001)
-                self.spinBoxParameter3.setValue(DEFAULT_VALUE_Khe)
+                self.spinBoxParameter3.setRange(0.0, 100.0)
+                self.spinBoxParameter3.setSingleStep(0.1)
+                self.spinBoxParameter3.setValue(DEFAULT_VALUE_Khe_2_2CFM)
                 
                 self.spinBoxParameter4.setDecimals(5)
-                self.spinBoxParameter4.setRange(0.0, 0.1)
-                self.spinBoxParameter4.setSingleStep(0.00001)
-                self.spinBoxParameter4.setValue(DEFAULT_VALUE_Kbh)
+                self.spinBoxParameter4.setRange(0.0, 100.0)
+                self.spinBoxParameter4.setSingleStep(0.1)
+                self.spinBoxParameter4.setValue(DEFAULT_VALUE_Kbh_2_2CFM)
                 
             elif modelName == 'HF2-2CFM':
                 self.spinBoxParameter1.setDecimals(2)
@@ -1251,16 +1303,18 @@ class ModelFittingApp(QDialog):
                 self.spinBoxParameter1.setSuffix('%')
 
                 self.spinBoxParameter2.setDecimals(5)
-                self.spinBoxParameter2.setRange(0.0, 0.1)
-                self.spinBoxParameter2.setSingleStep(0.00001)
+                self.spinBoxParameter2.setRange(0.0, 100.0)
+                self.spinBoxParameter2.setSingleStep(0.1)
                 self.spinBoxParameter2.setValue(DEFAULT_VALUE_Khe)
                 
                 self.spinBoxParameter3.setDecimals(5)
-                self.spinBoxParameter3.setRange(0.0, 0.1)
-                self.spinBoxParameter3.setSingleStep(0.00001)
+                self.spinBoxParameter3.setRange(0.0, 100.0)
+                self.spinBoxParameter3.setSingleStep(0.1)
                 self.spinBoxParameter3.setValue(DEFAULT_VALUE_Kbh)
 
-            elif modelName == 'HF1-2CFM':
+            elif modelName == 'HF1-2CFM' or modelName == 'HF1-2CFM-FixVe':
+                if modelName == 'HF1-2CFM-FixVe':
+                    self.spinBoxParameter1.setEnabled(False)
                 self.spinBoxParameter1.setDecimals(2)
                 self.spinBoxParameter1.setRange(0, 100)
                 self.spinBoxParameter1.setSingleStep(0.1)
@@ -1268,32 +1322,15 @@ class ModelFittingApp(QDialog):
                 self.spinBoxParameter1.setSuffix('%')
 
                 self.spinBoxParameter2.setDecimals(5)
-                self.spinBoxParameter2.setRange(0.0, 0.1)
-                self.spinBoxParameter2.setSingleStep(0.00001)
+                self.spinBoxParameter2.setRange(0.0, 100.0)
+                self.spinBoxParameter2.setSingleStep(0.1)
                 self.spinBoxParameter2.setValue(DEFAULT_VALUE_Khe)
                 
                 self.spinBoxParameter3.setDecimals(5)
-                self.spinBoxParameter3.setRange(0.0, 0.1)
-                self.spinBoxParameter3.setSingleStep(0.00001)
+                self.spinBoxParameter3.setRange(0.0, 100.0)
+                self.spinBoxParameter3.setSingleStep(0.1)
                 self.spinBoxParameter3.setValue(DEFAULT_VALUE_Kbh)
 
-            elif modelName == 'HF1-2CFM-FixVe':
-                self.spinBoxParameter1.setEnabled(False)
-                self.spinBoxParameter1.setDecimals(2)
-                self.spinBoxParameter1.setRange(0, 100)
-                self.spinBoxParameter1.setSingleStep(0.1)
-                self.spinBoxParameter1.setValue(DEFAULT_VALUE_Ve)
-                self.spinBoxParameter1.setSuffix('%')
-
-                self.spinBoxParameter2.setDecimals(5)
-                self.spinBoxParameter2.setRange(0.0, 0.1)
-                self.spinBoxParameter2.setSingleStep(0.00001)
-                self.spinBoxParameter2.setValue(DEFAULT_VALUE_Khe)
-                
-                self.spinBoxParameter3.setDecimals(5)
-                self.spinBoxParameter3.setRange(0.0, 0.1)
-                self.spinBoxParameter3.setSingleStep(0.00001)
-                self.spinBoxParameter3.setValue(DEFAULT_VALUE_Kbh)
             #Models no longer used
             #elif modelName ==  'Extended Tofts':
             #    self.spinBoxParameter1.setValue(DEFAULT_VALUE_Ve)
@@ -1324,7 +1361,7 @@ class ModelFittingApp(QDialog):
             logger.info('Function configureGUIForEachModel called when model = ' + modelName)
             
             #self.cboxDelay.show()
-            self.cboxConstaint.show()
+            #self.cboxConstaint.show()
             self.cboxConstaint.setChecked(False)
             self.btnReset.show()
             self.btnSaveReport.show()
@@ -1360,7 +1397,7 @@ class ModelFittingApp(QDialog):
                 self.labelParameter3.show()
                 self.labelParameter4.hide()
                 self.spinBoxParameter4.hide()
-            elif modelName == 'HF1-2CFM':
+            elif modelName == 'HF1-2CFM' or modelName == 'HF1-2CFM-FixVe':
                 self.labelParameter1.setText(LABEL_PARAMETER_Ve)
                 self.labelParameter1.show()
                 self.labelParameter2.setText(LABEL_PARAMETER_Khe)
@@ -1371,17 +1408,8 @@ class ModelFittingApp(QDialog):
                 self.spinBoxParameter4.hide()
                 self.lblVIF.hide()
                 self.cmbVIF.hide()
-            elif modelName == 'HF1-2CFM-FixVe':
-                self.labelParameter1.setText(LABEL_PARAMETER_Ve)
-                self.labelParameter1.show()
-                self.labelParameter2.setText(LABEL_PARAMETER_Khe)
-                self.labelParameter2.show()
-                self.labelParameter3.setText(LABEL_PARAMETER_Kbh)
-                self.labelParameter3.show()
-                self.labelParameter4.hide()
-                self.spinBoxParameter4.hide()
-                self.lblVIF.hide()
-                self.cmbVIF.hide()
+                self.cmbVIF.setCurrentIndex(0)
+
             # Models no longer used
             #elif modelName ==  'Extended Tofts':
             #    self.labelParameter1.setText(LABEL_PARAMETER_Vp)
@@ -1492,6 +1520,8 @@ class ModelFittingApp(QDialog):
         """
         try:
             global _listModel
+            boolAIFSelected = False
+            boolVIFSelected = False
 
             self.figure.clear()
             
@@ -1507,7 +1537,8 @@ class ModelFittingApp(QDialog):
             #Get the name of the model 
             modelName = str(self.cmbModels.currentText())
             
-            arrayTimes = np.array(_concentrationData['Time'], dtype='float')
+            arrayTimes = np.array(_concentrationData['time'], dtype='float')
+
             ROI = str(self.cmbROI.currentText())
             if ROI != 'Please Select':
                 arrayROIConcs = np.array(_concentrationData[ROI], dtype='float')
@@ -1519,22 +1550,36 @@ class ModelFittingApp(QDialog):
             logger.info('Function plot called from ' + nameCallingFunction + ' when ROI={}, AIF={} and VIF={}'.format(ROI, AIF, VIF))
 
             if AIF != 'Please Select':
+                #Plot AIF curve
                 arrayAIFConcs = np.array(_concentrationData[AIF], dtype='float')
                 ax.plot(arrayTimes, arrayAIFConcs, 'r.-', label= AIF)
-                parameterArray = self.buildParameterArray()
+                boolAIFSelected = True
 
-                if VIF == 'Please Select':
-                    arrayVIFConcs = []
-                else:
-                    arrayVIFConcs = np.array(_concentrationData[VIF], dtype='float')
-                    ax.plot(arrayTimes, arrayVIFConcs, 'k.-', label= VIF)
+            if VIF != 'Please Select':
+                #Plot VIF curve
+                arrayVIFConcs = np.array(_concentrationData[VIF], dtype='float')
+                ax.plot(arrayTimes, arrayVIFConcs, 'k.-', label= VIF)
+                boolVIFSelected = True
                     
-                logger.info('TracerKineticModels.modelSelector called when model ={} and parameter array = {}'. format(modelName, parameterArray))        
-                _listModel = TracerKineticModels.modelSelector(modelName, arrayTimes, 
-                        arrayAIFConcs, parameterArray, arrayVIFConcs)
-                arrayModel =  np.array(_listModel, dtype='float')
-                ax.plot(arrayTimes, arrayModel, 'g--', label= modelName + ' model')
-            
+            #Plot concentration curve from the model
+            if TracerKineticModels.getModelInletType(modelName) == 'dual':
+                if boolAIFSelected and boolVIFSelected:
+                    parameterArray = self.buildParameterArray()
+                    logger.info('TracerKineticModels.modelSelector called when model ={} and parameter array = {}'. format(modelName, parameterArray))        
+                    _listModel = TracerKineticModels.modelSelector(modelName, arrayTimes, 
+                       arrayAIFConcs, parameterArray, arrayVIFConcs)
+                    arrayModel =  np.array(_listModel, dtype='float')
+                    ax.plot(arrayTimes, arrayModel, 'g--', label= modelName + ' model')
+            elif TracerKineticModels.getModelInletType(modelName) == 'single':
+                if boolAIFSelected:
+                    parameterArray = self.buildParameterArray()
+                    logger.info('TracerKineticModels.modelSelector called when model ={} and parameter array = {}'. format(modelName, parameterArray))        
+                    _listModel = TracerKineticModels.modelSelector(modelName, arrayTimes, 
+                       arrayAIFConcs, parameterArray)
+                    arrayModel =  np.array(_listModel, dtype='float')
+                    ax.plot(arrayTimes, arrayModel, 'g--', label= modelName + ' model')
+
+
             if ROI != 'Please Select':  
                 ax.set_xlabel('Time (mins)', fontsize=xyAxisLabelSize)
                 ax.set_ylabel('Concentration (mM)', fontsize=xyAxisLabelSize)
