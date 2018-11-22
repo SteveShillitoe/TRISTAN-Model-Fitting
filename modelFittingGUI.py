@@ -311,10 +311,10 @@ class ModelFittingApp(QDialog):
         self.lblAIF = QLabel('Arterial Input Function:')
         self.cmbAIF = QComboBox()
         self.cmbAIF.setToolTip('Select Arterial Input Function')
-        self.lblVIF = QLabel("Venal Input Function:")
+        self.lblVIF = QLabel("Venous Input Function:")
         self.cmbVIF = QComboBox()
        
-        self.cmbVIF.setToolTip('Select Venal Input Function')
+        self.cmbVIF.setToolTip('Select Venous Input Function')
         #When a ROI is selected plot its concentration data on the graph.
         self.cmbROI.activated.connect(lambda:  self.plot('cmbROI'))
         #When a ROI is selected, then make the Model groupbox and the widgets
@@ -606,9 +606,9 @@ class ModelFittingApp(QDialog):
                 lowerLimit = _optimisedParamaterList[0][1]
                 upperLimit = _optimisedParamaterList[0][2]
                 suffix = '%'
-                parameterValue = round(parameterValue * 100.0, 3)
-                lowerLimit = round(lowerLimit * 100.0, 3)
-                upperLimit = round(upperLimit * 100.0, 3)
+                parameterValue = round(parameterValue * 100.0, 2)
+                lowerLimit = round(lowerLimit * 100.0, 2)
+                upperLimit = round(upperLimit * 100.0, 2)
                 #For display in the PDF report, overwrite decimal volume fraction values in  _optimisedParamaterList
                 #with the % equivalent
                 _optimisedParamaterList[0][0] = parameterValue
@@ -630,15 +630,15 @@ class ModelFittingApp(QDialog):
             if self.spinBoxParameter1.suffix() == '%':
                 #convert from decimal fraction to %
                 suffix = '%'
-                parameterValue = parameterValue * 100.0
-                lowerLimit = lowerLimit * 100.0
-                upperLimit = upperLimit * 100.0
+                parameterValue = round(parameterValue * 100.0, 3)
+                lowerLimit = round(lowerLimit * 100.0,3)
+                upperLimit = round(upperLimit * 100.0,3)
                 
                 #For display in the PDF report, overwrite decimal volume fraction values in  _optimisedParamaterList
                 #with the % equivalent
-                _optimisedParamaterList[nextIndex][0] = round(parameterValue, 3)
-                _optimisedParamaterList[nextIndex][1] = round(lowerLimit, 3)
-                _optimisedParamaterList[nextIndex][2] = round(upperLimit, 3)
+                _optimisedParamaterList[nextIndex][0] = parameterValue
+                _optimisedParamaterList[nextIndex][1] = lowerLimit
+                _optimisedParamaterList[nextIndex][2] = upperLimit
             else:
                 suffix = ''
             
@@ -655,14 +655,14 @@ class ModelFittingApp(QDialog):
 
             if self.spinBoxParameter2.suffix() == '%':
                 suffix = '%'
-                parameterValue = parameterValue * 100.0
-                lowerLimit = lowerLimit * 100.0
-                upperLimit = upperLimit * 100.0
+                parameterValue = round(parameterValue * 100.0,3)
+                lowerLimit = round(lowerLimit * 100.0,3)
+                upperLimit = round(upperLimit * 100.0,3)
                 #For display in the PDF report, overwrite decimal volume fraction values in  _optimisedParamaterList
                 #with the % equivalent
-                _optimisedParamaterList[nextIndex][0] = round(parameterValue,3)
-                _optimisedParamaterList[nextIndex][1] = round(lowerLimit,3)
-                _optimisedParamaterList[nextIndex][2] = round(upperLimit,3)
+                _optimisedParamaterList[nextIndex][0] = parameterValue
+                _optimisedParamaterList[nextIndex][1] = lowerLimit
+                _optimisedParamaterList[nextIndex][2] = upperLimit
             else:
                 suffix = ''
             
@@ -679,14 +679,14 @@ class ModelFittingApp(QDialog):
                 nextIndex += 1
                 if self.spinBoxParameter3.suffix() == '%':
                     suffix = '%'
-                    parameterValue = parameterValue * 100.0
-                    lowerLimit = lowerLimit * 100.0
-                    upperLimit = upperLimit * 100.0
+                    parameterValue = round(parameterValue * 100.0, 3)
+                    lowerLimit = round(lowerLimit * 100.0, 3)
+                    upperLimit = round(upperLimit * 100.0, 3)
                     #For display in the PDF report, overwrite decimal volume fraction values in  _optimisedParamaterList
                     #with the % equivalent
-                    _optimisedParamaterList[nextIndex][0] = round(parameterValue, 3)
-                    _optimisedParamaterList[nextIndex][1] = round(lowerLimit, 3)
-                    _optimisedParamaterList[nextIndex][2] = round(upperLimit, 3)
+                    _optimisedParamaterList[nextIndex][0] = parameterValue
+                    _optimisedParamaterList[nextIndex][1] = lowerLimit
+                    _optimisedParamaterList[nextIndex][2] = upperLimit
                 else:
                     suffix = ''
                 
@@ -696,20 +696,20 @@ class ModelFittingApp(QDialog):
 
             if self.spinBoxParameter4.isHidden() == False:
                 self.lblParam4Name.setText(self.labelParameter4.text())
-                parameterValue = round(_optimisedParamaterList[nextIndex][0], 4)
+                parameterValue = round(_optimisedParamaterList[nextIndex][0], 3)
                 lowerLimit = round(_optimisedParamaterList[nextIndex][1], 3)
                 upperLimit = round(_optimisedParamaterList[nextIndex][2], 3)
                 nextIndex += 1
                 if self.spinBoxParameter4.suffix() == '%':
                     suffix = '%'
-                    parameterValue = parameterValue * 100.0
-                    lowerLimit = lowerLimit * 100.0
-                    upperLimit = upperLimit * 100.0
+                    parameterValue = round(parameterValue * 100.0, 3)
+                    lowerLimit = round(lowerLimit * 100.0, 3)
+                    upperLimit = round(upperLimit * 100.0, 3)
                     #For display in the PDF report, overwrite decimal volume fraction values in  _optimisedParamaterList
                     #with the % equivalent
-                    _optimisedParamaterList[nextIndex][0] = round(parameterValue, 3)
-                    _optimisedParamaterList[nextIndex][1] = round(lowerLimit, 3)
-                    _optimisedParamaterList[nextIndex][2] = round(upperLimit, 3)
+                    _optimisedParamaterList[nextIndex][0] = parameterValue
+                    _optimisedParamaterList[nextIndex][1] = lowerLimit
+                    _optimisedParamaterList[nextIndex][2] = upperLimit
                 else:
                     suffix = ''
                 
@@ -766,7 +766,7 @@ class ModelFittingApp(QDialog):
                     writeCSV = csv.writer(csvfile,  delimiter=',')
                     #write header row
                     writeCSV.writerow(['Time', ROI, AIF, modelName + ' model'])
-                    for i, time in enumerate(_concentrationData['Time']):
+                    for i, time in enumerate(_concentrationData['time']):
                          writeCSV.writerow([time, _concentrationData[ROI][i], _concentrationData[AIF][i], _listModel[i]])
                     csvfile.close()
 
@@ -838,7 +838,13 @@ class ModelFittingApp(QDialog):
                 arterialFlowFactor = self.spinBoxArterialFlowFactor.value()/100
                 initialParametersArray.append(arterialFlowFactor)
 
-            parameter1 = self.spinBoxParameter1.value()
+            modelName = str(self.cmbModels.currentText())
+            if modelName == 'HF1-2CFM-FixVe':
+                #Ve must be fixed at 23%
+                parameter1 = 23.00
+            else:
+                parameter1 = self.spinBoxParameter1.value()
+         
             if self.spinBoxParameter1.suffix() == '%':
                 #This is a volume fraction so convert % to a decimal fraction
                 parameter1 = parameter1/100.0
@@ -964,9 +970,9 @@ class ModelFittingApp(QDialog):
            
             for counter, numParams, var in zip(range(numDataPoints), optimumParams, np.diag(paramCovarianceMatrix)):
                 sigma = var**0.5
-                _optimisedParamaterList[counter].append(numParams)
-                _optimisedParamaterList[counter].append(round((numParams - sigma*tval), 5))
-                _optimisedParamaterList[counter].append(round((numParams + sigma*tval), 5))
+                _optimisedParamaterList[counter].append(round(numParams,3))
+                _optimisedParamaterList[counter].append(round((numParams - sigma*tval), 3))
+                _optimisedParamaterList[counter].append(round((numParams + sigma*tval), 3))
                 i+=1
             logger.info('In calculate95ConfidenceLimits, _optimisedParamaterList = {}'.format(_optimisedParamaterList))
         except Exception as e:
@@ -1016,7 +1022,7 @@ class ModelFittingApp(QDialog):
             logger.info('TracerKineticModels.curveFit called with model {}, parameters {} and Constraint = {}'.format(modelName, initialParametersArray, addConstraint))
             optimumParams, paramCovarianceMatrix = TracerKineticModels.curveFit(modelName, arrayTimes, 
                  arrayAIFConcs, arrayVIFConcs, arrayROIConcs, initialParametersArray, addConstraint)
-       
+            print('Optimum params = {}'. format(optimumParams))
             _boolCurveFittingDone = True 
             logger.info('TracerKineticModels.curveFit returned optimum parameters {} with confidence levels {}'.format(optimumParams, paramCovarianceMatrix))
             
@@ -1069,20 +1075,54 @@ class ModelFittingApp(QDialog):
                 parameter1 = self.spinBoxParameter1.value()
                 parameter2 = self.spinBoxParameter2.value()
                 parameter3 = self.spinBoxParameter3.value()
+                parameter4 = self.spinBoxParameter4.value()
                 arterialFlowFractionValue = self.spinBoxArterialFlowFactor.value()
                 
-##                def createAndSavePDFReport(self, fileName, _dataFileName, modelName, imageName, 
+#def createAndSavePDFReport(self, fileName, dataFileName, modelName, imageName, 
 #                               parameter1Text, parameter1Value,
 #                               parameter2Text, parameter2Value,
-#                               parameter3Text = None, parameter3Value = None, confidenceLimitsArray =[], _boolCurveFittingDone=True)
+#                               parameter3Text = None, parameter3Value = None,
+#                               parameter4Text = None, parameter4Value = None,
+#                               arterialFlowFractionValue = None,
+#                               confidenceLimitsArray =[], curveFittingDone=True):
                 
                 QApplication.setOverrideCursor(QCursor(QtCore.Qt.WaitCursor))
-                if modelName ==  'One Compartment':
-                    pdf.createAndSavePDFReport(reportFileName, _dataFileName, modelName, IMAGE_NAME, LABEL_PARAMETER_Vp, parameter1, LABEL_PARAMETER_Fp, parameter2, None, None, _optimisedParamaterList, _boolCurveFittingDone)
-                elif modelName ==  'Extended Tofts':
-                    pdf.createAndSavePDFReport(reportFileName, _dataFileName, modelName, IMAGE_NAME, LABEL_PARAMETER_Vp, parameter1, LABEL_PARAMETER_Ve, parameter2, LABEL_PARAMETER_Ktrans, parameter3, _optimisedParamaterList, _boolCurveFittingDone)
-                elif modelName == 'High-Flow Gadoxetate':
-                    pdf.createAndSavePDFReport(reportFileName, _dataFileName, modelName, IMAGE_NAME, LABEL_PARAMETER_Kce, parameter1, LABEL_PARAMETER_Ve, parameter2, LABEL_PARAMETER_Kbc, parameter3, _optimisedParamaterList, _boolCurveFittingDone)
+                if modelName ==  '2-2CFM':
+                    pdf.createAndSavePDFReport(reportFileName, _dataFileName, 
+                       modelName, IMAGE_NAME, 
+                       LABEL_PARAMETER_Ve, parameter1, 
+                       LABEL_PARAMETER_Fp, parameter2, 
+                       LABEL_PARAMETER_Khe, parameter3, 
+                       LABEL_PARAMETER_Kbh, parameter4, 
+                       arterialFlowFractionValue,
+                       _optimisedParamaterList, _boolCurveFittingDone)
+                elif modelName ==  'HF2-2CFM':
+                    pdf.createAndSavePDFReport(reportFileName, _dataFileName, 
+                       modelName, IMAGE_NAME, 
+                       LABEL_PARAMETER_Ve, parameter1, 
+                       LABEL_PARAMETER_Khe, parameter2, 
+                       LABEL_PARAMETER_Kbh, parameter3,
+                       None, None,
+                       arterialFlowFractionValue,
+                       _optimisedParamaterList, _boolCurveFittingDone)
+                elif modelName == 'HF1-2CFM':
+                    pdf.createAndSavePDFReport(reportFileName, _dataFileName, 
+                       modelName, IMAGE_NAME, 
+                       LABEL_PARAMETER_Ve, parameter1, 
+                       LABEL_PARAMETER_Khe, parameter2, 
+                       LABEL_PARAMETER_Kbh, parameter3,
+                       None, None,
+                       None,
+                       _optimisedParamaterList, _boolCurveFittingDone)
+                elif modelName == 'HF1-2CFM-FixVe':
+                    pdf.createAndSavePDFReport(reportFileName, _dataFileName, 
+                       modelName, IMAGE_NAME, 
+                       LABEL_PARAMETER_Ve, parameter1, 
+                       LABEL_PARAMETER_Khe, parameter2, 
+                       LABEL_PARAMETER_Kbh, parameter3,
+                       None, None,
+                       None,
+                       _optimisedParamaterList, _boolCurveFittingDone)
                 QApplication.restoreOverrideCursor()
 
                 #Delete image file
@@ -1280,17 +1320,17 @@ class ModelFittingApp(QDialog):
                 self.spinBoxParameter1.setValue(DEFAULT_VALUE_Ve_2_2CFM)
                 self.spinBoxParameter1.setSuffix('%')
 
-                self.spinBoxParameter2.setDecimals(4)
+                self.spinBoxParameter2.setDecimals(2)
                 self.spinBoxParameter2.setRange(0, 100.0)
                 self.spinBoxParameter2.setSingleStep(0.1)
                 self.spinBoxParameter2.setValue(DEFAULT_VALUE_Fp_2_2CFM)
 
-                self.spinBoxParameter3.setDecimals(5)
+                self.spinBoxParameter3.setDecimals(3)
                 self.spinBoxParameter3.setRange(0.0, 100.0)
                 self.spinBoxParameter3.setSingleStep(0.1)
                 self.spinBoxParameter3.setValue(DEFAULT_VALUE_Khe_2_2CFM)
                 
-                self.spinBoxParameter4.setDecimals(5)
+                self.spinBoxParameter4.setDecimals(4)
                 self.spinBoxParameter4.setRange(0.0, 100.0)
                 self.spinBoxParameter4.setSingleStep(0.1)
                 self.spinBoxParameter4.setValue(DEFAULT_VALUE_Kbh_2_2CFM)
@@ -1302,31 +1342,29 @@ class ModelFittingApp(QDialog):
                 self.spinBoxParameter1.setValue(DEFAULT_VALUE_Ve)
                 self.spinBoxParameter1.setSuffix('%')
 
-                self.spinBoxParameter2.setDecimals(5)
+                self.spinBoxParameter2.setDecimals(3)
                 self.spinBoxParameter2.setRange(0.0, 100.0)
                 self.spinBoxParameter2.setSingleStep(0.1)
                 self.spinBoxParameter2.setValue(DEFAULT_VALUE_Khe)
                 
-                self.spinBoxParameter3.setDecimals(5)
+                self.spinBoxParameter3.setDecimals(4)
                 self.spinBoxParameter3.setRange(0.0, 100.0)
                 self.spinBoxParameter3.setSingleStep(0.1)
                 self.spinBoxParameter3.setValue(DEFAULT_VALUE_Kbh)
 
             elif modelName == 'HF1-2CFM' or modelName == 'HF1-2CFM-FixVe':
-                if modelName == 'HF1-2CFM-FixVe':
-                    self.spinBoxParameter1.setEnabled(False)
                 self.spinBoxParameter1.setDecimals(2)
                 self.spinBoxParameter1.setRange(0, 100)
                 self.spinBoxParameter1.setSingleStep(0.1)
                 self.spinBoxParameter1.setValue(DEFAULT_VALUE_Ve)
                 self.spinBoxParameter1.setSuffix('%')
 
-                self.spinBoxParameter2.setDecimals(5)
+                self.spinBoxParameter2.setDecimals(3)
                 self.spinBoxParameter2.setRange(0.0, 100.0)
                 self.spinBoxParameter2.setSingleStep(0.1)
                 self.spinBoxParameter2.setValue(DEFAULT_VALUE_Khe)
                 
-                self.spinBoxParameter3.setDecimals(5)
+                self.spinBoxParameter3.setDecimals(4)
                 self.spinBoxParameter3.setRange(0.0, 100.0)
                 self.spinBoxParameter3.setSingleStep(0.1)
                 self.spinBoxParameter3.setValue(DEFAULT_VALUE_Kbh)

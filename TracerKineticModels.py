@@ -221,8 +221,8 @@ def HighFlowDualInletTwoCompartmentGadoxetateModel(xData2DArray, fAFF, Ve, Khe, 
     try:
         logger.info('In function TracerKineticModels.HighFlowDualInletTwoCompartmentGadoxetateModel ' +
           'with fAFF={}, Ve={}, Khe={} & Kbh={}'.format(fAFF, Ve, Khe, Kbh))
-        #print('In function TracerKineticModels.HighFlowDualInletTwoCompartmentGadoxetateModel ' +
-         # 'with fAFF={}, Ve={}, Khe={} & Kbh={}'.format(fAFF, Ve,  Khe, Kbh))
+        print('In function TracerKineticModels.HighFlowDualInletTwoCompartmentGadoxetateModel ' +
+          'with fAFF={}, Ve={}, Khe={} & Kbh={}'.format(fAFF, Ve,  Khe, Kbh))
         #In order to use scipy.optimize.curve_fit, time and concentration must be
         #combined into one function input parameter, a 2D array, then separated into individual
         #1 D arrays 
@@ -579,9 +579,12 @@ def curveFit(modelName, times, AIFConcs, VIFConcs, concROI, paramArray, constrai
         #fAFF, Ve, Fp, Khe, Kbh
 
         elif modelName == 'HF2-2CFM':
+            print('concROI = {}'.format(concROI))
             return curve_fit(HighFlowDualInletTwoCompartmentGadoxetateModel, 
                              timeInputConcs2DArray, concROI, paramArray,
                              bounds=([0.0,0.0,0.0,0.0001], [1., 0.9999, 100.0, 100.0]))
+            #return curve_fit(f=HighFlowDualInletTwoCompartmentGadoxetateModel, 
+           #                  xdata=timeInputConcs2DArray, ydata=concROI, p0=paramArray)
         #Ve, Khe, Kbh
         elif modelName == 'HF1-2CFM':
             return curve_fit(HighFlowSingleInletTwoCompartmentGadoxetateModel, 

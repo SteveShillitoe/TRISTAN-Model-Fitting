@@ -55,7 +55,9 @@ class PDF(FPDF):
     def createAndSavePDFReport(self, fileName, dataFileName, modelName, imageName, 
                                parameter1Text, parameter1Value,
                                parameter2Text, parameter2Value,
-                               parameter3Text = None, parameter3Value = None, 
+                               parameter3Text, parameter3Value,
+                               parameter4Text, parameter4Value,
+                               arterialFlowFractionValue,
                                confidenceLimitsArray =[], curveFittingDone=True):
         """Creates and saves a copy of a curve fitting report.
         It includes the name of the file containing the data to be plotted and the name
@@ -100,12 +102,7 @@ class PDF(FPDF):
             self.write(5, 'Data file name = ' + dataFileName + '\n\n')
 
             #Build table
-            if parameter3Text is not None:
-                numRowsData = 3
-            else:
-                numRowsData = 2
-
-            logger.info('In Function PDFWriter.createAndSavePDFReport printing results table with numRowsData ={} from {}'.format(numRowsData, confidenceLimitsArray))
+            logger.info('In Function PDFWriter.createAndSavePDFReport printing results table with confidence limits array = {}'.format(confidenceLimitsArray))
             
             # Effective page width, or just effectivePageWidth
             effectivePageWidth = self.w - 2*self.l_margin
@@ -121,29 +118,63 @@ class PDF(FPDF):
             self.ln(textHeight)
             #Body of Table
             #Row 1
+            if arterialFlowFractionValue is not None:
+                self.cell(col_width*3,textHeight*2, 'Arterial Flow Fraction', border=1)
+                self.cell(col_width,textHeight*2, str(round(arterialFlowFractionValue,2)), border=1)
+                if len(confidenceLimitsArray) > 0 and curveFittingDone == True:
+                    confidenceStr = '[{}     {}]'.format(confidenceLimitsArray[0][1], confidenceLimitsArray[0][2])
+                else:
+                    confidenceStr = 'N/A'
+                self.cell(col_width*2,textHeight*2, confidenceStr, border=1)
+                self.ln(textHeight*2)
+                nextIndex = 1
+            else:
+                nextIndex = 0
+
+            #Row 2
             self.cell(col_width*3,textHeight*2, parameter1Text.replace('\n', ''), border=1)
             self.cell(col_width,textHeight*2, str(round(parameter1Value,5)), border=1)
             if len(confidenceLimitsArray) > 0 and curveFittingDone == True:
-                confidenceStr = '[{}     {}]'.format(confidenceLimitsArray[0][1], confidenceLimitsArray[0][2])
+                confidenceStr = '[{}     {}]'.format(confidenceLimitsArray[nextIndex][1], 
+                                                     confidenceLimitsArray[nextIndex][2])
             else:
                 confidenceStr = 'N/A'
             self.cell(col_width*2,textHeight*2, confidenceStr, border=1)
             self.ln(textHeight*2)
-            #Row 2
+            nextIndex +=1
+
+            #Row 3
             self.cell(col_width*3,textHeight*2, parameter2Text.replace('\n', ''), border=1)
             self.cell(col_width,textHeight*2, str(round(parameter2Value,5)), border=1)
             if len(confidenceLimitsArray) > 0 and curveFittingDone == True:
-                confidenceStr = '[{}     {}]'.format(confidenceLimitsArray[1][1], confidenceLimitsArray[1][2])
+                confidenceStr = '[{}     {}]'.format(confidenceLimitsArray[nextIndex][1], 
+                                                     confidenceLimitsArray[nextIndex][2])
             else:
                 confidenceStr = 'N/A'
             self.cell(col_width*2,textHeight*2, confidenceStr, border=1)
             self.ln(textHeight*2)
-            if numRowsData == 3:
-                #Row 3
+            nextIndex +=1
+
+            if parameter3Text is not None:
+                #Row 4
                 self.cell(col_width*3,textHeight*2, parameter3Text.replace('\n', ''), border=1)
                 self.cell(col_width,textHeight*2, str(round(parameter3Value,5)), border=1)
                 if len(confidenceLimitsArray) > 0 and curveFittingDone == True:
-                    confidenceStr = '[{}     {}]'.format(confidenceLimitsArray[2][1], confidenceLimitsArray[2][2])
+                    confidenceStr = '[{}     {}]'.format(confidenceLimitsArray[nextIndex][1], 
+                                                         confidenceLimitsArray[nextIndex][2])
+                else:
+                    confidenceStr = 'N/A'
+                self.cell(col_width*2,textHeight*2, confidenceStr, border=1)
+                self.ln(textHeight*2)
+                nextIndex +=1
+
+            if parameter4Text is not None:
+                #Row 5
+                self.cell(col_width*3,textHeight*2, parameter4Text.replace('\n', ''), border=1)
+                self.cell(col_width,textHeight*2, str(round(parameter4Value,5)), border=1)
+                if len(confidenceLimitsArray) > 0 and curveFittingDone == True:
+                    confidenceStr = '[{}     {}]'.format(confidenceLimitsArray[nextIndex][1], 
+                                                         confidenceLimitsArray[nextIndex][2])
                 else:
                     confidenceStr = 'N/A'
                 self.cell(col_width*2,textHeight*2, confidenceStr, border=1)
