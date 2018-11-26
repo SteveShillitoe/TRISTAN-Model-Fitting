@@ -53,12 +53,7 @@ class PDF(FPDF):
         self.cell(0, 10, currentDateTime, 0, 0, 'R')
 
     def createAndSavePDFReport(self, fileName, dataFileName, modelName, imageName, 
-                               parameter1Text, parameter1Value,
-                               parameter2Text, parameter2Value,
-                               parameter3Text, parameter3Value,
-                               parameter4Text, parameter4Value,
-                               arterialFlowFractionValue,
-                               confidenceLimitsArray =[], curveFittingDone=True):
+                               parameterDictionary):
         """Creates and saves a copy of a curve fitting report.
         It includes the name of the file containing the data to be plotted and the name
         of the model used for curve fitting.  A table of input parameters, their values
@@ -73,27 +68,11 @@ class PDF(FPDF):
         modelName - Name of the model used to curve fit the time/concentration data.
         imageName - Name of the PNG file holding an image of the plot of time/concentration
             data on the GUI.
-        parameter1Text - Name of the first model input parameter.
-        parameter1Value - Value of the first model input parameter.
-        parameter2Text - Name of the second model input parameter.
-        parameter2Value - Value of the second model input parameter.
-        parameter3Text - Name of the third model input parameter.
-        parameter3Value - Value of the third model input parameter.
-        The third model input parameter is optional.
-        confidenceLimitsArray - Optional array of lower and upper confidence limits 
-            for each model input parameter.
-        curveFittingDone - Optional boolean that indicates if curve fitting has just 
-            performed (value=True), so there will be a set of confidence limits. 
-            Or if the user has been manually setting the values of the model input
-            parameters (value = False).
         """
         try:
             logger.info('Function PDFWriter.createAndSavePDFReport called with filename={}, \
-            dataFileName={}, modelName={}, imageName={}, parameter1Text={}, parameter1Value={},\
-                 parameter2Text={}, parameter2Value={},parameter3Text ={}, parameter3Value ={}, \
-                 curveFittingDone = {}' \
-             .format(fileName, dataFileName, modelName, imageName,parameter1Text, parameter1Value,
-             parameter2Text, parameter2Value,parameter3Text, parameter3Value, curveFittingDone))
+            dataFileName={}, modelName={} & imageName={}.' \
+             .format(fileName, dataFileName, modelName, imageName))
             
             self.add_page() #First Page in Portrait format, A4
             self.set_font('Arial', 'BU', 12)
@@ -101,9 +80,6 @@ class PDF(FPDF):
             self.set_font('Arial', '', 10)
             self.write(5, 'Data file name = ' + dataFileName + '\n\n')
 
-            #Build table
-            logger.info('In Function PDFWriter.createAndSavePDFReport printing results table with confidence limits array = {}'.format(confidenceLimitsArray))
-            
             # Effective page width, or just effectivePageWidth
             effectivePageWidth = self.w - 2*self.l_margin
             # Set column width to 1/7 of effective page width to distribute content 
@@ -111,74 +87,22 @@ class PDF(FPDF):
             col_width = effectivePageWidth/6
             # Text height is the same as current font size
             textHeight = self.font_size
-            #Header Row
+            #Parameter Table - Header Row
             self.cell(col_width*3,textHeight, 'Parameter', border=1)
             self.cell(col_width,textHeight, 'Value', border=1)
             self.cell(col_width*2,textHeight, '95% confidence interval', border=1)
             self.ln(textHeight)
-            #Body of Table
-            #Row 1
-            if arterialFlowFractionValue is not None:
-                self.cell(col_width*3,textHeight*2, 'Arterial Flow Fraction', border=1)
-                self.cell(col_width,textHeight*2, str(round(arterialFlowFractionValue,2)), border=1)
-                if len(confidenceLimitsArray) > 0 and curveFittingDone == True:
-                    confidenceStr = '[{}     {}]'.format(confidenceLimitsArray[0][1], confidenceLimitsArray[0][2])
-                else:
-                    confidenceStr = 'N/A'
+
+            #Parameter Table - Rows of parameter data
+            for paramName, paramList in parameterDictionary.items():
+                #print('paramName = {}, value={}, lower={}, upper={}'.format(paramName, 
+                #        paramList[0], paramList[1], paramList[2]))
+                #Create a row in the table
+                self.cell(col_width*3,textHeight*2, paramName.replace('\n', ''), border=1)
+                self.cell(col_width,textHeight*2, str(paramList[0]), border=1)
+                confidenceStr = '[{}     {}]'.format(paramList[1], paramList[2])
                 self.cell(col_width*2,textHeight*2, confidenceStr, border=1)
-                self.ln(textHeight*2)
-                nextIndex = 1
-            else:
-                nextIndex = 0
-
-            #Row 2
-            self.cell(col_width*3,textHeight*2, parameter1Text.replace('\n', ''), border=1)
-            self.cell(col_width,textHeight*2, str(round(parameter1Value,5)), border=1)
-            if len(confidenceLimitsArray) > 0 and curveFittingDone == True:
-                confidenceStr = '[{}     {}]'.format(confidenceLimitsArray[nextIndex][1], 
-                                                     confidenceLimitsArray[nextIndex][2])
-            else:
-                confidenceStr = 'N/A'
-            self.cell(col_width*2,textHeight*2, confidenceStr, border=1)
-            self.ln(textHeight*2)
-            nextIndex +=1
-
-            #Row 3
-            self.cell(col_width*3,textHeight*2, parameter2Text.replace('\n', ''), border=1)
-            self.cell(col_width,textHeight*2, str(round(parameter2Value,5)), border=1)
-            if len(confidenceLimitsArray) > 0 and curveFittingDone == True:
-                confidenceStr = '[{}     {}]'.format(confidenceLimitsArray[nextIndex][1], 
-                                                     confidenceLimitsArray[nextIndex][2])
-            else:
-                confidenceStr = 'N/A'
-            self.cell(col_width*2,textHeight*2, confidenceStr, border=1)
-            self.ln(textHeight*2)
-            nextIndex +=1
-
-            if parameter3Text is not None:
-                #Row 4
-                self.cell(col_width*3,textHeight*2, parameter3Text.replace('\n', ''), border=1)
-                self.cell(col_width,textHeight*2, str(round(parameter3Value,5)), border=1)
-                if len(confidenceLimitsArray) > 0 and curveFittingDone == True:
-                    confidenceStr = '[{}     {}]'.format(confidenceLimitsArray[nextIndex][1], 
-                                                         confidenceLimitsArray[nextIndex][2])
-                else:
-                    confidenceStr = 'N/A'
-                self.cell(col_width*2,textHeight*2, confidenceStr, border=1)
-                self.ln(textHeight*2)
-                nextIndex +=1
-
-            if parameter4Text is not None:
-                #Row 5
-                self.cell(col_width*3,textHeight*2, parameter4Text.replace('\n', ''), border=1)
-                self.cell(col_width,textHeight*2, str(round(parameter4Value,5)), border=1)
-                if len(confidenceLimitsArray) > 0 and curveFittingDone == True:
-                    confidenceStr = '[{}     {}]'.format(confidenceLimitsArray[nextIndex][1], 
-                                                         confidenceLimitsArray[nextIndex][2])
-                else:
-                    confidenceStr = 'N/A'
-                self.cell(col_width*2,textHeight*2, confidenceStr, border=1)
-                self.ln(textHeight*2)
+                self.ln(textHeight*2)    
 
             self.write(10, '\n') #line break
 

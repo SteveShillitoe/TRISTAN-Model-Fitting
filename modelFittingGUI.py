@@ -246,7 +246,7 @@ class ModelFittingApp(QDialog):
         self.btnSaveReport.hide()
         self.btnSaveReport.setToolTip('Insert an image of the graph opposite and associated data in a PDF file')
         layout.addWidget(self.btnSaveReport, QtCore.Qt.AlignTop)
-        self.btnSaveReport.clicked.connect(self.savePDFReport)
+        self.btnSaveReport.clicked.connect(self.createPDFReport)
         
         self.btnExit = QPushButton('Exit')
         layout.addWidget(self.btnExit)
@@ -1048,7 +1048,95 @@ class ModelFittingApp(QDialog):
             print('Error in function runCurveFit with model ' + modelName + ': ' + str(e))
             logger.error('Error in function runCurveFit with model ' + modelName + ': ' + str(e))
     
-    def savePDFReport(self):
+    def buildParameterDictionary(self, confidenceLimitsArray = None):
+        """Builds a dictionary of values and their confidence limits 
+        (if curve fitting is performed) for each model input parameter (dictionary key)
+        This dictionary is used in the creation of a parameter values table in the
+        creation of the PDF report"""
+        try:
+            logger.info('buildParameterDictionary called with confidence limits array = {}'
+                        .format(confidenceLimitsArray))
+            parameterDictionary = {}
+           
+            index = 0
+            if self.spinBoxArterialFlowFactor.isHidden() == False:
+                parameterList1 = []
+                if confidenceLimitsArray != None:
+                    parameterList1.append(confidenceLimitsArray[index][0]) #Parameter Value
+                    parameterList1.append(confidenceLimitsArray[index][1]) #Lower Limit
+                    parameterList1.append(confidenceLimitsArray[index][2]) #Upper Limit
+                else:
+                    parameterList1.append(self.spinBoxArterialFlowFactor.value())
+                    parameterList1.append('N/A')
+                    parameterList1.append('N/A')
+                
+                parameterDictionary[self.lblArterialFlowFactor.text()] = parameterList1
+                index +=1
+
+            if self.spinBoxParameter1.isHidden() == False:
+                parameterList2=[]
+                if confidenceLimitsArray != None:
+                    parameterList2.append(confidenceLimitsArray[index][0]) #Parameter Value
+                    parameterList2.append(confidenceLimitsArray[index][1]) #Lower Limit
+                    parameterList2.append(confidenceLimitsArray[index][2]) #Upper Limit
+                else:
+                    parameterList2.append(self.spinBoxParameter1.value())
+                    parameterList2.append('N/A')
+                    parameterList2.append('N/A')
+                
+                parameterDictionary[self.labelParameter1.text()] = parameterList2
+                index +=1
+
+            if self.spinBoxParameter2.isHidden() == False:
+                parameterList3 =[]
+                if confidenceLimitsArray != None:
+                    parameterList3.append(confidenceLimitsArray[index][0]) #Parameter Value
+                    parameterList3.append(confidenceLimitsArray[index][1]) #Lower Limit
+                    parameterList3.append(confidenceLimitsArray[index][2]) #Upper Limit
+                else:
+                    parameterList3.append(self.spinBoxParameter2.value())
+                    parameterList3.append('N/A')
+                    parameterList3.append('N/A')
+                
+                parameterDictionary[self.labelParameter2.text()] = parameterList3
+                index +=1
+
+            if self.spinBoxParameter3.isHidden() == False:
+                parameterList4 = []
+                if confidenceLimitsArray != None:
+                    parameterList4.append(confidenceLimitsArray[index][0]) #Parameter Value
+                    parameterList4.append(confidenceLimitsArray[index][1]) #Lower Limit
+                    parameterList4.append(confidenceLimitsArray[index][2]) #Upper Limit
+                else:
+                    parameterList4.append(self.spinBoxParameter3.value())
+                    parameterList4.append('N/A')
+                    parameterList4.append('N/A')
+                
+                parameterDictionary[self.labelParameter3.text()] = parameterList4
+                index +=1
+
+            if self.spinBoxParameter4.isHidden() == False:
+                parameterList5=[]
+                if confidenceLimitsArray != None:
+                    parameterList5.append(confidenceLimitsArray[index][0]) #Parameter Value
+                    parameterList5.append(confidenceLimitsArray[index][1]) #Lower Limit
+                    parameterList5.append(confidenceLimitsArray[index][2]) #Upper Limit
+                else:
+                    parameterList5.append(self.spinBoxParameter4.value())
+                    parameterList5.append('N/A')
+                    parameterList5.append('N/A')
+                
+                parameterDictionary[self.labelParameter4.text()] = parameterList5
+                #print('parameterDictionary = {}'.format(parameterDictionary))
+
+            return parameterDictionary
+    
+        except Exception as e:
+            print('Error in function buildParameterDictionary: ' + str(e))
+            logger.error('Error in function buildParameterDictionary: ' + str(e))
+
+
+    def createPDFReport(self):
         """Creates and saves a report of the plot on the GUI."""
         try:
             pdf = PDF(REPORT_TITLE) 
@@ -1072,65 +1160,24 @@ class ModelFittingApp(QDialog):
                 #in the PDF report.
                 self.figure.savefig(fname=IMAGE_NAME, dpi=150)  #dpi=150 so as to get a clear image in the PDF report
                 
-                parameter1 = self.spinBoxParameter1.value()
-                parameter2 = self.spinBoxParameter2.value()
-                parameter3 = self.spinBoxParameter3.value()
-                parameter4 = self.spinBoxParameter4.value()
-                arterialFlowFractionValue = self.spinBoxArterialFlowFactor.value()
-                
-#def createAndSavePDFReport(self, fileName, dataFileName, modelName, imageName, 
-#                               parameter1Text, parameter1Value,
-#                               parameter2Text, parameter2Value,
-#                               parameter3Text = None, parameter3Value = None,
-#                               parameter4Text = None, parameter4Value = None,
-#                               arterialFlowFractionValue = None,
-#                               confidenceLimitsArray =[], curveFittingDone=True):
-                
+                if _boolCurveFittingDone == True:
+                    parameterDict = self.buildParameterDictionary(_optimisedParamaterList)
+                else:
+                    parameterDict = self.buildParameterDictionary()
+                             
                 QApplication.setOverrideCursor(QCursor(QtCore.Qt.WaitCursor))
-                if modelName ==  '2-2CFM':
-                    pdf.createAndSavePDFReport(reportFileName, _dataFileName, 
-                       modelName, IMAGE_NAME, 
-                       LABEL_PARAMETER_Ve, parameter1, 
-                       LABEL_PARAMETER_Fp, parameter2, 
-                       LABEL_PARAMETER_Khe, parameter3, 
-                       LABEL_PARAMETER_Kbh, parameter4, 
-                       arterialFlowFractionValue,
-                       _optimisedParamaterList, _boolCurveFittingDone)
-                elif modelName ==  'HF2-2CFM':
-                    pdf.createAndSavePDFReport(reportFileName, _dataFileName, 
-                       modelName, IMAGE_NAME, 
-                       LABEL_PARAMETER_Ve, parameter1, 
-                       LABEL_PARAMETER_Khe, parameter2, 
-                       LABEL_PARAMETER_Kbh, parameter3,
-                       None, None,
-                       arterialFlowFractionValue,
-                       _optimisedParamaterList, _boolCurveFittingDone)
-                elif modelName == 'HF1-2CFM':
-                    pdf.createAndSavePDFReport(reportFileName, _dataFileName, 
-                       modelName, IMAGE_NAME, 
-                       LABEL_PARAMETER_Ve, parameter1, 
-                       LABEL_PARAMETER_Khe, parameter2, 
-                       LABEL_PARAMETER_Kbh, parameter3,
-                       None, None,
-                       None,
-                       _optimisedParamaterList, _boolCurveFittingDone)
-                elif modelName == 'HF1-2CFM-FixVe':
-                    pdf.createAndSavePDFReport(reportFileName, _dataFileName, 
-                       modelName, IMAGE_NAME, 
-                       LABEL_PARAMETER_Ve, parameter1, 
-                       LABEL_PARAMETER_Khe, parameter2, 
-                       LABEL_PARAMETER_Kbh, parameter3,
-                       None, None,
-                       None,
-                       _optimisedParamaterList, _boolCurveFittingDone)
+
+                pdf.createAndSavePDFReport(reportFileName, _dataFileName, 
+                       modelName, IMAGE_NAME, parameterDict)
+                
                 QApplication.restoreOverrideCursor()
 
                 #Delete image file
                 os.remove(IMAGE_NAME)
                 logger.info('PDF Report created called ' + reportFileName)
         except Exception as e:
-            print('Error in function savePDFReport: ' + str(e))
-            logger.error('Error in function savePDFReport: ' + str(e))
+            print('Error in function createPDFReport: ' + str(e))
+            logger.error('Error in function createPDFReport: ' + str(e))
        
     def loadDataFile(self):
         """Loads the contents of a CSV file containing time and concentration data
