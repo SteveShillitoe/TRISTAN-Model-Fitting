@@ -1258,9 +1258,7 @@ class ModelFittingApp(QDialog):
                 csvfile.close()
 
                 self.configureGUIAfterLoadingData()
-                #clear the plot in case it is showing data from a previous data file
-                self.figure.clear()
-
+                
         except csv.Error:
             print('CSV Reader error in function loadDataFile: file %s, line %d: %s' % (_dataFileName, readCSV.line_num, csv.Error))
             logger.error('CSV Reader error in function loadDataFile: file %s, line %d: %s' % (_dataFileName, readCSV.line_num, csv.Error))
@@ -1290,11 +1288,12 @@ class ModelFittingApp(QDialog):
         self.groupBoxModel.hide()
         self.btnFitModel.hide()
         self.btnSaveCSV.hide()
+        
 
     def configureGUIAfterLoadingData(self):
         """After successfully loading a datafile, this method loads a list of
         organs into ROI, AIF & VIF drop-down lists and displays 
-        the ROI drop-down list."""
+        the ROI drop-down list.  It also clears the Matplotlib graph."""
         try:
             #Data file loaded OK, so set up the GUI
             #Reset and enable dropdown list of models
@@ -1312,6 +1311,12 @@ class ModelFittingApp(QDialog):
             self.cmbVIF.addItems(organArray)
             self.lblROI.show()
             self.cmbROI.show()
+
+            #Clear the existing plot
+            self.figure.clear()
+            self.figure.set_visible(False)
+            
+            self.canvas.draw()
 
             logger.info('Function configureGUIAfterLoadingData called and the following organ list loaded: {}'.format(organArray))
         except RuntimeError as re:
@@ -1609,6 +1614,7 @@ class ModelFittingApp(QDialog):
             boolVIFSelected = False
 
             self.figure.clear()
+            self.figure.set_visible(True)
             
             # create an axis
             ax = self.figure.add_subplot(111)
