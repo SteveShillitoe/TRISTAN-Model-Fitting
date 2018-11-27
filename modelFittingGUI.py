@@ -1009,7 +1009,6 @@ class ModelFittingApp(QDialog):
                 #Create empty dummy array to act as place holder in  
                 #TracerKineticModels.curveFit function call 
                 arrayVIFConcs = []
-              
             
             if self.cboxConstaint.isChecked():
                 addConstraint = True
@@ -1022,7 +1021,7 @@ class ModelFittingApp(QDialog):
             logger.info('TracerKineticModels.curveFit called with model {}, parameters {} and Constraint = {}'.format(modelName, initialParametersArray, addConstraint))
             optimumParams, paramCovarianceMatrix = TracerKineticModels.curveFit(modelName, arrayTimes, 
                  arrayAIFConcs, arrayVIFConcs, arrayROIConcs, initialParametersArray, addConstraint)
-            print('Optimum params = {}'. format(optimumParams))
+            
             _boolCurveFittingDone = True 
             logger.info('TracerKineticModels.curveFit returned optimum parameters {} with confidence levels {}'.format(optimumParams, paramCovarianceMatrix))
             
@@ -1052,7 +1051,8 @@ class ModelFittingApp(QDialog):
         """Builds a dictionary of values and their confidence limits 
         (if curve fitting is performed) for each model input parameter (dictionary key)
         This dictionary is used in the creation of a parameter values table in the
-        creation of the PDF report"""
+        creation of the PDF report.  It orders the input parameters in the same 
+       vertical order as the parameters on the GUI, top to bottom."""
         try:
             logger.info('buildParameterDictionary called with confidence limits array = {}'
                         .format(confidenceLimitsArray))
@@ -1137,7 +1137,8 @@ class ModelFittingApp(QDialog):
 
 
     def createPDFReport(self):
-        """Creates and saves a report of the plot on the GUI."""
+        """Creates and saves a report of model fitting. It includes the name of the model, 
+        the current values of its input parameters and a copy of the current plot."""
         try:
             pdf = PDF(REPORT_TITLE) 
             

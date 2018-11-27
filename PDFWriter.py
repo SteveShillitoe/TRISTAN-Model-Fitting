@@ -68,6 +68,16 @@ class PDF(FPDF):
         modelName - Name of the model used to curve fit the time/concentration data.
         imageName - Name of the PNG file holding an image of the plot of time/concentration
             data on the GUI.
+        parameterDictionary - A dictionary of parameter names (keys) linked to a 3 element list
+            containing the parameter value, its lower 95% confidence limit and upper 95%
+            confidence limit.
+
+        Action
+        ------
+        Creates and saves a PDF report at fileName.  This report lists the name of the data file
+        containing the data being analyses, displays the values of the model input parameters in 
+        a table. If curve fitting has been done, this table also displays the 95% confidence limits
+        of the predicted parameter values.  The report also displays the time/concentration plots.
         """
         try:
             logger.info('Function PDFWriter.createAndSavePDFReport called with filename={}, \

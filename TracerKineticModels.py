@@ -23,18 +23,19 @@ import logging
 logger = logging.getLogger(__name__)
 
 #Dictionary of model names - short name:long name pairs
-
 modelDict = {'Select a model':'Select a model',
                    '2-2CFM':'2 Inlet - Two Compartment Filtration Model',
                    'HF2-2CFM':'High Flow 2 Inlet - Two Compartment Filtration Model',
                    'HF1-2CFM':'High Flow 1 Inlet - Two Compartment Filtration Model',
                    'HF1-2CFM-FixVe':'High Flow 1 Inlet - Two Compartment Filtration Model\n - Fixed Extracellular Vol Fraction'}
 
+#Dictionary linking the model with a graphic file containing its visual representation.
 modelImageDict = {'2-2CFM':'DualInletTwoCompartmentGadoxetateModel.png',
                    'HF2-2CFM':'HighFlowDualInletTwoCompartmentGadoxetateModel.png',
                    'HF1-2CFM':'HighFlowSingleInletTwoCompartmentGadoxetateModel.png',
                    'HF1-2CFM-FixVe':'HighFlowSingleInletTwoCompartmentGadoxetateModel_fixedve.png'}
 
+#Dictionary linking a model with its input type:single or dual
 modelInletTypeDict = {'2-2CFM':'dual',
                     'HF2-2CFM':'dual',
                    'HF1-2CFM':'single',
@@ -165,8 +166,6 @@ def DualInputTwoCompartmentFiltrationModel(xData2DArray, fAFF, Ve, Fp, Khe, Kbh)
     try:
         logger.info('In function TracerKineticModels.DualInputTwoCompartmentFiltrationModel ' +
           'with fAFF={}, Ve={}, Fp={}, Khe={} & Kbh={}'.format(fAFF, Ve, Fp, Khe, Kbh))
-       # print('In function TracerKineticModels.DualInputTwoCompartmentFiltrationModel ' +
-       #   'with fAFF={}, Ve={}, Fp={}, Khe={} & Kbh={}'.format(fAFF, Ve, Fp, Khe, Kbh))
         #In order to use scipy.optimize.curve_fit, time and concentration must be
         #combined into one function input parameter, a 2D array, then separated into individual
         #1 D arrays 
@@ -183,7 +182,7 @@ def DualInputTwoCompartmentFiltrationModel(xData2DArray, fAFF, Ve, Fp, Khe, Kbh)
         #Calculate Intracellular transit time, Th
         Th = (1-Ve)/Kbh
         Te = Ve/(Fp + Khe)
-    
+        
         alpha = np.sqrt( ((1/Te + 1/Th)/2)**2 - 1/(Te*Th) )
         beta = (1/Th - 1/Te)/2
         gamma = (1/Th + 1/Te)/2
@@ -192,9 +191,9 @@ def DualInputTwoCompartmentFiltrationModel(xData2DArray, fAFF, Ve, Fp, Khe, Kbh)
         Tc2 = 1/(gamma+alpha)
     
         listConcentrationsFromModel = []
-        ce = (1/(2*Ve))*( (1+beta/alpha)*Tc1*tools.expconv(Tc1,times,combinedConcentration,'DualInputTwoCompartmentFiltrationModel - 1') 
-             + (1-beta/alpha)*Tc2*tools.expconv(Tc2,times,combinedConcentration,'DualInputTwoCompartmentFiltrationModel - 2') )
-        
+        ce = (1/(2*Ve))*( (1+beta/alpha)*Tc1*tools.expconv(Tc1,times,combinedConcentration,'DualInputTwoCompartmentFiltrationModel - 1') + 
+                        (1-beta/alpha)*Tc2*tools.expconv(Tc2,times,combinedConcentration,'DualInputTwoCompartmentFiltrationModel - 2')) 
+   
         listConcentrationsFromModel = Ve*ce + Khe*Th*tools.expconv(Th,times,ce,'DualInputTwoCompartmentFiltrationModel - 3')
     
         return(listConcentrationsFromModel)
@@ -221,27 +220,27 @@ def HighFlowDualInletTwoCompartmentGadoxetateModel(xData2DArray, fAFF, Ve, Khe, 
     try:
         logger.info('In function TracerKineticModels.HighFlowDualInletTwoCompartmentGadoxetateModel ' +
           'with fAFF={}, Ve={}, Khe={} & Kbh={}'.format(fAFF, Ve, Khe, Kbh))
-        print('In function TracerKineticModels.HighFlowDualInletTwoCompartmentGadoxetateModel ' +
-          'with fAFF={}, Ve={}, Khe={} & Kbh={}'.format(fAFF, Ve,  Khe, Kbh))
+        #print('In function TracerKineticModels.HighFlowDualInletTwoCompartmentGadoxetateModel ' +
+        #  'with fAFF={}, Ve={}, Khe={} & Kbh={}'.format(fAFF, Ve,  Khe, Kbh))
         #In order to use scipy.optimize.curve_fit, time and concentration must be
         #combined into one function input parameter, a 2D array, then separated into individual
         #1 D arrays 
         times = xData2DArray[:,0]
         AIFconcentrations = xData2DArray[:,1]
         VIFconcentrations = xData2DArray[:,2]
-    
+
         #Calculate Venal Flow Factor, fVFF
         fVFF = 1 - fAFF
 
         Th = (1-Ve)/Kbh
     
         #Determine an overall concentration
-        combinedConcentration = fAFF*AIFconcentrations + fVFF*VIFconcentrations
+        combinedConcentration = fAFF*AIFconcentrations + fVFF*VIFconcentrations 
     
         listConcentrationsFromModel = []
-        listConcentrationsFromModel = Ve*combinedConcentration 
-        + Khe*Th*tools.expconv(Th,times,combinedConcentration,'HighFlowDualInletTwoCompartmentGadoxetateModel')
-    
+        listConcentrationsFromModel = (Ve*combinedConcentration + 
+      Khe*Th*tools.expconv(Th,times,combinedConcentration,'HighFlowDualInletTwoCompartmentGadoxetateModel'))
+        
         return(listConcentrationsFromModel)
     except Exception as e:
             print('Error - TracerKineticModels.TracerKineticModels.HighFlowDualInletTwoCompartmentGadoxetateModel: ' + str(e))
@@ -280,8 +279,8 @@ def HighFlowSingleInletTwoCompartmentGadoxetateModel(xData2DArray, Ve, Khe, Kbh)
         combinedConcentration = AIFconcentrations
     
         listConcentrationsFromModel = []
-        listConcentrationsFromModel = Ve*AIFconcentrations 
-        + Khe*Th*tools.expconv(Th,times,AIFconcentrations,'HighFlowSingleInletTwoCompartmentGadoxetateModel')
+        listConcentrationsFromModel = (Ve*AIFconcentrations +
+       Khe*Th*tools.expconv(Th,times,AIFconcentrations,'HighFlowSingleInletTwoCompartmentGadoxetateModel'))
     
         return(listConcentrationsFromModel)
     except Exception as e:
@@ -565,7 +564,6 @@ def curveFit(modelName, times, AIFConcs, VIFConcs, concROI, paramArray, constrai
     """
     try:
         logger.info('Function TracerKineticModels.curveFit called with model={}, parameters = {} and constrain={}'.format(modelName,paramArray, constrain) )
-        print('Function TracerKineticModels.curveFit called with model={}, parameters = {} and constrain={}'.format(modelName,paramArray, constrain) )
         
         if getModelInletType(modelName) == 'dual':
             timeInputConcs2DArray = np.column_stack((times, AIFConcs, VIFConcs))
@@ -575,17 +573,14 @@ def curveFit(modelName, times, AIFConcs, VIFConcs, concROI, paramArray, constrai
         if modelName ==  '2-2CFM':
             return curve_fit(DualInputTwoCompartmentFiltrationModel, 
                              timeInputConcs2DArray, concROI, paramArray,
-                             bounds=([0.0,0.0,0.0,0.0,0.0001], [1., 0.9999, 100.0, 100.0, 100.0]))
+                             bounds=([0.0,0.0001,0.0,0.0,0.0001], [1., 0.9999, 100.0, 100.0, 100.0]))
         #fAFF, Ve, Fp, Khe, Kbh
 
         elif modelName == 'HF2-2CFM':
-            print('concROI = {}'.format(concROI))
             return curve_fit(HighFlowDualInletTwoCompartmentGadoxetateModel, 
                              timeInputConcs2DArray, concROI, paramArray,
-                             bounds=([0.0,0.0,0.0,0.0001], [1., 0.9999, 100.0, 100.0]))
-            #return curve_fit(f=HighFlowDualInletTwoCompartmentGadoxetateModel, 
-           #                  xdata=timeInputConcs2DArray, ydata=concROI, p0=paramArray)
-        #Ve, Khe, Kbh
+                            bounds=([0.0,0.0,0.0,0.0001], [1., 0.9999, 100.0, 100.0]))
+            
         elif modelName == 'HF1-2CFM':
             return curve_fit(HighFlowSingleInletTwoCompartmentGadoxetateModel, 
                              timeInputConcs2DArray, concROI, paramArray,
