@@ -150,7 +150,7 @@ class ModelFittingApp(QDialog):
         self.setWindowTitle(WINDOW_TITLE)
         self.setWindowIcon(QIcon('TRISTAN LOGO.jpg'))
         width, height = self.getScreenResolution()
-        self.setGeometry(width*0.05, height*0.25, width*0.9, height*0.5)
+        self.setGeometry(width*0.05, height*0.05, width*0.9, height*0.9)
         self.setWindowFlags(QtCore.Qt.WindowMinMaxButtonsHint |  QtCore.Qt.WindowCloseButtonHint)
         
         self.applyStyleSheet()
@@ -762,12 +762,26 @@ class ModelFittingApp(QDialog):
             
                 ROI = str(self.cmbROI.currentText())
                 AIF = str(self.cmbAIF.currentText())
+                if self.cmbVIF.isVisible() == True:
+                    VIF = str(self.cmbVIF.currentText())
+                    boolIncludeVIF = True
+                else:
+                    boolIncludeVIF = False
+
                 with open(CSVFileName, 'w',  newline='') as csvfile:
                     writeCSV = csv.writer(csvfile,  delimiter=',')
-                    #write header row
-                    writeCSV.writerow(['Time', ROI, AIF, modelName + ' model'])
-                    for i, time in enumerate(_concentrationData['time']):
-                         writeCSV.writerow([time, _concentrationData[ROI][i], _concentrationData[AIF][i], _listModel[i]])
+                    if boolIncludeVIF:
+                        #write header row
+                        writeCSV.writerow(['Time (min)', ROI, AIF, VIF, modelName + ' model'])
+                        #Write rows of data
+                        for i, time in enumerate(_concentrationData['time']):
+                            writeCSV.writerow([time, _concentrationData[ROI][i], _concentrationData[AIF][i], _concentrationData[VIF][i], _listModel[i]])
+                    else:
+                        #write header row
+                        writeCSV.writerow(['Time (min)', ROI, AIF, modelName + ' model'])
+                        #Write rows of data
+                        for i, time in enumerate(_concentrationData['time']):
+                            writeCSV.writerow([time, _concentrationData[ROI][i], _concentrationData[AIF][i], _listModel[i]])
                     csvfile.close()
 
         except csv.Error:
@@ -1305,7 +1319,7 @@ class ModelFittingApp(QDialog):
             #Create a list of organs for which concentrations are
             #provided in the data input file.  See loadDataFile method.
             organArray = []
-            organArray = self.returnListOrgans()
+            organArray = self.getListOrgans()
             
             self.cmbROI.addItems(organArray)
             self.cmbAIF.addItems(organArray)
@@ -1327,7 +1341,7 @@ class ModelFittingApp(QDialog):
             print('Error in function configureGUIAfterLoadingData: ' + str(e) )
             logger.error('Error in function configureGUIAfterLoadingData: ' + str(e))
         
-    def returnListOrgans(self):
+    def getListOrgans(self):
         """Builds a list of organs from the headers in the CSV data file. 
         The CSV data file comprises columns of concentration data for a
         set of organs.  Each column of concentration data is labeled by
@@ -1338,7 +1352,7 @@ class ModelFittingApp(QDialog):
             A list of organs for which there is concentration data.
         """
         try:
-            logger.info('Function returnListOrgans called')
+            logger.info('Function getListOrgans called')
             organList =[]
             organList.append('Please Select') #First item at the top of the drop-down list
             for key in _concentrationData:
@@ -1346,11 +1360,11 @@ class ModelFittingApp(QDialog):
                     organList.append(str(key))       
             return organList
         except RuntimeError as re:
-            print('runtime error in function returnListOrgans' + str(re))
-            logger.error('runtime error in function returnListOrgans' + str(re))
+            print('runtime error in function getListOrgans' + str(re))
+            logger.error('runtime error in function getListOrgans' + str(re))
         except Exception as e:
-            print('Error in function returnListOrgans: ' + str(e))
-            logger.error('Error in function returnListOrgans: ' + str(e))
+            print('Error in function getListOrgans: ' + str(e))
+            logger.error('Error in function getListOrgans: ' + str(e))
     
     def initialiseParameterSpinBoxes(self):
         """Reset model parameter spinboxes with typical initial values for each model"""
