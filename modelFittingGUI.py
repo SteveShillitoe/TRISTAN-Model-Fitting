@@ -1080,7 +1080,7 @@ class ModelFittingApp(QDialog):
                     parameterList1.append(confidenceLimitsArray[index][1]) #Lower Limit
                     parameterList1.append(confidenceLimitsArray[index][2]) #Upper Limit
                 else:
-                    parameterList1.append(self.spinBoxArterialFlowFactor.value())
+                    parameterList1.append(round(self.spinBoxArterialFlowFactor.value(), 2))
                     parameterList1.append('N/A')
                     parameterList1.append('N/A')
                 
@@ -1094,7 +1094,7 @@ class ModelFittingApp(QDialog):
                     parameterList2.append(confidenceLimitsArray[index][1]) #Lower Limit
                     parameterList2.append(confidenceLimitsArray[index][2]) #Upper Limit
                 else:
-                    parameterList2.append(self.spinBoxParameter1.value())
+                    parameterList2.append(round(self.spinBoxParameter1.value(), 2))
                     parameterList2.append('N/A')
                     parameterList2.append('N/A')
                 
@@ -1108,7 +1108,7 @@ class ModelFittingApp(QDialog):
                     parameterList3.append(confidenceLimitsArray[index][1]) #Lower Limit
                     parameterList3.append(confidenceLimitsArray[index][2]) #Upper Limit
                 else:
-                    parameterList3.append(self.spinBoxParameter2.value())
+                    parameterList3.append(round(self.spinBoxParameter2.value(), 2))
                     parameterList3.append('N/A')
                     parameterList3.append('N/A')
                 
@@ -1122,7 +1122,7 @@ class ModelFittingApp(QDialog):
                     parameterList4.append(confidenceLimitsArray[index][1]) #Lower Limit
                     parameterList4.append(confidenceLimitsArray[index][2]) #Upper Limit
                 else:
-                    parameterList4.append(self.spinBoxParameter3.value())
+                    parameterList4.append(round(self.spinBoxParameter3.value(), 3))
                     parameterList4.append('N/A')
                     parameterList4.append('N/A')
                 
@@ -1136,7 +1136,7 @@ class ModelFittingApp(QDialog):
                     parameterList5.append(confidenceLimitsArray[index][1]) #Lower Limit
                     parameterList5.append(confidenceLimitsArray[index][2]) #Upper Limit
                 else:
-                    parameterList5.append(self.spinBoxParameter4.value())
+                    parameterList5.append(round(self.spinBoxParameter4.value(), 4))
                     parameterList5.append('N/A')
                     parameterList5.append('N/A')
                 
@@ -1169,7 +1169,8 @@ class ModelFittingApp(QDialog):
                 if os.path.exists(reportFileName):
                     #delete existing copy of PDF called reportFileName
                     os.remove(reportFileName)   
-                modelName = str(self.cmbModels.currentText())
+                shortModelName = str(self.cmbModels.currentText())
+                longModelName = TracerKineticModels.getLongModelName(shortModelName)
                 
                 #Save a png of the concentration/time plot for display 
                 #in the PDF report.
@@ -1183,7 +1184,7 @@ class ModelFittingApp(QDialog):
                 QApplication.setOverrideCursor(QCursor(QtCore.Qt.WaitCursor))
 
                 pdf.createAndSavePDFReport(reportFileName, _dataFileName, 
-                       modelName, IMAGE_NAME, parameterDict)
+                       longModelName, IMAGE_NAME, parameterDict)
                 
                 QApplication.restoreOverrideCursor()
 
