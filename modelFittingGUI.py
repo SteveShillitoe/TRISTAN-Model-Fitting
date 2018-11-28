@@ -1383,7 +1383,7 @@ class ModelFittingApp(QDialog):
             logger.info('Function initialiseParameterSpinBoxes called when model = ' + modelName)
             if modelName == '2-2CFM':
                 self.spinBoxParameter1.setDecimals(2)
-                self.spinBoxParameter1.setRange(0, 99.99)
+                self.spinBoxParameter1.setRange(0.01, 99.99)
                 self.spinBoxParameter1.setSingleStep(0.1)
                 self.spinBoxParameter1.setValue(DEFAULT_VALUE_Ve_2_2CFM)
                 self.spinBoxParameter1.setSuffix('%')
@@ -1405,7 +1405,7 @@ class ModelFittingApp(QDialog):
                 
             elif modelName == 'HF2-2CFM':
                 self.spinBoxParameter1.setDecimals(2)
-                self.spinBoxParameter1.setRange(0, 99.99)
+                self.spinBoxParameter1.setRange(0.01, 99.99)
                 self.spinBoxParameter1.setSingleStep(0.1)
                 self.spinBoxParameter1.setValue(DEFAULT_VALUE_Ve)
                 self.spinBoxParameter1.setSuffix('%')
@@ -1422,7 +1422,7 @@ class ModelFittingApp(QDialog):
 
             elif modelName == 'HF1-2CFM' or modelName == 'HF1-2CFM-FixVe':
                 self.spinBoxParameter1.setDecimals(2)
-                self.spinBoxParameter1.setRange(0, 99.99)
+                self.spinBoxParameter1.setRange(0.01, 99.99)
                 self.spinBoxParameter1.setSingleStep(0.1)
                 self.spinBoxParameter1.setValue(DEFAULT_VALUE_Ve)
                 self.spinBoxParameter1.setSuffix('%')

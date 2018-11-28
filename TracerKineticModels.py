@@ -579,12 +579,12 @@ def curveFit(modelName, times, AIFConcs, VIFConcs, concROI, paramArray, constrai
         elif modelName == 'HF2-2CFM':
             return curve_fit(HighFlowDualInletTwoCompartmentGadoxetateModel, 
                              timeInputConcs2DArray, concROI, paramArray,
-                            bounds=([0.0,0.0,0.0,0.0001], [1., 0.9999, 100.0, 100.0]))
+                            bounds=([0.0,0.0001,0.0,0.0001], [1., 0.9999, 100.0, 100.0]))
             
         elif modelName == 'HF1-2CFM':
             return curve_fit(HighFlowSingleInletTwoCompartmentGadoxetateModel, 
                              timeInputConcs2DArray, concROI, paramArray,
-                             bounds=([0.0,0.0,0.0001], [0.9999, 100.0, 100.0]))
+                             bounds=([0.0001,0.0,0.0001], [0.9999, 100.0, 100.0]))
         # Ve, Khe, Kbh
         elif modelName == 'HF1-2CFM-FixVe':
             return curve_fit(HighFlowSingleInletTwoCompartmentGadoxetateModel, 
