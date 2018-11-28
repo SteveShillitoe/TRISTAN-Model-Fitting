@@ -1399,7 +1399,7 @@ class ModelFittingApp(QDialog):
                 self.spinBoxParameter3.setValue(DEFAULT_VALUE_Khe_2_2CFM)
                 
                 self.spinBoxParameter4.setDecimals(4)
-                self.spinBoxParameter4.setRange(0.0, 100.0)
+                self.spinBoxParameter4.setRange(0.0001, 100.0)
                 self.spinBoxParameter4.setSingleStep(0.1)
                 self.spinBoxParameter4.setValue(DEFAULT_VALUE_Kbh_2_2CFM)
                 
@@ -1416,7 +1416,7 @@ class ModelFittingApp(QDialog):
                 self.spinBoxParameter2.setValue(DEFAULT_VALUE_Khe)
                 
                 self.spinBoxParameter3.setDecimals(4)
-                self.spinBoxParameter3.setRange(0.0, 100.0)
+                self.spinBoxParameter3.setRange(0.0001, 100.0)
                 self.spinBoxParameter3.setSingleStep(0.1)
                 self.spinBoxParameter3.setValue(DEFAULT_VALUE_Kbh)
 
@@ -1433,7 +1433,7 @@ class ModelFittingApp(QDialog):
                 self.spinBoxParameter2.setValue(DEFAULT_VALUE_Khe)
                 
                 self.spinBoxParameter3.setDecimals(4)
-                self.spinBoxParameter3.setRange(0.0, 100.0)
+                self.spinBoxParameter3.setRange(0.0001, 100.0)
                 self.spinBoxParameter3.setSingleStep(0.1)
                 self.spinBoxParameter3.setValue(DEFAULT_VALUE_Kbh)
 
