@@ -6,9 +6,6 @@ The list modelNames holds the names of these models for display in a dropdown li
 The function modelSelector coordinates the execution of the appropriate function 
 according to the model selected on the GUI.
 
-For each model there are two functions.  A single input version (AIF only) and
-a dual input version (AIF & VIF).
-
 The function, curveFit calls the curve_fit function imported from scipy.optimize 
 to fit any of the models in this module to actual concentration/time data 
 using non-linear least squares.  

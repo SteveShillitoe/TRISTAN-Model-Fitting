@@ -1,9 +1,7 @@
 TRISTAN-Model-Fitting
 ----------------------
-The modelFittingGUI.py module is the start up module in the TRISTAN-Model-Fitting application. 
-It defines the GUI and the logic providing the application's functionality.
-The GUI was built using PyQT5
-
+How to use.
+------------
    The TRISTAN-Model-Fitting application allows the user to analyse organ time/concentration data
    by fitting a model to the Region Of Interest (ROI) time/concentration curve. 
    This application provides the following functionality:
@@ -57,5 +55,44 @@ The GUI was built using PyQT5
 			scipy
 			FPDF
 
-		------------------------------------------------------
+		The 4 Python files that comprise this application must be placed in folder together
+		with the accompanying 7 graphics (jpg & png) files.
+		
+GUI Structure
+--------------
+The GUI is based on the QDialog class, which is the base class of dialog windows.
+The GUI contains a single form.  Controls are arranged in three verticals on this form.
+Consequently, a horizontal layout control in placed on this form. Within this horizontal
+layout is placed 3 vertical layout controls.
+
+The left-hand side vertical layout holds controls pertaining to the input and selection of data
+and the selection of a model to analyse the data.
+
+The central vertical layout holds a canvas widget for the graphical display of the data.
+
+The right-hand side vertical layout holds controls for the display of a schematic 
+representation of the chosen model and the optimum model input parameters resulting
+from fitting the curve to the Region of Interest (ROI) concentration/time curve.
+
+The appearance of the GUI is controlled by the CSS commands in styleSheet.py
+
+Application File Structure.
+---------------------------
+The modelFittingGUI.py class module is the start up module in the TRISTAN-Model-Fitting application. 
+It defines the GUI and the logic providing the application's functionality.
+The GUI was built using PyQT5.
+
+The styleSheet.py module contains style instructions using CSS notation for each control/widget.
+
+The Tools.py module contains a library of mathematical functions used to solve the equations in 
+the models in TracerKineticModels.py.
+
+Objects of the following 2 classes are created in modelFittingGUI.py and provide services 
+to this class:
+The PDFWrite.py class module creates and saves a report of a model fitting session in a PDF file.
+
+The TracerkineticModels.py module contains functions that calculate the variation of concentration
+with time according to several tracer kinetic models.   
+
+
 

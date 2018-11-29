@@ -2,6 +2,8 @@
 It defines the GUI and the logic providing the application's functionality. 
 The GUI was built using PyQT5.
 
+How to use.
+-----------
    The TRISTAN-Model-Fitting application allows the user to analyse organ time/concentration data
    by fitting a model to the Region Of Interest (ROI) time/concentration curve. 
    The TRISTAN-Model-Fitting application provides the following functionality:
@@ -43,6 +45,24 @@ The GUI was built using PyQT5.
             This file will used as a debugging aid. When a new instance of the application is started, 
             TRISTAN.log from the last session will be deleted and a new log file started.
         12. Clicking the 'Exit' button closes the application.
+
+GUI Structure
+--------------
+The GUI is based on the QDialog class, which is the base class of dialog windows.
+The GUI contains a single form.  Controls are arranged in three verticals on this form.
+Consequently, a horizontal layout control in placed on this form. Within this horizontal
+layout is placed 3 vertical layout controls.
+
+The left-hand side vertical layout holds controls pertaining to the input and selection of data
+and the selection of a model to analyse the data.
+
+The central vertical layout holds a canvas widget for the graphical display of the data.
+
+The right-hand side vertical layout holds controls for the display of a schematic 
+representation of the chosen model and the optimum model input parameters resulting
+from fitting the curve to the Region of Interest (ROI) concentration/time curve.
+
+The appearance of the GUI is controlled by the CSS commands in styleSheet.py
         """
    
 import sys
@@ -330,6 +350,7 @@ class ModelFittingApp(QDialog):
         self.cmbModels.currentIndexChanged.connect(self.displayModelImage)
         self.cmbModels.currentIndexChanged.connect(self.configureGUIForEachModel)
         self.cmbModels.currentIndexChanged.connect(lambda: self.clearOptimisedParamaterList('cmbModels')) 
+        self.cmbModels.currentIndexChanged.connect(self.displayFitModelSaveCSVButtons)
         self.cmbModels.activated.connect(lambda:  self.plot('cmbModels'))
 
         #Create dropdown lists for selection of AIF & VIF
@@ -350,6 +371,7 @@ class ModelFittingApp(QDialog):
         #When an AIF is selected display the Fit Model and Save plot CVS buttons.
         self.cmbAIF.currentIndexChanged.connect(self.displayFitModelSaveCSVButtons)
         self.cmbVIF.currentIndexChanged.connect(self.displayArterialFlowFactorSpinBox)
+        self.cmbVIF.currentIndexChanged.connect(self.displayFitModelSaveCSVButtons)
         #When a VIF is selected plot its concentration data on the graph.
         self.cmbVIF.activated.connect(lambda: self.plot('cmbVIF'))
         self.lblAIF.hide()
@@ -562,16 +584,29 @@ class ModelFittingApp(QDialog):
         #Add horizontal layout to bottom of the vertical layout
         layout.addLayout(horizontalLogoLayout)
         #Display TRISTAN & University of Leeds Logos in labels
-        lblTRISTAN_Logo = QLabel(self)
-        lblUoL_Logo = QLabel(self)
+        self.lblTRISTAN_Logo = QLabel(self)
+        self.lblUoL_Logo = QLabel(self)
+        self.lblTRISTAN_Logo.setAlignment(QtCore.Qt.AlignHCenter)
+        self.lblUoL_Logo.setAlignment(QtCore.Qt.AlignHCenter)
+
         pixmapTRISTAN = QPixmap('logo-tristan.png')
-        lblTRISTAN_Logo.setPixmap(pixmapTRISTAN)
+        pMapWidth = pixmapTRISTAN.width() * 0.5
+        pMapHeight = pixmapTRISTAN.height() * 0.5
+        pixmapTRISTAN = pixmapTRISTAN.scaled(pMapWidth, pMapHeight, 
+                      QtCore.Qt.KeepAspectRatio, QtCore.Qt.SmoothTransformation)
+        self.lblTRISTAN_Logo.setPixmap(pixmapTRISTAN)
+
+
         pixmapUoL = QPixmap('uni-leeds-logo.jpg')
-        lblUoL_Logo.setPixmap(pixmapUoL)
+        pMapWidth = pixmapUoL.width() * 0.75
+        pMapHeight = pixmapUoL.height() * 0.75
+        pixmapUoL = pixmapUoL.scaled(pMapWidth, pMapHeight, 
+                      QtCore.Qt.KeepAspectRatio, QtCore.Qt.SmoothTransformation)
+        self.lblUoL_Logo.setPixmap(pixmapUoL)
         #Add labels displaying logos to the horizontal layout, 
         #Tristan on the LHS, UoL on the RHS
-        horizontalLogoLayout.addWidget(lblTRISTAN_Logo)
-        horizontalLogoLayout.addWidget(lblUoL_Logo)
+        horizontalLogoLayout.addWidget(self.lblTRISTAN_Logo)
+        horizontalLogoLayout.addWidget(self.lblUoL_Logo)
 
     def applyStyleSheet(self):
         """Modifies the appearance of the GUI using CSS instructions"""
@@ -669,7 +704,11 @@ class ModelFittingApp(QDialog):
             
             nextIndex +=1
             self.lblParam1Value.setText(str(parameterValue) + suffix)
-            confidenceStr = '[{}     {}]'.format(lowerLimit, upperLimit)
+            modelName = str(self.cmbModels.currentText())
+            if modelName == 'HF1-2CFM-FixVe':
+                confidenceStr = '[N/A     N/A]'
+            else:
+                confidenceStr = '[{}     {}]'.format(lowerLimit, upperLimit)
             self.lblParam1ConfInt.setText(confidenceStr) 
 
             self.lblParam2Name.setText(self.labelParameter2.text())
@@ -845,16 +884,26 @@ class ModelFittingApp(QDialog):
         """Displays the Fit Model and Save CSV buttons if both a ROI & AIF 
         are selected.  Otherwise hides them."""
         try:
+            #Hide buttons then display them if appropriate
+            self.btnFitModel.hide()
+            self.btnSaveCSV.hide()
             ROI = str(self.cmbROI.currentText())
             AIF = str(self.cmbAIF.currentText())
-            if ROI != 'Please Select' and AIF != 'Please Select':
-                self.btnFitModel.show()
-                self.btnSaveCSV.show()
-                logger.info("Function displayFitModelSaveCSVButtons called. Fit Model button shown when ROI = {} and AIF = {}".format(ROI, AIF))
-            else:
-                self.btnFitModel.hide()
-                self.btnSaveCSV.hide()
-                logger.info("Function displayFitModelSaveCSVButtons called. Fit Model button hidden.")
+            VIF = str(self.cmbVIF.currentText())
+            modelName = str(self.cmbModels.currentText())
+            modelInletType = TracerKineticModels.getModelInletType(modelName)
+            logger.info("Function displayFitModelSaveCSVButtons called. Model is " + modelName)
+            if modelInletType == 'single':
+                if ROI != 'Please Select' and AIF != 'Please Select':
+                    self.btnFitModel.show()
+                    self.btnSaveCSV.show()
+                    logger.info("Function displayFitModelSaveCSVButtons called when ROI = {} and AIF = {}".format(ROI, AIF))
+            elif modelInletType == 'dual':
+                if ROI != 'Please Select' and AIF != 'Please Select' and VIF != 'Please Select' :
+                    self.btnFitModel.show()
+                    self.btnSaveCSV.show()
+                    logger.info("Function displayFitModelSaveCSVButtons called when ROI = {}, AIF = {} & VIF ={}".format(ROI, AIF, VIF)) 
+        
         except Exception as e:
             print('Error in function displayFitModelSaveCSVButtons: ' + str(e))
             logger.error('Error in function displayFitModelSaveCSVButtons: ' + str(e))
