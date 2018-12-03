@@ -44,20 +44,38 @@ How to use.
             TRISTAN.log from the last session will be deleted and a new TRISTAN.log file created.
         12. Clicking the 'Exit' button closes the application.
 
-		Setting up your computer to run TRISTAN Model Fitting.
-		-------------------------------------------------------
-		In addition to the 32 bit version of Python 3, to run the TRISTAN model fitting application
-		the following Python packages must be installed on your computer:
-			numpy
-			pyautogui
-			PyQt5
-			matplotlib
-			scipy
-			FPDF
+Setting up your computer to run TRISTAN Model Fitting.
+-------------------------------------------------------
+	In addition to the 32 bit version of Python 3, to run the TRISTAN model fitting application
+	the following Python packages must be installed on your computer:
+		numpy
+		pyautogui
+		PyQt5
+		matplotlib
+		scipy
+		FPDF
 
-		The 4 Python files that comprise this application must be placed in folder together
-		with the accompanying 7 graphics (jpg & png) files.
+	The 4 Python files that comprise this application must be placed in folder together
+	with the accompanying an images subfolder containing the 7 graphics (jpg & png) files.
 		
+Application Module Structure.
+---------------------------
+The modelFittingGUI.py class module is the start up module in the TRISTAN-Model-Fitting application. 
+It defines the GUI and the logic providing the application's functionality.
+The GUI was built using PyQT5.
+
+The styleSheet.py module contains style instructions using CSS notation for each control/widget.
+
+The Tools.py module contains a library of mathematical functions used to solve the equations in 
+the models in TracerKineticModels.py.
+
+Objects of the following 2 classes are created in modelFittingGUI.py and provide services 
+to this class:
+The PDFWrite.py class module creates and saves a report of a model fitting session in a PDF file.
+
+The TracerkineticModels.py module contains functions that calculate the variation of concentration
+with time according to several tracer kinetic models.   
+
 GUI Structure
 --------------
 The GUI is based on the QDialog class, which is the base class of dialog windows.
@@ -76,23 +94,21 @@ from fitting the curve to the Region of Interest (ROI) concentration/time curve.
 
 The appearance of the GUI is controlled by the CSS commands in styleSheet.py
 
-Application File Structure.
----------------------------
-The modelFittingGUI.py class module is the start up module in the TRISTAN-Model-Fitting application. 
-It defines the GUI and the logic providing the application's functionality.
-The GUI was built using PyQT5.
+Reading Data into the Application.
+----------------------------------
+The function loadDataFile loads the contents of a CSV file containing time and 
+concentration data into a dictionary of lists. The key is the name of the organ 
+or 'time' and the corresponding value is a list of concentrations for that organ
+(or times when the key is 'time').  The header label of each column of data is
+taken as a key.  
+        
+The following validation is applied to the data file:
+    -The CSV file must contain at least 3 columns of data separated by commas.
+    -The first column in the CSV file must contain time data.
+    -The header of the time column must contain the word 'time'.
 
-The styleSheet.py module contains style instructions using CSS notation for each control/widget.
-
-The Tools.py module contains a library of mathematical functions used to solve the equations in 
-the models in TracerKineticModels.py.
-
-Objects of the following 2 classes are created in modelFittingGUI.py and provide services 
-to this class:
-The PDFWrite.py class module creates and saves a report of a model fitting session in a PDF file.
-
-The TracerkineticModels.py module contains functions that calculate the variation of concentration
-with time according to several tracer kinetic models.   
-
+A list of keys is created and displayed in drop down lists to provide a means 
+of selecting the Region of Interest (ROI), Arterial Input Function (AIF) and
+the Venous Input Function (VIF).
 
 

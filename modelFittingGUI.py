@@ -2,7 +2,7 @@
 It defines the GUI and the logic providing the application's functionality. 
 The GUI was built using PyQT5.
 
-How to use.
+How to Use.
 -----------
    The TRISTAN-Model-Fitting application allows the user to analyse organ time/concentration data
    by fitting a model to the Region Of Interest (ROI) time/concentration curve. 
@@ -46,6 +46,24 @@ How to use.
             TRISTAN.log from the last session will be deleted and a new log file started.
         12. Clicking the 'Exit' button closes the application.
 
+Application Module Structure.
+---------------------------
+The modelFittingGUI.py class module is the start up module in the TRISTAN-Model-Fitting application. 
+It defines the GUI and the logic providing the application's functionality.
+The GUI was built using PyQT5.
+
+The styleSheet.py module contains style instructions using CSS notation for each control/widget.
+
+The Tools.py module contains a library of mathematical functions used to solve the equations in 
+the models in TracerKineticModels.py.
+
+Objects of the following 2 classes are created in modelFittingGUI.py and provide services 
+to this class:
+The PDFWrite.py class module creates and saves a report of a model fitting session in a PDF file.
+
+The TracerkineticModels.py module contains functions that calculate the variation of concentration
+with time according to several tracer kinetic models. 
+
 GUI Structure
 --------------
 The GUI is based on the QDialog class, which is the base class of dialog windows.
@@ -63,6 +81,23 @@ representation of the chosen model and the optimum model input parameters result
 from fitting the curve to the Region of Interest (ROI) concentration/time curve.
 
 The appearance of the GUI is controlled by the CSS commands in styleSheet.py
+
+Reading Data into the Application.
+----------------------------------
+The function loadDataFile loads the contents of a CSV file containing time and 
+concentration data into a dictionary of lists. The key is the name of the organ 
+or 'time' and the corresponding value is a list of concentrations for that organ
+(or times when the key is 'time').  The header label of each column of data is
+taken as a key.  
+        
+The following validation is applied to the data file:
+    -The CSV file must contain at least 3 columns of data separated by commas.
+    -The first column in the CSV file must contain time data.
+    -The header of the time column must contain the word 'time'.
+
+A list of keys is created and displayed in drop down lists to provide a means 
+of selecting the Region of Interest (ROI), Arterial Input Function (AIF) and
+the Venous Input Function (VIF).
         """
    
 import sys
@@ -1283,8 +1318,8 @@ class ModelFittingApp(QDialog):
         
         The following validation is applied to the data file:
             -The CSV file must contain at least 3 columns of data separated by commas.
-            -The first row of the CSV file must be a header row with column names.
-            -The first column in the CSV file must contain time data."""
+            -The first column in the CSV file must contain time data.
+            -The header of the time column must contain the word 'time'."""
         global _concentrationData
         global _dataFileName
 
