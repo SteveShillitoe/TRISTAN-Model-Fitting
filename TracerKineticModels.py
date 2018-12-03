@@ -27,10 +27,10 @@ modelDict = {'Select a model':'Select a model',
                    'HF1-2CFM-FixVe':'High Flow 1 Inlet - Two Compartment Filtration Model\n - Fixed Extracellular Vol Fraction'}
 
 #Dictionary linking the model with a graphic file containing its visual representation.
-modelImageDict = {'2-2CFM':'DualInletTwoCompartmentGadoxetateModel.png',
-                   'HF2-2CFM':'HighFlowDualInletTwoCompartmentGadoxetateModel.png',
-                   'HF1-2CFM':'HighFlowSingleInletTwoCompartmentGadoxetateModel.png',
-                   'HF1-2CFM-FixVe':'HighFlowSingleInletTwoCompartmentGadoxetateModel_fixedve.png'}
+modelImageDict = {'2-2CFM':'images\\DualInletTwoCompartmentGadoxetateModel.png',
+                   'HF2-2CFM':'images\\HighFlowDualInletTwoCompartmentGadoxetateModel.png',
+                   'HF1-2CFM':'images\\HighFlowSingleInletTwoCompartmentGadoxetateModel.png',
+                   'HF1-2CFM-FixVe':'images\\HighFlowSingleInletTwoCompartmentGadoxetateModel_fixedve.png'}
 
 #Dictionary linking a model with its input type:single or dual
 modelInletTypeDict = {'2-2CFM':'dual',

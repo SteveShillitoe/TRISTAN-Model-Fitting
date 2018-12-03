@@ -126,6 +126,12 @@ DEFAULT_REPORT_FILE_PATH_NAME = 'report.pdf'
 DEFAULT_PLOT_DATA_FILE_PATH_NAME = 'plot.csv'
 LOG_FILE_NAME = "TRISTAN.log"
 MIN_NUM_COLUMNS_CSV_FILE = 3
+
+#Image Files
+TRISTAN_LOGO = 'images\\TRISTAN LOGO.jpg'
+LARGE_TRISTAN_LOGO ='images\\logo-tristan.png'
+UNI_OF_LEEDS_LOGO ='images\\uni-leeds-logo.jpg'
+
 #Model 1: 2-2CFM
 DEFAULT_VALUE_Ve_2_2CFM = 20.0
 DEFAULT_VALUE_Fp_2_2CFM = 1.0
@@ -193,7 +199,7 @@ class ModelFittingApp(QDialog):
         super(ModelFittingApp, self).__init__(parent)
       
         self.setWindowTitle(WINDOW_TITLE)
-        self.setWindowIcon(QIcon('TRISTAN LOGO.jpg'))
+        self.setWindowIcon(QIcon(TRISTAN_LOGO))
         width, height = self.getScreenResolution()
         self.setGeometry(width*0.05, height*0.05, width*0.9, height*0.9)
         self.setWindowFlags(QtCore.Qt.WindowMinMaxButtonsHint |  QtCore.Qt.WindowCloseButtonHint)
@@ -589,7 +595,7 @@ class ModelFittingApp(QDialog):
         self.lblTRISTAN_Logo.setAlignment(QtCore.Qt.AlignHCenter)
         self.lblUoL_Logo.setAlignment(QtCore.Qt.AlignHCenter)
 
-        pixmapTRISTAN = QPixmap('logo-tristan.png')
+        pixmapTRISTAN = QPixmap(LARGE_TRISTAN_LOGO)
         pMapWidth = pixmapTRISTAN.width() * 0.5
         pMapHeight = pixmapTRISTAN.height() * 0.5
         pixmapTRISTAN = pixmapTRISTAN.scaled(pMapWidth, pMapHeight, 
@@ -597,7 +603,7 @@ class ModelFittingApp(QDialog):
         self.lblTRISTAN_Logo.setPixmap(pixmapTRISTAN)
 
 
-        pixmapUoL = QPixmap('uni-leeds-logo.jpg')
+        pixmapUoL = QPixmap(UNI_OF_LEEDS_LOGO)
         pMapWidth = pixmapUoL.width() * 0.75
         pMapHeight = pixmapUoL.height() * 0.75
         pixmapUoL = pixmapUoL.scaled(pMapWidth, pMapHeight, 
