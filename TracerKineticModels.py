@@ -1,7 +1,7 @@
 """This module contains functions that calculate the variation of concentration
 with time according to several tracer kinetic models.  
 
-The list modelNames holds the names of these models for display in a dropdown list.
+The dictionary modelDict holds the names of these models for display in a dropdown list.
 
 The function modelSelector coordinates the execution of the appropriate function 
 according to the model selected on the GUI.
@@ -55,7 +55,7 @@ def getModelInletType(shortModelName):
     return modelInletTypeDict.get(shortModelName)
 
 def modelSelector(modelName, times, AIFConcentration, parameterArray, VIFConcentration=[]):
-    """Function called in the GUI of the model fitting tool to select the 
+    """Function called in the GUI of the model fitting application to select the 
     function corresponding to each model.
 
     Input Parameters
@@ -112,33 +112,6 @@ def modelSelector(modelName, times, AIFConcentration, parameterArray, VIFConcent
         return HighFlowSingleInletTwoCompartmentGadoxetateModel(timeInputConcs2DArray, Ve, Khe, Kbh)
 
 
-
-    #elif modelName ==  'Extended Tofts':
-    #    parameter3 = parameterArray[2]
-    #    if boolDualInput == True:
-    #        arterialFlowFraction = parameterArray[3]
-    #        return extendedTofts_DualInput(timeInputConcs2DArray, parameter1, parameter2, 
-    #          parameter3, arterialFlowFraction)
-    #    else:
-    #        return extendedTofts_SingleInput(timeInputConcs2DArray, parameter1, parameter2, 
-    #          parameter3)
-    #elif modelName ==  'One Compartment':
-    #    if boolDualInput == True:
-    #        arterialFlowFraction = parameterArray[2]
-    #        return oneCompartment_DualInput(timeInputConcs2DArray, parameter1, parameter2, 
-    #          arterialFlowFraction)
-    #    else:
-    #        return oneCompartment_SingleInput(timeInputConcs2DArray, parameter1, parameter2)
-    #elif modelName ==  'High-Flow Gadoxetate':
-    #    parameter3 = parameterArray[2]
-    #    if boolDualInput == True:
-    #        arterialFlowFraction = parameterArray[3]
-    #        return highFlowGadoxetate_DualInput(timeInputConcs2DArray, parameter1, parameter2, 
-    #          parameter3, arterialFlowFraction)
-    #    else:
-    #        return highFlowGadoxetate_SingleInput(timeInputConcs2DArray, parameter1, parameter2, 
-    #          parameter3)
-
 #Note: The input paramaters for the volume fractions and rate constants in
 # the following model function definitions are listed in the same order as they are 
 # displayed in the GUI from top (first) to bottom (last) 
@@ -151,9 +124,9 @@ def DualInputTwoCompartmentFiltrationModel(xData2DArray, fAFF, Ve, Fp, Khe, Kbh)
             ----------------
                 xData2DArray - time and AIF concentration 1D arrays stacked into one 2D array.
                 Vp - Plasma Volume Fraction (decimal fraction).
-                Fp - 
-                Khe - 
-                Kbe - 
+                Fp - Total Plasma Inflow (mL/min/mL)
+                Khe - Hepatocyte Uptake Rate (mL/min/mL)
+                Kbh - 'Biliary Efflux Rate (mL/min/mL)'
 
             Returns
             -------
@@ -206,8 +179,8 @@ def HighFlowDualInletTwoCompartmentGadoxetateModel(xData2DArray, fAFF, Ve, Khe, 
             ----------------
                 xData2DArray - time and AIF concentration 1D arrays stacked into one 2D array.
                 Vp - Plasma Volume Fraction (decimal fraction).
-                Khe - 
-                Kbe - 
+                Khe - Hepatocyte Uptake Rate (mL/min/mL)
+                Kbh - 'Biliary Efflux Rate (mL/min/mL)' 
 
             Returns
             -------
@@ -250,9 +223,9 @@ def HighFlowSingleInletTwoCompartmentGadoxetateModel(xData2DArray, Ve, Khe, Kbh)
             Input Parameters
             ----------------
                 xData2DArray - time and AIF concentration 1D arrays stacked into one 2D array.
-                Vp - Plasma Volume Fraction (decimal fraction).
-                Khe - 
-                Kbe - 
+                Vp - Plasma Volume Fraction (decimal fraction)
+                Khe - Hepatocyte Uptake Rate (mL/min/mL)
+                Kbh - 'Biliary Efflux Rate (mL/min/mL)'- 
 
             Returns
             -------
@@ -607,44 +580,7 @@ def curveFit(modelName, times, AIFConcs, VIFConcs, concROI, paramArray, constrai
         #            else:
         #                return curve_fit(extendedTofts_SingleInput, timeInputConcs2DArray, concROI, 
         #                                 paramArray)
-        #elif modelName ==  'One Compartment':
-        #    if boolDualInput == True:
-        #            if constrain == True:
-        #                return curve_fit(oneCompartment_DualInput, timeInputConcs2DArray, concROI, 
-        #                          paramArray, bounds=(0,[PARAMETER_UPPER_BOUND_VOL_FRACTION, 
-        #                                     PARAMETER_UPPER_BOUND_VOL_FRACTION,
-        #                                     PARAMETER_UPPER_BOUND_RATE]))
-        #            else:
-        #                return curve_fit(oneCompartment_DualInput, timeInputConcs2DArray, concROI, 
-        #                                 paramArray)
-        #    else:
-        #            if constrain == True:
-        #                return curve_fit(oneCompartment_SingleInput, timeInputConcs2DArray, concROI, 
-        #                          paramArray, bounds=(0,[PARAMETER_UPPER_BOUND_VOL_FRACTION, 
-        #                                     PARAMETER_UPPER_BOUND_VOL_FRACTION,
-        #                                     PARAMETER_UPPER_BOUND_RATE]))
-        #            else:
-        #                return curve_fit(oneCompartment_SingleInput, timeInputConcs2DArray, concROI, 
-        #                                 paramArray)   
-        #elif modelName ==  'High-Flow Gadoxetate':
-        #    if boolDualInput == True:
-        #            if constrain == True:
-        #                return curve_fit(highFlowGadoxetate_DualInput, timeInputConcs2DArray, concROI, 
-        #                          paramArray, bounds=(0,[PARAMETER_UPPER_BOUND_VOL_FRACTION, 
-        #                                     PARAMETER_UPPER_BOUND_VOL_FRACTION,
-        #                                     PARAMETER_UPPER_BOUND_RATE]))
-        #            else:
-        #                return curve_fit(highFlowGadoxetate_DualInput, timeInputConcs2DArray, concROI, 
-        #                                 paramArray)
-        #    else:
-        #            if constrain == True:
-        #                return curve_fit(highFlowGadoxetate_SingleInput, timeInputConcs2DArray, concROI, 
-        #                          paramArray, bounds=(0,[PARAMETER_UPPER_BOUND_VOL_FRACTION, 
-        #                                     PARAMETER_UPPER_BOUND_VOL_FRACTION,
-        #                                     PARAMETER_UPPER_BOUND_RATE]))
-        #            else:
-        #                return curve_fit(highFlowGadoxetate_SingleInput, timeInputConcs2DArray, concROI, 
-        #                                 paramArray)   
+       
 
     except ValueError as ve:
         print ('TracerKineticModels.curveFit Value Error: ' + str(ve))

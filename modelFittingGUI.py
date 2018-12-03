@@ -41,8 +41,9 @@ How to Use.
             the report will contain the 95% confidence limits of the model input parameter values 
             arrived at by curve fitting.
         11. While this application is running, events & function calls with data where appropriate 
-            are logged to a file called TRISTAN.log, stored at the same location as the source code.
-            This file will used as a debugging aid. When a new instance of the application is started, 
+            are logged to a file called TRISTAN.log, stored at the same location as the 
+            source code or executable. This file will used as a debugging aid. 
+            When a new instance of the application is started, 
             TRISTAN.log from the last session will be deleted and a new log file started.
         12. Clicking the 'Exit' button closes the application.
 
