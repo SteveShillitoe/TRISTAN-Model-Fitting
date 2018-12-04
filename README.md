@@ -5,12 +5,12 @@ How to use.
    The TRISTAN-Model-Fitting application allows the user to analyse organ time/concentration data
    by fitting a model to the Region Of Interest (ROI) time/concentration curve. 
    This application provides the following functionality:
-        1. Load a CSV file of concentration/time data.  The first column must contain time data.
-           The remaining columns of data must contain concentration data for individual organs at
-           the time points in the time column. 
-           There must be at least 2 columns of concentration data.  
-           There is no upper limit on the number of columns of concentration data.
-           Each time a CSV file is loaded, the screen is reset to its initial state.
+        1.	Load a CSV file of concentration/time data.  The first column must contain time data 
+			in seconds. The remaining columns of data must contain concentration data in 
+			millimoles (mM) for individual organs at the time points in the time column. 
+			There must be at least 2 columns of concentration data.  
+			There is no upper limit on the number of columns of concentration data.
+			Each time a CSV file is loaded, the screen is reset to its initial state.
         2. Select a Region Of Interest (ROI) and display a plot of its concentration against
             time.
         3. The user can then select a model they would like to fit to the ROI data.  
@@ -110,6 +110,8 @@ The following validation is applied to the data file:
 A list of keys is created and displayed in drop down lists to provide a means 
 of selecting the Region of Interest (ROI), Arterial Input Function (AIF) and
 the Venous Input Function (VIF).
+
+As the time data is read, it is divided by 60 in order to convert it into minutes
 
 Included in this repository is a sample data input file called Sample_Data.csv
 
