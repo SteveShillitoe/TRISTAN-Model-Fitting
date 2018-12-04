@@ -1,6 +1,6 @@
 """This module creates and saves a report of a model fitting session in a PDF file. 
 In addition to a table of model parameter data, this report contains an image
-of the concentration/time plot at the time the createAndSavePDFReport method
+of the concentration/time plot at the time the CreateAndSavePDFReport method
 was called.
 
 This is done using the functionality in the FPDF library.
@@ -9,6 +9,9 @@ This is done using the functionality in the FPDF library.
 import datetime
 from fpdf import FPDF
 import logging
+
+#Constant - Images
+TRISTAN_LOGO = 'images\\TRISTAN LOGO.jpg'
 
 #Create logger
 logger = logging.getLogger(__name__)
@@ -32,7 +35,7 @@ class PDF(FPDF):
         """Prints a header at the top of every page of the report.
         It includes the TRISTAN Logo and the title of the report. """
         # Logo
-        self.image('TRISTAN LOGO.jpg', 10, 8, 33, 10)
+        self.image(TRISTAN_LOGO, 10, 8, 33, 10)
         # Arial bold 15
         self.set_font('Arial', 'BU', 15)
         # Title
@@ -52,7 +55,7 @@ class PDF(FPDF):
         # Current Date & Time - Right justified
         self.cell(0, 10, currentDateTime, 0, 0, 'R')
 
-    def createAndSavePDFReport(self, fileName, dataFileName, modelName, imageName, 
+    def CreateAndSavePDFReport(self, fileName, dataFileName, modelName, imageName, 
                                parameterDictionary):
         """Creates and saves a copy of a curve fitting report.
         It includes the name of the file containing the data to be plotted and the name
@@ -80,7 +83,7 @@ class PDF(FPDF):
         of the predicted parameter values.  The report also displays the time/concentration plots.
         """
         try:
-            logger.info('Function PDFWriter.createAndSavePDFReport called with filename={}, \
+            logger.info('Function PDFWriter.CreateAndSavePDFReport called with filename={}, \
             dataFileName={}, modelName={} & imageName={}.' \
              .format(fileName, dataFileName, modelName, imageName))
             
@@ -121,7 +124,7 @@ class PDF(FPDF):
             #Save report PDF
             self.output(fileName, 'F')  
         except Exception as e:
-            print('PDFWriter.createAndSavePDFReport: ' + str(e)) 
-            logger.error('PDFWriter.createAndSavePDFReport: ' + str(e)) 
+            print('PDFWriter.CreateAndSavePDFReport: ' + str(e)) 
+            logger.error('PDFWriter.CreateAndSavePDFReport: ' + str(e)) 
             self.output(fileName, 'F')  #Save PDF
 

@@ -46,17 +46,17 @@ How to use.
 
 Setting up your computer to run TRISTAN Model Fitting.
 -------------------------------------------------------
-	In addition to the 32 bit version of Python 3, to run the TRISTAN model fitting application
-	the following Python packages must be installed on your computer:
-		numpy
-		pyautogui
-		PyQt5
-		matplotlib
-		scipy
-		FPDF
+In addition to the 32 bit version of Python 3, to run the TRISTAN model fitting application
+the following Python packages must be installed on your computer:
+	numpy
+	pyautogui
+	PyQt5
+	matplotlib
+	scipy
+	FPDF
 
-	The 4 Python files that comprise this application must be placed in folder together
-	with the accompanying an images subfolder containing the 7 graphics (jpg & png) files.
+The 4 Python files that comprise this application must be placed in folder together
+with the accompanying an images subfolder containing the 7 graphics (jpg & png) files.
 		
 Application Module Structure.
 ---------------------------
@@ -110,5 +110,7 @@ The following validation is applied to the data file:
 A list of keys is created and displayed in drop down lists to provide a means 
 of selecting the Region of Interest (ROI), Arterial Input Function (AIF) and
 the Venous Input Function (VIF).
+
+Included in this repository is a sample data input file called Sample_Data.csv
 
 

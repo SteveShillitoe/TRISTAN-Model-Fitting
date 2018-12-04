@@ -3,10 +3,10 @@ with time according to several tracer kinetic models.
 
 The dictionary modelDict holds the names of these models for display in a dropdown list.
 
-The function modelSelector coordinates the execution of the appropriate function 
+The function ModelSelector coordinates the execution of the appropriate function 
 according to the model selected on the GUI.
 
-The function, curveFit calls the curve_fit function imported from scipy.optimize 
+The function, CurveFit calls the curve_fit function imported from scipy.optimize 
 to fit any of the models in this module to actual concentration/time data 
 using non-linear least squares.  
 """
@@ -42,19 +42,24 @@ modelInletTypeDict = {'2-2CFM':'dual',
 PARAMETER_UPPER_BOUND_VOL_FRACTION = 1.0
 PARAMETER_UPPER_BOUND_RATE = np.inf
 
-def getListModels():
+def GetListModels():
+
     return list(modelDict.keys())
 
-def getLongModelName(shortModelName):
+def GetLongModelName(shortModelName):
+    """Returns the full name of a model whose short name is shortModelName."""
     return modelDict.get(shortModelName)
 
-def getModelImageName(shortModelName):
+def GetModelImageName(shortModelName):
+    """Returns the file path and name of the image that represents schematically
+    the model whose short name is shortModelName."""
     return modelImageDict.get(shortModelName)
 
-def getModelInletType(shortModelName):
+def GetModelInletType(shortModelName):
+    """Returns the inlet type (single or dual) of the model whose short name is shortModelName."""
     return modelInletTypeDict.get(shortModelName)
 
-def modelSelector(modelName, times, AIFConcentration, parameterArray, VIFConcentration=[]):
+def ModelSelector(modelName, times, AIFConcentration, parameterArray, VIFConcentration=[]):
     """Function called in the GUI of the model fitting application to select the 
     function corresponding to each model.
 
@@ -77,7 +82,7 @@ def modelSelector(modelName, times, AIFConcentration, parameterArray, VIFConcent
             single(=False) AIF only or dual(=True) AIF & VIR.
 
         VIFConcentration - Optional NumPy Array of concentration values stored as floats. 
-            Created from a Python list.  These concentrations are the Venal
+            Created from a Python list.  These concentrations are the Venous
             Input Function input to the model.
 
         Returns
@@ -85,7 +90,7 @@ def modelSelector(modelName, times, AIFConcentration, parameterArray, VIFConcent
         Returns the return value from the selected model function that is a list of
         concentrations calculated at the times in the array time.
         """
-    logger.info("In TracerKineticModels.modelSelector. Called with model {} and parameters {}".format(modelName, parameterArray))
+    logger.info("In TracerKineticModels.ModelSelector. Called with model {} and parameters {}".format(modelName, parameterArray))
 
     if modelName == '2-2CFM':
         timeInputConcs2DArray = np.column_stack((times, AIFConcentration, VIFConcentration))
@@ -110,7 +115,6 @@ def modelSelector(modelName, times, AIFConcentration, parameterArray, VIFConcent
         Khe = parameterArray[1]
         Kbh = parameterArray[2]
         return HighFlowSingleInletTwoCompartmentGadoxetateModel(timeInputConcs2DArray, Ve, Khe, Kbh)
-
 
 #Note: The input paramaters for the volume fractions and rate constants in
 # the following model function definitions are listed in the same order as they are 
@@ -143,7 +147,7 @@ def DualInputTwoCompartmentFiltrationModel(xData2DArray, fAFF, Ve, Fp, Khe, Kbh)
         AIFconcentrations = xData2DArray[:,1]
         VIFconcentrations = xData2DArray[:,2]
     
-        #Calculate Venal Flow Factor, fVFF
+        #Calculate Venous Flow Factor, fVFF
         fVFF = 1 - fAFF
 
         #Determine an overall concentration
@@ -199,7 +203,7 @@ def HighFlowDualInletTwoCompartmentGadoxetateModel(xData2DArray, fAFF, Ve, Khe, 
         AIFconcentrations = xData2DArray[:,1]
         VIFconcentrations = xData2DArray[:,2]
 
-        #Calculate Venal Flow Factor, fVFF
+        #Calculate Venous Flow Factor, fVFF
         fVFF = 1 - fAFF
 
         Th = (1-Ve)/Kbh
@@ -256,10 +260,8 @@ def HighFlowSingleInletTwoCompartmentGadoxetateModel(xData2DArray, Ve, Khe, Kbh)
     except Exception as e:
             print('Error - TracerKineticModels.TracerKineticModels.HighFlowSingleInletTwoCompartmentGadoxetateModel: ' + str(e))
             logger.error('TracerKineticModels.HighFlowSingleInletTwoCompartmentGadoxetateModel:' + str(e) )
- 
 
-
-def extendedTofts_SingleInput(xData2DArray, Vp, Ve, Ktrans):
+def ExtendedTofts_SingleInput(xData2DArray, Vp, Ve, Ktrans):
     """This function contains the algorithm for calculating how concentration varies with time
         using the Extended Tofts model when it takes just an arterial input.
         
@@ -294,7 +296,7 @@ def extendedTofts_SingleInput(xData2DArray, Vp, Ve, Ktrans):
         print('TracerKineticModels.extendedTofts_SingleInput: ' + str(e))
         logger.error('Runtime error in function TracerKineticModels.extendedTofts_SingleInput:' + str(e) )
 
-def extendedTofts_DualInput(xData2DArray, Vp, Ve, Ktrans, fAFF):
+def ExtendedTofts_DualInput(xData2DArray, Vp, Ve, Ktrans, fAFF):
     """This function contains the algorithm for calculating how concentration varies with time
         using the Extended Tofts model when it takes both an arterial and a venal input.
         
@@ -323,7 +325,7 @@ def extendedTofts_DualInput(xData2DArray, Vp, Ve, Ktrans, fAFF):
            
         #Calculate Intracellular transit time, Tc
         Tc = Ve/Ktrans
-        #Calculate Venal Flow Factor
+        #Calculate Venous Flow Factor
         fVFF = 1 - fAFF
         
         listConcentrationsFromModel = []
@@ -335,7 +337,7 @@ def extendedTofts_DualInput(xData2DArray, Vp, Ve, Ktrans, fAFF):
         print('TracerKineticModels.extendedTofts_DualInput: ' + str(e))
         logger.error('Runtime error in function TracerKineticModels.extendedTofts_DualInput:' + str(e) )
             
-def oneCompartment_SingleInput(xData2DArray, Vp, Fp):
+def OneCompartment_SingleInput(xData2DArray, Vp, Fp):
     """This function contains the algorithm for calculating how concentration varies with time
         using the One Compartment model when it takes just an arterial input.
         
@@ -369,7 +371,7 @@ def oneCompartment_SingleInput(xData2DArray, Vp, Fp):
         print('TracerKineticModels.oneCompartment_SingleInput: ' + str(e))
         logger.error('Runtime error in function TracerKineticModels.oneCompartment_SingleInput:' + str(e) )
 
-def oneCompartment_DualInput(xData2DArray, Vp, Fp, fAFF):
+def OneCompartment_DualInput(xData2DArray, Vp, Fp, fAFF):
     """This function contains the algorithm for calculating how concentration varies with time
         using the One Compartment model when it takes both an arterial and a venal input.
         
@@ -408,7 +410,7 @@ def oneCompartment_DualInput(xData2DArray, Vp, Fp, fAFF):
         print('TracerKineticModels.oneCompartment_DualInput: ' + str(e))
         logger.error('Runtime error in function TracerKineticModels.oneCompartment_DualInput:' + str(e) )
 
-def highFlowGadoxetate_SingleInput(xData2DArray, Ve, Kce, Kbc):
+def HighFlowGadoxetate_SingleInput(xData2DArray, Ve, Kce, Kbc):
     """This function contains the algorithm for calculating how concentration varies with time
         using the High Flow Gadoxetate model when it takes just an arterial input.
         
@@ -446,7 +448,7 @@ def highFlowGadoxetate_SingleInput(xData2DArray, Ve, Kce, Kbc):
         logger.error('Runtime error in function TracerKineticModels.highFlowGadoxetate_SingleInput:' + str(e) )
     
 
-def highFlowGadoxetate_DualInput(xData2DArray, Ve, Kce, Kbc, fAFF):
+def HighFlowGadoxetate_DualInput(xData2DArray, Ve, Kce, Kbc, fAFF):
     """This function contains the algorithm for calculating how concentration varies with time
         using the High Flow Gadoxetate model when it takes both an arterial and a venal input.
         
@@ -476,7 +478,7 @@ def highFlowGadoxetate_DualInput(xData2DArray, Ve, Kce, Kbc, fAFF):
         
         #Calculate Intracellular transit time, Tc
         Tc = (1-Ve)/Kbc
-        #Calculate Venal Flow Factor
+        #Calculate Venous Flow Factor
         fVFF = 1 - fAFF
         listConcentrationsFromModel = []
 
@@ -489,13 +491,15 @@ def highFlowGadoxetate_DualInput(xData2DArray, Ve, Kce, Kbc, fAFF):
         logger.error('Runtime error in function TracerKineticModels.highFlowGadoxetate_DualInput:' + str(e) )
     
 
-def curveFit(modelName, times, AIFConcs, VIFConcs, concROI, paramArray, constrain):
+def CurveFit(modelName, times, AIFConcs, VIFConcs, concROI, paramArray, constrain):
     """This function calls the curve_fit function imported from scipy.optimize 
-    to fit a model in this module to actual Region of Interest (ROI)
-    concentration/time data using non-linear least squares.  
-    During curve fitting, it allows parameter
-    values to be constrained by imposing an upper and lower limit on their values.
-    
+    to fit the time/conconcentration data calculated by a model in this module 
+    to actual Region of Interest (ROI) concentration/time data using   
+    non-linear least squares. 
+
+    In the function calls to curve_fit, bounds are set on the input parameters to 
+    avoid division by zero errors.
+
     Input Parameters
     ----------------
         modelName - Name of the model taken from the selected value in the  
@@ -510,7 +514,7 @@ def curveFit(modelName, times, AIFConcs, VIFConcs, concROI, paramArray, constrai
             Input Function input to the model.
 
         VIFConcs - NumPy Array of concentration values stored as floats. 
-            Created from a Python list.  These concentrations are the Venal
+            Created from a Python list.  These concentrations are the Venous
             Input Function input to the model.
 
         concROI - NumPy Array of concentration values stored as floats. 
@@ -533,9 +537,9 @@ def curveFit(modelName, times, AIFConcs, VIFConcs, concROI, paramArray, constrai
             Used to calculate 95% confidence limits.
     """
     try:
-        logger.info('Function TracerKineticModels.curveFit called with model={}, parameters = {} and constrain={}'.format(modelName,paramArray, constrain) )
+        logger.info('Function TracerKineticModels.CurveFit called with model={}, parameters = {} and constrain={}'.format(modelName,paramArray, constrain) )
         
-        if getModelInletType(modelName) == 'dual':
+        if GetModelInletType(modelName) == 'dual':
             timeInputConcs2DArray = np.column_stack((times, AIFConcs, VIFConcs))
         else:
             timeInputConcs2DArray = np.column_stack((times, AIFConcs))
@@ -557,6 +561,7 @@ def curveFit(modelName, times, AIFConcs, VIFConcs, concROI, paramArray, constrai
                              bounds=([0.0001,0.0,0.0001], [0.9999, 100.0, 100.0]))
         # Ve, Khe, Kbh
         elif modelName == 'HF1-2CFM-FixVe':
+            #Ve is fixed at 0.23 by constaining it in the range 0.22999<Ve<0.23001
             return curve_fit(HighFlowSingleInletTwoCompartmentGadoxetateModel, 
                              timeInputConcs2DArray, concROI, paramArray,
                              bounds=([0.22999,0.0,0.0001], [0.23001, 100.0, 100.0]))
@@ -583,11 +588,11 @@ def curveFit(modelName, times, AIFConcs, VIFConcs, concROI, paramArray, constrai
        
 
     except ValueError as ve:
-        print ('TracerKineticModels.curveFit Value Error: ' + str(ve))
+        print ('TracerKineticModels.CurveFit Value Error: ' + str(ve))
     except RuntimeError as re:
-        print('TracerKineticModels.curveFit runtime error: ' + str(re))
+        print('TracerKineticModels.CurveFit runtime error: ' + str(re))
     except Exception as e:
-        print('TracerKineticModels.curveFit: ' + str(e))        
+        print('TracerKineticModels.CurveFit: ' + str(e))        
 ##  For more information on 
 #      scipy.optimize.curve_fit(f, xdata, ydata, p0=None, sigma=None, absolute_sigma=False,
 #      check_finite=True, bounds=(-inf, inf), method=None, jac=None, **kwargs)[source]    

@@ -85,7 +85,7 @@ The appearance of the GUI is controlled by the CSS commands in styleSheet.py
 
 Reading Data into the Application.
 ----------------------------------
-The function loadDataFile loads the contents of a CSV file containing time and 
+The function LoadDataFile loads the contents of a CSV file containing time and 
 concentration data into a dictionary of lists. The key is the name of the organ 
 or 'time' and the corresponding value is a list of concentrations for that organ
 (or times when the key is 'time').  The header label of each column of data is
@@ -134,7 +134,7 @@ class NavigationToolbar(NavigationToolbar):
 import TracerKineticModels
 
 #Import CSS file
-import styleSheet
+import StyleSheet
 
 #Import PDF report writer class
 from PDFWriter import PDF
@@ -186,11 +186,11 @@ DEFAULT_VALUE_Kce = 0.025
 DEFAULT_VALUE_Kbc = 0.003
 DEFAULT_VALUE_Fa = 17.0 #Arterial Flow Fraction
 
-LABEL_PARAMETER_Vp = 'Plasma Volume Fraction,\n Vp'
-LABEL_PARAMETER_Vh = 'Hepatocyte Volume Fraction,\n Vh'
-LABEL_PARAMETER_Vb = 'Intrahepatic Bile Duct Volume Fraction,\n Vb'
+LABEL_PARAMETER_Vp = 'Plasma Volume Fraction,\n Vp (%)'
+LABEL_PARAMETER_Vh = 'Hepatocyte Volume Fraction,\n Vh (%)'
+LABEL_PARAMETER_Vb = 'Intrahepatic Bile Duct Volume Fraction,\n Vb (%)'
 LABEL_PARAMETER_Kce = 'Hepatocellular Uptake Rate, \n Kce (mL/100mL/min)'
-LABEL_PARAMETER_Ve = 'Extracellular Vol Fraction,\n Ve'
+LABEL_PARAMETER_Ve = 'Extracellular Vol Fraction,\n Ve (%)'
 LABEL_PARAMETER_Fp = 'Total Plasma Inflow, \n Fp (mL/min/mL)'
 LABEL_PARAMETER_Ktrans = 'Transfer Rate Constant, \n Ktrans (1/min)'
 LABEL_PARAMETER_Kbh = 'Biliary Efflux Rate, \n Kbh (mL/min/mL)'
@@ -236,29 +236,29 @@ class ModelFittingApp(QDialog):
       
         self.setWindowTitle(WINDOW_TITLE)
         self.setWindowIcon(QIcon(TRISTAN_LOGO))
-        width, height = self.getScreenResolution()
+        width, height = self.GetScreenResolution()
         self.setGeometry(width*0.05, height*0.05, width*0.9, height*0.9)
         self.setWindowFlags(QtCore.Qt.WindowMinMaxButtonsHint |  QtCore.Qt.WindowCloseButtonHint)
         
-        self.applyStyleSheet()
+        self.ApplyStyleSheet()
        
         #Setup the layouts, the containers for widgets
-        verticalLayoutLeft, verticalLayoutMiddle, verticalLayoutRight = self.setupLayouts()
+        verticalLayoutLeft, verticalLayoutMiddle, verticalLayoutRight = self.SetUpLayouts()
         
         #Add widgets to the left-hand side vertical layout
-        self.setupLeftVerticalLayout(verticalLayoutLeft)
+        self.SetUpLeftVerticalLayout(verticalLayoutLeft)
 
         #Set up the graph to plot concentration data on
         # the middle vertical layout
-        self.setupPlotArea(verticalLayoutMiddle)
+        self.SetUpPlotArea(verticalLayoutMiddle)
         
         #Create a group box and place it in the right-handside vertical layout
         #Also add a label to hold the TRISTAN Logo
-        self.setupRightVerticalLayout(verticalLayoutRight)
+        self.SetUpRightVerticalLayout(verticalLayoutRight)
 
         logger.info("GUI created successfully.")
 
-    def setupLayouts(self):
+    def SetUpLayouts(self):
         """Places a horizontal layout on the window
            and places 3 vertical layouts on the horizontal layout.
            
@@ -282,7 +282,7 @@ class ModelFittingApp(QDialog):
         horizontalLayout.addLayout(verticalLayoutRight,2)
         return verticalLayoutLeft, verticalLayoutMiddle, verticalLayoutRight
 
-    def setupLeftVerticalLayout(self, layout):
+    def SetUpLeftVerticalLayout(self, layout):
         """
         Creates widgets and places them on the left-handside vertical layout. 
         """
@@ -292,8 +292,8 @@ class ModelFittingApp(QDialog):
         self.btnLoadDisplayData.setShortcut("Ctrl+L")
         self.btnLoadDisplayData.setAutoDefault(False)
         self.btnLoadDisplayData.resize(self.btnLoadDisplayData.minimumSizeHint())
-        #Method loadDataFile is executed in the clicked event of this button
-        self.btnLoadDisplayData.clicked.connect(self.loadDataFile)
+        #Method LoadDataFile is executed in the clicked event of this button
+        self.btnLoadDisplayData.clicked.connect(self.LoadDataFile)
 
         #Create label to display the name of the loaded data file
         self.lblDataFileName = QLabel('')
@@ -327,20 +327,20 @@ class ModelFittingApp(QDialog):
         #Create a group box to group together widgets associated with
         #the model selected. 
         #It is placed in the left-handside vertical layout
-        self.setupModelGroupBox(layout, verticalSpacer)
+        self.SetUpModelGroupBox(layout, verticalSpacer)
         
         self.btnSaveReport = QPushButton('Save Report in PDF Format')
         self.btnSaveReport.hide()
         self.btnSaveReport.setToolTip('Insert an image of the graph opposite and associated data in a PDF file')
         layout.addWidget(self.btnSaveReport, QtCore.Qt.AlignTop)
-        self.btnSaveReport.clicked.connect(self.createPDFReport)
+        self.btnSaveReport.clicked.connect(self.CreatePDFReport)
         
         self.btnExit = QPushButton('Exit')
         layout.addWidget(self.btnExit)
-        self.btnExit.clicked.connect(self.exitApp)
+        self.btnExit.clicked.connect(self.ExitApp)
         layout.addStretch()
 
-    def setupModelGroupBox(self, layout, verticalSpacer):
+    def SetUpModelGroupBox(self, layout, verticalSpacer):
         """Creates a group box to hold widgets associated with the 
         selection of a model and for inputing/displaying that model's
         parameter data."""
@@ -387,13 +387,13 @@ class ModelFittingApp(QDialog):
         self.cmbModels.setToolTip('Select a model to fit to the data')
         #Populate the combo box with names of models in the modelNames list
         #self.cmbModels.addItems(TracerKineticModels.modelNames)
-        self.cmbModels.addItems(TracerKineticModels.getListModels())
+        self.cmbModels.addItems(TracerKineticModels.GetListModels())
         self.cmbModels.setCurrentIndex(0) #Display "Select a Model"
-        self.cmbModels.currentIndexChanged.connect(self.displayModelImage)
-        self.cmbModels.currentIndexChanged.connect(self.configureGUIForEachModel)
-        self.cmbModels.currentIndexChanged.connect(lambda: self.clearOptimisedParamaterList('cmbModels')) 
-        self.cmbModels.currentIndexChanged.connect(self.displayFitModelSaveCSVButtons)
-        self.cmbModels.activated.connect(lambda:  self.plot('cmbModels'))
+        self.cmbModels.currentIndexChanged.connect(self.DisplayModelImage)
+        self.cmbModels.currentIndexChanged.connect(self.ConfigureGUIForEachModel)
+        self.cmbModels.currentIndexChanged.connect(lambda: self.ClearOptimisedParamaterList('cmbModels')) 
+        self.cmbModels.currentIndexChanged.connect(self.DisplayFitModelSaveCSVButtons)
+        self.cmbModels.activated.connect(lambda:  self.PlotConcentrations('cmbModels'))
 
         #Create dropdown lists for selection of AIF & VIF
         self.lblAIF = QLabel('Arterial Input Function:')
@@ -404,18 +404,18 @@ class ModelFittingApp(QDialog):
        
         self.cmbVIF.setToolTip('Select Venous Input Function')
         #When a ROI is selected plot its concentration data on the graph.
-        self.cmbROI.activated.connect(lambda:  self.plot('cmbROI'))
+        self.cmbROI.activated.connect(lambda:  self.PlotConcentrations('cmbROI'))
         #When a ROI is selected, then make the Model groupbox and the widgets
         #contains visible.
-        self.cmbROI.currentIndexChanged.connect(self.displayModelFittingGroupBox)
+        self.cmbROI.currentIndexChanged.connect(self.DisplayModelFittingGroupBox)
         #When an AIF is selected plot its concentration data on the graph.
-        self.cmbAIF.activated.connect(lambda: self.plot('cmbAIF'))
+        self.cmbAIF.activated.connect(lambda: self.PlotConcentrations('cmbAIF'))
         #When an AIF is selected display the Fit Model and Save plot CVS buttons.
-        self.cmbAIF.currentIndexChanged.connect(self.displayFitModelSaveCSVButtons)
-        self.cmbVIF.currentIndexChanged.connect(self.displayArterialFlowFactorSpinBox)
-        self.cmbVIF.currentIndexChanged.connect(self.displayFitModelSaveCSVButtons)
+        self.cmbAIF.currentIndexChanged.connect(self.DisplayFitModelSaveCSVButtons)
+        self.cmbVIF.currentIndexChanged.connect(self.DisplayArterialFlowFactorSpinBox)
+        self.cmbVIF.currentIndexChanged.connect(self.DisplayFitModelSaveCSVButtons)
         #When a VIF is selected plot its concentration data on the graph.
-        self.cmbVIF.activated.connect(lambda: self.plot('cmbVIF'))
+        self.cmbVIF.activated.connect(lambda: self.PlotConcentrations('cmbVIF'))
         self.lblAIF.hide()
         self.cmbAIF.hide()
         self.lblVIF.hide()
@@ -440,16 +440,16 @@ class ModelFittingApp(QDialog):
         self.btnReset = QPushButton('Reset')
         self.btnReset.setToolTip('Reset parameters to their default values.')
         self.btnReset.hide()
-        self.btnReset.clicked.connect(self.initialiseParameterSpinBoxes)
+        self.btnReset.clicked.connect(self.InitialiseParameterSpinBoxes)
         #If parameters reset to their default values, replot the concentration and model data
-        self.btnReset.clicked.connect(lambda: self.plot('Reset Button'))
+        self.btnReset.clicked.connect(lambda: self.PlotConcentrations('Reset Button'))
         modelHorizontalLayoutReset.addWidget(self.cboxDelay)
         modelHorizontalLayoutReset.addWidget(self.cboxConstaint)
         modelHorizontalLayoutReset.addWidget(self.btnReset)
         
         #Create spinboxes and their labels
-        #Label text set in function configureGUIForEachModel when the model is selected
-        self.lblArterialFlowFactor = QLabel("Arterial Flow Fraction, fa:") 
+        #Label text set in function ConfigureGUIForEachModel when the model is selected
+        self.lblArterialFlowFactor = QLabel("Arterial Flow Fraction, \n fa (%):") 
         self.lblArterialFlowFactor.hide()
         self.labelParameter1 = QLabel("")
         self.labelParameter2 = QLabel("")
@@ -479,18 +479,18 @@ class ModelFittingApp(QDialog):
         self.spinBoxParameter4.hide()
 
         #If a parameter value is changed, replot the concentration and model data
-        self.spinBoxArterialFlowFactor.valueChanged.connect(lambda: self.plot('spinBoxArterialFlowFactor')) 
-        self.spinBoxParameter1.valueChanged.connect(lambda: self.plot('spinBoxParameter1')) 
-        self.spinBoxParameter2.valueChanged.connect(lambda: self.plot('spinBoxParameter2')) 
-        self.spinBoxParameter3.valueChanged.connect(lambda: self.plot('spinBoxParameter3'))
-        self.spinBoxParameter4.valueChanged.connect(lambda: self.plot('spinBoxParameter4'))
+        self.spinBoxArterialFlowFactor.valueChanged.connect(lambda: self.PlotConcentrations('spinBoxArterialFlowFactor')) 
+        self.spinBoxParameter1.valueChanged.connect(lambda: self.PlotConcentrations('spinBoxParameter1')) 
+        self.spinBoxParameter2.valueChanged.connect(lambda: self.PlotConcentrations('spinBoxParameter2')) 
+        self.spinBoxParameter3.valueChanged.connect(lambda: self.PlotConcentrations('spinBoxParameter3'))
+        self.spinBoxParameter4.valueChanged.connect(lambda: self.PlotConcentrations('spinBoxParameter4'))
         #Set a global boolean variable, _boolCurveFittingDone to false to indicate that 
         #the value of a model parameter has been changed manually rather than by curve fitting
-        self.spinBoxArterialFlowFactor.valueChanged.connect(self.setCurveFittingNotDoneBoolean) 
-        self.spinBoxParameter1.valueChanged.connect(self.setCurveFittingNotDoneBoolean) 
-        self.spinBoxParameter2.valueChanged.connect(self.setCurveFittingNotDoneBoolean) 
-        self.spinBoxParameter3.valueChanged.connect(self.setCurveFittingNotDoneBoolean)
-        self.spinBoxParameter4.valueChanged.connect(self.setCurveFittingNotDoneBoolean)
+        self.spinBoxArterialFlowFactor.valueChanged.connect(self.SetCurveFittingNotDoneBoolean) 
+        self.spinBoxParameter1.valueChanged.connect(self.SetCurveFittingNotDoneBoolean) 
+        self.spinBoxParameter2.valueChanged.connect(self.SetCurveFittingNotDoneBoolean) 
+        self.spinBoxParameter3.valueChanged.connect(self.SetCurveFittingNotDoneBoolean)
+        self.spinBoxParameter4.valueChanged.connect(self.SetCurveFittingNotDoneBoolean)
         
         #Place spin boxes and their labels in horizontal layouts
         modelHorizontalLayoutArterialFlowFactor.addWidget(self.lblArterialFlowFactor)
@@ -508,15 +508,15 @@ class ModelFittingApp(QDialog):
         self.btnFitModel.setToolTip('Use non-linear least squares to fit the selected model to the data')
         self.btnFitModel.hide()
         modelHorizontalLayout8.addWidget(self.btnFitModel)
-        self.btnFitModel.clicked.connect(self.runCurveFit)
+        self.btnFitModel.clicked.connect(self.RunCurveFit)
         
         self.btnSaveCSV = QPushButton('Save plot data to CSV file')
         self.btnSaveCSV.setToolTip('Save the data plotted on the graph to a CSV file')
         self.btnSaveCSV.hide()
         modelHorizontalLayout9.addWidget(self.btnSaveCSV)
-        self.btnSaveCSV.clicked.connect(self.saveCSVFile)
+        self.btnSaveCSV.clicked.connect(self.SaveCSVFile)
 
-    def displayModelFittingGroupBox(self):
+    def DisplayModelFittingGroupBox(self):
         """Shows the model fitting group box if a ROI is selected. 
         Otherwise hides the model fitting group box. """
         try:
@@ -524,18 +524,18 @@ class ModelFittingApp(QDialog):
             if ROI != 'Please Select':
                 self.groupBoxModel.show()
                 self.btnSaveReport.show()
-                logger.info("Function displayModelFittingGroupBox called. Model group box and Save Report button shown when ROI = {}".format(ROI))
+                logger.info("Function DisplayModelFittingGroupBox called. Model group box and Save Report button shown when ROI = {}".format(ROI))
             else:
                 self.groupBoxModel.hide()
                 self.cmbAIF.setCurrentIndex(0)
                 self.cmbModels.setCurrentIndex(0)
                 self.btnSaveReport.hide()
-                logger.info("Function displayModelFittingGroupBox called. Model group box and Save Report button hidden.")
+                logger.info("Function DisplayModelFittingGroupBox called. Model group box and Save Report button hidden.")
         except Exception as e:
-            print('Error in function displayModelFittingGroupBox: ' + str(e)) 
-            logger.error('Error in function displayModelFittingGroupBox: ' + str(e))
+            print('Error in function DisplayModelFittingGroupBox: ' + str(e)) 
+            logger.error('Error in function DisplayModelFittingGroupBox: ' + str(e))
 
-    def setupPlotArea(self, layout):
+    def SetUpPlotArea(self, layout):
         """Adds widgets for the display of the graph onto the middle vertical layout."""
         self.figure = plt.figure(figsize=(5, 4), dpi=100)
         # this is the Canvas Widget that displays the `figure`
@@ -548,7 +548,7 @@ class ModelFittingApp(QDialog):
         layout.addWidget(self.toolbar)
         layout.addWidget(self.canvas)
 
-    def setupRightVerticalLayout(self, layout):
+    def SetUpRightVerticalLayout(self, layout):
         """Creates and adds widgets to the right hand side vertical layout for the 
         display of the results of curve fitting. """
 
@@ -600,7 +600,6 @@ class ModelFittingApp(QDialog):
         self.lblParam4ConfInt = QLabel("")
         self.lblParam4ConfInt.setAlignment(QtCore.Qt.AlignCenter)
         
-        
         gridLayoutResults.addWidget(self.lblHeaderLeft, 1, 1)
         gridLayoutResults.addWidget(self.lblHeaderMiddle, 1, 3)
         gridLayoutResults.addWidget(self.lblHeaderRight, 1, 5)
@@ -619,7 +618,6 @@ class ModelFittingApp(QDialog):
         gridLayoutResults.addWidget(self.lblParam4Name, 6, 1, QtCore.Qt.AlignTop)
         gridLayoutResults.addWidget(self.lblParam4Value, 6, 3, QtCore.Qt.AlignTop)
         gridLayoutResults.addWidget(self.lblParam4ConfInt, 6, 5, QtCore.Qt.AlignTop)
-        
 
         #Create horizontal layout box to hold TRISTAN & University of Leeds Logos
         horizontalLogoLayout = QHBoxLayout()
@@ -650,25 +648,25 @@ class ModelFittingApp(QDialog):
         horizontalLogoLayout.addWidget(self.lblTRISTAN_Logo)
         horizontalLogoLayout.addWidget(self.lblUoL_Logo)
 
-    def applyStyleSheet(self):
+    def ApplyStyleSheet(self):
         """Modifies the appearance of the GUI using CSS instructions"""
         try:
-            self.setStyleSheet(styleSheet.TRISTAN_GREY)
+            self.setStyleSheet(StyleSheet.TRISTAN_GREY)
         except Exception as e:
-            print('Error in function applyStyleSheet: ' + str(e))
-            logger.error('Error in function applyStyleSheet: ' + str(e))
+            print('Error in function ApplyStyleSheet: ' + str(e))
+            logger.error('Error in function ApplyStyleSheet: ' + str(e))
 
-    def displayModelImage(self):
+    def DisplayModelImage(self):
         """This method takes the name of the model from the drop-down list 
             on the left-hand side of the GUI and displays the corresponding
             image depicting the model and the full name of the model at the
             top of the right-hand side of the GUI."""
         try:
-            logger.info('Function displayModelImage called.')
+            logger.info('Function DisplayModelImage called.')
             shortModelName = str(self.cmbModels.currentText())
         
             if shortModelName != 'Select a model':
-                modelImageName = TracerKineticModels.getModelImageName(shortModelName)
+                modelImageName = TracerKineticModels.GetModelImageName(shortModelName)
                 pixmapModelImage = QPixmap(modelImageName)
                 #Increase the size of the model image
                 pMapWidth = pixmapModelImage.width() * 1.35
@@ -677,31 +675,31 @@ class ModelFittingApp(QDialog):
                       QtCore.Qt.KeepAspectRatio, QtCore.Qt.SmoothTransformation)
                 self.lblModelImage.setPixmap(pixmapModelImage)
 
-                longModelName = TracerKineticModels.getLongModelName(shortModelName)
+                longModelName = TracerKineticModels.GetLongModelName(shortModelName)
                 self.lblModelName.setText(longModelName)
             else:
                 self.lblModelImage.clear()
                 self.lblModelName.setText('')
 
         except Exception as e:
-            print('Error in function displayModelImage: ' + str(e)) 
-            logger.error('Error in function displayModelImage: ' + str(e))  
+            print('Error in function DisplayModelImage: ' + str(e)) 
+            logger.error('Error in function DisplayModelImage: ' + str(e))  
 
-    def setCurveFittingNotDoneBoolean(self):
+    def SetCurveFittingNotDoneBoolean(self):
         """Sets global boolean _boolCurveFittingDone to false if the 
         plot of the model curve is changed by manually changing the values of 
         model input parameters rather than by running curve fitting."""
         global _boolCurveFittingDone
         _boolCurveFittingDone=False
 
-    def displayOptimumParamaterValuesOnGUI(self):
+    def DisplayOptimumParamaterValuesOnGUI(self):
         """Displays the optimum parameter values resulting from curve fitting 
         with their confidence limits on the right-hand side of the GUI. These
         values are stored in the global list _optimisedParamaterList
         
         Where appropriate decimal fractions are converted to %"""
         try:
-            logger.info('Function displayOptimumParamaterValuesOnGUI called.')
+            logger.info('Function DisplayOptimumParamaterValuesOnGUI called.')
             if self.spinBoxArterialFlowFactor.isHidden() == False:
                 self.lblAFFName.setText(self.lblArterialFlowFactor.text())
                 parameterValue = _optimisedParamaterList[0][0]
@@ -757,7 +755,6 @@ class ModelFittingApp(QDialog):
             parameterValue = round(_optimisedParamaterList[nextIndex][0], 3)
             lowerLimit = round(_optimisedParamaterList[nextIndex][1], 3)
             upperLimit = round(_optimisedParamaterList[nextIndex][2], 3)
-
 
             if self.spinBoxParameter2.suffix() == '%':
                 suffix = '%'
@@ -824,15 +821,15 @@ class ModelFittingApp(QDialog):
                 self.lblParam4ConfInt.setText(confidenceStr)
             
         except Exception as e:
-            print('Error in function displayOptimumParamaterValuesOnGUI: ' + str(e))
-            logger.error('Error in function displayOptimumParamaterValuesOnGUI: ' + str(e))
+            print('Error in function DisplayOptimumParamaterValuesOnGUI: ' + str(e))
+            logger.error('Error in function DisplayOptimumParamaterValuesOnGUI: ' + str(e))
 
-    def clearOptimumParamaterValuesOnGUI(self):
+    def ClearOptimumParamaterValuesOnGUI(self):
         """Clears the contents of the labels on the right handside of the GUI.
         That is the parameter values and their confidence limits resulting 
         from curve fitting. """
         try:
-            logger.info('Function clearOptimumParamaterValuesOnGUI called.')
+            logger.info('Function ClearOptimumParamaterValuesOnGUI called.')
             self.lblParam1Name.clear()
             self.lblParam1Value.clear()
             self.lblParam1ConfInt.clear()
@@ -850,13 +847,13 @@ class ModelFittingApp(QDialog):
             self.lblAFFConfInt.clear()
             
         except Exception as e:
-            print('Error in function clearOptimumParamaterValuesOnGUI: ' + str(e))
-            logger.error('Error in function clearOptimumParamaterValuesOnGUI: ' + str(e))
+            print('Error in function ClearOptimumParamaterValuesOnGUI: ' + str(e))
+            logger.error('Error in function ClearOptimumParamaterValuesOnGUI: ' + str(e))
     
-    def saveCSVFile(self):
+    def SaveCSVFile(self):
         """Saves in CSV format the data in the plot on the GUI """ 
         try:
-            logger.info('Function saveCSVFile called.')
+            logger.info('Function SaveCSVFile called.')
             modelName = str(self.cmbModels.currentText())
             modelName.replace(" ", "-")
             #Ask the user to specify the path & name of the CSV file. The name of the model is suggested as a default file name.
@@ -864,7 +861,7 @@ class ModelFittingApp(QDialog):
            
            #Check that the user did not press Cancel on the create file dialog
             if CSVFileName:
-                logger.info('Function saveCSVFile - csv file name = ' + CSVFileName)
+                logger.info('Function SaveCSVFile - csv file name = ' + CSVFileName)
             
                 ROI = str(self.cmbROI.currentText())
                 AIF = str(self.cmbAIF.currentText())
@@ -891,30 +888,30 @@ class ModelFittingApp(QDialog):
                     csvfile.close()
 
         except csv.Error:
-            print('CSV Writer error in function saveCSVFile: file %s, line %d: %s' % (CSVFileName, WriteCSV.line_num, csv.Error))
-            logger.error('CSV Writer error in function saveCSVFile: file %s, line %d: %s' % (CSVFileName, WriteCSV.line_num, csv.Error))
+            print('CSV Writer error in function SaveCSVFile: file %s, line %d: %s' % (CSVFileName, WriteCSV.line_num, csv.Error))
+            logger.error('CSV Writer error in function SaveCSVFile: file %s, line %d: %s' % (CSVFileName, WriteCSV.line_num, csv.Error))
         except IOError as IOe:
-            print ('IOError in function saveCSVFile: cannot open file ' + CSVFileName + ' or read its data: ' + str(IOe))
-            logger.error ('IOError in function saveCSVFile: cannot open file ' + CSVFileName + ' or read its data; ' + str(IOe))
+            print ('IOError in function SaveCSVFile: cannot open file ' + CSVFileName + ' or read its data: ' + str(IOe))
+            logger.error ('IOError in function SaveCSVFile: cannot open file ' + CSVFileName + ' or read its data; ' + str(IOe))
         except RuntimeError as re:
-            print('Runtime error in function saveCSVFile: ' + str(re))
-            logger.error('Runtime error in function saveCSVFile: ' + str(re))
+            print('Runtime error in function SaveCSVFile: ' + str(re))
+            logger.error('Runtime error in function SaveCSVFile: ' + str(re))
         except Exception as e:
-            print('Error in function saveCSVFile: ' + str(e) + ' at line in CSV file ', WriteCSV.line_num)
-            logger.error('Error in function saveCSVFile: ' + str(e) + ' at line in CSV file ', WriteCSV.line_num)
+            print('Error in function SaveCSVFile: ' + str(e) + ' at line in CSV file ', WriteCSV.line_num)
+            logger.error('Error in function SaveCSVFile: ' + str(e) + ' at line in CSV file ', WriteCSV.line_num)
 
-    def clearOptimisedParamaterList(self, callingControl):
+    def ClearOptimisedParamaterList(self, callingControl):
         """Clears results of curve fitting from the GUI and from the global list
         _optimisedParamaterList """
         try:
-            logger.info('clearOptimisedParamaterList called from ' + callingControl)
+            logger.info('ClearOptimisedParamaterList called from ' + callingControl)
             _optimisedParamaterList.clear()
-            self.clearOptimumParamaterValuesOnGUI()
+            self.ClearOptimumParamaterValuesOnGUI()
         except Exception as e:
-            print('Error in function clearOptimisedParamaterList: ' + str(e)) 
-            logger.error('Error in function clearOptimisedParamaterList: ' + str(e))
+            print('Error in function ClearOptimisedParamaterList: ' + str(e)) 
+            logger.error('Error in function ClearOptimisedParamaterList: ' + str(e))
 
-    def displayArterialFlowFactorSpinBox(self):
+    def DisplayArterialFlowFactorSpinBox(self):
         if str(self.cmbVIF.currentText()) == 'Please Select':
             self.lblArterialFlowFactor.hide()
             self.spinBoxArterialFlowFactor.hide()
@@ -922,7 +919,7 @@ class ModelFittingApp(QDialog):
             self.lblArterialFlowFactor.show()
             self.spinBoxArterialFlowFactor.show()
 
-    def displayFitModelSaveCSVButtons(self):
+    def DisplayFitModelSaveCSVButtons(self):
         """Displays the Fit Model and Save CSV buttons if both a ROI & AIF 
         are selected.  Otherwise hides them."""
         try:
@@ -933,24 +930,24 @@ class ModelFittingApp(QDialog):
             AIF = str(self.cmbAIF.currentText())
             VIF = str(self.cmbVIF.currentText())
             modelName = str(self.cmbModels.currentText())
-            modelInletType = TracerKineticModels.getModelInletType(modelName)
-            logger.info("Function displayFitModelSaveCSVButtons called. Model is " + modelName)
+            modelInletType = TracerKineticModels.GetModelInletType(modelName)
+            logger.info("Function DisplayFitModelSaveCSVButtons called. Model is " + modelName)
             if modelInletType == 'single':
                 if ROI != 'Please Select' and AIF != 'Please Select':
                     self.btnFitModel.show()
                     self.btnSaveCSV.show()
-                    logger.info("Function displayFitModelSaveCSVButtons called when ROI = {} and AIF = {}".format(ROI, AIF))
+                    logger.info("Function DisplayFitModelSaveCSVButtons called when ROI = {} and AIF = {}".format(ROI, AIF))
             elif modelInletType == 'dual':
                 if ROI != 'Please Select' and AIF != 'Please Select' and VIF != 'Please Select' :
                     self.btnFitModel.show()
                     self.btnSaveCSV.show()
-                    logger.info("Function displayFitModelSaveCSVButtons called when ROI = {}, AIF = {} & VIF ={}".format(ROI, AIF, VIF)) 
+                    logger.info("Function DisplayFitModelSaveCSVButtons called when ROI = {}, AIF = {} & VIF ={}".format(ROI, AIF, VIF)) 
         
         except Exception as e:
-            print('Error in function displayFitModelSaveCSVButtons: ' + str(e))
-            logger.error('Error in function displayFitModelSaveCSVButtons: ' + str(e))
+            print('Error in function DisplayFitModelSaveCSVButtons: ' + str(e))
+            logger.error('Error in function DisplayFitModelSaveCSVButtons: ' + str(e))
 
-    def buildParameterArray(self):
+    def BuildParameterArray(self):
         """Forms a 1D array of model input parameters.  Volume fractions are converted 
             from percentages to decimal fractions.
             
@@ -959,7 +956,7 @@ class ModelFittingApp(QDialog):
                 A list of model input parameter values.
             """
         try:
-            logger.info('Function buildParameterArray called.')
+            logger.info('Function BuildParameterArray called.')
             initialParametersArray = []
 
             #Only add the Arterial Flow Factor if a VIF has been selected
@@ -1002,14 +999,14 @@ class ModelFittingApp(QDialog):
 
             return initialParametersArray
         except Exception as e:
-            print('Error in function buildParameterArray ' + str(e))
-            logger.error('Error in function buildParameterArray '  + str(e))
+            print('Error in function BuildParameterArray ' + str(e))
+            logger.error('Error in function BuildParameterArray '  + str(e))
 
-    def blockSpinBoxSignals(self, boolBlockSignal):
+    def BlockSpinBoxSignals(self, boolBlockSignal):
         """Blocks signals from spinboxes that fire events.  
            Thus allowing spinbox values to be set programmatically 
            without causing a method connected to one of their events to be executed."""
-        logger.info('Function blockSpinBoxSignals called.')
+        logger.info('Function BlockSpinBoxSignals called.')
         self.spinBoxArterialFlowFactor.blockSignals(boolBlockSignal)
         self.spinBoxParameter1.blockSignals(boolBlockSignal)
         self.spinBoxParameter2.blockSignals(boolBlockSignal)
@@ -1028,7 +1025,7 @@ class ModelFittingApp(QDialog):
             logger.info('Function setParameterSpinBoxesWithOptimumValues called with optimumParams = {}'.format(optimumParams))
             #Block signals from spinboxes, so that setting values
             #returned from curve fitting does not trigger an event. 
-            self.blockSpinBoxSignals(True)
+            self.BlockSpinBoxSignals(True)
             
             if self.spinBoxArterialFlowFactor.isHidden() == False:
                 self.spinBoxArterialFlowFactor.setValue(optimumParams[0]* 100) #Convert decimal fraction to %
@@ -1061,12 +1058,12 @@ class ModelFittingApp(QDialog):
                 else:
                     self.spinBoxParameter4.setValue(optimumParams[nextIndex])
        
-            self.blockSpinBoxSignals(False)
+            self.BlockSpinBoxSignals(False)
         except Exception as e:
             print('Error in function setParameterSpinBoxesWithOptimumValues ' + str(e))
             logger.error('Error in function setParameterSpinBoxesWithOptimumValues '  + str(e))
 
-    def calculate95ConfidenceLimits(self, numDataPoints, numParams, optimumParams, paramCovarianceMatrix):
+    def Calculate95ConfidenceLimits(self, numDataPoints, numParams, optimumParams, paramCovarianceMatrix):
         """Calculates the 95% confidence limits of optimum parameter values 
         resulting from curve fitting. Results are stored in 
         global _optimisedParamaterList that is used in the creation of the PDF report
@@ -1083,7 +1080,7 @@ class ModelFittingApp(QDialog):
                         calculated during curve fitting.
         """
         try:
-            logger.info('Function calculate95ConfidenceLimits called: numDataPoints ={}, numParams={}, optimumParams={}, paramCovarianceMatrix={}'
+            logger.info('Function Calculate95ConfidenceLimits called: numDataPoints ={}, numParams={}, optimumParams={}, paramCovarianceMatrix={}'
                         .format(numDataPoints, numParams, optimumParams, paramCovarianceMatrix))
             alpha = 0.05 #95% confidence interval = 100*(1-alpha)
             degsOfFreedom = max(0, numDataPoints - numParams) #Number of degrees of freedom
@@ -1104,12 +1101,12 @@ class ModelFittingApp(QDialog):
                 _optimisedParamaterList[counter].append(round((numParams - sigma*tval), 3))
                 _optimisedParamaterList[counter].append(round((numParams + sigma*tval), 3))
                 i+=1
-            logger.info('In calculate95ConfidenceLimits, _optimisedParamaterList = {}'.format(_optimisedParamaterList))
+            logger.info('In Calculate95ConfidenceLimits, _optimisedParamaterList = {}'.format(_optimisedParamaterList))
         except Exception as e:
-            print('Error in function calculate95ConfidenceLimits ' + str(e))
-            logger.error('Error in function calculate95ConfidenceLimits '  + str(e))  
+            print('Error in function Calculate95ConfidenceLimits ' + str(e))
+            logger.error('Error in function Calculate95ConfidenceLimits '  + str(e))  
 
-    def runCurveFit(self):
+    def RunCurveFit(self):
         """Performs curve fitting to fit AIF (and VIF) data to the ROI curve.
         Then displays the optimum model input parameters on the GUI and calls 
         the plot function to display the line of best fit on the graph on the GUI
@@ -1120,7 +1117,7 @@ class ModelFittingApp(QDialog):
         """
         global _boolCurveFittingDone
         try:
-            initialParametersArray = self.buildParameterArray()
+            initialParametersArray = self.BuildParameterArray()
 
             #Get name of region of interest, arterial and venal input functions
             ROI = str(self.cmbROI.currentText())
@@ -1137,7 +1134,7 @@ class ModelFittingApp(QDialog):
                 arrayVIFConcs = np.array(_concentrationData[VIF], dtype='float')
             else:
                 #Create empty dummy array to act as place holder in  
-                #TracerKineticModels.curveFit function call 
+                #TracerKineticModels.CurveFit function call 
                 arrayVIFConcs = []
             
             if self.cboxConstaint.isChecked():
@@ -1148,43 +1145,43 @@ class ModelFittingApp(QDialog):
             #Get the name of the model to be fitted to the ROI curve
             modelName = str(self.cmbModels.currentText())
             #Call curve fitting routine
-            logger.info('TracerKineticModels.curveFit called with model {}, parameters {} and Constraint = {}'.format(modelName, initialParametersArray, addConstraint))
-            optimumParams, paramCovarianceMatrix = TracerKineticModels.curveFit(modelName, arrayTimes, 
+            logger.info('TracerKineticModels.CurveFit called with model {}, parameters {} and Constraint = {}'.format(modelName, initialParametersArray, addConstraint))
+            optimumParams, paramCovarianceMatrix = TracerKineticModels.CurveFit(modelName, arrayTimes, 
                  arrayAIFConcs, arrayVIFConcs, arrayROIConcs, initialParametersArray, addConstraint)
             
             _boolCurveFittingDone = True 
-            logger.info('TracerKineticModels.curveFit returned optimum parameters {} with confidence levels {}'.format(optimumParams, paramCovarianceMatrix))
+            logger.info('TracerKineticModels.CurveFit returned optimum parameters {} with confidence levels {}'.format(optimumParams, paramCovarianceMatrix))
             
             #Display results of curve fitting  
             #(optimum model parameter values) on GUI.
             self.setParameterSpinBoxesWithOptimumValues(optimumParams)
 
             #Plot the best curve on the graph
-            self.plot('runCurveFit')
+            self.PlotConcentrations('RunCurveFit')
 
             #Determine 95% confidence limits.
             numDataPoints = arrayROIConcs.size
             numParams = len(initialParametersArray)
-            self.calculate95ConfidenceLimits(numDataPoints, numParams, 
+            self.Calculate95ConfidenceLimits(numDataPoints, numParams, 
                                     optimumParams, paramCovarianceMatrix)
             
-            self.displayOptimumParamaterValuesOnGUI()
+            self.DisplayOptimumParamaterValuesOnGUI()
             
         except ValueError as ve:
-            print ('Value Error: runCurveFit with model ' + modelName + ': '+ str(ve))
-            logger.error('Value Error: runCurveFit with model ' + modelName + ': '+ str(ve))
+            print ('Value Error: RunCurveFit with model ' + modelName + ': '+ str(ve))
+            logger.error('Value Error: RunCurveFit with model ' + modelName + ': '+ str(ve))
         except Exception as e:
-            print('Error in function runCurveFit with model ' + modelName + ': ' + str(e))
-            logger.error('Error in function runCurveFit with model ' + modelName + ': ' + str(e))
+            print('Error in function RunCurveFit with model ' + modelName + ': ' + str(e))
+            logger.error('Error in function RunCurveFit with model ' + modelName + ': ' + str(e))
     
-    def buildParameterDictionary(self, confidenceLimitsArray = None):
+    def BuildParameterDictionary(self, confidenceLimitsArray = None):
         """Builds a dictionary of values and their confidence limits 
         (if curve fitting is performed) for each model input parameter (dictionary key)
         This dictionary is used in the creation of a parameter values table in the
         creation of the PDF report.  It orders the input parameters in the same 
        vertical order as the parameters on the GUI, top to bottom."""
         try:
-            logger.info('buildParameterDictionary called with confidence limits array = {}'
+            logger.info('BuildParameterDictionary called with confidence limits array = {}'
                         .format(confidenceLimitsArray))
             parameterDictionary = {}
            
@@ -1262,11 +1259,11 @@ class ModelFittingApp(QDialog):
             return parameterDictionary
     
         except Exception as e:
-            print('Error in function buildParameterDictionary: ' + str(e))
-            logger.error('Error in function buildParameterDictionary: ' + str(e))
+            print('Error in function BuildParameterDictionary: ' + str(e))
+            logger.error('Error in function BuildParameterDictionary: ' + str(e))
 
 
-    def createPDFReport(self):
+    def CreatePDFReport(self):
         """Creates and saves a report of model fitting. It includes the name of the model, 
         the current values of its input parameters and a copy of the current plot."""
         try:
@@ -1286,20 +1283,20 @@ class ModelFittingApp(QDialog):
                     #delete existing copy of PDF called reportFileName
                     os.remove(reportFileName)   
                 shortModelName = str(self.cmbModels.currentText())
-                longModelName = TracerKineticModels.getLongModelName(shortModelName)
+                longModelName = TracerKineticModels.GetLongModelName(shortModelName)
                 
                 #Save a png of the concentration/time plot for display 
                 #in the PDF report.
                 self.figure.savefig(fname=IMAGE_NAME, dpi=150)  #dpi=150 so as to get a clear image in the PDF report
                 
                 if _boolCurveFittingDone == True:
-                    parameterDict = self.buildParameterDictionary(_optimisedParamaterList)
+                    parameterDict = self.BuildParameterDictionary(_optimisedParamaterList)
                 else:
-                    parameterDict = self.buildParameterDictionary()
+                    parameterDict = self.BuildParameterDictionary()
                              
                 QApplication.setOverrideCursor(QCursor(QtCore.Qt.WaitCursor))
 
-                pdf.createAndSavePDFReport(reportFileName, _dataFileName, 
+                pdf.CreateAndSavePDFReport(reportFileName, _dataFileName, 
                        longModelName, IMAGE_NAME, parameterDict)
                 
                 QApplication.restoreOverrideCursor()
@@ -1308,10 +1305,10 @@ class ModelFittingApp(QDialog):
                 os.remove(IMAGE_NAME)
                 logger.info('PDF Report created called ' + reportFileName)
         except Exception as e:
-            print('Error in function createPDFReport: ' + str(e))
-            logger.error('Error in function createPDFReport: ' + str(e))
+            print('Error in function CreatePDFReport: ' + str(e))
+            logger.error('Error in function CreatePDFReport: ' + str(e))
        
-    def loadDataFile(self):
+    def LoadDataFile(self):
         """Loads the contents of a CSV file containing time and concentration data
         into a dictionary of lists. The key is the name of the organ or 'time' and 
         the corresponding value is a list of concentrations 
@@ -1327,7 +1324,7 @@ class ModelFittingApp(QDialog):
         #clear the global dictionary of previous data
         _concentrationData.clear()
         
-        self.hideAllControlsOnGUI()
+        self.HideAllControlsOnGUI()
         
         try:
             #get the data file in csv format
@@ -1391,29 +1388,30 @@ class ModelFittingApp(QDialog):
                                 colNum+=1           
                 csvfile.close()
 
-                self.configureGUIAfterLoadingData()
+                self.ConfigureGUIAfterLoadingData()
                 
         except csv.Error:
-            print('CSV Reader error in function loadDataFile: file %s, line %d: %s' % (_dataFileName, readCSV.line_num, csv.Error))
-            logger.error('CSV Reader error in function loadDataFile: file %s, line %d: %s' % (_dataFileName, readCSV.line_num, csv.Error))
+            print('CSV Reader error in function LoadDataFile: file {}, line {}: error={}'.format(_dataFileName, readCSV.line_num, csv.Error))
+            logger.error('CSV Reader error in function LoadDataFile: file {}, line {}: error ={}'.format(_dataFileName, readCSV.line_num, csv.Error))
         except IOError:
-            print ('IOError in function loadDataFile: cannot open file' + _dataFileName + ' or read its data')
-            logger.error ('IOError in function loadDataFile: cannot open file' + _dataFileName + ' or read its data')
+            print ('IOError in function LoadDataFile: cannot open file' + _dataFileName + ' or read its data')
+            logger.error ('IOError in function LoadDataFile: cannot open file' + _dataFileName + ' or read its data')
         except RuntimeError as re:
-            print('Runtime error in function loadDataFile: ' + str(re))
-            logger.error('Runtime error in function loadDataFile: ' + str(re))
+            print('Runtime error in function LoadDataFile: ' + str(re))
+            logger.error('Runtime error in function LoadDataFile: ' + str(re))
         except Exception as e:
-            print('Error in function loadDataFile: ' + str(e) + ' at line in CSV file ', readCSV.line_num)
-            logger.error('Error in function loadDataFile: ' + str(e) + ' at line in CSV file ', readCSV.line_num)
+            print('Error in function LoadDataFile: ' + str(e) + ' at line {} in the CSV file'.format( readCSV.line_num))
+            logger.error('Error in function LoadDataFile: ' + str(e) + ' at line {} in the CSV file'.format( readCSV.line_num))
+            QMessageBox().warning(self, "CSV data file", "Error reading CSV file at line {} - {}".format(readCSV.line_num, e), QMessageBox.Ok)
 
-    def hideAllControlsOnGUI(self):
+    def HideAllControlsOnGUI(self):
         """Hides/clears all the widgets on left-hand side of the application 
         except for the Load & Display Data and Exit buttons.  
         It is called before a data file is loaded in case the Cancel button on the dialog
         is clicked.  This prevents the scenario where buttons are displayed but there is no
         data loaded to process when they are clicked."""
 
-        logger.info('Function hideAllControlsOnGUI called')
+        logger.info('Function HideAllControlsOnGUI called')
         #Clear label displaying name of the datafile
         self.lblDataFileName.setText('')
 
@@ -1424,7 +1422,7 @@ class ModelFittingApp(QDialog):
         self.btnSaveCSV.hide()
         
 
-    def configureGUIAfterLoadingData(self):
+    def ConfigureGUIAfterLoadingData(self):
         """After successfully loading a datafile, this method loads a list of
         organs into ROI, AIF & VIF drop-down lists and displays 
         the ROI drop-down list.  It also clears the Matplotlib graph."""
@@ -1436,9 +1434,9 @@ class ModelFittingApp(QDialog):
             self.cmbVIF.clear()
             
             #Create a list of organs for which concentrations are
-            #provided in the data input file.  See loadDataFile method.
+            #provided in the data input file.  See LoadDataFile method.
             organArray = []
-            organArray = self.getListOrgans()
+            organArray = self.GetListOrgans()
             
             self.cmbROI.addItems(organArray)
             self.cmbAIF.addItems(organArray)
@@ -1452,15 +1450,15 @@ class ModelFittingApp(QDialog):
             
             self.canvas.draw()
 
-            logger.info('Function configureGUIAfterLoadingData called and the following organ list loaded: {}'.format(organArray))
+            logger.info('Function ConfigureGUIAfterLoadingData called and the following organ list loaded: {}'.format(organArray))
         except RuntimeError as re:
-            print('runtime error in function configureGUIAfterLoadingData: ' + str(re) )
-            logger.error('runtime error in function configureGUIAfterLoadingData: ' + str(re) )
+            print('runtime error in function ConfigureGUIAfterLoadingData: ' + str(re) )
+            logger.error('runtime error in function ConfigureGUIAfterLoadingData: ' + str(re) )
         except Exception as e:
-            print('Error in function configureGUIAfterLoadingData: ' + str(e) )
-            logger.error('Error in function configureGUIAfterLoadingData: ' + str(e))
+            print('Error in function ConfigureGUIAfterLoadingData: ' + str(e) )
+            logger.error('Error in function ConfigureGUIAfterLoadingData: ' + str(e))
         
-    def getListOrgans(self):
+    def GetListOrgans(self):
         """Builds a list of organs from the headers in the CSV data file. 
         The CSV data file comprises columns of concentration data for a
         set of organs.  Each column of concentration data is labeled by
@@ -1471,7 +1469,7 @@ class ModelFittingApp(QDialog):
             A list of organs for which there is concentration data.
         """
         try:
-            logger.info('Function getListOrgans called')
+            logger.info('Function GetListOrgans called')
             organList =[]
             organList.append('Please Select') #First item at the top of the drop-down list
             for key in _concentrationData:
@@ -1479,13 +1477,13 @@ class ModelFittingApp(QDialog):
                     organList.append(str(key))       
             return organList
         except RuntimeError as re:
-            print('runtime error in function getListOrgans' + str(re))
-            logger.error('runtime error in function getListOrgans' + str(re))
+            print('runtime error in function GetListOrgans' + str(re))
+            logger.error('runtime error in function GetListOrgans' + str(re))
         except Exception as e:
-            print('Error in function getListOrgans: ' + str(e))
-            logger.error('Error in function getListOrgans: ' + str(e))
+            print('Error in function GetListOrgans: ' + str(e))
+            logger.error('Error in function GetListOrgans: ' + str(e))
     
-    def initialiseParameterSpinBoxes(self):
+    def InitialiseParameterSpinBoxes(self):
         """Reset model parameter spinboxes with typical initial values for each model"""
         try:
             #Remove suffixes from the first spinboxes 
@@ -1494,11 +1492,11 @@ class ModelFittingApp(QDialog):
 
             #Block signals from spinboxes, so that setting initial values
             #does not trigger an event.
-            self.blockSpinBoxSignals(True)
+            self.BlockSpinBoxSignals(True)
             self.spinBoxArterialFlowFactor.setValue(DEFAULT_VALUE_Fa)
             
             modelName = str(self.cmbModels.currentText())
-            logger.info('Function initialiseParameterSpinBoxes called when model = ' + modelName)
+            logger.info('Function InitialiseParameterSpinBoxes called when model = ' + modelName)
             if modelName == '2-2CFM':
                 self.spinBoxParameter1.setDecimals(2)
                 self.spinBoxParameter1.setRange(0.01, 99.99)
@@ -1555,34 +1553,18 @@ class ModelFittingApp(QDialog):
                 self.spinBoxParameter3.setSingleStep(0.1)
                 self.spinBoxParameter3.setValue(DEFAULT_VALUE_Kbh)
 
-            #Models no longer used
-            #elif modelName ==  'Extended Tofts':
-            #    self.spinBoxParameter1.setValue(DEFAULT_VALUE_Ve)
-            #    self.spinBoxParameter1.setSuffix('%')
-            #    self.spinBoxParameter2.setValue(DEFAULT_VALUE_Fp)
-            #    self.spinBoxParameter3.setValue(DEFAULT_VALUE_Ktrans)
-            #elif modelName == 'High-Flow Gadoxetate':
-            #    self.spinBoxParameter1.setValue(DEFAULT_VALUE_Ve)
-            #    self.spinBoxParameter1.setSuffix('%')
-            #    self.spinBoxParameter2.setValue(DEFAULT_VALUE_Kce)
-            #    self.spinBoxParameter3.setValue(DEFAULT_VALUE_Kbc)
-            #elif modelName ==  'One Compartment':
-            #    self.spinBoxParameter1.setValue(DEFAULT_VALUE_Vp)
-            #    self.spinBoxParameter1.setSuffix('%')
-            #    self.spinBoxParameter2.setValue(DEFAULT_VALUE_Fp)
-
-            self.blockSpinBoxSignals(False)
+            self.BlockSpinBoxSignals(False)
         except Exception as e:
-            print('Error in function initialiseParameterSpinBoxes: ' + str(e) )
-            logger.error('Error in function initialiseParameterSpinBoxes: ' + str(e) )
+            print('Error in function InitialiseParameterSpinBoxes: ' + str(e) )
+            logger.error('Error in function InitialiseParameterSpinBoxes: ' + str(e) )
 
-    def configureGUIForEachModel(self):
+    def ConfigureGUIForEachModel(self):
         """When a model is selected, this method configures the appearance of the GUI
         accordingly.  For example, spinboxes for the input of model parameter values are
         given an appropriate label."""
         try:
             modelName = str(self.cmbModels.currentText())
-            logger.info('Function configureGUIForEachModel called when model = ' + modelName)
+            logger.info('Function ConfigureGUIForEachModel called when model = ' + modelName)
             
             #self.cboxDelay.show()
             #self.cboxConstaint.show()
@@ -1590,8 +1572,8 @@ class ModelFittingApp(QDialog):
             self.btnReset.show()
             self.btnSaveReport.show()
             #Remove results of curve fitting of the previous model
-            self.clearOptimumParamaterValuesOnGUI() 
-            self.initialiseParameterSpinBoxes() #Typical initial values for each model
+            self.ClearOptimumParamaterValuesOnGUI() 
+            self.InitialiseParameterSpinBoxes() #Typical initial values for each model
             #Show widgets common to all models
             self.lblAIF.show()
             self.cmbAIF.show()
@@ -1633,32 +1615,6 @@ class ModelFittingApp(QDialog):
                 self.lblVIF.hide()
                 self.cmbVIF.hide()
                 self.cmbVIF.setCurrentIndex(0)
-
-            # Models no longer used
-            #elif modelName ==  'Extended Tofts':
-            #    self.labelParameter1.setText(LABEL_PARAMETER_Vp)
-            #    self.labelParameter1.show()
-            #    self.labelParameter2.setText(LABEL_PARAMETER_Ve)
-            #    self.labelParameter2.show()
-            #    self.labelParameter3.setText(LABEL_PARAMETER_Ktrans)
-            #    self.labelParameter3.show()
-            #elif modelName == 'High-Flow Gadoxetate':
-            #    self.labelParameter1.setText(LABEL_PARAMETER_Ve)
-            #    self.labelParameter1.show()
-            #    self.labelParameter2.setText(LABEL_PARAMETER_Kce)
-            #    self.labelParameter2.show()
-            #    self.labelParameter3.setText(LABEL_PARAMETER_Kbc)
-            #    self.labelParameter3.show()
-            #elif modelName ==  'One Compartment':
-            #    self.labelParameter1.setText(LABEL_PARAMETER_Vp)
-            #    self.labelParameter1.show()
-            #    self.labelParameter2.setText(LABEL_PARAMETER_Fp)
-            #    self.labelParameter2.show()
-                
-            #    #Hide this spinbox & label as this model does not have a third parameter
-            #    self.spinBoxParameter3.hide() 
-            #    self.labelParameter3.hide()
-            #    self.labelParameter3.clear()
             else:  #No model is selected
                 self.lblAIF.hide()
                 self.cmbAIF.hide()
@@ -1684,10 +1640,10 @@ class ModelFittingApp(QDialog):
                 self.btnSaveReport.hide()
                 self.btnSaveCSV.hide()
         except Exception as e:
-            print('Error in function configureGUIForEachModel: ' + str(e) )
-            logger.error('Error in function configureGUIForEachModel: ' + str(e) )
+            print('Error in function ConfigureGUIForEachModel: ' + str(e) )
+            logger.error('Error in function ConfigureGUIForEachModel: ' + str(e) )
             
-    def getScreenResolution(self):
+    def GetScreenResolution(self):
         """Determines the screen resolution of the device running this software.
         
         Returns
@@ -1696,13 +1652,13 @@ class ModelFittingApp(QDialog):
         """
         try:
             width, height = pyautogui.size()
-            logger.info('Function getScreenResolution called. Screen width = {}, height = {}.'.format(width, height))
+            logger.info('Function GetScreenResolution called. Screen width = {}, height = {}.'.format(width, height))
             return width, height
         except Exception as e:
-            print('Error in function getScreenResolution: ' + str(e) )
-            logger.error('Error in function getScreenResolution: ' + str(e) )
+            print('Error in function GetScreenResolution: ' + str(e) )
+            logger.error('Error in function GetScreenResolution: ' + str(e) )
         
-    def determineTextSize(self):
+    def DetermineTextSize(self):
         """Determines the optimum size for the title & labels on the 
            matplotlib graph from the screen resolution.
            
@@ -1711,8 +1667,8 @@ class ModelFittingApp(QDialog):
               tick label size, xy axis label size & title size
            """
         try:
-            logger.info('Function determineTextSize called.')
-            width, _ = self.getScreenResolution()
+            logger.info('Function DetermineTextSize called.')
+            width, _ = self.GetScreenResolution()
             
             if width == 1920: #Desktop
                 tickLabelSize = 12
@@ -1729,10 +1685,10 @@ class ModelFittingApp(QDialog):
 
             return tickLabelSize, xyAxisLabelSize, titleSize
         except Exception as e:
-            print('Error in function determineTextSize: ' + str(e) )
-            logger.error('Error in function determineTextSize: ' + str(e) )
+            print('Error in function DetermineTextSize: ' + str(e) )
+            logger.error('Error in function DetermineTextSize: ' + str(e) )
     
-    def plot(self, nameCallingFunction):
+    def PlotConcentrations(self, nameCallingFunction):
         """Plots the concentration against time curves for the ROI, AIF, VIF.  
         Also, the concentration/time curve predicted by the selected model.
         
@@ -1754,7 +1710,7 @@ class ModelFittingApp(QDialog):
             ax = self.figure.add_subplot(111)
 
             #Get the optimum label size for the screen resolution.
-            tickLabelSize, xyAxisLabelSize, titleSize = self.determineTextSize()
+            tickLabelSize, xyAxisLabelSize, titleSize = self.DetermineTextSize()
             
             #Set size of the x,y axis tick labels
             ax.tick_params(axis='both', which='major', labelsize=tickLabelSize)
@@ -1787,19 +1743,19 @@ class ModelFittingApp(QDialog):
                 boolVIFSelected = True
                     
             #Plot concentration curve from the model
-            if TracerKineticModels.getModelInletType(modelName) == 'dual':
+            if TracerKineticModels.GetModelInletType(modelName) == 'dual':
                 if boolAIFSelected and boolVIFSelected:
-                    parameterArray = self.buildParameterArray()
-                    logger.info('TracerKineticModels.modelSelector called when model ={} and parameter array = {}'. format(modelName, parameterArray))        
-                    _listModel = TracerKineticModels.modelSelector(modelName, arrayTimes, 
+                    parameterArray = self.BuildParameterArray()
+                    logger.info('TracerKineticModels.ModelSelector called when model ={} and parameter array = {}'. format(modelName, parameterArray))        
+                    _listModel = TracerKineticModels.ModelSelector(modelName, arrayTimes, 
                        arrayAIFConcs, parameterArray, arrayVIFConcs)
                     arrayModel =  np.array(_listModel, dtype='float')
                     ax.plot(arrayTimes, arrayModel, 'g--', label= modelName + ' model')
-            elif TracerKineticModels.getModelInletType(modelName) == 'single':
+            elif TracerKineticModels.GetModelInletType(modelName) == 'single':
                 if boolAIFSelected:
-                    parameterArray = self.buildParameterArray()
-                    logger.info('TracerKineticModels.modelSelector called when model ={} and parameter array = {}'. format(modelName, parameterArray))        
-                    _listModel = TracerKineticModels.modelSelector(modelName, arrayTimes, 
+                    parameterArray = self.BuildParameterArray()
+                    logger.info('TracerKineticModels.ModelSelector called when model ={} and parameter array = {}'. format(modelName, parameterArray))        
+                    _listModel = TracerKineticModels.ModelSelector(modelName, arrayTimes, 
                        arrayAIFConcs, parameterArray)
                     arrayModel =  np.array(_listModel, dtype='float')
                     ax.plot(arrayTimes, arrayModel, 'g--', label= modelName + ' model')
@@ -1820,10 +1776,10 @@ class ModelFittingApp(QDialog):
                 self.canvas.draw()
             
         except Exception as e:
-                print('Error in function plot when an event associated with ' + str(nameCallingFunction) + ' is fired : ROI=' + ROI + ' AIF = ' + AIF + ' : ' + str(e) )
-                logger.error('Error in function plot when an event associated with ' + str(nameCallingFunction) + ' is fired : ROI=' + ROI + ' AIF = ' + AIF + ' : ' + str(e) )
+                print('Error in function PlotConcentrations when an event associated with ' + str(nameCallingFunction) + ' is fired : ROI=' + ROI + ' AIF = ' + AIF + ' : ' + str(e) )
+                logger.error('Error in function PlotConcentrations when an event associated with ' + str(nameCallingFunction) + ' is fired : ROI=' + ROI + ' AIF = ' + AIF + ' : ' + str(e) )
     
-    def exitApp(self):
+    def ExitApp(self):
         """Closes the Model Fitting application."""
         logger.info("Application closed using the Exit button.")
         sys.exit(0)  
