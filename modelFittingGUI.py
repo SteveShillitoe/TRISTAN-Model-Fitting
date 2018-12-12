@@ -102,7 +102,11 @@ the Venous Input Function (VIF).
 
 As the time data is read, it is divided by 60 in order to convert it into minutes.
         """
-   
+  
+__author__ = "Steve Shillitoe, https://www.imagingbiomarkers.org/stephen-shillitoe"
+__version__ = "1.0"
+__date__ = "Date: 2018/12/12"
+
 import sys
 import csv
 import os.path
