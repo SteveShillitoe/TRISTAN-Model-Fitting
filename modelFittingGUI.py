@@ -102,7 +102,6 @@ the Venous Input Function (VIF).
 
 As the time data is read, it is divided by 60 in order to convert it into minutes.
         """
-  
 __author__ = "Steve Shillitoe, https://www.imagingbiomarkers.org/stephen-shillitoe"
 __version__ = "1.0"
 __date__ = "Date: 2018/12/12"
@@ -1106,7 +1105,7 @@ class ModelFittingApp(QDialog):
                 _optimisedParamaterList[counter].append(round(numParams,3))
                 _optimisedParamaterList[counter].append(round((numParams - sigma*tval), 3))
                 _optimisedParamaterList[counter].append(round((numParams + sigma*tval), 3))
-                i+=1
+                
             logger.info('In Calculate95ConfidenceLimits, _optimisedParamaterList = {}'.format(_optimisedParamaterList))
         except Exception as e:
             print('Error in function Calculate95ConfidenceLimits ' + str(e))
