@@ -46,20 +46,20 @@ def GetListModels():
 
     return list(modelDict.keys())
 
-def GetLongModelName(shortModelName):
+def GetLongModelName(shortModelName) -> str:
     """Returns the full name of a model whose short name is shortModelName."""
     return modelDict.get(shortModelName)
 
-def GetModelImageName(shortModelName):
+def GetModelImageName(shortModelName) -> str:
     """Returns the file path and name of the image that represents schematically
     the model whose short name is shortModelName."""
     return modelImageDict.get(shortModelName)
 
-def GetModelInletType(shortModelName):
+def GetModelInletType(shortModelName) -> str:
     """Returns the inlet type (single or dual) of the model whose short name is shortModelName."""
     return modelInletTypeDict.get(shortModelName)
 
-def ModelSelector(modelName, times, AIFConcentration, parameterArray, VIFConcentration=[]):
+def ModelSelector(modelName: str, times, AIFConcentration, parameterArray, VIFConcentration=[]):
     """Function called in the GUI of the model fitting application to select the 
     function corresponding to each model.
 
@@ -120,7 +120,8 @@ def ModelSelector(modelName, times, AIFConcentration, parameterArray, VIFConcent
 # the following model function definitions are listed in the same order as they are 
 # displayed in the GUI from top (first) to bottom (last) 
 # 
-def DualInputTwoCompartmentFiltrationModel(xData2DArray, fAFF, Ve, Fp, Khe, Kbh):
+def DualInputTwoCompartmentFiltrationModel(xData2DArray, fAFF: float, 
+                                           Ve: float, Fp: float, Khe: float, Kbh: float):
     """This function contains the algorithm for calculating how concentration varies with time
             using the Dual Input Two Compartment Filtration Model model.
         
@@ -175,7 +176,8 @@ def DualInputTwoCompartmentFiltrationModel(xData2DArray, fAFF, Ve, Fp, Khe, Kbh)
             print('Error - TracerKineticModels.TracerKineticModels.DualInputTwoCompartmentFiltrationModel: ' + str(e))
             logger.error('TracerKineticModels.DualInputTwoCompartmentFiltrationModel:' + str(e) )
  
-def HighFlowDualInletTwoCompartmentGadoxetateModel(xData2DArray, fAFF, Ve, Khe, Kbh):
+def HighFlowDualInletTwoCompartmentGadoxetateModel(xData2DArray, fAFF: float, 
+                                                   Ve: float, Khe: float, Kbh: float):
     """This function contains the algorithm for calculating how concentration varies with time
             using the High Flow Dual Inlet Two Compartment Gadoxetate Model model.
         
@@ -220,7 +222,8 @@ def HighFlowDualInletTwoCompartmentGadoxetateModel(xData2DArray, fAFF, Ve, Khe, 
             print('Error - TracerKineticModels.TracerKineticModels.HighFlowDualInletTwoCompartmentGadoxetateModel: ' + str(e))
             logger.error('TracerKineticModels.HighFlowDualInletTwoCompartmentGadoxetateModel:' + str(e) )
  
-def HighFlowSingleInletTwoCompartmentGadoxetateModel(xData2DArray, Ve, Khe, Kbh):
+def HighFlowSingleInletTwoCompartmentGadoxetateModel(xData2DArray, Ve: float, 
+                                                     Khe: float, Kbh: float):
     """This function contains the algorithm for calculating how concentration varies with time
             using the High Flow Single Inlet Two Compartment Gadoxetate Model model.
         
@@ -491,7 +494,7 @@ def HighFlowGadoxetate_DualInput(xData2DArray, Ve, Kce, Kbc, fAFF):
         logger.error('Runtime error in function TracerKineticModels.highFlowGadoxetate_DualInput:' + str(e) )
     
 
-def CurveFit(modelName, times, AIFConcs, VIFConcs, concROI, paramArray, constrain):
+def CurveFit(modelName: str, times, AIFConcs, VIFConcs, concROI, paramArray, constrain: bool):
     """This function calls the curve_fit function imported from scipy.optimize 
     to fit the time/conconcentration data calculated by a model in this module 
     to actual Region of Interest (ROI) concentration/time data using   
@@ -525,9 +528,6 @@ def CurveFit(modelName, times, AIFConcs, VIFConcs, concROI, paramArray, constrai
 
         constrain - Boolean that indicates if a contraint should be 
             applied to the input parameters during curve fitting.
-
-        boolDualInput - boolean indicating if the input to the model is 
-            single(=False) AIF only or dual(=True) AIF & VIR.
 
         Returns
         ------

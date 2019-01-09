@@ -112,12 +112,14 @@ import os.path
 import numpy as np
 import pyautogui
 import logging
+from typing import List
 
 from PyQt5.QtGui import QCursor, QIcon, QPixmap
 from PyQt5 import QtCore
 from PyQt5.QtWidgets import QApplication, QDialog,  QApplication, QPushButton, \
      QVBoxLayout, QHBoxLayout, QGroupBox, QComboBox, QLabel, QDoubleSpinBox, \
-     QMessageBox, QFileDialog, QCheckBox, QLineEdit, QSizePolicy, QSpacerItem, QGridLayout
+     QMessageBox, QFileDialog, QCheckBox, QLineEdit, QSizePolicy, QSpacerItem, \
+     QGridLayout
 
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
@@ -212,7 +214,7 @@ logging.basicConfig(filename=LOG_FILE_NAME,
                     format=LOG_FORMAT)
 logger = logging.getLogger(__name__)
 
-class ModelFittingApp(QDialog):
+class ModelFittingApp(QDialog):  # 
     """This class defines the TRISTAN Model Fitting software 
        based on a QDialog window.
        This includes seting up the GUI and defining the methods 
@@ -905,7 +907,7 @@ class ModelFittingApp(QDialog):
             print('Error in function SaveCSVFile: ' + str(e) + ' at line in CSV file ', WriteCSV.line_num)
             logger.error('Error in function SaveCSVFile: ' + str(e) + ' at line in CSV file ', WriteCSV.line_num)
 
-    def ClearOptimisedParamaterList(self, callingControl):
+    def ClearOptimisedParamaterList(self, callingControl: str):
         """Clears results of curve fitting from the GUI and from the global list
         _optimisedParamaterList """
         try:
@@ -952,7 +954,7 @@ class ModelFittingApp(QDialog):
             print('Error in function DisplayFitModelSaveCSVButtons: ' + str(e))
             logger.error('Error in function DisplayFitModelSaveCSVButtons: ' + str(e))
 
-    def BuildParameterArray(self):
+    def BuildParameterArray(self) -> List[float]:
         """Forms a 1D array of model input parameters.  Volume fractions are converted 
             from percentages to decimal fractions.
             
@@ -1007,7 +1009,7 @@ class ModelFittingApp(QDialog):
             print('Error in function BuildParameterArray ' + str(e))
             logger.error('Error in function BuildParameterArray '  + str(e))
 
-    def BlockSpinBoxSignals(self, boolBlockSignal):
+    def BlockSpinBoxSignals(self, boolBlockSignal: bool):
         """Blocks signals from spinboxes that fire events.  
            Thus allowing spinbox values to be set programmatically 
            without causing a method connected to one of their events to be executed."""
@@ -1068,7 +1070,8 @@ class ModelFittingApp(QDialog):
             print('Error in function setParameterSpinBoxesWithOptimumValues ' + str(e))
             logger.error('Error in function setParameterSpinBoxesWithOptimumValues '  + str(e))
 
-    def Calculate95ConfidenceLimits(self, numDataPoints, numParams, optimumParams, paramCovarianceMatrix):
+    def Calculate95ConfidenceLimits(self, numDataPoints: int, numParams: int, 
+                                    optimumParams, paramCovarianceMatrix):
         """Calculates the 95% confidence limits of optimum parameter values 
         resulting from curve fitting. Results are stored in 
         global _optimisedParamaterList that is used in the creation of the PDF report
@@ -1693,7 +1696,7 @@ class ModelFittingApp(QDialog):
             print('Error in function DetermineTextSize: ' + str(e) )
             logger.error('Error in function DetermineTextSize: ' + str(e) )
     
-    def PlotConcentrations(self, nameCallingFunction):
+    def PlotConcentrations(self, nameCallingFunction: str):
         """Plots the concentration against time curves for the ROI, AIF, VIF.  
         Also, the concentration/time curve predicted by the selected model.
         
