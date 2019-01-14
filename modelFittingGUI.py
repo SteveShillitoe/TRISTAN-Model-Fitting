@@ -119,7 +119,7 @@ from PyQt5 import QtCore
 from PyQt5.QtWidgets import QApplication, QApplication, QPushButton, \
      QVBoxLayout, QHBoxLayout, QGroupBox, QComboBox, QLabel, QDoubleSpinBox, \
      QMessageBox, QFileDialog, QCheckBox, QLineEdit, QSizePolicy, QSpacerItem, \
-     QGridLayout, QWidget
+     QGridLayout, QWidget, QStatusBar, QProgressBar
 
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
@@ -301,9 +301,6 @@ class ModelFittingApp(QWidget):
         self.btnLoadDisplayData.resize(self.btnLoadDisplayData.minimumSizeHint())
         #Method LoadDataFile is executed in the clicked event of this button
         self.btnLoadDisplayData.clicked.connect(self.LoadDataFile)
-
-        #Create label to display the name of the loaded data file
-        self.lblDataFileName = QLabel('')
         
         #Add a vertical spacer to the top of vertical layout to ensure
         #the top of the Load Data button is level with the MATPLOTLIB toolbar 
@@ -312,7 +309,6 @@ class ModelFittingApp(QWidget):
         layout.addItem(verticalSpacer)
         #Add Load data file button to the top of the vertical layout
         layout.addWidget(self.btnLoadDisplayData)
-        layout.addWidget(self.lblDataFileName)
         layout.addItem(verticalSpacer)
 
         #Create dropdown list for selection of ROI
@@ -342,10 +338,13 @@ class ModelFittingApp(QWidget):
         layout.addWidget(self.btnSaveReport, QtCore.Qt.AlignTop)
         self.btnSaveReport.clicked.connect(self.CreatePDFReport)
         
+        layout.addStretch(1)
         self.btnExit = QPushButton('Exit')
         layout.addWidget(self.btnExit)
+        self.statusbar = QStatusBar()
+        layout.addWidget(self.statusbar)
         self.btnExit.clicked.connect(self.ExitApp)
-        layout.addStretch()
+        
 
     def SetUpModelGroupBox(self, layout, verticalSpacer):
         """Creates a group box to hold widgets associated with the 
@@ -1370,7 +1369,7 @@ class ModelFittingApp(QWidget):
                     
                     #Extract data filename from the full data file path
                     _dataFileName = os.path.basename(_dataFileName)
-                    self.lblDataFileName.setText('File ' + _dataFileName + ' loaded')
+                    self.statusbar.showMessage('File ' + _dataFileName + ' loaded')
 
                     #Column headers form the keys in the dictionary called _concentrationData
                     for header in headers:
@@ -1421,7 +1420,7 @@ class ModelFittingApp(QWidget):
 
         logger.info('Function HideAllControlsOnGUI called')
         #Clear label displaying name of the datafile
-        self.lblDataFileName.setText('')
+        self.statusbar.clearMessage()
 
         self.lblROI.hide()
         self.cmbROI.hide()
