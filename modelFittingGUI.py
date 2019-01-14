@@ -116,10 +116,10 @@ from typing import List
 
 from PyQt5.QtGui import QCursor, QIcon, QPixmap
 from PyQt5 import QtCore
-from PyQt5.QtWidgets import QApplication, QDialog,  QApplication, QPushButton, \
+from PyQt5.QtWidgets import QApplication, QApplication, QPushButton, \
      QVBoxLayout, QHBoxLayout, QGroupBox, QComboBox, QLabel, QDoubleSpinBox, \
      QMessageBox, QFileDialog, QCheckBox, QLineEdit, QSizePolicy, QSpacerItem, \
-     QGridLayout
+     QGridLayout, QWidget
 
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
@@ -214,7 +214,7 @@ logging.basicConfig(filename=LOG_FILE_NAME,
                     format=LOG_FORMAT)
 logger = logging.getLogger(__name__)
 
-class ModelFittingApp(QDialog):  # 
+class ModelFittingApp(QWidget):   
     """This class defines the TRISTAN Model Fitting software 
        based on a QDialog window.
        This includes seting up the GUI and defining the methods 
