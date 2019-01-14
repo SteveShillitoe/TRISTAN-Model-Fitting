@@ -1,4 +1,4 @@
-TRISTAN-Model-Fitting
+Batch TRISTAN-Model-Fitting
 ----------------------
 How to use.
 ------------
