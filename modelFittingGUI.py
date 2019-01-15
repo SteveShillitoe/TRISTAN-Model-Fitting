@@ -113,11 +113,12 @@ import numpy as np
 import pyautogui
 import logging
 from typing import List
+import time
 
 from PyQt5.QtGui import QCursor, QIcon, QPixmap
 from PyQt5 import QtCore
-from PyQt5.QtWidgets import QApplication, QApplication, QPushButton, \
-     QVBoxLayout, QHBoxLayout, QGroupBox, QComboBox, QLabel, QDoubleSpinBox, \
+from PyQt5.QtWidgets import QApplication, QPushButton, QDoubleSpinBox,\
+     QVBoxLayout, QHBoxLayout, QGroupBox, QComboBox, QLabel,  \
      QMessageBox, QFileDialog, QCheckBox, QLineEdit, QSizePolicy, QSpacerItem, \
      QGridLayout, QWidget, QStatusBar, QProgressBar
 
@@ -246,7 +247,7 @@ class ModelFittingApp(QWidget):
         width, height = self.GetScreenResolution()
         self.setGeometry(width*0.05, height*0.05, width*0.9, height*0.9)
         self.setWindowFlags(QtCore.Qt.WindowMinMaxButtonsHint |  QtCore.Qt.WindowCloseButtonHint)
-        
+        self.directory = ""
         self.ApplyStyleSheet()
        
         #Setup the layouts, the containers for widgets
@@ -337,6 +338,8 @@ class ModelFittingApp(QWidget):
         self.btnSaveReport.setToolTip('Insert an image of the graph opposite and associated data in a PDF file')
         layout.addWidget(self.btnSaveReport, QtCore.Qt.AlignTop)
         self.btnSaveReport.clicked.connect(self.CreatePDFReport)
+
+        self.SetUpBatchProcessingGroupBox(layout)
         
         layout.addStretch(1)
         self.btnExit = QPushButton('Exit')
@@ -521,6 +524,33 @@ class ModelFittingApp(QWidget):
         self.btnSaveCSV.hide()
         modelHorizontalLayout9.addWidget(self.btnSaveCSV)
         self.btnSaveCSV.clicked.connect(self.SaveCSVFile)
+
+    def SetUpBatchProcessingGroupBox(self, layout):
+        """Creates a group box to hold widgets associated with batch
+        processing functionality."""
+        self.groupBoxBatchProcessing = QGroupBox('Batch Processing')
+        self.groupBoxBatchProcessing.setAlignment(QtCore.Qt.AlignHCenter)
+        self.groupBoxBatchProcessing.hide()
+        layout.addWidget(self.groupBoxBatchProcessing)
+
+        verticalLayout = QVBoxLayout()
+        self.groupBoxBatchProcessing.setLayout(verticalLayout)
+
+        self.btnBatchProc = QPushButton('Batch Processing')
+        self.btnBatchProc.setToolTip('Processes all the CSV data files in the selected directory')
+        self.btnBatchProc.clicked.connect(self.BatchProcess) 
+        verticalLayout.addWidget(self.btnBatchProc)
+
+        self.lblBatchProcessing = QLabel("")
+        self.lblBatchProcessing.setWordWrap(True)
+        verticalLayout.addWidget(self.lblBatchProcessing)
+        verticalSpacer = QSpacerItem(20, 60, QSizePolicy.Minimum, QSizePolicy.Minimum)
+        verticalLayout.addSpacerItem(verticalSpacer)
+        self.pbar = QProgressBar(self)
+        self.pbar.setGeometry(30, 40, 200, 25)
+        verticalLayout.addWidget(self.pbar)
+       # self.pbar.hide()
+        
 
     def DisplayModelFittingGroupBox(self):
         """Shows the model fitting group box if a ROI is selected. 
@@ -1336,9 +1366,9 @@ class ModelFittingApp(QWidget):
         try:
             #get the data file in csv format
             #filter parameter set so that the user can only open a csv file
-            _dataFileName, _ = QFileDialog.getOpenFileName(parent=self, caption="Select csv file", filter="*.csv")
-            if os.path.exists(_dataFileName):
-                with open(_dataFileName, newline='') as csvfile:
+            fullFilePath, _ = QFileDialog.getOpenFileName(parent=self, caption="Select csv file", filter="*.csv")
+            if os.path.exists(fullFilePath):
+                with open(fullFilePath, newline='') as csvfile:
                     line = csvfile.readline()
                     if line.count(',') < (MIN_NUM_COLUMNS_CSV_FILE - 1):
                         QMessageBox().warning(self, "CSV data file", "The CSV file must contain at least 3 columns of data separated by commas.  The first column must contain time data.", QMessageBox.Ok)
@@ -1368,8 +1398,12 @@ class ModelFittingApp(QWidget):
                     logger.info('CSV data file {} loaded'.format(_dataFileName))
                     
                     #Extract data filename from the full data file path
-                    _dataFileName = os.path.basename(_dataFileName)
+                    #_dataFileName = os.path.basename(_dataFileName)
+                    folderName = os.path.basename(os.path.dirname(fullFilePath))
+                    self.directory, _dataFileName = os.path.split(fullFilePath)
                     self.statusbar.showMessage('File ' + _dataFileName + ' loaded')
+                    self.lblBatchProcessing.setText("Batch process all CSV data files in folder: " + folderName)
+                    self.groupBoxBatchProcessing.show() 
 
                     #Column headers form the keys in the dictionary called _concentrationData
                     for header in headers:
@@ -1790,6 +1824,29 @@ class ModelFittingApp(QWidget):
         """Closes the Model Fitting application."""
         logger.info("Application closed using the Exit button.")
         sys.exit(0)  
+
+    def BatchProcess(self):
+        self.pbar.show()
+        #Create a list of csv files in the selected directory
+        csvFiles = [file for file in os.listdir(self.directory) if file.lower().endswith('.csv')]
+        numCSVFiles = len(csvFiles)
+        self.lblBatchProcessing.clear()
+        self.lblBatchProcessing.setText('{}: {} csv files.'
+                                   .format(self.directory, str(numCSVFiles)))
+        time.sleep(1)
+        self.pbar.setMaximum(numCSVFiles)
+        self.pbar.setValue(0)
+        
+        count = 0
+        for file in csvFiles:
+            count +=1
+            self.lblBatchProcessing.clear()
+            self.lblBatchProcessing.setText("Processing {}".format(str(file)))
+            time.sleep(5)
+            self.pbar.setValue(count)
+
+        self.lblBatchProcessing.setText("Processing complete.")
+        self.pbar.hide()
                 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
