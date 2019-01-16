@@ -113,7 +113,6 @@ import numpy as np
 import pyautogui
 import logging
 from typing import List
-import time
 
 from PyQt5.QtGui import QCursor, QIcon, QPixmap
 from PyQt5 import QtCore
@@ -358,7 +357,7 @@ class ModelFittingApp(QWidget):
         #The group box is hidden until a ROI is selected.
         self.groupBoxModel.hide()
         layout.addWidget(self.groupBoxModel)
-        layout.addItem(verticalSpacer)
+        #layout.addItem(verticalSpacer)
         
         #Create horizontal layouts, one row of widgets to 
         #each horizontal layout. Then add them to a vertical layout, 
@@ -536,20 +535,17 @@ class ModelFittingApp(QWidget):
         verticalLayout = QVBoxLayout()
         self.groupBoxBatchProcessing.setLayout(verticalLayout)
 
-        self.btnBatchProc = QPushButton('Batch Processing')
+        self.btnBatchProc = QPushButton('Start Batch Processing')
         self.btnBatchProc.setToolTip('Processes all the CSV data files in the selected directory')
-        self.btnBatchProc.clicked.connect(self.BatchProcess) 
+        self.btnBatchProc.clicked.connect(self.BatchProcessAllCSVDataFiles) 
         verticalLayout.addWidget(self.btnBatchProc)
 
         self.lblBatchProcessing = QLabel("")
         self.lblBatchProcessing.setWordWrap(True)
         verticalLayout.addWidget(self.lblBatchProcessing)
-        verticalSpacer = QSpacerItem(20, 60, QSizePolicy.Minimum, QSizePolicy.Minimum)
-        verticalLayout.addSpacerItem(verticalSpacer)
         self.pbar = QProgressBar(self)
-        self.pbar.setGeometry(30, 40, 200, 25)
         verticalLayout.addWidget(self.pbar)
-       # self.pbar.hide()
+        self.pbar.hide()
         
 
     def DisplayModelFittingGroupBox(self):
@@ -886,15 +882,19 @@ class ModelFittingApp(QWidget):
             print('Error in function ClearOptimumParamaterValuesOnGUI: ' + str(e))
             logger.error('Error in function ClearOptimumParamaterValuesOnGUI: ' + str(e))
     
-    def SaveCSVFile(self):
+    def SaveCSVFile(self, fileName=''):
         """Saves in CSV format the data in the plot on the GUI """ 
         try:
             logger.info('Function SaveCSVFile called.')
             modelName = str(self.cmbModels.currentText())
             modelName.replace(" ", "-")
-            #Ask the user to specify the path & name of the CSV file. The name of the model is suggested as a default file name.
-            CSVFileName, _ = QFileDialog.getSaveFileName(self, caption="Enter CSV file name", directory=DEFAULT_PLOT_DATA_FILE_PATH_NAME, filter="*.csv")
-           
+
+            if fileName == '':
+                #Ask the user to specify the path & name of the CSV file. The name of the model is suggested as a default file name.
+                CSVFileName, _ = QFileDialog.getSaveFileName(self, caption="Enter CSV file name", directory=DEFAULT_PLOT_DATA_FILE_PATH_NAME, filter="*.csv")
+            else:
+               CSVFileName = fileName
+
            #Check that the user did not press Cancel on the create file dialog
             if CSVFileName:
                 logger.info('Function SaveCSVFile - csv file name = ' + CSVFileName)
@@ -906,6 +906,10 @@ class ModelFittingApp(QWidget):
                     boolIncludeVIF = True
                 else:
                     boolIncludeVIF = False
+
+                #If CSVFileName already exists, delete it
+                if os.path.exists(CSVFileName):
+                    os.remove(CSVFileName)
 
                 with open(CSVFileName, 'w',  newline='') as csvfile:
                     writeCSV = csv.writer(csvfile,  delimiter=',')
@@ -962,6 +966,7 @@ class ModelFittingApp(QWidget):
             #Hide buttons then display them if appropriate
             self.btnFitModel.hide()
             self.btnSaveCSV.hide()
+            self.groupBoxBatchProcessing.hide()
             ROI = str(self.cmbROI.currentText())
             AIF = str(self.cmbAIF.currentText())
             VIF = str(self.cmbVIF.currentText())
@@ -972,11 +977,13 @@ class ModelFittingApp(QWidget):
                 if ROI != 'Please Select' and AIF != 'Please Select':
                     self.btnFitModel.show()
                     self.btnSaveCSV.show()
+                    self.groupBoxBatchProcessing.show() 
                     logger.info("Function DisplayFitModelSaveCSVButtons called when ROI = {} and AIF = {}".format(ROI, AIF))
             elif modelInletType == 'dual':
                 if ROI != 'Please Select' and AIF != 'Please Select' and VIF != 'Please Select' :
                     self.btnFitModel.show()
                     self.btnSaveCSV.show()
+                    self.groupBoxBatchProcessing.show() 
                     logger.info("Function DisplayFitModelSaveCSVButtons called when ROI = {}, AIF = {} & VIF ={}".format(ROI, AIF, VIF)) 
         
         except Exception as e:
@@ -1376,16 +1383,6 @@ class ModelFittingApp(QWidget):
                     
                     #go back to top of the file
                     csvfile.seek(0)
-                    
-                    #Check for a header row in the CSV file
-                    #sniffer = csv.Sniffer()
-                    #has_header = csv.Sniffer().has_header(csvfile.read(16384))
-                    #if has_header == False:
-                    #    QMessageBox().warning(self, "CSV data file", "The first row of the CSV file must be a header row with column names", QMessageBox.Ok)
-                    #    raise RuntimeError('The CSV file must have a header row')
-                    
-                    #go back to top of the file
-                    csvfile.seek(0)
                     readCSV = csv.reader(csvfile, delimiter=',')
                     #Get column header labels
                     headers = next(readCSV, None)  # returns the headers or `None` if the input is empty
@@ -1403,8 +1400,7 @@ class ModelFittingApp(QWidget):
                     self.directory, _dataFileName = os.path.split(fullFilePath)
                     self.statusbar.showMessage('File ' + _dataFileName + ' loaded')
                     self.lblBatchProcessing.setText("Batch process all CSV data files in folder: " + folderName)
-                    self.groupBoxBatchProcessing.show() 
-
+                    
                     #Column headers form the keys in the dictionary called _concentrationData
                     for header in headers:
                         if 'time' in header:
@@ -1461,6 +1457,7 @@ class ModelFittingApp(QWidget):
         self.groupBoxModel.hide()
         self.btnFitModel.hide()
         self.btnSaveCSV.hide()
+        self.groupBoxBatchProcessing.hide()
         
 
     def ConfigureGUIAfterLoadingData(self):
@@ -1680,6 +1677,7 @@ class ModelFittingApp(QWidget):
                 self.btnFitModel.hide()
                 self.btnSaveReport.hide()
                 self.btnSaveCSV.hide()
+                self.groupBoxBatchProcessing.hide()
         except Exception as e:
             print('Error in function ConfigureGUIForEachModel: ' + str(e) )
             logger.error('Error in function ConfigureGUIForEachModel: ' + str(e) )
@@ -1825,28 +1823,149 @@ class ModelFittingApp(QWidget):
         logger.info("Application closed using the Exit button.")
         sys.exit(0)  
 
-    def BatchProcess(self):
-        self.pbar.show()
-        #Create a list of csv files in the selected directory
-        csvFiles = [file for file in os.listdir(self.directory) if file.lower().endswith('.csv')]
-        numCSVFiles = len(csvFiles)
-        self.lblBatchProcessing.clear()
-        self.lblBatchProcessing.setText('{}: {} csv files.'
-                                   .format(self.directory, str(numCSVFiles)))
-        time.sleep(1)
-        self.pbar.setMaximum(numCSVFiles)
-        self.pbar.setValue(0)
-        
-        count = 0
-        for file in csvFiles:
-            count +=1
-            self.lblBatchProcessing.clear()
-            self.lblBatchProcessing.setText("Processing {}".format(str(file)))
-            time.sleep(5)
-            self.pbar.setValue(count)
+    def BatchProcessAllCSVDataFiles(self):
+        try:
+            logger.info('Function BatchProcessAllCSVDataFiles called.')
+            self.pbar.show()
+            #Create a list of csv files in the selected directory
+            csvFiles = [file for file in os.listdir(self.directory) if file.lower().endswith('.csv')]
+            numCSVFiles = len(csvFiles)
 
-        self.lblBatchProcessing.setText("Processing complete.")
-        self.pbar.hide()
+            self.lblBatchProcessing.clear()
+            self.lblBatchProcessing.setText('{}: {} csv files.'
+                                       .format(self.directory, str(numCSVFiles)))
+
+            #Make nested folders to hold plot CSV files and PDF reports
+            csvPlotDataFolder = self.directory + '/CSVPlotDataFiles'
+            pdfReportFolder = self.directory + '/PDFReports'
+            if not os.path.exists(csvPlotDataFolder):
+                os.makedirs(csvPlotDataFolder)
+                logger.info('BatchProcessAllCSVDataFiles: {} created.'.format(csvPlotDataFolder))
+            if not os.path.exists(pdfReportFolder):
+                os.makedirs(pdfReportFolder)
+                logger.info('BatchProcessAllCSVDataFiles: {} created.'.format(pdfReportFolder))
+            
+            self.pbar.setMaximum(numCSVFiles)
+            self.pbar.setValue(0)
+        
+            count = 0
+
+            for file in csvFiles:
+                count +=1
+                self.lblBatchProcessing.clear()
+                self.lblBatchProcessing.setText("Processing {}".format(str(file)))
+                #Load current file
+                if not self.BatchProcessingLoadDataFile(self.directory + '/' + str(file)):
+                    continue
+                #Plot data
+                self.PlotConcentrations('BatchProcessAllCSVDataFiles')
+                #Fit curve to model
+                self.RunCurveFit()
+                #Save plot data to CSV file
+                self.SaveCSVFile(str(csvPlotDataFolder + '/plot' + file))
+                #Save PDF Report
+                #Reset default values
+                self.pbar.setValue(count)
+
+            self.lblBatchProcessing.setText("Processing complete.")
+            self.pbar.hide()
+        except Exception as e:
+            print('Error in function BatchProcessAllCSVDataFiles: ' + str(e) )
+            logger.error('Error in function BatchProcessAllCSVDataFiles: ' + str(e) )
+
+    def BatchProcessingLoadDataFile(self, fullFilePath):
+        """Loads the contents of a CSV file containing time and concentration data
+        into a dictionary of lists. The key is the name of the organ or 'time' and 
+        the corresponding value is a list of concentrations 
+        (or times when the key is 'time')
+        
+        The following validation is applied to the data file:
+            -The CSV file must contain at least 3 columns of data separated by commas.
+            -The first column in the CSV file must contain time data.
+            -The header of the time column must contain the word 'time'.
+       
+        Input Parameters:
+        ******************
+            fullFilePath - Full file path to a CSV file containing 
+                            time/concentration data
+            
+        """
+        global _concentrationData
+        global _dataFileName
+
+        #clear the global dictionary of previous data
+        _concentrationData.clear()
+
+        boolFileLoadedOK = True
+        
+        try:
+            if os.path.exists(fullFilePath):
+                with open(fullFilePath, newline='') as csvfile:
+                    line = csvfile.readline()
+                    if line.count(',') < (MIN_NUM_COLUMNS_CSV_FILE - 1):
+                        boolFileLoadedOK = False
+                        errorStr = 'Batch Processing: CSV file {} must contain at least 3 columns of data separated by commas.'.format(fullFilePath)
+                        logger.info(errorStr)
+                        raise RuntimeError(errorStr)
+
+                    #go back to top of the file
+                    csvfile.seek(0)
+                    readCSV = csv.reader(csvfile, delimiter=',')
+                    #Get column header labels
+                    headers = next(readCSV, None)  # returns the headers or `None` if the input is empty
+                    if headers:
+                        firstColumnHeader = headers[0].strip().lower()
+                        if 'time' not in firstColumnHeader:
+                            boolFileLoadedOK = False
+                            errorStr = 'Batch Processing: The first column in {} must contain time data.'.format(fullFilePath)
+                            logger.info(errorStr)
+                            raise RuntimeError(errorStr)    
+
+                    logger.info('Batch Processing: CSV data file {} loaded OK'.format(fullFilePath))
+                    
+                    #Column headers form the keys in the dictionary called _concentrationData
+                    for header in headers:
+                        if 'time' in header:
+                            header ='time'
+                        _concentrationData[header.title().lower()]=[]
+                    #Also add a 'model' key to hold a list of concentrations generated by a model
+                    _concentrationData['model'] = []
+
+                    #Each key in the dictionary is paired with a list of 
+                    #corresponding concentrations 
+                    #(except the Time key that is paired with a list of times)
+                    for row in readCSV:
+                        colNum=0
+                        for key in _concentrationData:
+                            #Iterate over columns in the selected row
+                            if key != 'model':
+                                if colNum == 0: 
+                                    #time column
+                                    _concentrationData['time'].append(float(row[colNum])/60.0)
+                                else:
+                                    _concentrationData[key].append(float(row[colNum]))
+                                colNum+=1           
+                csvfile.close()
+                
+        except csv.Error:
+            boolFileLoadedOK = False
+            print('CSV Reader error in function LoadDataFile: file {}, line {}: error={}'.format(_dataFileName, readCSV.line_num, csv.Error))
+            logger.error('CSV Reader error in function LoadDataFile: file {}, line {}: error ={}'.format(_dataFileName, readCSV.line_num, csv.Error))
+        except IOError:
+            boolFileLoadedOK = False
+            print ('IOError in function LoadDataFile: cannot open file' + _dataFileName + ' or read its data')
+            logger.error ('IOError in function LoadDataFile: cannot open file' + _dataFileName + ' or read its data')
+        except RuntimeError as re:
+            boolFileLoadedOK = False
+            print('Runtime error in function LoadDataFile: ' + str(re))
+            logger.error('Runtime error in function LoadDataFile: ' + str(re))
+        except Exception as e:
+            boolFileLoadedOK = False
+            print('Error in function LoadDataFile: ' + str(e) + ' at line {} in the CSV file'.format( readCSV.line_num))
+            logger.error('Error in function LoadDataFile: ' + str(e) + ' at line {} in the CSV file'.format( readCSV.line_num))
+            QMessageBox().warning(self, "CSV data file", "Error reading CSV file at line {} - {}".format(readCSV.line_num, e), QMessageBox.Ok)
+        finally:
+            return boolFileLoadedOK
                 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
