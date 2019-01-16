@@ -113,6 +113,8 @@ import numpy as np
 import pyautogui
 import logging
 from typing import List
+import time
+
 
 from PyQt5.QtGui import QCursor, QIcon, QPixmap
 from PyQt5 import QtCore
@@ -882,14 +884,14 @@ class ModelFittingApp(QWidget):
             print('Error in function ClearOptimumParamaterValuesOnGUI: ' + str(e))
             logger.error('Error in function ClearOptimumParamaterValuesOnGUI: ' + str(e))
     
-    def SaveCSVFile(self, fileName=''):
+    def SaveCSVFile(self, fileName=""):
         """Saves in CSV format the data in the plot on the GUI """ 
         try:
             logger.info('Function SaveCSVFile called.')
             modelName = str(self.cmbModels.currentText())
             modelName.replace(" ", "-")
 
-            if fileName == '':
+            if not fileName:
                 #Ask the user to specify the path & name of the CSV file. The name of the model is suggested as a default file name.
                 CSVFileName, _ = QFileDialog.getSaveFileName(self, caption="Enter CSV file name", directory=DEFAULT_PLOT_DATA_FILE_PATH_NAME, filter="*.csv")
             else:
@@ -1307,15 +1309,22 @@ class ModelFittingApp(QWidget):
             logger.error('Error in function BuildParameterDictionary: ' + str(e))
 
 
-    def CreatePDFReport(self):
+    def CreatePDFReport(self, reportFileName=""):
         """Creates and saves a report of model fitting. It includes the name of the model, 
-        the current values of its input parameters and a copy of the current plot."""
+        the current values of its input parameters and a copy of the current plot.
+        
+        Input Parameter:
+        ****************
+            reportFileName - file path and name of the PDF file in which the report will be save.
+                    Used during batch processing.
+        """
         try:
             pdf = PDF(REPORT_TITLE) 
             
-            #Ask the user to specify the path & name of PDF report. A default report name is suggested, see the Constant declarations at the top of this file
-            reportFileName, _ = QFileDialog.getSaveFileName(self, caption="Enter PDF file name", directory=DEFAULT_REPORT_FILE_PATH_NAME, filter="*.pdf")
-        
+            if not reportFileName:
+                #Ask the user to specify the path & name of PDF report. A default report name is suggested, see the Constant declarations at the top of this file
+                reportFileName, _ = QFileDialog.getSaveFileName(self, caption="Enter PDF file name", directory=DEFAULT_REPORT_FILE_PATH_NAME, filter="*.pdf")
+
             if reportFileName:
                 #If the user has entered the name of a new file, then we will have to add the .pdf extension
                 #If the user has decided to overwrite an existing file, then will not have to add the .pdf extension
@@ -1823,8 +1832,28 @@ class ModelFittingApp(QWidget):
         logger.info("Application closed using the Exit button.")
         sys.exit(0)  
 
+    def toggleEnabled(self, boolEnabled=False):
+        self.btnExit.setEnabled(boolEnabled)
+        self.btnLoadDisplayData.setEnabled(boolEnabled)
+        self.cmbROI.setEnabled(boolEnabled)
+        self.cmbAIF.setEnabled(boolEnabled)
+        self.cmbVIF.setEnabled(boolEnabled)
+        self.btnSaveReport.setEnabled(boolEnabled)
+        self.btnExit.setEnabled(boolEnabled)
+        self.cmbModels.setEnabled(boolEnabled)
+        self.btnReset.setEnabled(boolEnabled)
+        self.btnFitModel.setEnabled(boolEnabled)
+        self.btnSaveCSV.setEnabled(boolEnabled)
+        self.spinBoxArterialFlowFactor.setEnabled(boolEnabled)
+        self.spinBoxParameter1.setEnabled(boolEnabled) 
+        self.spinBoxParameter2.setEnabled(boolEnabled) 
+        self.spinBoxParameter3.setEnabled(boolEnabled) 
+        self.spinBoxParameter4.setEnabled(boolEnabled)
+        
+
     def BatchProcessAllCSVDataFiles(self):
         try:
+            global _dataFileName
             logger.info('Function BatchProcessAllCSVDataFiles called.')
             self.pbar.show()
             #Create a list of csv files in the selected directory
@@ -1850,25 +1879,30 @@ class ModelFittingApp(QWidget):
         
             count = 0
 
+            self.toggleEnabled(False)
+            QApplication.processEvents()
             for file in csvFiles:
+                #Set global filename to name of file in current iteration 
+                #as this variable used to write datafile name in the PDF report
+                _dataFileName = str(file) 
+                self.statusbar.showMessage('File ' + str(file) + ' loaded.')
                 count +=1
-                self.lblBatchProcessing.clear()
                 self.lblBatchProcessing.setText("Processing {}".format(str(file)))
                 #Load current file
                 if not self.BatchProcessingLoadDataFile(self.directory + '/' + str(file)):
-                    continue
-                #Plot data
-                self.PlotConcentrations('BatchProcessAllCSVDataFiles')
-                #Fit curve to model
-                self.RunCurveFit()
-                #Save plot data to CSV file
-                self.SaveCSVFile(str(csvPlotDataFolder + '/plot' + file))
-                #Save PDF Report
-                #Reset default values
+                    continue  #Skip ths iteration if any problems loading file
+                self.PlotConcentrations('BatchProcessAllCSVDataFiles') #Plot data                
+                self.RunCurveFit() #Fit curve to model                
+                self.SaveCSVFile(csvPlotDataFolder + '/plot' + file) #Save plot data to CSV file               
+                self.CreatePDFReport(pdfReportFolder + '/' + os.path.splitext(file)[0]) #Save PDF Report                
+                self.InitialiseParameterSpinBoxes() #Reset default values
                 self.pbar.setValue(count)
+                time.sleep(0.5)
+                QApplication.processEvents()
 
             self.lblBatchProcessing.setText("Processing complete.")
-            self.pbar.hide()
+            self.toggleEnabled(True)
+            #self.pbar.hide()
         except Exception as e:
             print('Error in function BatchProcessAllCSVDataFiles: ' + str(e) )
             logger.error('Error in function BatchProcessAllCSVDataFiles: ' + str(e) )
