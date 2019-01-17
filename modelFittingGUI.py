@@ -1058,55 +1058,55 @@ class ModelFittingApp(QWidget):
         self.spinBoxParameter3.blockSignals(boolBlockSignal)
         self.spinBoxParameter4.blockSignals(boolBlockSignal)
 
-    def setParameterSpinBoxesWithOptimumValues(self, optimumParams):
+    def setParameterSpinBoxValues(self, parameterList):
         """Sets the value displayed in the model parameter spinboxes 
            to the calculated optimum model parameter values.
         
         Input Parameters
         ----------------
-            optimumParams - Array of optimum model input parameter values.
+            parameterList - Array of optimum model input parameter values.
         """
         try:
-            logger.info('Function setParameterSpinBoxesWithOptimumValues called with optimumParams = {}'.format(optimumParams))
+            logger.info('Function setParameterSpinBoxValues called with parameterList = {}'.format(parameterList))
             #Block signals from spinboxes, so that setting values
             #returned from curve fitting does not trigger an event. 
             self.BlockSpinBoxSignals(True)
             
             if self.spinBoxArterialFlowFactor.isHidden() == False:
-                self.spinBoxArterialFlowFactor.setValue(optimumParams[0]* 100) #Convert decimal fraction to %
+                self.spinBoxArterialFlowFactor.setValue(parameterList[0]* 100) #Convert decimal fraction to %
                 nextIndex = 1
             else:
                 nextIndex = 0
 
             if self.spinBoxParameter1.suffix() == '%':
-                self.spinBoxParameter1.setValue(optimumParams[nextIndex]* 100) #Convert Volume fraction to %
+                self.spinBoxParameter1.setValue(parameterList[nextIndex]* 100) #Convert Volume fraction to %
             else:
-                self.spinBoxParameter1.setValue(optimumParams[nextIndex])
+                self.spinBoxParameter1.setValue(parameterList[nextIndex])
             nextIndex += 1
 
             if self.spinBoxParameter2.suffix() == '%':
-                self.spinBoxParameter2.setValue(optimumParams[nextIndex]* 100) #Convert Volume fraction to %
+                self.spinBoxParameter2.setValue(parameterList[nextIndex]* 100) #Convert Volume fraction to %
             else:
-                self.spinBoxParameter2.setValue(optimumParams[nextIndex])
+                self.spinBoxParameter2.setValue(parameterList[nextIndex])
             nextIndex += 1
 
             if self.spinBoxParameter3.isHidden() == False:
                 if self.spinBoxParameter3.suffix() == '%':
-                    self.spinBoxParameter3.setValue(optimumParams[nextIndex]* 100) #Convert Volume fraction to %
+                    self.spinBoxParameter3.setValue(parameterList[nextIndex]* 100) #Convert Volume fraction to %
                 else:
-                    self.spinBoxParameter3.setValue(optimumParams[nextIndex])
+                    self.spinBoxParameter3.setValue(parameterList[nextIndex])
                 nextIndex += 1
 
             if self.spinBoxParameter4.isHidden() == False:
                 if self.spinBoxParameter4.suffix() == '%':
-                    self.spinBoxParameter4.setValue(optimumParams[nextIndex]* 100) #Convert Volume fraction to %
+                    self.spinBoxParameter4.setValue(parameterList[nextIndex]* 100) #Convert Volume fraction to %
                 else:
-                    self.spinBoxParameter4.setValue(optimumParams[nextIndex])
+                    self.spinBoxParameter4.setValue(parameterList[nextIndex])
        
             self.BlockSpinBoxSignals(False)
         except Exception as e:
-            print('Error in function setParameterSpinBoxesWithOptimumValues ' + str(e))
-            logger.error('Error in function setParameterSpinBoxesWithOptimumValues '  + str(e))
+            print('Error in function setParameterSpinBoxValues ' + str(e))
+            logger.error('Error in function setParameterSpinBoxValues '  + str(e))
 
     def Calculate95ConfidenceLimits(self, numDataPoints: int, numParams: int, 
                                     optimumParams, paramCovarianceMatrix):
@@ -1200,7 +1200,7 @@ class ModelFittingApp(QWidget):
             
             #Display results of curve fitting  
             #(optimum model parameter values) on GUI.
-            self.setParameterSpinBoxesWithOptimumValues(optimumParams)
+            self.setParameterSpinBoxValues(optimumParams)
 
             #Plot the best curve on the graph
             self.PlotConcentrations('RunCurveFit')
@@ -1849,13 +1849,14 @@ class ModelFittingApp(QWidget):
         self.spinBoxParameter2.setEnabled(boolEnabled) 
         self.spinBoxParameter3.setEnabled(boolEnabled) 
         self.spinBoxParameter4.setEnabled(boolEnabled)
+        self.btnBatchProc.setEnabled(boolEnabled)
         
 
     def BatchProcessAllCSVDataFiles(self):
         try:
             global _dataFileName
             logger.info('Function BatchProcessAllCSVDataFiles called.')
-            self.pbar.show()
+            
             #Create a list of csv files in the selected directory
             csvFiles = [file for file in os.listdir(self.directory) if file.lower().endswith('.csv')]
             numCSVFiles = len(csvFiles)
@@ -1874,14 +1875,39 @@ class ModelFittingApp(QWidget):
                 os.makedirs(pdfReportFolder)
                 logger.info('BatchProcessAllCSVDataFiles: {} created.'.format(pdfReportFolder))
             
+            #Set up progress bar
+            self.pbar.show()
             self.pbar.setMaximum(numCSVFiles)
             self.pbar.setValue(0)
         
-            count = 0
+            boolUseParameterDefaultValues = True
+            #If the user has changed one or more parameter values
+            #ask if they still wish to use the parameter default values
+            #or the values they have selected.
+            if self.haveParametersChanged():
+                buttonReply = QMessageBox.question(self, 'Parameter values changed.', 
+                       "Do you wish to use to use the new parameter values (Yes) or the default values (No)?", QMessageBox.Yes | QMessageBox.No, 
+                       QMessageBox.No)
+                if buttonReply == QMessageBox.Yes:
+                    logger.info('BatchProcessAllCSVDataFiles: Using new parameter values')
+                    boolUseParameterDefaultValues = False
+                    #Store new parameter values
+                    initialParameterArray = self.BuildParameterArray()
+                else:
+                    logger.info('BatchProcessAllCSVDataFiles: Using default parameter values')
 
             self.toggleEnabled(False)
             QApplication.processEvents()
+            count = 0
             for file in csvFiles:
+                if boolUseParameterDefaultValues:
+                    self.InitialiseParameterSpinBoxes() #Reset default values
+                    self.spinBoxParameter1.setEnabled(False) #Enabled in InitialiseParameterSpinBoxes
+                else:
+                    #Reset parameters to values selected by the user before
+                    #the start of batch processing
+                    self.setParameterSpinBoxValues(initialParameterArray)
+
                 #Set global filename to name of file in current iteration 
                 #as this variable used to write datafile name in the PDF report
                 _dataFileName = str(file) 
@@ -1889,13 +1915,12 @@ class ModelFittingApp(QWidget):
                 count +=1
                 self.lblBatchProcessing.setText("Processing {}".format(str(file)))
                 #Load current file
-                if not self.BatchProcessingLoadDataFile(self.directory + '/' + str(file)):
+                if not self.BatchProcessingLoadDataFiles(self.directory + '/' + str(file)):
                     continue  #Skip ths iteration if any problems loading file
                 self.PlotConcentrations('BatchProcessAllCSVDataFiles') #Plot data                
                 self.RunCurveFit() #Fit curve to model                
                 self.SaveCSVFile(csvPlotDataFolder + '/plot' + file) #Save plot data to CSV file               
                 self.CreatePDFReport(pdfReportFolder + '/' + os.path.splitext(file)[0]) #Save PDF Report                
-                self.InitialiseParameterSpinBoxes() #Reset default values
                 self.pbar.setValue(count)
                 time.sleep(0.5)
                 QApplication.processEvents()
@@ -1907,7 +1932,7 @@ class ModelFittingApp(QWidget):
             print('Error in function BatchProcessAllCSVDataFiles: ' + str(e) )
             logger.error('Error in function BatchProcessAllCSVDataFiles: ' + str(e) )
 
-    def BatchProcessingLoadDataFile(self, fullFilePath):
+    def BatchProcessingLoadDataFiles(self, fullFilePath):
         """Loads the contents of a CSV file containing time and concentration data
         into a dictionary of lists. The key is the name of the organ or 'time' and 
         the corresponding value is a list of concentrations 
@@ -2000,6 +2025,37 @@ class ModelFittingApp(QWidget):
             QMessageBox().warning(self, "CSV data file", "Error reading CSV file at line {} - {}".format(readCSV.line_num, e), QMessageBox.Ok)
         finally:
             return boolFileLoadedOK
+
+    def haveParametersChanged(self) -> bool:
+        """Returns True if the user has changed parameter spinbox values from the defaults"""
+        try:
+            boolParameterChanged = False
+            modelName = str(self.cmbModels.currentText())
+            logger.info('Function haveParametersChanged called when model = ' + modelName)
+
+            if modelName == '2-2CFM':
+                if (self.spinBoxArterialFlowFactor.value() != DEFAULT_VALUE_Fa or
+                    self.spinBoxParameter1.value() != DEFAULT_VALUE_Ve_2_2CFM or
+                    self.spinBoxParameter2.value() != DEFAULT_VALUE_Fp_2_2CFM or
+                    self.spinBoxParameter3.value() != DEFAULT_VALUE_Khe_2_2CFM or
+                    self.spinBoxParameter4.value() !=DEFAULT_VALUE_Kbh_2_2CFM):
+                    boolParameterChanged = True
+            elif modelName == 'HF2-2CFM':
+                if (self.spinBoxArterialFlowFactor.value() != DEFAULT_VALUE_Fa or
+                    self.spinBoxParameter1.value() != DEFAULT_VALUE_Ve or
+                    self.spinBoxParameter2.value() != DEFAULT_VALUE_Khe or
+                    self.spinBoxParameter3.value() != DEFAULT_VALUE_Kbh):
+                    boolParameterChanged = True
+            elif modelName == 'HF1-2CFM' or modelName == 'HF1-2CFM-FixVe':
+                if (self.spinBoxParameter1.value() != DEFAULT_VALUE_Ve or
+                    self.spinBoxParameter2.value() != DEFAULT_VALUE_Khe or
+                    self.spinBoxParameter3.value() != DEFAULT_VALUE_Kbh):
+                    boolParameterChanged = True
+
+            return boolParameterChanged    
+        except Exception as e:
+            print('Error in function haveParametersChanged: ' + str(e) )
+            logger.error('Error in function haveParametersChanged: ' + str(e) )
                 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
