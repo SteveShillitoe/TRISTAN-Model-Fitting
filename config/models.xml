@@ -1,0 +1,230 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<models>
+  <model>
+    <name>
+      <short>2-2CFM</short>
+      <long>2 Inlet - Two Compartment Filtration Model</long>
+    </name>
+    <function>DualInputTwoCompartmentFiltrationModel</function>
+    <image>DualInletTwoCompartmentGadoxetateModel.png</image>
+    <inlet_type>dual</inlet_type>
+    <parameters>
+      <parameter>
+      <name>
+        <short>Fa</short>
+        <long>Arterial Flow Fraction</long>
+      </name>
+      <units>%</units>
+      <default>17.0</default>
+      <constraints>
+        <lower>0.0</lower>
+        <upper>100.00</upper>
+      </constraints>
+    </parameter>
+      <parameter>
+        <name>
+          <short>Ve</short>
+          <long>Extracellular Volume Fraction</long>
+        </name>
+        <units>%</units>
+        <default>20.0</default>
+        <constraints>
+          <lower>0.0</lower>
+          <upper>100.00</upper>
+        </constraints>
+      </parameter>
+      <parameter>
+        <name>
+          <short>Fp</short>
+          <long>Total Plasma Inflow</long>
+        </name>
+        <units>mL/min/mL</units>
+        <default>1.0</default>
+        <constraints>
+          <lower>0.0001</lower>
+          <upper>0.9999</upper>
+        </constraints>
+      </parameter>
+      <parameter>
+        <name>
+          <short>Kbh</short>
+          <long>Biliary Efflux Rate</long>
+        </name>
+        <units>mL/min/mL</units>
+        <default>0.017</default>
+        <constraints>
+          <lower>0.0</lower>
+          <upper>100.0</upper>
+        </constraints>
+      </parameter>
+      <parameter>
+        <name>
+          <short>Khe</short>
+          <long>Hepatocyte Uptake Rate</long>
+        </name>
+        <units>mL/min/mL</units>
+        <default>0.22</default>
+        <constraints>
+          <lower>0.0</lower>
+          <upper>100.0</upper>
+        </constraints>
+      </parameter>
+    </parameters>
+  </model>
+  <model>
+    <name>
+      <short>HF2-2CFM</short>
+      <long>High Flow 2 Inlet - Two Compartment Filtration Model</long>
+    </name>
+    <function>HighFlowDualInletTwoCompartmentGadoxetateModel</function>
+    <image>HighFlowDualInletTwoCompartmentGadoxetateModel.png</image>
+    <inlet_type>dual</inlet_type>
+    <parameters>
+      <parameter>
+        <name>
+          <short>Fa</short>
+          <long>Arterial Flow Fraction</long>
+        </name>
+        <units>%</units>
+        <default>17.0</default>
+        <constraints>
+          <lower>0.0</lower>
+          <upper>100.00</upper>
+        </constraints>
+      </parameter>
+      <parameter>
+        <name>
+          <short>Ve</short>
+          <long>Extracellular Volume Fraction</long>
+        </name>
+        <units>%</units>
+        <default>23.0</default>
+        <constraints>
+          <lower>0.0</lower>
+          <upper>100.00</upper>
+        </constraints>
+      </parameter>
+      <parameter>
+        <name>
+          <short>Kbh</short>
+          <long>Biliary Efflux Rate</long>
+        </name>
+        <units>mL/min/mL</units>
+        <default>0.0918</default>
+        <constraints>
+          <lower>0.0</lower>
+          <upper>100.0</upper>
+        </constraints>
+      </parameter>
+      <parameter>
+        <name>
+          <short>Khe</short>
+          <long>Hepatocyte Uptake Rate</long>
+        </name>
+        <units>mL/min/mL</units>
+        <default>2.358</default>
+        <constraints>
+          <lower>0.0</lower>
+          <upper>100.0</upper>
+        </constraints>
+      </parameter>
+    </parameters>
+  </model>
+  <model>
+    <name>
+      <short>HF1-2CFM</short>
+      <long>High Flow 1 Inlet - Two Compartment Filtration Model</long>
+    </name>
+    <function>HighFlowSingleInletTwoCompartmentGadoxetateModel</function>
+    <image>HighFlowSingleInletTwoCompartmentGadoxetateModel.png'</image>
+    <inlet_type>single</inlet_type>
+    <parameters>
+      <parameter>
+        <name>
+          <short>Ve</short>
+          <long>Extracellular Volume Fraction</long>
+        </name>
+        <units>%</units>
+        <default>23.0</default>
+        <constraints>
+          <lower>0.0001</lower>
+          <upper>0.9999</upper>
+        </constraints>
+      </parameter>
+      <parameter>
+        <name>
+          <short>Kbh</short>
+          <long>Biliary Efflux Rate</long>
+        </name>
+        <units>mL/min/mL</units>
+        <default>0.0918</default>
+        <constraints>
+          <lower>0.0</lower>
+          <upper>100.0</upper>
+        </constraints>
+      </parameter>
+      <parameter>
+        <name>
+          <short>Khe</short>
+          <long>Hepatocyte Uptake Rate</long>
+        </name>
+        <units>mL/min/mL</units>
+        <default>2.358</default>
+        <constraints>
+          <lower>0.0001</lower>
+          <upper>100.0</upper>
+        </constraints>
+      </parameter>
+    </parameters>
+  </model>
+  <model>
+    <name>
+      <short>HF1-2CFM-FixVe</short>
+      <long>High Flow 1 Inlet - Two Compartment Filtration Model\n - Fixed Extracellular Vol Fraction</long>
+    </name>
+    <function>HighFlowSingleInletTwoCompartmentGadoxetateModel</function>
+    <image>HighFlowSingleInletTwoCompartmentGadoxetateModel_fixedve.png</image>
+    <inlet_type>single</inlet_type>
+    <parameters>
+      <parameter fixed="true">
+        <name>
+          <short>Ve</short>
+          <long>Extracellular Volume Fraction</long>
+        </name>
+        <units>%</units>
+        <default>23.0</default>
+        <constraints>
+          <lower>0.22999</lower>
+          <upper>0.23001</upper>
+        </constraints>
+      </parameter>
+      <parameter>
+        <name>
+          <short>Kbh</short>
+          <long>Biliary Efflux Rate</long>
+        </name>
+        <units>mL/min/mL</units>
+        <default>0.0918</default>
+        <constraints>
+          <lower>0.0</lower>
+          <upper>100.0</upper>
+        </constraints>
+      </parameter>
+      <parameter>
+        <name>
+          <short>Khe</short>
+          <long>Hepatocyte Uptake Rate</long>
+        </name>
+        <units>mL/min/mL</units>
+        <default>2.358</default>
+        <constraints>
+          <lower>0.0001</lower>
+          <upper>100.0</upper>
+        </constraints>
+      </parameter>
+    </parameters>
+  </model>
+</models>
+
+
+
