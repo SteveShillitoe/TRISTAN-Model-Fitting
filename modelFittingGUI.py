@@ -1905,6 +1905,8 @@ class ModelFittingApp(QWidget):
             self.toggleEnabled(False)
             QApplication.processEvents()
             count = 0
+
+            cvsFile = self.CreateCSVBatchSummaryFile(self.directory)
             for file in csvFiles:
                 if boolUseParameterDefaultValues:
                     self.InitialiseParameterSpinBoxes() #Reset default values
@@ -1937,6 +1939,54 @@ class ModelFittingApp(QWidget):
         except Exception as e:
             print('Error in function BatchProcessAllCSVDataFiles: ' + str(e) )
             logger.error('Error in function BatchProcessAllCSVDataFiles: ' + str(e) )
+
+    def CreateCSVBatchSummaryFile(self, pathToFolder):
+        """Creates a CSV to hold a summary of model fitting a batch of datafiles""" 
+        try:
+            logger.info('Function CreateCSVBatchSummaryFile called.')
+            modelName = str(self.cmbModels.currentText())
+            modelName.replace(" ", "-")
+
+            #Ask the user to specify the path & name of the CSV file. The name of the model is suggested as a default file name.
+            CSVFileName, _ = QFileDialog.getSaveFileName(self, caption="Batch Summary CSV file name", 
+                           directory=pathToFolder + "\\" + modelName, filter="*.csv")
+
+           #Check that the user did not press Cancel on the create file dialog
+            if CSVFileName:
+                logger.info('Function CreateCSVBatchSummaryFile - csv file name = ' + CSVFileName)
+
+                #If CSVFileName already exists, delete it
+                if os.path.exists(CSVFileName):
+                    os.remove(CSVFileName)
+
+                csvfile = open(CSVFileName, 'w',  newline='')
+                writeCSV = csv.writer(csvfile,  delimiter=',')
+                #write header row
+                writeCSV.writerow(['Data File', 'Parameter', 'Value', 'Lower', 'Upper'])
+                return writeCSV
+                   #    #Write rows of data
+                    #    for i, time in enumerate(_concentrationData['time']):
+                    #        writeCSV.writerow([time, _concentrationData[ROI][i], _concentrationData[AIF][i], _concentrationData[VIF][i], _listModel[i]])
+                    #else:
+                    #    #write header row
+                    #    writeCSV.writerow(['Time (min)', ROI, AIF, modelName + ' model'])
+                    #    #Write rows of data
+                    #    for i, time in enumerate(_concentrationData['time']):
+                    #        writeCSV.writerow([time, _concentrationData[ROI][i], _concentrationData[AIF][i], _listModel[i]])
+                    #csvfile.close()
+
+        except csv.Error:
+            print('CSV Writer error in function SaveCSVFile: file %s, line %d: %s' % (CSVFileName, WriteCSV.line_num, csv.Error))
+            logger.error('CSV Writer error in function SaveCSVFile: file %s, line %d: %s' % (CSVFileName, WriteCSV.line_num, csv.Error))
+        except IOError as IOe:
+            print ('IOError in function SaveCSVFile: cannot open file ' + CSVFileName + ' or read its data: ' + str(IOe))
+            logger.error ('IOError in function SaveCSVFile: cannot open file ' + CSVFileName + ' or read its data; ' + str(IOe))
+        except RuntimeError as re:
+            print('Runtime error in function SaveCSVFile: ' + str(re))
+            logger.error('Runtime error in function SaveCSVFile: ' + str(re))
+        except Exception as e:
+            print('Error in function SaveCSVFile: ' + str(e) + ' at line in CSV file ', WriteCSV.line_num)
+            logger.error('Error in function SaveCSVFile: ' + str(e) + ' at line in CSV file ', WriteCSV.line_num)    
 
     def BatchProcessingLoadDataFiles(self, fullFilePath):
         """Loads the contents of a CSV file containing time and concentration data
