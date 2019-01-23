@@ -109,13 +109,19 @@ def ModelSelector(modelName: str, times, AIFConcentration, parameterArray, VIFCo
         Kbh = parameterArray[3]
         return HighFlowDualInletTwoCompartmentGadoxetateModel(timeInputConcs2DArray, arterialFlowFraction,
               Ve, Khe, Kbh)
-    elif modelName == 'HF1-2CFM' or modelName == 'HF1-2CFM-FixVe':
+    elif modelName == 'HF1-2CFM':
         timeInputConcs2DArray = np.column_stack((times, AIFConcentration))
         Ve = parameterArray[0]
         Khe = parameterArray[1]
         Kbh = parameterArray[2]
         return HighFlowSingleInletTwoCompartmentGadoxetateModel(timeInputConcs2DArray, Ve, Khe, Kbh)
 
+    elif modelName == 'HF1-2CFM-FixVe':
+        timeInputConcs2DArray = np.column_stack((times, AIFConcentration))
+        Khe = parameterArray[1]
+        Kbh = parameterArray[2]
+        return HighFlowSingleInletTwoCompartmentGadoxetateModelFixedVe(timeInputConcs2DArray, 
+                                                     Khe, Kbh)
 #Note: The input paramaters for the volume fractions and rate constants in
 # the following model function definitions are listed in the same order as they are 
 # displayed in the GUI from top (first) to bottom (last) 
@@ -135,7 +141,7 @@ def DualInputTwoCompartmentFiltrationModel(xData2DArray, fAFF: float,
 
             Returns
             -------
-            listConcentrationsFromModel - list of calculated concentrations at each of the 
+            modelConcs - list of calculated concentrations at each of the 
                 time points in array 'time'.
             """ 
     try:
@@ -165,13 +171,13 @@ def DualInputTwoCompartmentFiltrationModel(xData2DArray, fAFF: float,
         Tc1 = 1/(gamma-alpha)
         Tc2 = 1/(gamma+alpha)
     
-        listConcentrationsFromModel = []
+        modelConcs = []
         ce = (1/(2*Ve))*( (1+beta/alpha)*Tc1*tools.expconv(Tc1,times,combinedConcentration,'DualInputTwoCompartmentFiltrationModel - 1') + 
                         (1-beta/alpha)*Tc2*tools.expconv(Tc2,times,combinedConcentration,'DualInputTwoCompartmentFiltrationModel - 2')) 
    
-        listConcentrationsFromModel = Ve*ce + Khe*Th*tools.expconv(Th,times,ce,'DualInputTwoCompartmentFiltrationModel - 3')
+        modelConcs = Ve*ce + Khe*Th*tools.expconv(Th,times,ce,'DualInputTwoCompartmentFiltrationModel - 3')
     
-        return(listConcentrationsFromModel)
+        return(modelConcs)
     except Exception as e:
             print('Error - TracerKineticModels.TracerKineticModels.DualInputTwoCompartmentFiltrationModel: ' + str(e))
             logger.error('TracerKineticModels.DualInputTwoCompartmentFiltrationModel:' + str(e) )
@@ -190,7 +196,7 @@ def HighFlowDualInletTwoCompartmentGadoxetateModel(xData2DArray, fAFF: float,
 
             Returns
             -------
-            listConcentrationsFromModel - list of calculated concentrations at each of the 
+            modelConcs - list of calculated concentrations at each of the 
                 time points in array 'time'.
             """ 
     try:
@@ -213,11 +219,11 @@ def HighFlowDualInletTwoCompartmentGadoxetateModel(xData2DArray, fAFF: float,
         #Determine an overall concentration
         combinedConcentration = fAFF*AIFconcentrations + fVFF*VIFconcentrations 
     
-        listConcentrationsFromModel = []
-        listConcentrationsFromModel = (Ve*combinedConcentration + 
+        modelConcs = []
+        modelConcs = (Ve*combinedConcentration + 
       Khe*Th*tools.expconv(Th,times,combinedConcentration,'HighFlowDualInletTwoCompartmentGadoxetateModel'))
         
-        return(listConcentrationsFromModel)
+        return(modelConcs)
     except Exception as e:
             print('Error - TracerKineticModels.TracerKineticModels.HighFlowDualInletTwoCompartmentGadoxetateModel: ' + str(e))
             logger.error('TracerKineticModels.HighFlowDualInletTwoCompartmentGadoxetateModel:' + str(e) )
@@ -236,7 +242,7 @@ def HighFlowSingleInletTwoCompartmentGadoxetateModel(xData2DArray, Ve: float,
 
             Returns
             -------
-            listConcentrationsFromModel - list of calculated concentrations at each of the 
+            modelConcs - list of calculated concentrations at each of the 
                 time points in array 'time'.
             """ 
     try:
@@ -252,247 +258,52 @@ def HighFlowSingleInletTwoCompartmentGadoxetateModel(xData2DArray, Ve: float,
 
         Th = (1-Ve)/Kbh
     
-        #Determine an overall concentration
-        combinedConcentration = AIFconcentrations
-    
-        listConcentrationsFromModel = []
-        listConcentrationsFromModel = (Ve*AIFconcentrations +
+        modelConcs = []
+        modelConcs = (Ve*AIFconcentrations +
        Khe*Th*tools.expconv(Th,times,AIFconcentrations,'HighFlowSingleInletTwoCompartmentGadoxetateModel'))
     
-        return(listConcentrationsFromModel)
+        return(modelConcs)
     except Exception as e:
             print('Error - TracerKineticModels.TracerKineticModels.HighFlowSingleInletTwoCompartmentGadoxetateModel: ' + str(e))
             logger.error('TracerKineticModels.HighFlowSingleInletTwoCompartmentGadoxetateModel:' + str(e) )
 
-def ExtendedTofts_SingleInput(xData2DArray, Vp, Ve, Ktrans):
+def HighFlowSingleInletTwoCompartmentGadoxetateModelFixedVe(xData2DArray, 
+                                                     Khe: float, Kbh: float):
     """This function contains the algorithm for calculating how concentration varies with time
-        using the Extended Tofts model when it takes just an arterial input.
+            using the High Flow Single Inlet Two Compartment Gadoxetate Model model with FixedVe.
         
-        Input Parameters
-        ----------------
-            xData2DArray - time and AIF concentration 1D arrays stacked into one 2D array.
-            Vp - Plasma Volume Fraction (decimal fraction).
-            Ve - Extracellular Volume Fraction (decimal fraction).
-            Ktrans - Transfer Rate Constant, (1/min).
+            Input Parameters
+            ----------------
+                xData2DArray - time and AIF concentration 1D arrays stacked into one 2D array.
+                Khe - Hepatocyte Uptake Rate (mL/min/mL)
+                Kbh - 'Biliary Efflux Rate (mL/min/mL)'- 
 
-        Returns
-        -------
-        listConcentrationsFromModel - list of calculated concentrations at each of the 
-            time points in array 'time'.
-        """ 
+            Returns
+            -------
+            modelConcs - list of calculated concentrations at each of the 
+                time points in array 'time'.
+            """ 
     try:
-        logger.info('In function TracerKineticModels.extendedTofts_SingleInput with Vp={}, Ve={} & Ktrans={}'.format(Vp, Ve, Ktrans))
+        logger.info('In function TracerKineticModels.HighFlowSingleInletTwoCompartmentGadoxetateModelFixedVe ' +
+          'with Khe={} & Kbh={}'.format(Khe, Kbh))
+        
         #In order to use scipy.optimize.curve_fit, time and concentration must be
         #combined into one function input parameter, a 2D array, then separated into individual
         #1 D arrays 
         times = xData2DArray[:,0]
-        AIFconcentrations = xData2DArray[:,1]
-        
-        #Calculate Intracellular transit time, Tc
-        Tc = Ve/Ktrans
-        
-        listConcentrationsFromModel = []
-        # expconv calculates convolution of ca and (1/Tc)exp(-t/Tc)
-        listConcentrationsFromModel = Vp*AIFconcentrations + Ve*tools.expconv(Tc, times, AIFconcentrations, 'Extended Tofts')
-        return listConcentrationsFromModel
-    except Exception as e:
-        print('TracerKineticModels.extendedTofts_SingleInput: ' + str(e))
-        logger.error('Runtime error in function TracerKineticModels.extendedTofts_SingleInput:' + str(e) )
-
-def ExtendedTofts_DualInput(xData2DArray, Vp, Ve, Ktrans, fAFF):
-    """This function contains the algorithm for calculating how concentration varies with time
-        using the Extended Tofts model when it takes both an arterial and a venal input.
-        
-        Input Parameters
-        ----------------
-            xData2DArray - time, AIF & VIF concentration 1D arrays stacked into one 2D array.
-            Vp - Plasma Volume Fraction (decimal fraction).
-            Ve - Extracellular Volume Fraction (decimal fraction).
-            Ktrans - Transfer Rate Constant, (1/min).
-            fAFF - Arterial flow factor (decimal fraction).
-
-        Returns
-        -------
-        listConcentrationsFromModel - list of calculated concentrations at each of the 
-            time points in array 'time'.
-        """ 
-    try:
-        logger.info('In function TracerKineticModels.extendedTofts_DualInput with Vp={}, Ve={},Ktrans={}, fA={} '.format(Vp, Ve, Ktrans, fAFF))
-        #print('Extended Tofts. Vp={}, Ve={} and Ktrans={}'.format(Vp, Ve, Ktrans))
-        #In order to use scipy.optimize.curve_fit, time and concentration must be
-        #combined into one function input parameter, a 2D array, then separated into individual
-        #1 D arrays 
-        times = xData2DArray[:,0]
-        AIFconcentrations = xData2DArray[:,1]
-        VIFconcentrations = xData2DArray[:,2]
-           
-        #Calculate Intracellular transit time, Tc
-        Tc = Ve/Ktrans
-        #Calculate Venous Flow Factor
-        fVFF = 1 - fAFF
-        
-        listConcentrationsFromModel = []
-        # expconv calculates convolution of ca and (1/Tc)exp(-t/Tc)
-        listConcentrationsFromModel = Vp*((fAFF * AIFconcentrations) + (fVFF * VIFconcentrations)) \
-            + Ve*tools.expconv(Tc, times, ((fAFF * AIFconcentrations) + (fVFF * VIFconcentrations)), 'Extended Tofts')
-        return listConcentrationsFromModel
-    except Exception as e:
-        print('TracerKineticModels.extendedTofts_DualInput: ' + str(e))
-        logger.error('Runtime error in function TracerKineticModels.extendedTofts_DualInput:' + str(e) )
-            
-def OneCompartment_SingleInput(xData2DArray, Vp, Fp):
-    """This function contains the algorithm for calculating how concentration varies with time
-        using the One Compartment model when it takes just an arterial input.
-        
-        Input Parameters
-        ----------------
-            xData2DArray - time and AIF concentration 1D arrays stacked into one 2D array.
-            Vp - Plasma Volume Fraction (decimal fraction).
-            Fp - Plasma Flow Rate, (ml/min).
-
-        Returns
-        -------
-        listConcentrationsFromModel - list of calculated concentrations at each of the 
-            time points in array 'time'.
-        """
-    try:
-        logger.info('In function TracerKineticModels.oneCompartment_SingleInput with Vp={} and Fp={}'.format(Vp, Fp))
-        #In order to use scipy.optimize.curve_fit, time and concentration must be
-        #combined into one function input parameter, a 2D array, then separated into individual
-        #1 D arrays
-        times = xData2DArray[:,0]
-        AIFconcentrations = xData2DArray[:,1]
-        
-        #Calculate Intracellular transit time, Tc
-        Tc = Vp/Fp
-        listConcentrationsFromModel = []
-
-        # expconv calculates convolution of ca and (1/Tc)exp(-t/Tc)
-        listConcentrationsFromModel = Vp*tools.expconv(Tc, times, AIFconcentrations, 'One Compartment')
-        return listConcentrationsFromModel
-    except Exception as e:
-        print('TracerKineticModels.oneCompartment_SingleInput: ' + str(e))
-        logger.error('Runtime error in function TracerKineticModels.oneCompartment_SingleInput:' + str(e) )
-
-def OneCompartment_DualInput(xData2DArray, Vp, Fp, fAFF):
-    """This function contains the algorithm for calculating how concentration varies with time
-        using the One Compartment model when it takes both an arterial and a venal input.
-        
-        Input Parameters
-        ----------------
-            xData2DArray - time, AIF & VIF concentration 1D arrays stacked into one 2D array.
-            Vp - Plasma Volume Fraction (decimal fraction).
-            Fp - Plasma Flow Rate, (ml/min).
-            fAFF - Arterial flow factor (decimal fraction).
-
-        Returns
-        -------
-        listConcentrationsFromModel - list of calculated concentrations at each of the 
-            time points in array 'time'.
-        """
-    try:
-        logger.info('In function TracerKineticModels.oneCompartment_DualInput with Vp={} and Fp={}'.format(Vp, Fp))
-        #In order to use scipy.optimize.curve_fit, time and concentration must be
-        #combined into one function input parameter, a 2D array, then separated into individual
-        #1 D arrays
-        times = xData2DArray[:,0]
-        AIFconcentrations = xData2DArray[:,1]
-        VIFconcentrations = xData2DArray[:,2]
-        
-        #Calculate Intracellular transit time, Tc
-        Tc = Vp/Fp
-
-        fVFF = 1 - fAFF
-        listConcentrationsFromModel = []
-
-        # expconv calculates convolution of ca and (1/Tc)exp(-t/Tc)
-        listConcentrationsFromModel = Vp*tools.expconv(Tc, times, 
-                 ((fAFF * AIFconcentrations) + (fVFF * VIFconcentrations)), 'One Compartment')
-        return listConcentrationsFromModel
-    except Exception as e:
-        print('TracerKineticModels.oneCompartment_DualInput: ' + str(e))
-        logger.error('Runtime error in function TracerKineticModels.oneCompartment_DualInput:' + str(e) )
-
-def HighFlowGadoxetate_SingleInput(xData2DArray, Ve, Kce, Kbc):
-    """This function contains the algorithm for calculating how concentration varies with time
-        using the High Flow Gadoxetate model when it takes just an arterial input.
-        
-        Input Parameters
-        ----------------
-            xData2DArray - time and AIF concentration 1D arrays stacked into one 2D array
-            Ve - Extracellular Volume Fraction (decimal fraction)
-            Kce - Hepatocellular Uptake Rate,(mL/100m L/min)
-            Kbc - Biliary Efflux Rate (mL/100mL/min)
-
-        Returns
-        -------
-        listConcentrationsFromModel - list of calculated concentrations at each of the 
-            time points in array 'time'.
-        
-        """
-    try:
-        logger.info('In function TracerKineticModels.highFlowGadoxetate_DualInput with Kce={}, Ve={} and Kbc={}'.format(Kce, Ve, Kbc))
-        
-        #In order to use scipy.optimize.curve_fit, time and concentration must be
-        #combined into one function input parameter, a 2D array, then separated into individual
-        #1 D arrays
-        times = xData2DArray[:,0]
-        AIFconcentrations = xData2DArray[:,1]
-        
-        #Calculate Intracellular transit time, Tc
-        Tc = (1-Ve)/Kbc
-        listConcentrationsFromModel = []
-
-        # expconv calculates convolution of ca and (1/Tc)exp(-t/Tc)
-        listConcentrationsFromModel = Ve*AIFconcentrations + Kce*Tc*tools.expconv(Tc, times, AIFconcentrations, 'High Flow Gadoxetate')
-        return listConcentrationsFromModel
-    except Exception as e:
-        print('TracerKineticModels.highFlowGadoxetate_SingleInput: ' + str(e))
-        logger.error('Runtime error in function TracerKineticModels.highFlowGadoxetate_SingleInput:' + str(e) )
+        AIFconcs = xData2DArray[:,1]
+        Tc = 1/Kbh
     
-
-def HighFlowGadoxetate_DualInput(xData2DArray, Ve, Kce, Kbc, fAFF):
-    """This function contains the algorithm for calculating how concentration varies with time
-        using the High Flow Gadoxetate model when it takes both an arterial and a venal input.
-        
-        Input Parameters
-        ----------------
-            xData2DArray - time, AIF & VIF concentration 1D arrays stacked into one 2D array
-            Ve - Extracellular Volume Fraction (decimal fraction)
-            Kce - Hepatocellular Uptake Rate,(mL/100m L/min)
-            Kbc - Biliary Efflux Rate (mL/100mL/min)
-            fAFF - Arterial flow factor (decimal fraction).
-
-        Returns
-        -------
-        listConcentrationsFromModel - list of calculated concentrations at each of the 
-            time points in array 'time'.
-        
-        """
-    try:
-        logger.info('In function TracerKineticModels.highFlowGadoxetate_DualInput with Kce={}, Ve={} and Kbc={}'.format(Kce, Ve, Kbc))
-        
-        #In order to use scipy.optimize.curve_fit, time and concentration must be
-        #combined into one function input parameter, a 2D array, then separated into individual
-        #1 D arrays
-        times = xData2DArray[:,0]
-        AIFconcentrations = xData2DArray[:,1]
-        VIFconcentrations = xData2DArray[:,2]
-        
-        #Calculate Intracellular transit time, Tc
-        Tc = (1-Ve)/Kbc
-        #Calculate Venous Flow Factor
-        fVFF = 1 - fAFF
-        listConcentrationsFromModel = []
-
-        # expconv calculates convolution of ca and (1/Tc)exp(-t/Tc)
-        listConcentrationsFromModel = Ve*((fAFF * AIFconcentrations) + (fVFF * VIFconcentrations)) \
-                + Kce*Tc*tools.expconv(Tc, times, ((fAFF * AIFconcentrations) + (fVFF * VIFconcentrations)), 'High Flow Gadoxetate')
-        return listConcentrationsFromModel
-    except Exception as e:
-        print('TracerKineticModels.highFlowGadoxetate_DualInput: ' + str(e))
-        logger.error('Runtime error in function TracerKineticModels.highFlowGadoxetate_DualInput:' + str(e) )
+        modelConcs = []
+        modelConcs = Khe*Tc*tools.expconv(Tc,times,AIFconcs,'HighFlowSingleInletTwoCompartmentGadoxetateModelFixedVe')
     
+        return(modelConcs)
+
+    except Exception as e:
+            print('Error - TracerKineticModels.TracerKineticModels.HighFlowSingleInletTwoCompartmentGadoxetateModelFixedVe: ' + str(e))
+            logger.error('TracerKineticModels.HighFlowSingleInletTwoCompartmentGadoxetateModelFixedVe:' + str(e) )
+
+
 
 def CurveFit(modelName: str, times, AIFConcs, VIFConcs, concROI, paramArray, constrain: bool):
     """This function calls the curve_fit function imported from scipy.optimize 
@@ -561,31 +372,18 @@ def CurveFit(modelName: str, times, AIFConcs, VIFConcs, concROI, paramArray, con
                              bounds=([0.0001,0.0,0.0001], [0.9999, 100.0, 100.0]))
         # Ve, Khe, Kbh
         elif modelName == 'HF1-2CFM-FixVe':
-            #Ve is fixed at 0.23 by constaining it in the range 0.22999<Ve<0.23001
-            return curve_fit(HighFlowSingleInletTwoCompartmentGadoxetateModel, 
-                             timeInputConcs2DArray, concROI, paramArray,
-                             bounds=([0.22999,0.0,0.0001], [0.23001, 100.0, 100.0]))
-
-        #elif modelName ==  'Extended Tofts':
-        #    if boolDualInput == True:
-        #            if constrain == True:
-        #                return curve_fit(extendedTofts_DualInput, timeInputConcs2DArray, concROI, 
-        #                          paramArray, bounds=(0,[PARAMETER_UPPER_BOUND_VOL_FRACTION, 
-        #                                     PARAMETER_UPPER_BOUND_VOL_FRACTION,
-        #                                     PARAMETER_UPPER_BOUND_RATE]))
-        #            else:
-        #                return curve_fit(extendedTofts_DualInput, timeInputConcs2DArray, concROI, 
-        #                                 paramArray)
-        #    else:
-        #            if constrain == True:
-        #                return curve_fit(extendedTofts_SingleInput, timeInputConcs2DArray, concROI, 
-        #                          paramArray, bounds=(0,[PARAMETER_UPPER_BOUND_VOL_FRACTION, 
-        #                                     PARAMETER_UPPER_BOUND_VOL_FRACTION,
-        #                                     PARAMETER_UPPER_BOUND_RATE]))
-        #            else:
-        #                return curve_fit(extendedTofts_SingleInput, timeInputConcs2DArray, concROI, 
-        #                                 paramArray)
-       
+            #Ve is fixed at 0.23
+            Ve = paramArray[0] 
+            Khe = paramArray[1]
+            Kbh = paramArray[2]
+            params = []
+            params.append(Khe)
+            params.append(Kbh)
+            #print('params ='+ str(params))
+            hep_conc = (concROI - Ve*AIFConcs)/(1-Ve)
+            return curve_fit(HighFlowSingleInletTwoCompartmentGadoxetateModelFixedVe, 
+                             timeInputConcs2DArray, hep_conc, params,
+                             bounds=([0.0,0.0001], [100.0, 100.0]))
 
     except ValueError as ve:
         print ('TracerKineticModels.CurveFit Value Error: ' + str(ve))

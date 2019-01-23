@@ -756,35 +756,38 @@ class ModelFittingApp(QWidget):
             else:
                 nextIndex = 0
             
+            modelName = str(self.cmbModels.currentText())
             self.lblParam1Name.setText(self.labelParameter1.text())
-            parameterValue = round(_optimisedParamaterList[nextIndex][0], 3)
-            lowerLimit = round(_optimisedParamaterList[nextIndex][1], 3)
-            upperLimit = round(_optimisedParamaterList[nextIndex][2], 3)
-            
-            if self.spinBoxParameter1.suffix() == '%':
-                #convert from decimal fraction to %
+            if modelName == 'HF1-2CFM-FixVe':
+                parameterValue = self.spinBoxParameter1.value()
+                lowerLimit = "N/A"
+                upperLimit = "N/A"
                 suffix = '%'
-                parameterValue = round(parameterValue * 100.0, 3)
-                lowerLimit = round(lowerLimit * 100.0,3)
-                upperLimit = round(upperLimit * 100.0,3)
-                
+                tempList = [parameterValue, lowerLimit, upperLimit]
+                _optimisedParamaterList.insert(0, tempList)
+            else:
+                parameterValue = round(_optimisedParamaterList[nextIndex][0], 3)
+                lowerLimit = round(_optimisedParamaterList[nextIndex][1], 3)
+                upperLimit = round(_optimisedParamaterList[nextIndex][2], 3)
+                if self.spinBoxParameter1.suffix() == '%':
+                    #convert from decimal fraction to %
+                    suffix = '%'
+                    parameterValue = round(parameterValue * 100.0, 3)
+                    lowerLimit = round(lowerLimit * 100.0,3)
+                    upperLimit = round(upperLimit * 100.0,3)
+                else:
+                    suffix = ''
                 #For display in the PDF report, overwrite decimal volume fraction values in  _optimisedParamaterList
                 #with the % equivalent
                 _optimisedParamaterList[nextIndex][0] = parameterValue
                 _optimisedParamaterList[nextIndex][1] = lowerLimit
                 _optimisedParamaterList[nextIndex][2] = upperLimit
-            else:
-                suffix = ''
+
+            self.lblParam1Value.setText(str(parameterValue) + suffix)
+            confidenceStr = '[{}     {}]'.format(lowerLimit, upperLimit)
+            self.lblParam1ConfInt.setText(confidenceStr)
             
             nextIndex +=1
-            self.lblParam1Value.setText(str(parameterValue) + suffix)
-            modelName = str(self.cmbModels.currentText())
-            if modelName == 'HF1-2CFM-FixVe':
-                confidenceStr = '[N/A     N/A]'
-            else:
-                confidenceStr = '[{}     {}]'.format(lowerLimit, upperLimit)
-            self.lblParam1ConfInt.setText(confidenceStr) 
-
             self.lblParam2Name.setText(self.labelParameter2.text())
             parameterValue = round(_optimisedParamaterList[nextIndex][0], 3)
             lowerLimit = round(_optimisedParamaterList[nextIndex][1], 3)
@@ -803,11 +806,11 @@ class ModelFittingApp(QWidget):
             else:
                 suffix = ''
             
-            nextIndex += 1
             self.lblParam2Value.setText(str(parameterValue) + suffix)
             confidenceStr = '[{}     {}]'.format(lowerLimit, upperLimit)
             self.lblParam2ConfInt.setText(confidenceStr) 
-
+            
+            nextIndex += 1
             if self.spinBoxParameter3.isHidden() == False:
                 self.lblParam3Name.setText(self.labelParameter3.text())
                 parameterValue = round(_optimisedParamaterList[nextIndex][0], 3)
@@ -1010,13 +1013,7 @@ class ModelFittingApp(QWidget):
                 arterialFlowFactor = self.spinBoxArterialFlowFactor.value()/100
                 initialParametersArray.append(arterialFlowFactor)
 
-            modelName = str(self.cmbModels.currentText())
-            if modelName == 'HF1-2CFM-FixVe':
-                #Ve must be fixed at 23%
-                parameter1 = 23.00
-            else:
-                parameter1 = self.spinBoxParameter1.value()
-         
+            parameter1 = self.spinBoxParameter1.value()
             if self.spinBoxParameter1.suffix() == '%':
                 #This is a volume fraction so convert % to a decimal fraction
                 parameter1 = parameter1/100.0
@@ -1070,19 +1067,26 @@ class ModelFittingApp(QWidget):
             logger.info('Function setParameterSpinBoxValues called with parameterList = {}'.format(parameterList))
             #Block signals from spinboxes, so that setting values
             #returned from curve fitting does not trigger an event. 
+
             self.BlockSpinBoxSignals(True)
+
+            modelName = str(self.cmbModels.currentText())
             
             if self.spinBoxArterialFlowFactor.isHidden() == False:
                 self.spinBoxArterialFlowFactor.setValue(parameterList[0]* 100) #Convert decimal fraction to %
                 nextIndex = 1
             else:
                 nextIndex = 0
-
-            if self.spinBoxParameter1.suffix() == '%':
-                self.spinBoxParameter1.setValue(parameterList[nextIndex]* 100) #Convert Volume fraction to %
+                
+            if modelName == 'HF1-2CFM-FixVe':
+                #retain the value set by the user
+                pass
             else:
-                self.spinBoxParameter1.setValue(parameterList[nextIndex])
-            nextIndex += 1
+                if self.spinBoxParameter1.suffix() == '%':
+                    self.spinBoxParameter1.setValue(parameterList[nextIndex]* 100) #Convert Volume fraction to %
+                else:
+                    self.spinBoxParameter1.setValue(parameterList[nextIndex])
+                nextIndex += 1
 
             if self.spinBoxParameter2.suffix() == '%':
                 self.spinBoxParameter2.setValue(parameterList[nextIndex]* 100) #Convert Volume fraction to %
@@ -1247,6 +1251,8 @@ class ModelFittingApp(QWidget):
                 index +=1
 
             if self.spinBoxParameter1.isHidden() == False:
+                #modelName = str(self.cmbModels.currentText())
+                #if modelName != 'HF1-2CFM-FixVe':
                 parameterList2=[]
                 if confidenceLimitsArray != None:
                     parameterList2.append(confidenceLimitsArray[index][0]) #Parameter Value
