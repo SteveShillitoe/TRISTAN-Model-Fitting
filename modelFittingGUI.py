@@ -113,8 +113,7 @@ import numpy as np
 import pyautogui
 import logging
 from typing import List
-import time
-
+import datetime
 
 from PyQt5.QtGui import QCursor, QIcon, QPixmap
 from PyQt5 import QtCore
@@ -459,7 +458,7 @@ class ModelFittingApp(QWidget):
         
         #Create spinboxes and their labels
         #Label text set in function ConfigureGUIForEachModel when the model is selected
-        self.lblArterialFlowFactor = QLabel("Arterial Flow Fraction, \n fa (%):") 
+        self.lblArterialFlowFactor = QLabel("Arterial Flow Fraction, \n fa (%)") 
         self.lblArterialFlowFactor.hide()
         self.labelParameter1 = QLabel("")
         self.labelParameter2 = QLabel("")
@@ -1251,8 +1250,6 @@ class ModelFittingApp(QWidget):
                 index +=1
 
             if self.spinBoxParameter1.isHidden() == False:
-                #modelName = str(self.cmbModels.currentText())
-                #if modelName != 'HF1-2CFM-FixVe':
                 parameterList2=[]
                 if confidenceLimitsArray != None:
                     parameterList2.append(confidenceLimitsArray[index][0]) #Parameter Value
@@ -1363,6 +1360,7 @@ class ModelFittingApp(QWidget):
                 #Delete image file
                 os.remove(IMAGE_NAME)
                 logger.info('PDF Report created called ' + reportFileName)
+                return parameterDict
         except Exception as e:
             print('Error in function CreatePDFReport: ' + str(e))
             logger.error('Error in function CreatePDFReport: ' + str(e))
@@ -1856,7 +1854,6 @@ class ModelFittingApp(QWidget):
         self.spinBoxParameter3.setEnabled(boolEnabled) 
         self.spinBoxParameter4.setEnabled(boolEnabled)
         self.btnBatchProc.setEnabled(boolEnabled)
-        
 
     def BatchProcessAllCSVDataFiles(self):
         try:
@@ -1864,8 +1861,8 @@ class ModelFittingApp(QWidget):
             logger.info('Function BatchProcessAllCSVDataFiles called.')
             
             #Create a list of csv files in the selected directory
-            csvFiles = [file for file in os.listdir(self.directory) if file.lower().endswith('.csv')]
-            numCSVFiles = len(csvFiles)
+            csvDataFiles = [file for file in os.listdir(self.directory) if file.lower().endswith('.csv')]
+            numCSVFiles = len(csvDataFiles)
 
             self.lblBatchProcessing.clear()
             self.lblBatchProcessing.setText('{}: {} csv files.'
@@ -1890,7 +1887,7 @@ class ModelFittingApp(QWidget):
             #If the user has changed one or more parameter values
             #ask if they still wish to use the parameter default values
             #or the values they have selected.
-            if self.haveParametersChanged():
+            if self.BatchProcessingHaveParamsChanged():
                 buttonReply = QMessageBox.question(self, 'Parameter values changed.', 
                        "Do you wish to use to use the new parameter values (Yes) or the default values (No)?", QMessageBox.Yes | QMessageBox.No, 
                        QMessageBox.No)
@@ -1906,8 +1903,13 @@ class ModelFittingApp(QWidget):
             QApplication.processEvents()
             count = 0
 
-            cvsFile = self.CreateCSVBatchSummaryFile(self.directory)
-            for file in csvFiles:
+            modelName = str(self.cmbModels.currentText())
+
+            cvsSummary, batchSummaryFileName = self.BatchProcessingCreateCSVBatchSummaryFile(self.directory)
+            for file in csvDataFiles:
+                if str(file) == batchSummaryFileName:
+                    continue #Do not process the batch summary file
+
                 if boolUseParameterDefaultValues:
                     self.InitialiseParameterSpinBoxes() #Reset default values
                     self.spinBoxParameter1.setEnabled(False) #Enabled in InitialiseParameterSpinBoxes
@@ -1919,18 +1921,22 @@ class ModelFittingApp(QWidget):
                 #Set global filename to name of file in current iteration 
                 #as this variable used to write datafile name in the PDF report
                 _dataFileName = str(file) 
-                self.statusbar.showMessage('File ' + str(file) + ' loaded.')
+                self.statusbar.showMessage('File ' + _dataFileName + ' loaded.')
                 count +=1
-                self.lblBatchProcessing.setText("Processing {}".format(str(file)))
+                self.lblBatchProcessing.setText("Processing {}".format(_dataFileName))
                 #Load current file
-                if not self.BatchProcessingLoadDataFiles(self.directory + '/' + str(file)):
-                    continue  #Skip ths iteration if any problems loading file
+                fileLoadedOK, failureReason = self.BatchProcessingLoadDataFile(self.directory + '/' + _dataFileName)
+                if not fileLoadedOK:
+                    cvsSummary.writerow(
+                        [_dataFileName + ' could not be loaded because ' + failureReason])
+                    continue  #Skip this iteration if problems loading file
                 self.PlotConcentrations('BatchProcessAllCSVDataFiles') #Plot data                
-                self.RunCurveFit() #Fit curve to model                
+                self.RunCurveFit() #Fit curve to model 
                 self.SaveCSVFile(csvPlotDataFolder + '/plot' + file) #Save plot data to CSV file               
-                self.CreatePDFReport(pdfReportFolder + '/' + os.path.splitext(file)[0]) #Save PDF Report                
+                parameterDict = self.CreatePDFReport(pdfReportFolder + '/' + os.path.splitext(file)[0]) #Save PDF Report                
+                self.BatchProcessWriteOptimumParamsToSummary(cvsSummary, 
+                           _dataFileName,  modelName, parameterDict)
                 self.pbar.setValue(count)
-                time.sleep(0.5)
                 QApplication.processEvents()
 
             self.lblBatchProcessing.setText("Processing complete.")
@@ -1940,41 +1946,31 @@ class ModelFittingApp(QWidget):
             print('Error in function BatchProcessAllCSVDataFiles: ' + str(e) )
             logger.error('Error in function BatchProcessAllCSVDataFiles: ' + str(e) )
 
-    def CreateCSVBatchSummaryFile(self, pathToFolder):
+    def BatchProcessingCreateCSVBatchSummaryFile(self, pathToFolder):
         """Creates a CSV to hold a summary of model fitting a batch of datafiles""" 
         try:
-            logger.info('Function CreateCSVBatchSummaryFile called.')
-            modelName = str(self.cmbModels.currentText())
-            modelName.replace(" ", "-")
+            logger.info('Function BatchProcessingCreateCSVBatchSummaryFile called.')
 
             #Ask the user to specify the path & name of the CSV file. The name of the model is suggested as a default file name.
             CSVFileName, _ = QFileDialog.getSaveFileName(self, caption="Batch Summary CSV file name", 
-                           directory=pathToFolder + "\\" + modelName, filter="*.csv")
+                           directory=pathToFolder + "//BatchSummary", filter="*.csv")
 
            #Check that the user did not press Cancel on the create file dialog
-            if CSVFileName:
-                logger.info('Function CreateCSVBatchSummaryFile - csv file name = ' + CSVFileName)
+            if not CSVFileName:
+                CSVFileName = pathToFolder + "//BatchSummary.csv"
 
-                #If CSVFileName already exists, delete it
-                if os.path.exists(CSVFileName):
-                    os.remove(CSVFileName)
+            logger.info('Function BatchProcessingCreateCSVBatchSummaryFile - csv file name = ' + CSVFileName)
 
-                csvfile = open(CSVFileName, 'w',  newline='')
-                writeCSV = csv.writer(csvfile,  delimiter=',')
-                #write header row
-                writeCSV.writerow(['Data File', 'Parameter', 'Value', 'Lower', 'Upper'])
-                return writeCSV
-                   #    #Write rows of data
-                    #    for i, time in enumerate(_concentrationData['time']):
-                    #        writeCSV.writerow([time, _concentrationData[ROI][i], _concentrationData[AIF][i], _concentrationData[VIF][i], _listModel[i]])
-                    #else:
-                    #    #write header row
-                    #    writeCSV.writerow(['Time (min)', ROI, AIF, modelName + ' model'])
-                    #    #Write rows of data
-                    #    for i, time in enumerate(_concentrationData['time']):
-                    #        writeCSV.writerow([time, _concentrationData[ROI][i], _concentrationData[AIF][i], _listModel[i]])
-                    #csvfile.close()
+            #If CSVFileName already exists, delete it
+            if os.path.exists(CSVFileName):
+                os.remove(CSVFileName)
 
+            csvfile = open(CSVFileName, 'w',  newline='')
+            writeCSV = csv.writer(csvfile,  dialect='excel', delimiter=',')
+            #write header row
+            writeCSV.writerow(['Data File', 'Model', 'Parameter', 'Value', 'Lower', 'Upper'])
+            return writeCSV, csvfile
+         
         except csv.Error:
             print('CSV Writer error in function SaveCSVFile: file %s, line %d: %s' % (CSVFileName, WriteCSV.line_num, csv.Error))
             logger.error('CSV Writer error in function SaveCSVFile: file %s, line %d: %s' % (CSVFileName, WriteCSV.line_num, csv.Error))
@@ -1988,7 +1984,22 @@ class ModelFittingApp(QWidget):
             print('Error in function SaveCSVFile: ' + str(e) + ' at line in CSV file ', WriteCSV.line_num)
             logger.error('Error in function SaveCSVFile: ' + str(e) + ' at line in CSV file ', WriteCSV.line_num)    
 
-    def BatchProcessingLoadDataFiles(self, fullFilePath):
+    def BatchProcessWriteOptimumParamsToSummary(self, cvsFileObj, fileName, modelName, paramDict):
+        try:
+            for paramName, paramList in paramDict.items(): 
+                paramName.replace('\n', '')
+                paramName.replace(',', '')
+                paramName = "'" + paramName + "'"
+                value = str(round(paramList[0],3))
+                lower = paramList[1]
+                upper = paramList[2]
+                cvsFileObj.writerow([fileName, modelName, paramName, value, lower, upper])
+        except Exception as e:
+            print('Error in function BatchProcessWriteOptimumParamsToSummary: ' + str(e))
+            logger.error('Error in function BatchProcessWriteOptimumParamsToSummary: ' + str(e))
+                  
+
+    def BatchProcessingLoadDataFile(self, fullFilePath):
         """Loads the contents of a CSV file containing time and concentration data
         into a dictionary of lists. The key is the name of the organ or 'time' and 
         the corresponding value is a list of concentrations 
@@ -2011,18 +2022,19 @@ class ModelFittingApp(QWidget):
         #clear the global dictionary of previous data
         _concentrationData.clear()
 
-        boolFileLoadedOK = True
+        boolFileFormatOK = True
+        failureReason = ""
         
         try:
             if os.path.exists(fullFilePath):
                 with open(fullFilePath, newline='') as csvfile:
                     line = csvfile.readline()
                     if line.count(',') < (MIN_NUM_COLUMNS_CSV_FILE - 1):
-                        boolFileLoadedOK = False
-                        errorStr = 'Batch Processing: CSV file {} must contain at least 3 columns of data separated by commas.'.format(fullFilePath)
+                        boolFileFormatOK = False
+                        failureReason = "at least 3 columns of data are expected"
+                        errorStr = 'Batch Processing: CSV file {} must acontain at least 3 columns of data separated by commas.'.format(fullFilePath)
                         logger.info(errorStr)
-                        raise RuntimeError(errorStr)
-
+                        
                     #go back to top of the file
                     csvfile.seek(0)
                     readCSV = csv.reader(csvfile, delimiter=',')
@@ -2031,63 +2043,67 @@ class ModelFittingApp(QWidget):
                     if headers:
                         firstColumnHeader = headers[0].strip().lower()
                         if 'time' not in firstColumnHeader:
-                            boolFileLoadedOK = False
+                            boolFileFormatOK = False
+                            join = ""
+                            if len(failureReason) > 0:
+                                join = " and "
+                            failureReason = failureReason + join + \
+                           " first column must contain time data, with the word 'time' as a header"
                             errorStr = 'Batch Processing: The first column in {} must contain time data.'.format(fullFilePath)
                             logger.info(errorStr)
-                            raise RuntimeError(errorStr)    
-
-                    logger.info('Batch Processing: CSV data file {} loaded OK'.format(fullFilePath))
                     
-                    #Column headers form the keys in the dictionary called _concentrationData
-                    for header in headers:
-                        if 'time' in header:
-                            header ='time'
-                        _concentrationData[header.title().lower()]=[]
-                    #Also add a 'model' key to hold a list of concentrations generated by a model
-                    _concentrationData['model'] = []
+                    if boolFileFormatOK:
+                        #Column headers form the keys in the dictionary called _concentrationData
+                        for header in headers:
+                            if 'time' in header:
+                                header ='time'
+                            _concentrationData[header.title().lower()]=[]
+                        #Also add a 'model' key to hold a list of concentrations generated by a model
+                        _concentrationData['model'] = []
 
-                    #Each key in the dictionary is paired with a list of 
-                    #corresponding concentrations 
-                    #(except the Time key that is paired with a list of times)
-                    for row in readCSV:
-                        colNum=0
-                        for key in _concentrationData:
-                            #Iterate over columns in the selected row
-                            if key != 'model':
-                                if colNum == 0: 
-                                    #time column
-                                    _concentrationData['time'].append(float(row[colNum])/60.0)
-                                else:
-                                    _concentrationData[key].append(float(row[colNum]))
-                                colNum+=1           
-                csvfile.close()
-                
+                        #Each key in the dictionary is paired with a list of 
+                        #corresponding concentrations 
+                        #(except the Time key that is paired with a list of times)
+                        for row in readCSV:
+                            colNum=0
+                            for key in _concentrationData:
+                                #Iterate over columns in the selected row
+                                if key != 'model':
+                                    if colNum == 0: 
+                                        #time column
+                                        _concentrationData['time'].append(float(row[colNum])/60.0)
+                                    else:
+                                        _concentrationData[key].append(float(row[colNum]))
+                                    colNum+=1           
+                        logger.info('Batch Processing: CSV data file {} loaded OK'.format(fullFilePath))
+            return boolFileFormatOK, failureReason
+        
         except csv.Error:
-            boolFileLoadedOK = False
-            print('CSV Reader error in function LoadDataFile: file {}, line {}: error={}'.format(_dataFileName, readCSV.line_num, csv.Error))
-            logger.error('CSV Reader error in function LoadDataFile: file {}, line {}: error ={}'.format(_dataFileName, readCSV.line_num, csv.Error))
+            boolFileFormatOK = False
+            print('CSV Reader error in function BatchProcessingLoadDataFile: file {}, line {}: error={}'.format(_dataFileName, readCSV.line_num, csv.Error))
+            logger.error('CSV Reader error in function BatchProcessingLoadDataFile: file {}, line {}: error ={}'.format(_dataFileName, readCSV.line_num, csv.Error))
         except IOError:
-            boolFileLoadedOK = False
-            print ('IOError in function LoadDataFile: cannot open file' + _dataFileName + ' or read its data')
-            logger.error ('IOError in function LoadDataFile: cannot open file' + _dataFileName + ' or read its data')
+            boolFileFormatOK = False
+            print ('IOError in function BatchProcessingLoadDataFile: cannot open file' + _dataFileName + ' or read its data')
+            logger.error ('IOError in function BatchProcessingLoadDataFile: cannot open file' + _dataFileName + ' or read its data')
         except RuntimeError as re:
-            boolFileLoadedOK = False
-            print('Runtime error in function LoadDataFile: ' + str(re))
-            logger.error('Runtime error in function LoadDataFile: ' + str(re))
+            boolFileFormatOK = False
+            print('Runtime error in function BatchProcessingLoadDataFile: ' + str(re))
+            logger.error('Runtime error in function BatchProcessingLoadDataFile: ' + str(re))
         except Exception as e:
-            boolFileLoadedOK = False
-            print('Error in function LoadDataFile: ' + str(e) + ' at line {} in the CSV file'.format( readCSV.line_num))
-            logger.error('Error in function LoadDataFile: ' + str(e) + ' at line {} in the CSV file'.format( readCSV.line_num))
-            QMessageBox().warning(self, "CSV data file", "Error reading CSV file at line {} - {}".format(readCSV.line_num, e), QMessageBox.Ok)
+            boolFileFormatOK = False
+            print('Error in function BatchProcessingLoadDataFile: ' + str(e) + ' at line {} in the CSV file'.format( readCSV.line_num))
+            logger.error('Error in function BatchProcessingLoadDataFile: ' + str(e) + ' at line {} in the CSV file'.format( readCSV.line_num))
+            failureReason = "Error reading CSV file at line {} - {}".format(readCSV.line_num, e)
         finally:
-            return boolFileLoadedOK
+            return boolFileFormatOK, failureReason 
 
-    def haveParametersChanged(self) -> bool:
+    def BatchProcessingHaveParamsChanged(self) -> bool:
         """Returns True if the user has changed parameter spinbox values from the defaults"""
         try:
             boolParameterChanged = False
             modelName = str(self.cmbModels.currentText())
-            logger.info('Function haveParametersChanged called when model = ' + modelName)
+            logger.info('Function BatchProcessingHaveParamsChanged called when model = ' + modelName)
 
             if modelName == '2-2CFM':
                 if (self.spinBoxArterialFlowFactor.value() != DEFAULT_VALUE_Fa or
@@ -2110,8 +2126,8 @@ class ModelFittingApp(QWidget):
 
             return boolParameterChanged    
         except Exception as e:
-            print('Error in function haveParametersChanged: ' + str(e) )
-            logger.error('Error in function haveParametersChanged: ' + str(e) )
+            print('Error in function BatchProcessingHaveParamsChanged: ' + str(e) )
+            logger.error('Error in function BatchProcessingHaveParamsChanged: ' + str(e) )
                 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
