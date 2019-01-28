@@ -1941,10 +1941,12 @@ class ModelFittingApp(QWidget):
 
             self.lblBatchProcessing.setText("Processing complete.")
             self.toggleEnabled(True)
-            #self.pbar.hide()
+            
+
         except Exception as e:
             print('Error in function BatchProcessAllCSVDataFiles: ' + str(e) )
             logger.error('Error in function BatchProcessAllCSVDataFiles: ' + str(e) )
+                  
 
     def BatchProcessingCreateCSVBatchSummaryFile(self, pathToFolder):
         """Creates a CSV to hold a summary of model fitting a batch of datafiles""" 
@@ -1972,17 +1974,17 @@ class ModelFittingApp(QWidget):
             return writeCSV, csvfile
          
         except csv.Error:
-            print('CSV Writer error in function SaveCSVFile: file %s, line %d: %s' % (CSVFileName, WriteCSV.line_num, csv.Error))
-            logger.error('CSV Writer error in function SaveCSVFile: file %s, line %d: %s' % (CSVFileName, WriteCSV.line_num, csv.Error))
+            print('CSV Writer error in function BatchProcessingCreateCSVBatchSummaryFile: file %s, line %d: %s' % (CSVFileName, WriteCSV.line_num, csv.Error))
+            logger.error('CSV Writer error in function BatchProcessingCreateCSVBatchSummaryFile: file %s, line %d: %s' % (CSVFileName, WriteCSV.line_num, csv.Error))
         except IOError as IOe:
-            print ('IOError in function SaveCSVFile: cannot open file ' + CSVFileName + ' or read its data: ' + str(IOe))
-            logger.error ('IOError in function SaveCSVFile: cannot open file ' + CSVFileName + ' or read its data; ' + str(IOe))
+            print ('IOError in function BatchProcessingCreateCSVBatchSummaryFile: cannot open file ' + CSVFileName + ' or read its data: ' + str(IOe))
+            logger.error ('IOError in function BatchProcessingCreateCSVBatchSummaryFile: cannot open file ' + CSVFileName + ' or read its data; ' + str(IOe))
         except RuntimeError as re:
-            print('Runtime error in function SaveCSVFile: ' + str(re))
-            logger.error('Runtime error in function SaveCSVFile: ' + str(re))
+            print('Runtime error in function BatchProcessingCreateCSVBatchSummaryFile: ' + str(re))
+            logger.error('Runtime error in function BatchProcessingCreateCSVBatchSummaryFile: ' + str(re))
         except Exception as e:
-            print('Error in function SaveCSVFile: ' + str(e) + ' at line in CSV file ', WriteCSV.line_num)
-            logger.error('Error in function SaveCSVFile: ' + str(e) + ' at line in CSV file ', WriteCSV.line_num)    
+            print('Error in function BatchProcessingCreateCSVBatchSummaryFile: ' + str(e) + ' at line in CSV file ', WriteCSV.line_num)
+            logger.error('Error in function BatchProcessingCreateCSVBatchSummaryFile: ' + str(e) + ' at line in CSV file ', WriteCSV.line_num)    
 
     def BatchProcessWriteOptimumParamsToSummary(self, cvsFileObj, fileName, modelName, paramDict):
         try:
@@ -2023,6 +2025,7 @@ class ModelFittingApp(QWidget):
         _concentrationData.clear()
 
         boolFileFormatOK = True
+        boolDataOK = True
         failureReason = ""
         
         try:
@@ -2041,17 +2044,24 @@ class ModelFittingApp(QWidget):
                     #Get column header labels
                     headers = next(readCSV, None)  # returns the headers or `None` if the input is empty
                     if headers:
+                        join = ""
                         firstColumnHeader = headers[0].strip().lower()
                         if 'time' not in firstColumnHeader:
                             boolFileFormatOK = False
-                            join = ""
                             if len(failureReason) > 0:
                                 join = " and "
                             failureReason = failureReason + join + \
                            " first column must contain time data, with the word 'time' as a header"
                             errorStr = 'Batch Processing: The first column in {} must contain time data.'.format(fullFilePath)
                             logger.info(errorStr)
-                    
+                      
+                        boolDataOK, dataFailureReason = self.BatchProcessingCheckAllInputDataPresent(headers)
+                        if not boolDataOK:
+                            if len(failureReason) > 0:
+                                join = " and "
+                            failureReason = failureReason + join + dataFailureReason
+                            boolFileFormatOK = False
+
                     if boolFileFormatOK:
                         #Column headers form the keys in the dictionary called _concentrationData
                         for header in headers:
@@ -2097,6 +2107,43 @@ class ModelFittingApp(QWidget):
             failureReason = "Error reading CSV file at line {} - {}".format(readCSV.line_num, e)
         finally:
             return boolFileFormatOK, failureReason 
+
+    def BatchProcessingCheckAllInputDataPresent(self, headers):
+        boolDataOK = True
+        join = ""
+        failureReason = ""
+        try:
+            lowerCaseHeaders = [header.strip().lower() for header in headers]
+
+            #Check ROI data is in the current data file
+            ROI = str(self.cmbROI.currentText().strip().lower())
+            if ROI not in (lowerCaseHeaders):
+                boolDataOK = False
+                failureReason = ROI + " data missing"
+
+            AIF = str(self.cmbAIF.currentText().strip().lower())
+            if AIF not in (lowerCaseHeaders):
+                boolDataOK = False
+                if len(failureReason) == 0:
+                    join = " and "
+                failureReason = failureReason + join + AIF + " data missing"
+
+            if self.cmbVIF.isVisible():
+                VIF = str(self.cmbVIF.currentText().strip().lower())
+                if VIF not in (lowerCaseHeaders):
+                    boolDataOK = False
+                    if len(failureReason) == 0:
+                        join = " and "
+                    failureReason = failureReason + join + VIF + " data missing"
+            
+            return boolDataOK, failureReason
+
+        except Exception as e:
+            boolDataOK = False
+            print('Error in function BatchProcessingCheckAllInputDataPresent: ' + str(e))
+            logger.error('Error in function BatchProcessingCheckAllInputDataPresent: ' + str(e))
+            failureReason = failureReason + " " + str(e)
+            return boolDataOK, failureReason
 
     def BatchProcessingHaveParamsChanged(self) -> bool:
         """Returns True if the user has changed parameter spinbox values from the defaults"""
