@@ -460,10 +460,36 @@ class ModelFittingApp(QWidget):
         #Label text set in function ConfigureGUIForEachModel when the model is selected
         self.lblArterialFlowFactor = QLabel("Arterial Flow Fraction, \n fa (%)") 
         self.lblArterialFlowFactor.hide()
+        self.ckbAFF = QCheckBox("Fit")
+        self.ckbAFF.hide()
+        self.lblAFFConfInt = QLabel("")
+        #self.lblAFFConfInt.hide()
+        self.lblAFFConfInt.setAlignment(QtCore.Qt.AlignCenter)
+        
         self.labelParameter1 = QLabel("")
+        self.ckbParameter1 = QCheckBox("Fit")
+        self.ckbParameter1.hide()
+        self.lblParam1ConfInt = QLabel("")
+        self.lblParam1ConfInt.setAlignment(QtCore.Qt.AlignCenter)
+        
         self.labelParameter2 = QLabel("")
+        self.ckbParameter2 = QCheckBox("Fit")
+        self.ckbParameter2.hide()
+        self.lblParam2ConfInt = QLabel("")
+        self.lblParam2ConfInt.setAlignment(QtCore.Qt.AlignCenter)
+        
         self.labelParameter3 = QLabel("")
+        self.ckbParameter3 = QCheckBox("Fit")
+        self.ckbParameter3.hide()
+        self.lblParam3ConfInt = QLabel("")
+        self.lblParam3ConfInt.setAlignment(QtCore.Qt.AlignCenter)
+
         self.labelParameter4 = QLabel("")
+        self.ckbParameter4 = QCheckBox("Fit")
+        self.ckbParameter4.hide()
+        self.lblParam4ConfInt = QLabel("")
+        self.lblParam4ConfInt.setAlignment(QtCore.Qt.AlignCenter)
+
         self.labelParameter1.setWordWrap(True)
         self.labelParameter2.setWordWrap(True)
         self.labelParameter3.setWordWrap(True)
@@ -504,14 +530,28 @@ class ModelFittingApp(QWidget):
         #Place spin boxes and their labels in horizontal layouts
         modelHorizontalLayoutArterialFlowFactor.addWidget(self.lblArterialFlowFactor)
         modelHorizontalLayoutArterialFlowFactor.addWidget(self.spinBoxArterialFlowFactor)
+        modelHorizontalLayoutArterialFlowFactor.addWidget(self.lblAFFConfInt)
+        modelHorizontalLayoutArterialFlowFactor.addWidget(self.ckbAFF)
+
         modelHorizontalLayout5.addWidget(self.labelParameter1)
         modelHorizontalLayout5.addWidget(self.spinBoxParameter1)
+        modelHorizontalLayout5.addWidget(self.lblParam1ConfInt)
+        modelHorizontalLayout5.addWidget(self.ckbParameter1)
+
         modelHorizontalLayout6.addWidget(self.labelParameter2)
         modelHorizontalLayout6.addWidget(self.spinBoxParameter2)
+        modelHorizontalLayout6.addWidget(self.lblParam2ConfInt)
+        modelHorizontalLayout6.addWidget(self.ckbParameter2)
+
         modelHorizontalLayout7.addWidget(self.labelParameter3)
         modelHorizontalLayout7.addWidget(self.spinBoxParameter3)
+        modelHorizontalLayout7.addWidget(self.lblParam3ConfInt)
+        modelHorizontalLayout7.addWidget(self.ckbParameter3)
+
         modelHorizontalLayoutPara4.addWidget(self.labelParameter4)
         modelHorizontalLayoutPara4.addWidget(self.spinBoxParameter4)
+        modelHorizontalLayoutPara4.addWidget(self.lblParam4ConfInt)
+        modelHorizontalLayoutPara4.addWidget(self.ckbParameter4)
         
         self.btnFitModel = QPushButton('Fit Model')
         self.btnFitModel.setToolTip('Use non-linear least squares to fit the selected model to the data')
@@ -768,16 +808,15 @@ class ModelFittingApp(QWidget):
         global _boolCurveFittingDone
         _boolCurveFittingDone=False
 
-    def DisplayOptimumParamaterValuesOnGUI(self):
+    def ProcessOptimumParametersAfterCurveFit(self):
         """Displays the optimum parameter values resulting from curve fitting 
         with their confidence limits on the right-hand side of the GUI. These
         values are stored in the global list _optimisedParamaterList
         
         Where appropriate decimal fractions are converted to %"""
         try:
-            logger.info('Function DisplayOptimumParamaterValuesOnGUI called.')
+            logger.info('Function ProcessOptimumParametersAfterCurveFit called.')
             if self.spinBoxArterialFlowFactor.isHidden() == False:
-                self.lblAFFName.setText(self.lblArterialFlowFactor.text())
                 parameterValue = _optimisedParamaterList[0][0]
                 lowerLimit = _optimisedParamaterList[0][1]
                 upperLimit = _optimisedParamaterList[0][2]
@@ -791,7 +830,6 @@ class ModelFittingApp(QWidget):
                 _optimisedParamaterList[0][1] = lowerLimit
                 _optimisedParamaterList[0][2] = upperLimit
                
-                self.lblAFFValue.setText(str(parameterValue) + suffix)
                 confidenceStr = '[{}     {}]'.format(lowerLimit, upperLimit)
                 self.lblAFFConfInt.setText(confidenceStr)
                 nextIndex=1
@@ -799,7 +837,7 @@ class ModelFittingApp(QWidget):
                 nextIndex = 0
             
             modelName = str(self.cmbModels.currentText())
-            self.lblParam1Name.setText(self.labelParameter1.text())
+      
             if modelName == 'HF1-2CFM-FixVe':
                 parameterValue = self.spinBoxParameter1.value()
                 lowerLimit = "N/A"
@@ -825,12 +863,10 @@ class ModelFittingApp(QWidget):
                 _optimisedParamaterList[nextIndex][1] = lowerLimit
                 _optimisedParamaterList[nextIndex][2] = upperLimit
 
-            self.lblParam1Value.setText(str(parameterValue) + suffix)
             confidenceStr = '[{}     {}]'.format(lowerLimit, upperLimit)
             self.lblParam1ConfInt.setText(confidenceStr)
             
             nextIndex +=1
-            self.lblParam2Name.setText(self.labelParameter2.text())
             parameterValue = round(_optimisedParamaterList[nextIndex][0], 3)
             lowerLimit = round(_optimisedParamaterList[nextIndex][1], 3)
             upperLimit = round(_optimisedParamaterList[nextIndex][2], 3)
@@ -848,13 +884,11 @@ class ModelFittingApp(QWidget):
             else:
                 suffix = ''
             
-            self.lblParam2Value.setText(str(parameterValue) + suffix)
             confidenceStr = '[{}     {}]'.format(lowerLimit, upperLimit)
             self.lblParam2ConfInt.setText(confidenceStr) 
             
             nextIndex += 1
             if self.spinBoxParameter3.isHidden() == False:
-                self.lblParam3Name.setText(self.labelParameter3.text())
                 parameterValue = round(_optimisedParamaterList[nextIndex][0], 3)
                 lowerLimit = round(_optimisedParamaterList[nextIndex][1], 3)
                 upperLimit = round(_optimisedParamaterList[nextIndex][2], 3)
@@ -872,12 +906,10 @@ class ModelFittingApp(QWidget):
                 else:
                     suffix = ''
                 
-                self.lblParam3Value.setText(str(parameterValue) + suffix)
                 confidenceStr = '[{}     {}]'.format(lowerLimit, upperLimit)
                 self.lblParam3ConfInt.setText(confidenceStr)
 
             if self.spinBoxParameter4.isHidden() == False:
-                self.lblParam4Name.setText(self.labelParameter4.text())
                 parameterValue = round(_optimisedParamaterList[nextIndex][0], 3)
                 lowerLimit = round(_optimisedParamaterList[nextIndex][1], 3)
                 upperLimit = round(_optimisedParamaterList[nextIndex][2], 3)
@@ -895,13 +927,12 @@ class ModelFittingApp(QWidget):
                 else:
                     suffix = ''
                 
-                self.lblParam4Value.setText(str(parameterValue) + suffix)
                 confidenceStr = '[{}     {}]'.format(lowerLimit, upperLimit)
                 self.lblParam4ConfInt.setText(confidenceStr)
             
         except Exception as e:
-            print('Error in function DisplayOptimumParamaterValuesOnGUI: ' + str(e))
-            logger.error('Error in function DisplayOptimumParamaterValuesOnGUI: ' + str(e))
+            print('Error in function ProcessOptimumParametersAfterCurveFit: ' + str(e))
+            logger.error('Error in function ProcessOptimumParametersAfterCurveFit: ' + str(e))
 
     def ClearOptimumParamaterValuesOnGUI(self):
         """Clears the contents of the labels on the right handside of the GUI.
@@ -1257,7 +1288,7 @@ class ModelFittingApp(QWidget):
             self.Calculate95ConfidenceLimits(numDataPoints, numParams, 
                                     optimumParams, paramCovarianceMatrix)
             
-            self.DisplayOptimumParamaterValuesOnGUI()
+            self.ProcessOptimumParametersAfterCurveFit()
             
         except ValueError as ve:
             print ('Value Error: RunCurveFit with model ' + modelName + ': '+ str(ve))
