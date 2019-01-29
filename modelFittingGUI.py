@@ -251,18 +251,18 @@ class ModelFittingApp(QWidget):
         self.ApplyStyleSheet()
        
         #Setup the layouts, the containers for widgets
-        verticalLayoutLeft, verticalLayoutMiddle, verticalLayoutRight = self.SetUpLayouts()
+        verticalLayoutLeft, verticalLayoutRight = self.SetUpLayouts() #verticalLayoutMiddle,
         
         #Add widgets to the left-hand side vertical layout
         self.SetUpLeftVerticalLayout(verticalLayoutLeft)
 
         #Set up the graph to plot concentration data on
         # the middle vertical layout
-        self.SetUpPlotArea(verticalLayoutMiddle)
+        self.SetUpPlotArea(verticalLayoutRight)
         
         #Create a group box and place it in the right-handside vertical layout
         #Also add a label to hold the TRISTAN Logo
-        self.SetUpRightVerticalLayout(verticalLayoutRight)
+        #self.SetUpRightVerticalLayout(verticalLayoutRight)
 
         logger.info("GUI created successfully.")
 
@@ -281,14 +281,14 @@ class ModelFittingApp(QWidget):
 
         horizontalLayout = QHBoxLayout()
         verticalLayoutLeft = QVBoxLayout()
-        verticalLayoutMiddle = QVBoxLayout()
+        #verticalLayoutMiddle = QVBoxLayout()
         verticalLayoutRight = QVBoxLayout()
         
         self.setLayout(horizontalLayout)
         horizontalLayout.addLayout(verticalLayoutLeft,2)
-        horizontalLayout.addLayout(verticalLayoutMiddle,3)
+        #horizontalLayout.addLayout(verticalLayoutMiddle,3)
         horizontalLayout.addLayout(verticalLayoutRight,2)
-        return verticalLayoutLeft, verticalLayoutMiddle, verticalLayoutRight
+        return verticalLayoutLeft,  verticalLayoutRight  #verticalLayoutMiddle,
 
     def SetUpLeftVerticalLayout(self, layout):
         """
@@ -569,17 +569,60 @@ class ModelFittingApp(QWidget):
             logger.error('Error in function DisplayModelFittingGroupBox: ' + str(e))
 
     def SetUpPlotArea(self, layout):
-        """Adds widgets for the display of the graph onto the middle vertical layout."""
-        self.figure = plt.figure(figsize=(5, 4), dpi=100)
+        """Adds widgets for the display of the graph onto the right-hand side vertical layout."""
+        layout.setAlignment(QtCore.Qt.AlignTop)
+        verticalSpacer = QSpacerItem(20, 35, QSizePolicy.Minimum, QSizePolicy.Minimum)
+        layout.addItem(verticalSpacer)
+        layout.addItem(verticalSpacer)
+
+        self.lblModelImage = QLabel(self)
+        self.lblModelImage.setAlignment(QtCore.Qt.AlignCenter )
+        self.lblModelName = QLabel('')
+        self.lblModelName.setAlignment(QtCore.Qt.AlignCenter)
+        self.lblModelName.setWordWrap(True)
+
+        self.figure = plt.figure(figsize=(5, 9), dpi=100) 
         # this is the Canvas Widget that displays the `figure`
         # it takes the `figure` instance as a parameter to its __init__
         self.canvas = FigureCanvas(self.figure)
-        
         # this is the Navigation widget
         # it takes the Canvas widget as a parent
         self.toolbar = NavigationToolbar(self.canvas, self)
+
+        #Display TRISTAN & University of Leeds Logos in labels
+        self.lblTRISTAN_Logo = QLabel(self)
+        self.lblUoL_Logo = QLabel(self)
+        self.lblTRISTAN_Logo.setAlignment(QtCore.Qt.AlignHCenter)
+        self.lblUoL_Logo.setAlignment(QtCore.Qt.AlignHCenter)
+
+        pixmapTRISTAN = QPixmap(LARGE_TRISTAN_LOGO)
+        pMapWidth = pixmapTRISTAN.width() * 0.5
+        pMapHeight = pixmapTRISTAN.height() * 0.5
+        pixmapTRISTAN = pixmapTRISTAN.scaled(pMapWidth, pMapHeight, 
+                      QtCore.Qt.KeepAspectRatio, QtCore.Qt.SmoothTransformation)
+        self.lblTRISTAN_Logo.setPixmap(pixmapTRISTAN)
+
+
+        pixmapUoL = QPixmap(UNI_OF_LEEDS_LOGO)
+        pMapWidth = pixmapUoL.width() * 0.75
+        pMapHeight = pixmapUoL.height() * 0.75
+        pixmapUoL = pixmapUoL.scaled(pMapWidth, pMapHeight, 
+                      QtCore.Qt.KeepAspectRatio, QtCore.Qt.SmoothTransformation)
+        self.lblUoL_Logo.setPixmap(pixmapUoL)
+       
+        layout.addWidget(self.lblModelImage)
+        layout.addWidget(self.lblModelName)
         layout.addWidget(self.toolbar)
         layout.addWidget(self.canvas)
+        #Create horizontal layout box to hold TRISTAN & University of Leeds Logos
+        horizontalLogoLayout = QHBoxLayout()
+        horizontalLogoLayout.setAlignment(QtCore.Qt.AlignRight)
+        #Add horizontal layout to bottom of the vertical layout
+        layout.addLayout(horizontalLogoLayout)
+         #Add labels displaying logos to the horizontal layout, 
+        #Tristan on the LHS, UoL on the RHS
+        horizontalLogoLayout.addWidget(self.lblTRISTAN_Logo)
+        horizontalLogoLayout.addWidget(self.lblUoL_Logo)
 
     def SetUpRightVerticalLayout(self, layout):
         """Creates and adds widgets to the right hand side vertical layout for the 
@@ -950,7 +993,7 @@ class ModelFittingApp(QWidget):
         try:
             logger.info('ClearOptimisedParamaterList called from ' + callingControl)
             _optimisedParamaterList.clear()
-            self.ClearOptimumParamaterValuesOnGUI()
+            #self.ClearOptimumParamaterValuesOnGUI()
         except Exception as e:
             print('Error in function ClearOptimisedParamaterList: ' + str(e)) 
             logger.error('Error in function ClearOptimisedParamaterList: ' + str(e))
@@ -1623,7 +1666,7 @@ class ModelFittingApp(QWidget):
             self.btnReset.show()
             self.btnSaveReport.show()
             #Remove results of curve fitting of the previous model
-            self.ClearOptimumParamaterValuesOnGUI() 
+            #self.ClearOptimumParamaterValuesOnGUI() 
             self.InitialiseParameterSpinBoxes() #Typical initial values for each model
             #Show widgets common to all models
             self.lblAIF.show()
