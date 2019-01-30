@@ -1,0 +1,99 @@
+def SetUpRightVerticalLayout(self, layout):
+        """Creates and adds widgets to the right hand side vertical layout for the 
+        display of the results of curve fitting. """
+
+        #Add a vertical spacer to the top of vertical layout to ensure
+        #the top of the group box is level with the MATPLOTLIB toolbar 
+        #the central vertical layout.
+        verticalSpacer = QSpacerItem(20, 35, QSizePolicy.Minimum, QSizePolicy.Minimum)
+        layout.addItem(verticalSpacer)
+        layout.addItem(verticalSpacer)
+
+        self.lblModelImage = QLabel(self)
+        self.lblModelImage.setAlignment(QtCore.Qt.AlignCenter)
+        self.lblModelName = QLabel('')
+        self.lblModelName.setAlignment(QtCore.Qt.AlignCenter)
+        self.lblModelName.setWordWrap(True)
+        layout.addWidget(self.lblModelImage)
+        layout.addWidget(self.lblModelName)
+        #Create Group Box to contain labels displaying the results of curve fitting
+        self.groupBoxResults = QGroupBox('Curve Fitting Results')
+        self.groupBoxResults.setAlignment(QtCore.Qt.AlignHCenter)
+        layout.addWidget(self.groupBoxResults)
+        layout.addStretch()
+        #Grid layout to be placed inside the group box
+        gridLayoutResults = QGridLayout()
+        gridLayoutResults.setAlignment(QtCore.Qt.AlignTop) 
+        self.groupBoxResults.setLayout(gridLayoutResults)
+
+        self.lblHeaderLeft = QLabel("Parameter")
+        self.lblHeaderMiddle = QLabel("Value")
+        self.lblHeaderRight = QLabel("95% Confidence Interval")
+        self.lblAFFName = QLabel("")
+        self.lblAFFValue = QLabel("")
+        self.lblAFFConfInt = QLabel("")
+        self.lblAFFConfInt.setAlignment(QtCore.Qt.AlignCenter)
+        self.lblParam1Name = QLabel("")
+        self.lblParam1Value = QLabel("")
+        self.lblParam1ConfInt = QLabel("")
+        self.lblParam1ConfInt.setAlignment(QtCore.Qt.AlignCenter)
+        self.lblParam2Name = QLabel("")
+        self.lblParam2Value = QLabel("")
+        self.lblParam2ConfInt = QLabel("")
+        self.lblParam2ConfInt.setAlignment(QtCore.Qt.AlignCenter)
+        self.lblParam3Name = QLabel("")
+        self.lblParam3Value = QLabel("")
+        self.lblParam3ConfInt = QLabel("")
+        self.lblParam3ConfInt.setAlignment(QtCore.Qt.AlignCenter)
+        self.lblParam4Name = QLabel("")
+        self.lblParam4Value = QLabel("")
+        self.lblParam4ConfInt = QLabel("")
+        self.lblParam4ConfInt.setAlignment(QtCore.Qt.AlignCenter)
+        
+        gridLayoutResults.addWidget(self.lblHeaderLeft, 1, 1)
+        gridLayoutResults.addWidget(self.lblHeaderMiddle, 1, 3)
+        gridLayoutResults.addWidget(self.lblHeaderRight, 1, 5)
+        gridLayoutResults.addWidget(self.lblAFFName, 2, 1, QtCore.Qt.AlignTop)
+        gridLayoutResults.addWidget(self.lblAFFValue, 2, 3, QtCore.Qt.AlignTop)
+        gridLayoutResults.addWidget(self.lblAFFConfInt, 2, 5, QtCore.Qt.AlignTop)
+        gridLayoutResults.addWidget(self.lblParam1Name, 3, 1, QtCore.Qt.AlignTop)
+        gridLayoutResults.addWidget(self.lblParam1Value, 3, 3, QtCore.Qt.AlignTop)
+        gridLayoutResults.addWidget(self.lblParam1ConfInt, 3, 5, QtCore.Qt.AlignTop)
+        gridLayoutResults.addWidget(self.lblParam2Name, 4, 1, QtCore.Qt.AlignTop)
+        gridLayoutResults.addWidget(self.lblParam2Value, 4, 3, QtCore.Qt.AlignTop)
+        gridLayoutResults.addWidget(self.lblParam2ConfInt, 4, 5, QtCore.Qt.AlignTop)
+        gridLayoutResults.addWidget(self.lblParam3Name, 5, 1, QtCore.Qt.AlignTop)
+        gridLayoutResults.addWidget(self.lblParam3Value, 5, 3, QtCore.Qt.AlignTop)
+        gridLayoutResults.addWidget(self.lblParam3ConfInt, 5, 5, QtCore.Qt.AlignTop)
+        gridLayoutResults.addWidget(self.lblParam4Name, 6, 1, QtCore.Qt.AlignTop)
+        gridLayoutResults.addWidget(self.lblParam4Value, 6, 3, QtCore.Qt.AlignTop)
+        gridLayoutResults.addWidget(self.lblParam4ConfInt, 6, 5, QtCore.Qt.AlignTop)
+
+        #Create horizontal layout box to hold TRISTAN & University of Leeds Logos
+        horizontalLogoLayout = QHBoxLayout()
+        #Add horizontal layout to bottom of the vertical layout
+        layout.addLayout(horizontalLogoLayout)
+        #Display TRISTAN & University of Leeds Logos in labels
+        self.lblTRISTAN_Logo = QLabel(self)
+        self.lblUoL_Logo = QLabel(self)
+        self.lblTRISTAN_Logo.setAlignment(QtCore.Qt.AlignHCenter)
+        self.lblUoL_Logo.setAlignment(QtCore.Qt.AlignHCenter)
+
+        pixmapTRISTAN = QPixmap(LARGE_TRISTAN_LOGO)
+        pMapWidth = pixmapTRISTAN.width() * 0.5
+        pMapHeight = pixmapTRISTAN.height() * 0.5
+        pixmapTRISTAN = pixmapTRISTAN.scaled(pMapWidth, pMapHeight, 
+                      QtCore.Qt.KeepAspectRatio, QtCore.Qt.SmoothTransformation)
+        self.lblTRISTAN_Logo.setPixmap(pixmapTRISTAN)
+
+
+        pixmapUoL = QPixmap(UNI_OF_LEEDS_LOGO)
+        pMapWidth = pixmapUoL.width() * 0.75
+        pMapHeight = pixmapUoL.height() * 0.75
+        pixmapUoL = pixmapUoL.scaled(pMapWidth, pMapHeight, 
+                      QtCore.Qt.KeepAspectRatio, QtCore.Qt.SmoothTransformation)
+        self.lblUoL_Logo.setPixmap(pixmapUoL)
+        #Add labels displaying logos to the horizontal layout, 
+        #Tristan on the LHS, UoL on the RHS
+        horizontalLogoLayout.addWidget(self.lblTRISTAN_Logo)
+        horizontalLogoLayout.addWidget(self.lblUoL_Logo)
