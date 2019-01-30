@@ -447,6 +447,7 @@ class ModelFittingApp(QWidget):
         self.btnReset.setToolTip('Reset parameters to their default values.')
         self.btnReset.hide()
         self.btnReset.clicked.connect(self.InitialiseParameterSpinBoxes)
+        self.btnReset.clicked.connect(self.OptimumParameterChanged)
         #If parameters reset to their default values, replot the concentration and model data
         self.btnReset.clicked.connect(lambda: self.PlotConcentrations('Reset Button'))
         modelHorizontalLayoutReset.addWidget(self.cboxDelay)
@@ -470,6 +471,9 @@ class ModelFittingApp(QWidget):
         self.labelParameter1 = QLabel("")
         self.ckbParameter1 = QCheckBox("Fix")
         self.ckbParameter1.hide()
+        self.ckbParameter1.clicked.connect(self.OptimumParameterChanged)
+        self.ckbParameter1.clicked.connect(self.DisplayModelImage)
+        self.ckbParameter1.clicked.connect(lambda:  self.PlotConcentrations('ckbParameter1'))
         self.lblParam1ConfInt = QLabel("")
         self.lblParam1ConfInt.setAlignment(QtCore.Qt.AlignCenter)
         
@@ -533,28 +537,30 @@ class ModelFittingApp(QWidget):
 
         modelHorizontalLayoutArterialFlowFactor.addWidget(self.lblArterialFlowFactor)
         modelHorizontalLayoutArterialFlowFactor.addWidget(self.spinBoxArterialFlowFactor)
-        modelHorizontalLayoutArterialFlowFactor.addWidget(self.lblAFFConfInt)
         modelHorizontalLayoutArterialFlowFactor.addWidget(self.ckbAFF)
+        modelHorizontalLayoutArterialFlowFactor.addWidget(self.lblAFFConfInt)
+       
 
         modelHorizontalLayout5.addWidget(self.labelParameter1)
         modelHorizontalLayout5.addWidget(self.spinBoxParameter1)
-        modelHorizontalLayout5.addWidget(self.lblParam1ConfInt)
         modelHorizontalLayout5.addWidget(self.ckbParameter1)
+        modelHorizontalLayout5.addWidget(self.lblParam1ConfInt)
 
         modelHorizontalLayout6.addWidget(self.labelParameter2)
         modelHorizontalLayout6.addWidget(self.spinBoxParameter2)
-        modelHorizontalLayout6.addWidget(self.lblParam2ConfInt)
         modelHorizontalLayout6.addWidget(self.ckbParameter2)
+        modelHorizontalLayout6.addWidget(self.lblParam2ConfInt)
 
         modelHorizontalLayout7.addWidget(self.labelParameter3)
         modelHorizontalLayout7.addWidget(self.spinBoxParameter3)
-        modelHorizontalLayout7.addWidget(self.lblParam3ConfInt)
         modelHorizontalLayout7.addWidget(self.ckbParameter3)
+        modelHorizontalLayout7.addWidget(self.lblParam3ConfInt)
 
         modelHorizontalLayoutPara4.addWidget(self.labelParameter4)
         modelHorizontalLayoutPara4.addWidget(self.spinBoxParameter4)
-        modelHorizontalLayoutPara4.addWidget(self.lblParam4ConfInt)
         modelHorizontalLayoutPara4.addWidget(self.ckbParameter4)
+        modelHorizontalLayoutPara4.addWidget(self.lblParam4ConfInt)
+       
         
         self.btnFitModel = QPushButton('Fit Model')
         self.btnFitModel.setToolTip('Use non-linear least squares to fit the selected model to the data')
@@ -645,7 +651,6 @@ class ModelFittingApp(QWidget):
                       QtCore.Qt.KeepAspectRatio, QtCore.Qt.SmoothTransformation)
         self.lblTRISTAN_Logo.setPixmap(pixmapTRISTAN)
 
-
         pixmapUoL = QPixmap(UNI_OF_LEEDS_LOGO)
         pMapWidth = pixmapUoL.width() * 0.75
         pMapHeight = pixmapUoL.height() * 0.75
@@ -667,8 +672,6 @@ class ModelFittingApp(QWidget):
         horizontalLogoLayout.addWidget(self.lblTRISTAN_Logo)
         horizontalLogoLayout.addWidget(self.lblUoL_Logo)
 
-    
-
     def ApplyStyleSheet(self):
         """Modifies the appearance of the GUI using CSS instructions"""
         try:
@@ -687,7 +690,11 @@ class ModelFittingApp(QWidget):
             shortModelName = str(self.cmbModels.currentText())
         
             if shortModelName != 'Select a model':
-                modelImageName = TracerKineticModels.GetModelImageName(shortModelName)
+                if self.ckbParameter1.isChecked():
+                    boolFixVe = True
+                else:
+                    boolFixVe = False
+                modelImageName = TracerKineticModels.GetModelImageName(shortModelName, boolFixVe)
                 pixmapModelImage = QPixmap(modelImageName)
                 #Increase the size of the model image
                 pMapWidth = pixmapModelImage.width() * 1.35
@@ -695,8 +702,7 @@ class ModelFittingApp(QWidget):
                 pixmapModelImage = pixmapModelImage.scaled(pMapWidth, pMapHeight, 
                       QtCore.Qt.KeepAspectRatio, QtCore.Qt.SmoothTransformation)
                 self.lblModelImage.setPixmap(pixmapModelImage)
-
-                longModelName = TracerKineticModels.GetLongModelName(shortModelName)
+                longModelName = TracerKineticModels.GetLongModelName(shortModelName, boolFixVe)
                 self.lblModelName.setText(longModelName)
             else:
                 self.lblModelImage.clear()
@@ -749,30 +755,31 @@ class ModelFittingApp(QWidget):
             
             modelName = str(self.cmbModels.currentText())
       
-            if modelName == 'HF1-2CFM-FixVe':
-                parameterValue = self.spinBoxParameter1.value()
-                lowerLimit = "N/A"
-                upperLimit = "N/A"
-                suffix = '%'
-                tempList = [parameterValue, lowerLimit, upperLimit]
-                _optimisedParamaterList.insert(0, tempList)
-            else:
-                parameterValue = round(_optimisedParamaterList[nextIndex][0], 3)
-                lowerLimit = round(_optimisedParamaterList[nextIndex][1], 3)
-                upperLimit = round(_optimisedParamaterList[nextIndex][2], 3)
-                if self.spinBoxParameter1.suffix() == '%':
-                    #convert from decimal fraction to %
+            if modelName == 'HF1-2CFM':
+                if self.ckbParameter1.isChecked():
+                    parameterValue = self.spinBoxParameter1.value()
+                    lowerLimit = "N/A"
+                    upperLimit = "N/A"
                     suffix = '%'
-                    parameterValue = round(parameterValue * 100.0, 3)
-                    lowerLimit = round(lowerLimit * 100.0,3)
-                    upperLimit = round(upperLimit * 100.0,3)
+                    tempList = [parameterValue, lowerLimit, upperLimit]
+                    _optimisedParamaterList.insert(0, tempList)
                 else:
-                    suffix = ''
-                #For display in the PDF report, overwrite decimal volume fraction values in  _optimisedParamaterList
-                #with the % equivalent
-                _optimisedParamaterList[nextIndex][0] = parameterValue
-                _optimisedParamaterList[nextIndex][1] = lowerLimit
-                _optimisedParamaterList[nextIndex][2] = upperLimit
+                    parameterValue = round(_optimisedParamaterList[nextIndex][0], 3)
+                    lowerLimit = round(_optimisedParamaterList[nextIndex][1], 3)
+                    upperLimit = round(_optimisedParamaterList[nextIndex][2], 3)
+                    if self.spinBoxParameter1.suffix() == '%':
+                        #convert from decimal fraction to %
+                        suffix = '%'
+                        parameterValue = round(parameterValue * 100.0, 3)
+                        lowerLimit = round(lowerLimit * 100.0,3)
+                        upperLimit = round(upperLimit * 100.0,3)
+                    else:
+                        suffix = ''
+                    #For display in the PDF report, overwrite decimal volume fraction values in  _optimisedParamaterList
+                    #with the % equivalent
+                    _optimisedParamaterList[nextIndex][0] = parameterValue
+                    _optimisedParamaterList[nextIndex][1] = lowerLimit
+                    _optimisedParamaterList[nextIndex][2] = upperLimit
 
             confidenceStr = '[{}     {}]'.format(lowerLimit, upperLimit)
             self.lblParam1ConfInt.setText(confidenceStr)
@@ -1053,15 +1060,13 @@ class ModelFittingApp(QWidget):
             else:
                 nextIndex = 0
                 
-            if modelName == 'HF1-2CFM-FixVe':
-                #retain the value set by the user
-                pass
-            else:
-                if self.spinBoxParameter1.suffix() == '%':
-                    self.spinBoxParameter1.setValue(parameterList[nextIndex]* 100) #Convert Volume fraction to %
-                else:
-                    self.spinBoxParameter1.setValue(parameterList[nextIndex])
-                nextIndex += 1
+            if modelName == 'HF1-2CFM':
+                if not self.ckbParameter1.isChecked():
+                    if self.spinBoxParameter1.suffix() == '%':
+                        self.spinBoxParameter1.setValue(parameterList[nextIndex]* 100) #Convert Volume fraction to %
+                    else:
+                        self.spinBoxParameter1.setValue(parameterList[nextIndex])
+                    nextIndex += 1
 
             if self.spinBoxParameter2.suffix() == '%':
                 self.spinBoxParameter2.setValue(parameterList[nextIndex]* 100) #Convert Volume fraction to %
@@ -1170,9 +1175,15 @@ class ModelFittingApp(QWidget):
             #Get the name of the model to be fitted to the ROI curve
             modelName = str(self.cmbModels.currentText())
             #Call curve fitting routine
-            logger.info('TracerKineticModels.CurveFit called with model {}, parameters {} and Constraint = {}'.format(modelName, initialParametersArray, addConstraint))
-            optimumParams, paramCovarianceMatrix = TracerKineticModels.CurveFit(modelName, arrayTimes, 
-                 arrayAIFConcs, arrayVIFConcs, arrayROIConcs, initialParametersArray, addConstraint)
+            if self.ckbParameter1.isChecked():
+                boolFixVe = True
+            else:
+                boolFixVe = False
+            logger.info('TracerKineticModels.CurveFit called with model {}, parameters {}, Constraint = {} and boolFixVe = {}'.format(modelName, initialParametersArray, addConstraint, boolFixVe))
+            optimumParams, paramCovarianceMatrix = TracerKineticModels.CurveFit(
+                modelName, arrayTimes, 
+                arrayAIFConcs, arrayVIFConcs, arrayROIConcs,
+                initialParametersArray, addConstraint, boolFixVe)
             
             _boolCurveFittingDone = True 
             logger.info('TracerKineticModels.CurveFit returned optimum parameters {} with confidence levels {}'.format(optimumParams, paramCovarianceMatrix))
@@ -1315,7 +1326,11 @@ class ModelFittingApp(QWidget):
                     #delete existing copy of PDF called reportFileName
                     os.remove(reportFileName)   
                 shortModelName = str(self.cmbModels.currentText())
-                longModelName = TracerKineticModels.GetLongModelName(shortModelName)
+                if self.ckbParameter1.isChecked():
+                    boolFixVe = True
+                else:
+                    boolFixVe = False
+                longModelName = TracerKineticModels.GetLongModelName(shortModelName, boolFixVe)
                 
                 #Save a png of the concentration/time plot for display 
                 #in the PDF report.
@@ -1517,11 +1532,15 @@ class ModelFittingApp(QWidget):
         try:
             #Remove suffixes from the first spinboxes 
             self.spinBoxParameter1.setSuffix('')
-            self.spinBoxParameter1.setEnabled(True) #May have been disabled by HF1-2CFM-FixVe model
-
+           
             #Block signals from spinboxes, so that setting initial values
             #does not trigger an event.
             self.BlockSpinBoxSignals(True)
+            self.ckbAFF.setChecked(False)
+            self.ckbParameter1.setChecked(False)
+            self.ckbParameter2.setChecked(False)
+            self.ckbParameter3.setChecked(False)
+            self.ckbParameter4.setChecked(False)
             self.spinBoxArterialFlowFactor.setValue(DEFAULT_VALUE_Fa)
             
             modelName = str(self.cmbModels.currentText())
@@ -1565,7 +1584,7 @@ class ModelFittingApp(QWidget):
                 self.spinBoxParameter3.setSingleStep(0.1)
                 self.spinBoxParameter3.setValue(DEFAULT_VALUE_Kbh)
 
-            elif modelName == 'HF1-2CFM' or modelName == 'HF1-2CFM-FixVe':
+            elif modelName == 'HF1-2CFM':
                 self.spinBoxParameter1.setDecimals(2)
                 self.spinBoxParameter1.setRange(0.01, 99.99)
                 self.spinBoxParameter1.setSingleStep(0.1)
@@ -1612,6 +1631,7 @@ class ModelFittingApp(QWidget):
             self.spinBoxParameter3.show()
 
             self.pbar.reset()
+            self.ckbParameter1.hide()
             
             #Configure parameter spinbox labels for each model
             if modelName == '2-2CFM':
@@ -1633,9 +1653,10 @@ class ModelFittingApp(QWidget):
                 self.labelParameter3.show()
                 self.labelParameter4.hide()
                 self.spinBoxParameter4.hide()
-            elif modelName == 'HF1-2CFM' or modelName == 'HF1-2CFM-FixVe':
+            elif modelName == 'HF1-2CFM':
                 self.labelParameter1.setText(LABEL_PARAMETER_Ve)
                 self.labelParameter1.show()
+                self.ckbParameter1.show()
                 self.labelParameter2.setText(LABEL_PARAMETER_Khe)
                 self.labelParameter2.show()
                 self.labelParameter3.setText(LABEL_PARAMETER_Kbh)
@@ -1774,20 +1795,24 @@ class ModelFittingApp(QWidget):
                 boolVIFSelected = True
                     
             #Plot concentration curve from the model
+            if self.ckbParameter1.isChecked():
+                boolFixVe = True
+            else:
+                boolFixVe = False
             if TracerKineticModels.GetModelInletType(modelName) == 'dual':
                 if boolAIFSelected and boolVIFSelected:
                     parameterArray = self.BuildParameterArray()
-                    logger.info('TracerKineticModels.ModelSelector called when model ={} and parameter array = {}'. format(modelName, parameterArray))        
+                    logger.info('TracerKineticModels.ModelSelector called when model ={}, parameter array = {} and boolFixVe={}'. format(modelName, parameterArray, boolFixVe))        
                     _listModel = TracerKineticModels.ModelSelector(modelName, arrayTimes, 
-                       arrayAIFConcs, parameterArray, arrayVIFConcs)
+                       arrayAIFConcs, parameterArray, boolFixVe, arrayVIFConcs)
                     arrayModel =  np.array(_listModel, dtype='float')
                     ax.plot(arrayTimes, arrayModel, 'g--', label= modelName + ' model')
             elif TracerKineticModels.GetModelInletType(modelName) == 'single':
                 if boolAIFSelected:
                     parameterArray = self.BuildParameterArray()
-                    logger.info('TracerKineticModels.ModelSelector called when model ={} and parameter array = {}'. format(modelName, parameterArray))        
+                    logger.info('TracerKineticModels.ModelSelector called when model ={} and parameter array = {} and boolFixVe={}'. format(modelName, parameterArray, boolFixVe))        
                     _listModel = TracerKineticModels.ModelSelector(modelName, arrayTimes, 
-                       arrayAIFConcs, parameterArray)
+                       arrayAIFConcs, parameterArray, boolFixVe)
                     arrayModel =  np.array(_listModel, dtype='float')
                     ax.plot(arrayTimes, arrayModel, 'g--', label= modelName + ' model')
 
@@ -1891,7 +1916,6 @@ class ModelFittingApp(QWidget):
 
                 if boolUseParameterDefaultValues:
                     self.InitialiseParameterSpinBoxes() #Reset default values
-                    self.spinBoxParameter1.setEnabled(False) #Enabled in InitialiseParameterSpinBoxes
                 else:
                     #Reset parameters to values selected by the user before
                     #the start of batch processing
@@ -2144,7 +2168,7 @@ class ModelFittingApp(QWidget):
                     self.spinBoxParameter2.value() != DEFAULT_VALUE_Khe or
                     self.spinBoxParameter3.value() != DEFAULT_VALUE_Kbh):
                     boolParameterChanged = True
-            elif modelName == 'HF1-2CFM' or modelName == 'HF1-2CFM-FixVe':
+            elif modelName == 'HF1-2CFM':
                 if (self.spinBoxParameter1.value() != DEFAULT_VALUE_Ve or
                     self.spinBoxParameter2.value() != DEFAULT_VALUE_Khe or
                     self.spinBoxParameter3.value() != DEFAULT_VALUE_Kbh):
