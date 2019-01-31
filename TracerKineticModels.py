@@ -47,7 +47,7 @@ def GetLongModelName(shortModelName, fixVe:bool = False) -> str:
     """Returns the full name of a model whose short name is shortModelName."""
     longName =  modelDict.get(shortModelName)
     if fixVe:
-       longName = longName + '-FixVe'
+       longName = longName + '-Fixed Ve'
     return longName
 
 def GetModelImageName(shortModelName, fixVe:bool = False) -> str:

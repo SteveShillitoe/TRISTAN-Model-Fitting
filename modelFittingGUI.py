@@ -1527,6 +1527,27 @@ class ModelFittingApp(QWidget):
             print('Error in function GetListOrgans: ' + str(e))
             logger.error('Error in function GetListOrgans: ' + str(e))
     
+
+    def UncheckFixParameterCheckBoxes(self):
+        logger.info('Function UncheckFixParameterCheckBoxes called')
+        self.ckbAFF.blockSignals(True)
+        self.ckbParameter1.blockSignals(True)
+        self.ckbParameter2.blockSignals(True)
+        self.ckbParameter3.blockSignals(True)
+        self.ckbParameter4.blockSignals(True)
+
+        self.ckbAFF.setChecked(False)
+        self.ckbParameter1.setChecked(False)
+        self.ckbParameter2.setChecked(False)
+        self.ckbParameter3.setChecked(False)
+        self.ckbParameter4.setChecked(False)
+        
+        self.ckbAFF.blockSignals(False)
+        self.ckbParameter1.blockSignals(False)
+        self.ckbParameter2.blockSignals(False)
+        self.ckbParameter3.blockSignals(False)
+        self.ckbParameter4.blockSignals(False)
+
     def InitialiseParameterSpinBoxes(self):
         """Reset model parameter spinboxes with typical initial values for each model"""
         try:
@@ -1858,6 +1879,12 @@ class ModelFittingApp(QWidget):
         self.spinBoxParameter3.setEnabled(boolEnabled) 
         self.spinBoxParameter4.setEnabled(boolEnabled)
         self.btnBatchProc.setEnabled(boolEnabled)
+        self.ckbAFF.setEnabled(boolEnabled)
+        self.ckbParameter1.setEnabled(boolEnabled)
+        self.ckbParameter2.setEnabled(boolEnabled)
+        self.ckbParameter3.setEnabled(boolEnabled)
+        self.ckbParameter4.setEnabled(boolEnabled)
+        
 
     def BatchProcessAllCSVDataFiles(self):
         try:
@@ -1974,7 +2001,7 @@ class ModelFittingApp(QWidget):
             writeCSV = csv.writer(csvfile,  dialect='excel', delimiter=',')
             #write header row
             writeCSV.writerow(['Data File', 'Model', 'Parameter', 'Value', 'Lower', 'Upper'])
-            return writeCSV, csvfile
+            return writeCSV, CSVFileName
          
         except csv.Error:
             print('CSV Writer error in function BatchProcessingCreateCSVBatchSummaryFile: file %s, line %d: %s' % (CSVFileName, WriteCSV.line_num, csv.Error))
@@ -2037,7 +2064,7 @@ class ModelFittingApp(QWidget):
                     line = csvfile.readline()
                     if line.count(',') < (MIN_NUM_COLUMNS_CSV_FILE - 1):
                         boolFileFormatOK = False
-                        failureReason = "at least 3 columns of data are expected"
+                        failureReason = " at least 3 columns of data are expected"
                         errorStr = 'Batch Processing: CSV file {} must acontain at least 3 columns of data separated by commas.'.format(fullFilePath)
                         logger.info(errorStr)
                         
@@ -2127,7 +2154,7 @@ class ModelFittingApp(QWidget):
             AIF = str(self.cmbAIF.currentText().strip().lower())
             if AIF not in (lowerCaseHeaders):
                 boolDataOK = False
-                if len(failureReason) == 0:
+                if len(failureReason) > 0:
                     join = " and "
                 failureReason = failureReason + join + AIF + " data missing"
 
@@ -2135,7 +2162,7 @@ class ModelFittingApp(QWidget):
                 VIF = str(self.cmbVIF.currentText().strip().lower())
                 if VIF not in (lowerCaseHeaders):
                     boolDataOK = False
-                    if len(failureReason) == 0:
+                    if len(failureReason) > 0:
                         join = " and "
                     failureReason = failureReason + join + VIF + " data missing"
             
