@@ -73,24 +73,24 @@ Objects of the following 2 classes are created in modelFittingGUI.py and provide
 to this class:
 The PDFWrite.py class module creates and saves a report of a model fitting session in a PDF file.
 
-The TracerkineticModels.py module contains functions that calculate the variation of concentration
-with time according to several tracer kinetic models.   
+The TracerkineticModels.py module contains functions that calculate the variation of 
+concentration with time according to several tracer kinetic models.   
 
 GUI Structure
 --------------
-The GUI is based on the QDialog class, which is the base class of dialog windows.
-The GUI contains a single form.  Controls are arranged in three verticals on this form.
+The GUI is based on the QWidget class. The GUI contains a single form.  
+Controls are arranged in two vertical layouts on this form.
 Consequently, a horizontal layout control in placed on this form. Within this horizontal
-layout is placed 3 vertical layout controls.
+layout are placed 2 vertical layout controls.
 
 The left-hand side vertical layout holds controls pertaining to the input and selection of data
-and the selection of a model to analyse the data.
+and the selection of a model to analyse the data.  Also, the optimum model input parameters 
+(and their 95% confidence limits) resulting from fitting the curve to the Region of Interest 
+(ROI) concentration/time curve are displayed.  
 
-The central vertical layout holds a canvas widget for the graphical display of the data.
-
-The right-hand side vertical layout holds controls for the display of a schematic 
-representation of the chosen model and the optimum model input parameters resulting
-from fitting the curve to the Region of Interest (ROI) concentration/time curve.
+The right-hand side vertical layout holds a canvas widget for the graphical
+display of the data.  Above this a schematic representation of the chosen 
+model is displayed.
 
 The appearance of the GUI is controlled by the CSS commands in styleSheet.py
 
@@ -114,5 +114,44 @@ the Venous Input Function (VIF).
 As the time data is read, it is divided by 60 in order to convert it into minutes
 
 Included in this repository is a sample data input file called Sample_Data.csv
+
+Batch Processing.
+-----------------
+This application can be used to automatically fit models to concentration data in
+2 or more files in the same folder.  For each data file, a PDF report containing the 
+concentration curve plot and a table of the optimum parameter values and thier 95% 
+confidence limits is created in a folder called PDFReports.  
+
+Likewise, for each data file, the time/concentration data in the plot after curve 
+fitting is saved in csv format in a file in a folder called CSVPlotDataFiles.
+
+As each data file is processed, its name, the optimum parameter values and their 
+95% confidence limits are written in csv format to the batch summary file. 
+The names of any files that fail the validation tests are also recorded in this 
+summary csv file together with the reasons for their failure. 
+
+The folders PDFReports and CSVPlotDataFiles are automatically created within the folder 
+containg the csv data files.
+
+To initiate batch processing:
+	1. Put all the data files you wish to batch process in the same folder.
+		Note, all csv files in this folder will be included in the batch 
+		processing. However, files will be skipped over which do not meet
+		the above criteria.
+
+	2. Load one of these files. 
+
+	3. Select the region of interest for the whole batch.
+
+	4. Select the model for the whole batch.
+
+	5. Select the AIF and VIF (if appropriate) for the whole batch.
+
+	6. Set the initial values of the input parameters or use the defaults.
+
+	7. Click the 'Start Batch Processing' button.  You will be asked to give the
+		name and location of the batch summary csv file or you can accept the defaults.
+		A progress bar will show the progress batch processing.
+
 
 

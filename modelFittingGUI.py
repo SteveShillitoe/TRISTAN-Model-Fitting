@@ -251,44 +251,38 @@ class ModelFittingApp(QWidget):
         self.ApplyStyleSheet()
        
         #Setup the layouts, the containers for widgets
-        verticalLayoutLeft, verticalLayoutMiddle, verticalLayoutRight = self.SetUpLayouts()
+        verticalLayoutLeft, verticalLayoutRight = self.SetUpLayouts() #verticalLayoutMiddle,
         
         #Add widgets to the left-hand side vertical layout
         self.SetUpLeftVerticalLayout(verticalLayoutLeft)
 
         #Set up the graph to plot concentration data on
         # the middle vertical layout
-        self.SetUpPlotArea(verticalLayoutMiddle)
+        self.SetUpPlotArea(verticalLayoutRight)
         
-        #Create a group box and place it in the right-handside vertical layout
-        #Also add a label to hold the TRISTAN Logo
-        self.SetUpRightVerticalLayout(verticalLayoutRight)
-
         logger.info("GUI created successfully.")
 
     def SetUpLayouts(self):
         """Places a horizontal layout on the window
-           and places 3 vertical layouts on the horizontal layout.
+           and places 2 vertical layouts on the horizontal layout.
            
-           Returns the 3 vertical layouts to be used by other methods
+           Returns the 2 vertical layouts to be used by other methods
            that place widgets on them.
            
            Returns
            -------
-                Three vertical layouts that have been added to a 
+                Two vertical layouts that have been added to a 
                 horizontal layout.
            """
 
         horizontalLayout = QHBoxLayout()
         verticalLayoutLeft = QVBoxLayout()
-        verticalLayoutMiddle = QVBoxLayout()
         verticalLayoutRight = QVBoxLayout()
         
         self.setLayout(horizontalLayout)
         horizontalLayout.addLayout(verticalLayoutLeft,2)
-        horizontalLayout.addLayout(verticalLayoutMiddle,3)
-        horizontalLayout.addLayout(verticalLayoutRight,2)
-        return verticalLayoutLeft, verticalLayoutMiddle, verticalLayoutRight
+        horizontalLayout.addLayout(verticalLayoutRight,3)
+        return verticalLayoutLeft,  verticalLayoutRight  
 
     def SetUpLeftVerticalLayout(self, layout):
         """
@@ -311,7 +305,6 @@ class ModelFittingApp(QWidget):
         #Add Load data file button to the top of the vertical layout
         layout.addWidget(self.btnLoadDisplayData)
         layout.addItem(verticalSpacer)
-
         #Create dropdown list for selection of ROI
         self.lblROI = QLabel("Region of Interest:")
         self.lblROI.setAlignment(QtCore.Qt.AlignRight)
@@ -364,6 +357,8 @@ class ModelFittingApp(QWidget):
         #each horizontal layout. Then add them to a vertical layout, 
         #then add the vertical layout to the group box
         modelHorizontalLayout2 = QHBoxLayout()
+        modelHorizontalLayoutParamLabels = QHBoxLayout()
+        gridLayoutParamLabels = QGridLayout()
         modelHorizontalLayoutArterialFlowFactor = QHBoxLayout()
         modelHorizontalLayout3 = QHBoxLayout()
         modelHorizontalLayout4 = QHBoxLayout()
@@ -380,6 +375,8 @@ class ModelFittingApp(QWidget):
         modelVerticalLayout.addLayout(modelHorizontalLayout3)
         modelVerticalLayout.addLayout(modelHorizontalLayout4)
         modelVerticalLayout.addLayout(modelHorizontalLayoutReset)
+        modelVerticalLayout.addLayout(modelHorizontalLayoutParamLabels)
+        modelHorizontalLayoutParamLabels.addLayout(gridLayoutParamLabels)
         modelVerticalLayout.addLayout(modelHorizontalLayoutArterialFlowFactor)
         modelVerticalLayout.addLayout(modelHorizontalLayout5)
         modelVerticalLayout.addLayout(modelHorizontalLayout6)
@@ -398,6 +395,7 @@ class ModelFittingApp(QWidget):
         #self.cmbModels.addItems(TracerKineticModels.modelNames)
         self.cmbModels.addItems(TracerKineticModels.GetListModels())
         self.cmbModels.setCurrentIndex(0) #Display "Select a Model"
+        self.cmbModels.currentIndexChanged.connect(self.UncheckFixParameterCheckBoxes)
         self.cmbModels.currentIndexChanged.connect(self.DisplayModelImage)
         self.cmbModels.currentIndexChanged.connect(self.ConfigureGUIForEachModel)
         self.cmbModels.currentIndexChanged.connect(lambda: self.ClearOptimisedParamaterList('cmbModels')) 
@@ -450,6 +448,7 @@ class ModelFittingApp(QWidget):
         self.btnReset.setToolTip('Reset parameters to their default values.')
         self.btnReset.hide()
         self.btnReset.clicked.connect(self.InitialiseParameterSpinBoxes)
+        self.btnReset.clicked.connect(self.OptimumParameterChanged)
         #If parameters reset to their default values, replot the concentration and model data
         self.btnReset.clicked.connect(lambda: self.PlotConcentrations('Reset Button'))
         modelHorizontalLayoutReset.addWidget(self.cboxDelay)
@@ -460,10 +459,43 @@ class ModelFittingApp(QWidget):
         #Label text set in function ConfigureGUIForEachModel when the model is selected
         self.lblArterialFlowFactor = QLabel("Arterial Flow Fraction, \n fa (%)") 
         self.lblArterialFlowFactor.hide()
+        self.ckbAFF = QCheckBox("Fix")
+        self.ckbAFF.hide()
+        self.lblAFFConfInt = QLabel("")
+        self.lblAFFConfInt.setAlignment(QtCore.Qt.AlignCenter)
+
+        self.lblConfInt = QLabel("95% Confidence Interval")
+        self.lblConfInt.hide()
+        self.lblConfInt.setAlignment(QtCore.Qt.AlignRight)
+        gridLayoutParamLabels.addWidget(self.lblConfInt, 1,4)
+        
         self.labelParameter1 = QLabel("")
+        self.ckbParameter1 = QCheckBox("Fix")
+        self.ckbParameter1.hide()
+        self.ckbParameter1.clicked.connect(self.OptimumParameterChanged)
+        self.ckbParameter1.clicked.connect(self.DisplayModelImage)
+        self.ckbParameter1.clicked.connect(lambda:  self.PlotConcentrations('ckbParameter1'))
+        self.lblParam1ConfInt = QLabel("")
+        self.lblParam1ConfInt.setAlignment(QtCore.Qt.AlignCenter)
+        
         self.labelParameter2 = QLabel("")
+        self.ckbParameter2 = QCheckBox("Fix")
+        self.ckbParameter2.hide()
+        self.lblParam2ConfInt = QLabel("")
+        self.lblParam2ConfInt.setAlignment(QtCore.Qt.AlignCenter)
+        
         self.labelParameter3 = QLabel("")
+        self.ckbParameter3 = QCheckBox("Fix")
+        self.ckbParameter3.hide()
+        self.lblParam3ConfInt = QLabel("")
+        self.lblParam3ConfInt.setAlignment(QtCore.Qt.AlignCenter)
+
         self.labelParameter4 = QLabel("")
+        self.ckbParameter4 = QCheckBox("Fix")
+        self.ckbParameter4.hide()
+        self.lblParam4ConfInt = QLabel("")
+        self.lblParam4ConfInt.setAlignment(QtCore.Qt.AlignCenter)
+
         self.labelParameter1.setWordWrap(True)
         self.labelParameter2.setWordWrap(True)
         self.labelParameter3.setWordWrap(True)
@@ -495,23 +527,41 @@ class ModelFittingApp(QWidget):
         self.spinBoxParameter4.valueChanged.connect(lambda: self.PlotConcentrations('spinBoxParameter4'))
         #Set a global boolean variable, _boolCurveFittingDone to false to indicate that 
         #the value of a model parameter has been changed manually rather than by curve fitting
-        self.spinBoxArterialFlowFactor.valueChanged.connect(self.SetCurveFittingNotDoneBoolean) 
-        self.spinBoxParameter1.valueChanged.connect(self.SetCurveFittingNotDoneBoolean) 
-        self.spinBoxParameter2.valueChanged.connect(self.SetCurveFittingNotDoneBoolean) 
-        self.spinBoxParameter3.valueChanged.connect(self.SetCurveFittingNotDoneBoolean)
-        self.spinBoxParameter4.valueChanged.connect(self.SetCurveFittingNotDoneBoolean)
+        self.spinBoxArterialFlowFactor.valueChanged.connect(self.OptimumParameterChanged) 
+        self.spinBoxParameter1.valueChanged.connect(self.OptimumParameterChanged) 
+        self.spinBoxParameter2.valueChanged.connect(self.OptimumParameterChanged) 
+        self.spinBoxParameter3.valueChanged.connect(self.OptimumParameterChanged)
+        self.spinBoxParameter4.valueChanged.connect(self.OptimumParameterChanged)
         
         #Place spin boxes and their labels in horizontal layouts
+        #modelHorizontalLayoutParamLabels
+
         modelHorizontalLayoutArterialFlowFactor.addWidget(self.lblArterialFlowFactor)
         modelHorizontalLayoutArterialFlowFactor.addWidget(self.spinBoxArterialFlowFactor)
+        modelHorizontalLayoutArterialFlowFactor.addWidget(self.ckbAFF)
+        modelHorizontalLayoutArterialFlowFactor.addWidget(self.lblAFFConfInt)
+       
+
         modelHorizontalLayout5.addWidget(self.labelParameter1)
         modelHorizontalLayout5.addWidget(self.spinBoxParameter1)
+        modelHorizontalLayout5.addWidget(self.ckbParameter1)
+        modelHorizontalLayout5.addWidget(self.lblParam1ConfInt)
+
         modelHorizontalLayout6.addWidget(self.labelParameter2)
         modelHorizontalLayout6.addWidget(self.spinBoxParameter2)
+        modelHorizontalLayout6.addWidget(self.ckbParameter2)
+        modelHorizontalLayout6.addWidget(self.lblParam2ConfInt)
+
         modelHorizontalLayout7.addWidget(self.labelParameter3)
         modelHorizontalLayout7.addWidget(self.spinBoxParameter3)
+        modelHorizontalLayout7.addWidget(self.ckbParameter3)
+        modelHorizontalLayout7.addWidget(self.lblParam3ConfInt)
+
         modelHorizontalLayoutPara4.addWidget(self.labelParameter4)
         modelHorizontalLayoutPara4.addWidget(self.spinBoxParameter4)
+        modelHorizontalLayoutPara4.addWidget(self.ckbParameter4)
+        modelHorizontalLayoutPara4.addWidget(self.lblParam4ConfInt)
+       
         
         self.btnFitModel = QPushButton('Fit Model')
         self.btnFitModel.setToolTip('Use non-linear least squares to fit the selected model to the data')
@@ -569,93 +619,26 @@ class ModelFittingApp(QWidget):
             logger.error('Error in function DisplayModelFittingGroupBox: ' + str(e))
 
     def SetUpPlotArea(self, layout):
-        """Adds widgets for the display of the graph onto the middle vertical layout."""
-        self.figure = plt.figure(figsize=(5, 4), dpi=100)
-        # this is the Canvas Widget that displays the `figure`
-        # it takes the `figure` instance as a parameter to its __init__
-        self.canvas = FigureCanvas(self.figure)
-        
-        # this is the Navigation widget
-        # it takes the Canvas widget as a parent
-        self.toolbar = NavigationToolbar(self.canvas, self)
-        layout.addWidget(self.toolbar)
-        layout.addWidget(self.canvas)
-
-    def SetUpRightVerticalLayout(self, layout):
-        """Creates and adds widgets to the right hand side vertical layout for the 
-        display of the results of curve fitting. """
-
-        #Add a vertical spacer to the top of vertical layout to ensure
-        #the top of the group box is level with the MATPLOTLIB toolbar 
-        #the central vertical layout.
+        """Adds widgets for the display of the graph onto the right-hand side vertical layout."""
+        layout.setAlignment(QtCore.Qt.AlignTop)
         verticalSpacer = QSpacerItem(20, 35, QSizePolicy.Minimum, QSizePolicy.Minimum)
         layout.addItem(verticalSpacer)
         layout.addItem(verticalSpacer)
 
         self.lblModelImage = QLabel(self)
-        self.lblModelImage.setAlignment(QtCore.Qt.AlignCenter)
+        self.lblModelImage.setAlignment(QtCore.Qt.AlignCenter )
         self.lblModelName = QLabel('')
         self.lblModelName.setAlignment(QtCore.Qt.AlignCenter)
         self.lblModelName.setWordWrap(True)
-        layout.addWidget(self.lblModelImage)
-        layout.addWidget(self.lblModelName)
-        #Create Group Box to contain labels displaying the results of curve fitting
-        self.groupBoxResults = QGroupBox('Curve Fitting Results')
-        self.groupBoxResults.setAlignment(QtCore.Qt.AlignHCenter)
-        layout.addWidget(self.groupBoxResults)
-        layout.addStretch()
-        #Grid layout to be placed inside the group box
-        gridLayoutResults = QGridLayout()
-        gridLayoutResults.setAlignment(QtCore.Qt.AlignTop) 
-        self.groupBoxResults.setLayout(gridLayoutResults)
 
-        self.lblHeaderLeft = QLabel("Parameter")
-        self.lblHeaderMiddle = QLabel("Value")
-        self.lblHeaderRight = QLabel("95% Confidence Interval")
-        self.lblAFFName = QLabel("")
-        self.lblAFFValue = QLabel("")
-        self.lblAFFConfInt = QLabel("")
-        self.lblAFFConfInt.setAlignment(QtCore.Qt.AlignCenter)
-        self.lblParam1Name = QLabel("")
-        self.lblParam1Value = QLabel("")
-        self.lblParam1ConfInt = QLabel("")
-        self.lblParam1ConfInt.setAlignment(QtCore.Qt.AlignCenter)
-        self.lblParam2Name = QLabel("")
-        self.lblParam2Value = QLabel("")
-        self.lblParam2ConfInt = QLabel("")
-        self.lblParam2ConfInt.setAlignment(QtCore.Qt.AlignCenter)
-        self.lblParam3Name = QLabel("")
-        self.lblParam3Value = QLabel("")
-        self.lblParam3ConfInt = QLabel("")
-        self.lblParam3ConfInt.setAlignment(QtCore.Qt.AlignCenter)
-        self.lblParam4Name = QLabel("")
-        self.lblParam4Value = QLabel("")
-        self.lblParam4ConfInt = QLabel("")
-        self.lblParam4ConfInt.setAlignment(QtCore.Qt.AlignCenter)
-        
-        gridLayoutResults.addWidget(self.lblHeaderLeft, 1, 1)
-        gridLayoutResults.addWidget(self.lblHeaderMiddle, 1, 3)
-        gridLayoutResults.addWidget(self.lblHeaderRight, 1, 5)
-        gridLayoutResults.addWidget(self.lblAFFName, 2, 1, QtCore.Qt.AlignTop)
-        gridLayoutResults.addWidget(self.lblAFFValue, 2, 3, QtCore.Qt.AlignTop)
-        gridLayoutResults.addWidget(self.lblAFFConfInt, 2, 5, QtCore.Qt.AlignTop)
-        gridLayoutResults.addWidget(self.lblParam1Name, 3, 1, QtCore.Qt.AlignTop)
-        gridLayoutResults.addWidget(self.lblParam1Value, 3, 3, QtCore.Qt.AlignTop)
-        gridLayoutResults.addWidget(self.lblParam1ConfInt, 3, 5, QtCore.Qt.AlignTop)
-        gridLayoutResults.addWidget(self.lblParam2Name, 4, 1, QtCore.Qt.AlignTop)
-        gridLayoutResults.addWidget(self.lblParam2Value, 4, 3, QtCore.Qt.AlignTop)
-        gridLayoutResults.addWidget(self.lblParam2ConfInt, 4, 5, QtCore.Qt.AlignTop)
-        gridLayoutResults.addWidget(self.lblParam3Name, 5, 1, QtCore.Qt.AlignTop)
-        gridLayoutResults.addWidget(self.lblParam3Value, 5, 3, QtCore.Qt.AlignTop)
-        gridLayoutResults.addWidget(self.lblParam3ConfInt, 5, 5, QtCore.Qt.AlignTop)
-        gridLayoutResults.addWidget(self.lblParam4Name, 6, 1, QtCore.Qt.AlignTop)
-        gridLayoutResults.addWidget(self.lblParam4Value, 6, 3, QtCore.Qt.AlignTop)
-        gridLayoutResults.addWidget(self.lblParam4ConfInt, 6, 5, QtCore.Qt.AlignTop)
+        self.figure = plt.figure(figsize=(5, 9), dpi=100) 
+        # this is the Canvas Widget that displays the `figure`
+        # it takes the `figure` instance as a parameter to its __init__
+        self.canvas = FigureCanvas(self.figure)
+        # this is the Navigation widget
+        # it takes the Canvas widget as a parent
+        self.toolbar = NavigationToolbar(self.canvas, self)
 
-        #Create horizontal layout box to hold TRISTAN & University of Leeds Logos
-        horizontalLogoLayout = QHBoxLayout()
-        #Add horizontal layout to bottom of the vertical layout
-        layout.addLayout(horizontalLogoLayout)
         #Display TRISTAN & University of Leeds Logos in labels
         self.lblTRISTAN_Logo = QLabel(self)
         self.lblUoL_Logo = QLabel(self)
@@ -669,14 +652,23 @@ class ModelFittingApp(QWidget):
                       QtCore.Qt.KeepAspectRatio, QtCore.Qt.SmoothTransformation)
         self.lblTRISTAN_Logo.setPixmap(pixmapTRISTAN)
 
-
         pixmapUoL = QPixmap(UNI_OF_LEEDS_LOGO)
         pMapWidth = pixmapUoL.width() * 0.75
         pMapHeight = pixmapUoL.height() * 0.75
         pixmapUoL = pixmapUoL.scaled(pMapWidth, pMapHeight, 
                       QtCore.Qt.KeepAspectRatio, QtCore.Qt.SmoothTransformation)
         self.lblUoL_Logo.setPixmap(pixmapUoL)
-        #Add labels displaying logos to the horizontal layout, 
+       
+        layout.addWidget(self.lblModelImage)
+        layout.addWidget(self.lblModelName)
+        layout.addWidget(self.toolbar)
+        layout.addWidget(self.canvas)
+        #Create horizontal layout box to hold TRISTAN & University of Leeds Logos
+        horizontalLogoLayout = QHBoxLayout()
+        horizontalLogoLayout.setAlignment(QtCore.Qt.AlignRight)
+        #Add horizontal layout to bottom of the vertical layout
+        layout.addLayout(horizontalLogoLayout)
+         #Add labels displaying logos to the horizontal layout, 
         #Tristan on the LHS, UoL on the RHS
         horizontalLogoLayout.addWidget(self.lblTRISTAN_Logo)
         horizontalLogoLayout.addWidget(self.lblUoL_Logo)
@@ -699,7 +691,11 @@ class ModelFittingApp(QWidget):
             shortModelName = str(self.cmbModels.currentText())
         
             if shortModelName != 'Select a model':
-                modelImageName = TracerKineticModels.GetModelImageName(shortModelName)
+                if self.ckbParameter1.isChecked():
+                    boolFixVe = True
+                else:
+                    boolFixVe = False
+                modelImageName = TracerKineticModels.GetModelImageName(shortModelName, boolFixVe)
                 pixmapModelImage = QPixmap(modelImageName)
                 #Increase the size of the model image
                 pMapWidth = pixmapModelImage.width() * 1.35
@@ -707,8 +703,7 @@ class ModelFittingApp(QWidget):
                 pixmapModelImage = pixmapModelImage.scaled(pMapWidth, pMapHeight, 
                       QtCore.Qt.KeepAspectRatio, QtCore.Qt.SmoothTransformation)
                 self.lblModelImage.setPixmap(pixmapModelImage)
-
-                longModelName = TracerKineticModels.GetLongModelName(shortModelName)
+                longModelName = TracerKineticModels.GetLongModelName(shortModelName, boolFixVe)
                 self.lblModelName.setText(longModelName)
             else:
                 self.lblModelImage.clear()
@@ -718,23 +713,28 @@ class ModelFittingApp(QWidget):
             print('Error in function DisplayModelImage: ' + str(e)) 
             logger.error('Error in function DisplayModelImage: ' + str(e))  
 
-    def SetCurveFittingNotDoneBoolean(self):
+    def OptimumParameterChanged(self):
         """Sets global boolean _boolCurveFittingDone to false if the 
         plot of the model curve is changed by manually changing the values of 
-        model input parameters rather than by running curve fitting."""
+        model input parameters rather than by running curve fitting.
+        
+        Also, clears the labels that display the optimum value of each 
+        parameter and its confidence inteval."""
+
         global _boolCurveFittingDone
         _boolCurveFittingDone=False
+        self.ClearOptimisedParamaterList('Function-OptimumParameterChanged')
 
-    def DisplayOptimumParamaterValuesOnGUI(self):
+    def ProcessOptimumParametersAfterCurveFit(self):
         """Displays the optimum parameter values resulting from curve fitting 
         with their confidence limits on the right-hand side of the GUI. These
         values are stored in the global list _optimisedParamaterList
         
         Where appropriate decimal fractions are converted to %"""
         try:
-            logger.info('Function DisplayOptimumParamaterValuesOnGUI called.')
+            logger.info('Function ProcessOptimumParametersAfterCurveFit called.')
+            self.lblConfInt.show()
             if self.spinBoxArterialFlowFactor.isHidden() == False:
-                self.lblAFFName.setText(self.lblArterialFlowFactor.text())
                 parameterValue = _optimisedParamaterList[0][0]
                 lowerLimit = _optimisedParamaterList[0][1]
                 upperLimit = _optimisedParamaterList[0][2]
@@ -748,7 +748,6 @@ class ModelFittingApp(QWidget):
                 _optimisedParamaterList[0][1] = lowerLimit
                 _optimisedParamaterList[0][2] = upperLimit
                
-                self.lblAFFValue.setText(str(parameterValue) + suffix)
                 confidenceStr = '[{}     {}]'.format(lowerLimit, upperLimit)
                 self.lblAFFConfInt.setText(confidenceStr)
                 nextIndex=1
@@ -756,38 +755,37 @@ class ModelFittingApp(QWidget):
                 nextIndex = 0
             
             modelName = str(self.cmbModels.currentText())
-            self.lblParam1Name.setText(self.labelParameter1.text())
-            if modelName == 'HF1-2CFM-FixVe':
-                parameterValue = self.spinBoxParameter1.value()
-                lowerLimit = "N/A"
-                upperLimit = "N/A"
-                suffix = '%'
-                tempList = [parameterValue, lowerLimit, upperLimit]
-                _optimisedParamaterList.insert(0, tempList)
-            else:
-                parameterValue = round(_optimisedParamaterList[nextIndex][0], 3)
-                lowerLimit = round(_optimisedParamaterList[nextIndex][1], 3)
-                upperLimit = round(_optimisedParamaterList[nextIndex][2], 3)
-                if self.spinBoxParameter1.suffix() == '%':
-                    #convert from decimal fraction to %
+      
+            if modelName == 'HF1-2CFM':
+                if self.ckbParameter1.isChecked():
+                    parameterValue = self.spinBoxParameter1.value()
+                    lowerLimit = "N/A"
+                    upperLimit = "N/A"
                     suffix = '%'
-                    parameterValue = round(parameterValue * 100.0, 3)
-                    lowerLimit = round(lowerLimit * 100.0,3)
-                    upperLimit = round(upperLimit * 100.0,3)
+                    tempList = [parameterValue, lowerLimit, upperLimit]
+                    _optimisedParamaterList.insert(0, tempList)
                 else:
-                    suffix = ''
-                #For display in the PDF report, overwrite decimal volume fraction values in  _optimisedParamaterList
-                #with the % equivalent
-                _optimisedParamaterList[nextIndex][0] = parameterValue
-                _optimisedParamaterList[nextIndex][1] = lowerLimit
-                _optimisedParamaterList[nextIndex][2] = upperLimit
+                    parameterValue = round(_optimisedParamaterList[nextIndex][0], 3)
+                    lowerLimit = round(_optimisedParamaterList[nextIndex][1], 3)
+                    upperLimit = round(_optimisedParamaterList[nextIndex][2], 3)
+                    if self.spinBoxParameter1.suffix() == '%':
+                        #convert from decimal fraction to %
+                        suffix = '%'
+                        parameterValue = round(parameterValue * 100.0, 3)
+                        lowerLimit = round(lowerLimit * 100.0,3)
+                        upperLimit = round(upperLimit * 100.0,3)
+                    else:
+                        suffix = ''
+                    #For display in the PDF report, overwrite decimal volume fraction values in  _optimisedParamaterList
+                    #with the % equivalent
+                    _optimisedParamaterList[nextIndex][0] = parameterValue
+                    _optimisedParamaterList[nextIndex][1] = lowerLimit
+                    _optimisedParamaterList[nextIndex][2] = upperLimit
 
-            self.lblParam1Value.setText(str(parameterValue) + suffix)
             confidenceStr = '[{}     {}]'.format(lowerLimit, upperLimit)
             self.lblParam1ConfInt.setText(confidenceStr)
             
             nextIndex +=1
-            self.lblParam2Name.setText(self.labelParameter2.text())
             parameterValue = round(_optimisedParamaterList[nextIndex][0], 3)
             lowerLimit = round(_optimisedParamaterList[nextIndex][1], 3)
             upperLimit = round(_optimisedParamaterList[nextIndex][2], 3)
@@ -805,13 +803,11 @@ class ModelFittingApp(QWidget):
             else:
                 suffix = ''
             
-            self.lblParam2Value.setText(str(parameterValue) + suffix)
             confidenceStr = '[{}     {}]'.format(lowerLimit, upperLimit)
             self.lblParam2ConfInt.setText(confidenceStr) 
             
             nextIndex += 1
             if self.spinBoxParameter3.isHidden() == False:
-                self.lblParam3Name.setText(self.labelParameter3.text())
                 parameterValue = round(_optimisedParamaterList[nextIndex][0], 3)
                 lowerLimit = round(_optimisedParamaterList[nextIndex][1], 3)
                 upperLimit = round(_optimisedParamaterList[nextIndex][2], 3)
@@ -829,12 +825,10 @@ class ModelFittingApp(QWidget):
                 else:
                     suffix = ''
                 
-                self.lblParam3Value.setText(str(parameterValue) + suffix)
                 confidenceStr = '[{}     {}]'.format(lowerLimit, upperLimit)
                 self.lblParam3ConfInt.setText(confidenceStr)
 
             if self.spinBoxParameter4.isHidden() == False:
-                self.lblParam4Name.setText(self.labelParameter4.text())
                 parameterValue = round(_optimisedParamaterList[nextIndex][0], 3)
                 lowerLimit = round(_optimisedParamaterList[nextIndex][1], 3)
                 upperLimit = round(_optimisedParamaterList[nextIndex][2], 3)
@@ -852,39 +846,29 @@ class ModelFittingApp(QWidget):
                 else:
                     suffix = ''
                 
-                self.lblParam4Value.setText(str(parameterValue) + suffix)
                 confidenceStr = '[{}     {}]'.format(lowerLimit, upperLimit)
                 self.lblParam4ConfInt.setText(confidenceStr)
             
         except Exception as e:
-            print('Error in function DisplayOptimumParamaterValuesOnGUI: ' + str(e))
-            logger.error('Error in function DisplayOptimumParamaterValuesOnGUI: ' + str(e))
+            print('Error in function ProcessOptimumParametersAfterCurveFit: ' + str(e))
+            logger.error('Error in function ProcessOptimumParametersAfterCurveFit: ' + str(e))
 
-    def ClearOptimumParamaterValuesOnGUI(self):
-        """Clears the contents of the labels on the right handside of the GUI.
-        That is the parameter values and their confidence limits resulting 
+    def ClearOptimumParamaterConfLimitsOnGUI(self):
+        """Clears the contents of the labels on the left handside of the GUI 
+        that display parameter values confidence limits resulting 
         from curve fitting. """
         try:
-            logger.info('Function ClearOptimumParamaterValuesOnGUI called.')
-            self.lblParam1Name.clear()
-            self.lblParam1Value.clear()
+            logger.info('Function ClearOptimumParamaterConfLimitsOnGUI called.')
+            self.lblConfInt.hide()
             self.lblParam1ConfInt.clear()
-            self.lblParam2Name.clear()
-            self.lblParam2Value.clear()
             self.lblParam2ConfInt.clear()
-            self.lblParam3Name.clear()
-            self.lblParam3Value.clear()
             self.lblParam3ConfInt.clear()
-            self.lblParam4Name.clear()
-            self.lblParam4Value.clear()
             self.lblParam4ConfInt.clear()
-            self.lblAFFName.clear()
-            self.lblAFFValue.clear()
             self.lblAFFConfInt.clear()
             
         except Exception as e:
-            print('Error in function ClearOptimumParamaterValuesOnGUI: ' + str(e))
-            logger.error('Error in function ClearOptimumParamaterValuesOnGUI: ' + str(e))
+            print('Error in function ClearOptimumParamaterConfLimitsOnGUI: ' + str(e))
+            logger.error('Error in function ClearOptimumParamaterConfLimitsOnGUI: ' + str(e))
     
     def SaveCSVFile(self, fileName=""):
         """Saves in CSV format the data in the plot on the GUI """ 
@@ -950,7 +934,7 @@ class ModelFittingApp(QWidget):
         try:
             logger.info('ClearOptimisedParamaterList called from ' + callingControl)
             _optimisedParamaterList.clear()
-            self.ClearOptimumParamaterValuesOnGUI()
+            self.ClearOptimumParamaterConfLimitsOnGUI()
         except Exception as e:
             print('Error in function ClearOptimisedParamaterList: ' + str(e)) 
             logger.error('Error in function ClearOptimisedParamaterList: ' + str(e))
@@ -1077,15 +1061,13 @@ class ModelFittingApp(QWidget):
             else:
                 nextIndex = 0
                 
-            if modelName == 'HF1-2CFM-FixVe':
-                #retain the value set by the user
-                pass
-            else:
-                if self.spinBoxParameter1.suffix() == '%':
-                    self.spinBoxParameter1.setValue(parameterList[nextIndex]* 100) #Convert Volume fraction to %
-                else:
-                    self.spinBoxParameter1.setValue(parameterList[nextIndex])
-                nextIndex += 1
+            if modelName == 'HF1-2CFM':
+                if not self.ckbParameter1.isChecked():
+                    if self.spinBoxParameter1.suffix() == '%':
+                        self.spinBoxParameter1.setValue(parameterList[nextIndex]* 100) #Convert Volume fraction to %
+                    else:
+                        self.spinBoxParameter1.setValue(parameterList[nextIndex])
+                    nextIndex += 1
 
             if self.spinBoxParameter2.suffix() == '%':
                 self.spinBoxParameter2.setValue(parameterList[nextIndex]* 100) #Convert Volume fraction to %
@@ -1194,9 +1176,15 @@ class ModelFittingApp(QWidget):
             #Get the name of the model to be fitted to the ROI curve
             modelName = str(self.cmbModels.currentText())
             #Call curve fitting routine
-            logger.info('TracerKineticModels.CurveFit called with model {}, parameters {} and Constraint = {}'.format(modelName, initialParametersArray, addConstraint))
-            optimumParams, paramCovarianceMatrix = TracerKineticModels.CurveFit(modelName, arrayTimes, 
-                 arrayAIFConcs, arrayVIFConcs, arrayROIConcs, initialParametersArray, addConstraint)
+            if self.ckbParameter1.isChecked():
+                boolFixVe = True
+            else:
+                boolFixVe = False
+            logger.info('TracerKineticModels.CurveFit called with model {}, parameters {}, Constraint = {} and boolFixVe = {}'.format(modelName, initialParametersArray, addConstraint, boolFixVe))
+            optimumParams, paramCovarianceMatrix = TracerKineticModels.CurveFit(
+                modelName, arrayTimes, 
+                arrayAIFConcs, arrayVIFConcs, arrayROIConcs,
+                initialParametersArray, addConstraint, boolFixVe)
             
             _boolCurveFittingDone = True 
             logger.info('TracerKineticModels.CurveFit returned optimum parameters {} with confidence levels {}'.format(optimumParams, paramCovarianceMatrix))
@@ -1214,7 +1202,7 @@ class ModelFittingApp(QWidget):
             self.Calculate95ConfidenceLimits(numDataPoints, numParams, 
                                     optimumParams, paramCovarianceMatrix)
             
-            self.DisplayOptimumParamaterValuesOnGUI()
+            self.ProcessOptimumParametersAfterCurveFit()
             
         except ValueError as ve:
             print ('Value Error: RunCurveFit with model ' + modelName + ': '+ str(ve))
@@ -1339,13 +1327,17 @@ class ModelFittingApp(QWidget):
                     #delete existing copy of PDF called reportFileName
                     os.remove(reportFileName)   
                 shortModelName = str(self.cmbModels.currentText())
-                longModelName = TracerKineticModels.GetLongModelName(shortModelName)
+                if self.ckbParameter1.isChecked():
+                    boolFixVe = True
+                else:
+                    boolFixVe = False
+                longModelName = TracerKineticModels.GetLongModelName(shortModelName, boolFixVe)
                 
                 #Save a png of the concentration/time plot for display 
                 #in the PDF report.
                 self.figure.savefig(fname=IMAGE_NAME, dpi=150)  #dpi=150 so as to get a clear image in the PDF report
                 
-                if _boolCurveFittingDone == True:
+                if _boolCurveFittingDone:
                     parameterDict = self.BuildParameterDictionary(_optimisedParamaterList)
                 else:
                     parameterDict = self.BuildParameterDictionary()
@@ -1465,6 +1457,8 @@ class ModelFittingApp(QWidget):
         #Clear label displaying name of the datafile
         self.statusbar.clearMessage()
 
+        self.pbar.reset()
+
         self.lblROI.hide()
         self.cmbROI.hide()
         self.groupBoxModel.hide()
@@ -1534,13 +1528,33 @@ class ModelFittingApp(QWidget):
             print('Error in function GetListOrgans: ' + str(e))
             logger.error('Error in function GetListOrgans: ' + str(e))
     
+
+    def UncheckFixParameterCheckBoxes(self):
+        logger.info('Function UncheckFixParameterCheckBoxes called')
+        self.ckbAFF.blockSignals(True)
+        self.ckbParameter1.blockSignals(True)
+        self.ckbParameter2.blockSignals(True)
+        self.ckbParameter3.blockSignals(True)
+        self.ckbParameter4.blockSignals(True)
+
+        self.ckbAFF.setChecked(False)
+        self.ckbParameter1.setChecked(False)
+        self.ckbParameter2.setChecked(False)
+        self.ckbParameter3.setChecked(False)
+        self.ckbParameter4.setChecked(False)
+        
+        self.ckbAFF.blockSignals(False)
+        self.ckbParameter1.blockSignals(False)
+        self.ckbParameter2.blockSignals(False)
+        self.ckbParameter3.blockSignals(False)
+        self.ckbParameter4.blockSignals(False)
+
     def InitialiseParameterSpinBoxes(self):
         """Reset model parameter spinboxes with typical initial values for each model"""
         try:
             #Remove suffixes from the first spinboxes 
             self.spinBoxParameter1.setSuffix('')
-            self.spinBoxParameter1.setEnabled(True) #May have been disabled by HF1-2CFM-FixVe model
-
+           
             #Block signals from spinboxes, so that setting initial values
             #does not trigger an event.
             self.BlockSpinBoxSignals(True)
@@ -1587,7 +1601,7 @@ class ModelFittingApp(QWidget):
                 self.spinBoxParameter3.setSingleStep(0.1)
                 self.spinBoxParameter3.setValue(DEFAULT_VALUE_Kbh)
 
-            elif modelName == 'HF1-2CFM' or modelName == 'HF1-2CFM-FixVe':
+            elif modelName == 'HF1-2CFM':
                 self.spinBoxParameter1.setDecimals(2)
                 self.spinBoxParameter1.setRange(0.01, 99.99)
                 self.spinBoxParameter1.setSingleStep(0.1)
@@ -1622,8 +1636,7 @@ class ModelFittingApp(QWidget):
             self.cboxConstaint.setChecked(False)
             self.btnReset.show()
             self.btnSaveReport.show()
-            #Remove results of curve fitting of the previous model
-            self.ClearOptimumParamaterValuesOnGUI() 
+            
             self.InitialiseParameterSpinBoxes() #Typical initial values for each model
             #Show widgets common to all models
             self.lblAIF.show()
@@ -1633,6 +1646,9 @@ class ModelFittingApp(QWidget):
             self.spinBoxParameter1.show()
             self.spinBoxParameter2.show()
             self.spinBoxParameter3.show()
+
+            self.pbar.reset()
+            self.ckbParameter1.hide()
             
             #Configure parameter spinbox labels for each model
             if modelName == '2-2CFM':
@@ -1654,9 +1670,10 @@ class ModelFittingApp(QWidget):
                 self.labelParameter3.show()
                 self.labelParameter4.hide()
                 self.spinBoxParameter4.hide()
-            elif modelName == 'HF1-2CFM' or modelName == 'HF1-2CFM-FixVe':
+            elif modelName == 'HF1-2CFM':
                 self.labelParameter1.setText(LABEL_PARAMETER_Ve)
                 self.labelParameter1.show()
+                self.ckbParameter1.show()
                 self.labelParameter2.setText(LABEL_PARAMETER_Khe)
                 self.labelParameter2.show()
                 self.labelParameter3.setText(LABEL_PARAMETER_Kbh)
@@ -1795,20 +1812,24 @@ class ModelFittingApp(QWidget):
                 boolVIFSelected = True
                     
             #Plot concentration curve from the model
+            if self.ckbParameter1.isChecked():
+                boolFixVe = True
+            else:
+                boolFixVe = False
             if TracerKineticModels.GetModelInletType(modelName) == 'dual':
                 if boolAIFSelected and boolVIFSelected:
                     parameterArray = self.BuildParameterArray()
-                    logger.info('TracerKineticModels.ModelSelector called when model ={} and parameter array = {}'. format(modelName, parameterArray))        
+                    logger.info('TracerKineticModels.ModelSelector called when model ={}, parameter array = {} and boolFixVe={}'. format(modelName, parameterArray, boolFixVe))        
                     _listModel = TracerKineticModels.ModelSelector(modelName, arrayTimes, 
-                       arrayAIFConcs, parameterArray, arrayVIFConcs)
+                       arrayAIFConcs, parameterArray, boolFixVe, arrayVIFConcs)
                     arrayModel =  np.array(_listModel, dtype='float')
                     ax.plot(arrayTimes, arrayModel, 'g--', label= modelName + ' model')
             elif TracerKineticModels.GetModelInletType(modelName) == 'single':
                 if boolAIFSelected:
                     parameterArray = self.BuildParameterArray()
-                    logger.info('TracerKineticModels.ModelSelector called when model ={} and parameter array = {}'. format(modelName, parameterArray))        
+                    logger.info('TracerKineticModels.ModelSelector called when model ={} and parameter array = {} and boolFixVe={}'. format(modelName, parameterArray, boolFixVe))        
                     _listModel = TracerKineticModels.ModelSelector(modelName, arrayTimes, 
-                       arrayAIFConcs, parameterArray)
+                       arrayAIFConcs, parameterArray, boolFixVe)
                     arrayModel =  np.array(_listModel, dtype='float')
                     ax.plot(arrayTimes, arrayModel, 'g--', label= modelName + ' model')
 
@@ -1854,6 +1875,12 @@ class ModelFittingApp(QWidget):
         self.spinBoxParameter3.setEnabled(boolEnabled) 
         self.spinBoxParameter4.setEnabled(boolEnabled)
         self.btnBatchProc.setEnabled(boolEnabled)
+        self.ckbAFF.setEnabled(boolEnabled)
+        self.ckbParameter1.setEnabled(boolEnabled)
+        self.ckbParameter2.setEnabled(boolEnabled)
+        self.ckbParameter3.setEnabled(boolEnabled)
+        self.ckbParameter4.setEnabled(boolEnabled)
+        
 
     def BatchProcessAllCSVDataFiles(self):
         try:
@@ -1912,7 +1939,6 @@ class ModelFittingApp(QWidget):
 
                 if boolUseParameterDefaultValues:
                     self.InitialiseParameterSpinBoxes() #Reset default values
-                    self.spinBoxParameter1.setEnabled(False) #Enabled in InitialiseParameterSpinBoxes
                 else:
                     #Reset parameters to values selected by the user before
                     #the start of batch processing
@@ -1971,7 +1997,7 @@ class ModelFittingApp(QWidget):
             writeCSV = csv.writer(csvfile,  dialect='excel', delimiter=',')
             #write header row
             writeCSV.writerow(['Data File', 'Model', 'Parameter', 'Value', 'Lower', 'Upper'])
-            return writeCSV, csvfile
+            return writeCSV, CSVFileName
          
         except csv.Error:
             print('CSV Writer error in function BatchProcessingCreateCSVBatchSummaryFile: file %s, line %d: %s' % (CSVFileName, WriteCSV.line_num, csv.Error))
@@ -2034,7 +2060,7 @@ class ModelFittingApp(QWidget):
                     line = csvfile.readline()
                     if line.count(',') < (MIN_NUM_COLUMNS_CSV_FILE - 1):
                         boolFileFormatOK = False
-                        failureReason = "at least 3 columns of data are expected"
+                        failureReason = " at least 3 columns of data are expected"
                         errorStr = 'Batch Processing: CSV file {} must acontain at least 3 columns of data separated by commas.'.format(fullFilePath)
                         logger.info(errorStr)
                         
@@ -2124,7 +2150,7 @@ class ModelFittingApp(QWidget):
             AIF = str(self.cmbAIF.currentText().strip().lower())
             if AIF not in (lowerCaseHeaders):
                 boolDataOK = False
-                if len(failureReason) == 0:
+                if len(failureReason) > 0:
                     join = " and "
                 failureReason = failureReason + join + AIF + " data missing"
 
@@ -2132,7 +2158,7 @@ class ModelFittingApp(QWidget):
                 VIF = str(self.cmbVIF.currentText().strip().lower())
                 if VIF not in (lowerCaseHeaders):
                     boolDataOK = False
-                    if len(failureReason) == 0:
+                    if len(failureReason) > 0:
                         join = " and "
                     failureReason = failureReason + join + VIF + " data missing"
             
@@ -2165,7 +2191,7 @@ class ModelFittingApp(QWidget):
                     self.spinBoxParameter2.value() != DEFAULT_VALUE_Khe or
                     self.spinBoxParameter3.value() != DEFAULT_VALUE_Kbh):
                     boolParameterChanged = True
-            elif modelName == 'HF1-2CFM' or modelName == 'HF1-2CFM-FixVe':
+            elif modelName == 'HF1-2CFM':
                 if (self.spinBoxParameter1.value() != DEFAULT_VALUE_Ve or
                     self.spinBoxParameter2.value() != DEFAULT_VALUE_Khe or
                     self.spinBoxParameter3.value() != DEFAULT_VALUE_Kbh):

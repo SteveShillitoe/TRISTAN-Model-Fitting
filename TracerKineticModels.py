@@ -23,8 +23,7 @@ logger = logging.getLogger(__name__)
 modelDict = {'Select a model':'Select a model',
                    '2-2CFM':'2 Inlet - Two Compartment Filtration Model',
                    'HF2-2CFM':'High Flow 2 Inlet - Two Compartment Filtration Model',
-                   'HF1-2CFM':'High Flow 1 Inlet - Two Compartment Filtration Model',
-                   'HF1-2CFM-FixVe':'High Flow 1 Inlet - Two Compartment Filtration Model\n - Fixed Extracellular Vol Fraction'}
+                   'HF1-2CFM':'High Flow 1 Inlet - Two Compartment Filtration Model'}
 
 #Dictionary linking the model with a graphic file containing its visual representation.
 modelImageDict = {'2-2CFM':'images\\DualInletTwoCompartmentGadoxetateModel.png',
@@ -35,31 +34,35 @@ modelImageDict = {'2-2CFM':'images\\DualInletTwoCompartmentGadoxetateModel.png',
 #Dictionary linking a model with its input type:single or dual
 modelInletTypeDict = {'2-2CFM':'dual',
                     'HF2-2CFM':'dual',
-                   'HF1-2CFM':'single',
-                   'HF1-2CFM-FixVe':'single'}
+                     'HF1-2CFM':'single'}
 
 #Constants
 PARAMETER_UPPER_BOUND_VOL_FRACTION = 1.0
 PARAMETER_UPPER_BOUND_RATE = np.inf
 
 def GetListModels():
-
     return list(modelDict.keys())
 
-def GetLongModelName(shortModelName) -> str:
+def GetLongModelName(shortModelName, fixVe:bool = False) -> str:
     """Returns the full name of a model whose short name is shortModelName."""
-    return modelDict.get(shortModelName)
+    longName =  modelDict.get(shortModelName)
+    if fixVe:
+       longName = longName + '-Fixed Ve'
+    return longName
 
-def GetModelImageName(shortModelName) -> str:
+def GetModelImageName(shortModelName, fixVe:bool = False) -> str:
     """Returns the file path and name of the image that represents schematically
     the model whose short name is shortModelName."""
+    if fixVe:
+        shortModelName = shortModelName + '-FixVe'
     return modelImageDict.get(shortModelName)
 
 def GetModelInletType(shortModelName) -> str:
     """Returns the inlet type (single or dual) of the model whose short name is shortModelName."""
     return modelInletTypeDict.get(shortModelName)
 
-def ModelSelector(modelName: str, times, AIFConcentration, parameterArray, VIFConcentration=[]):
+def ModelSelector(modelName: str, times, AIFConcentration, parameterArray, fixVe: bool,
+                  VIFConcentration=[]):
     """Function called in the GUI of the model fitting application to select the 
     function corresponding to each model.
 
@@ -114,14 +117,13 @@ def ModelSelector(modelName: str, times, AIFConcentration, parameterArray, VIFCo
         Ve = parameterArray[0]
         Khe = parameterArray[1]
         Kbh = parameterArray[2]
-        return HighFlowSingleInletTwoCompartmentGadoxetateModel(timeInputConcs2DArray, Ve, Khe, Kbh)
-
-    elif modelName == 'HF1-2CFM-FixVe':
-        timeInputConcs2DArray = np.column_stack((times, AIFConcentration))
-        Khe = parameterArray[1]
-        Kbh = parameterArray[2]
-        return HighFlowSingleInletTwoCompartmentGadoxetateModelFixedVe(timeInputConcs2DArray, 
-                                                     Khe, Kbh)
+        if fixVe:
+            return HighFlowSingleInletTwoCompartmentGadoxetateModelFixedVe(
+                timeInputConcs2DArray, Khe, Kbh)
+        else:
+            return HighFlowSingleInletTwoCompartmentGadoxetateModel(
+                timeInputConcs2DArray, Ve, Khe, Kbh)
+        
 #Note: The input paramaters for the volume fractions and rate constants in
 # the following model function definitions are listed in the same order as they are 
 # displayed in the GUI from top (first) to bottom (last) 
@@ -236,7 +238,7 @@ def HighFlowSingleInletTwoCompartmentGadoxetateModel(xData2DArray, Ve: float,
             Input Parameters
             ----------------
                 xData2DArray - time and AIF concentration 1D arrays stacked into one 2D array.
-                Vp - Plasma Volume Fraction (decimal fraction)
+                Ve - Plasma Volume Fraction (decimal fraction)
                 Khe - Hepatocyte Uptake Rate (mL/min/mL)
                 Kbh - 'Biliary Efflux Rate (mL/min/mL)'- 
 
@@ -303,9 +305,8 @@ def HighFlowSingleInletTwoCompartmentGadoxetateModelFixedVe(xData2DArray,
             print('Error - TracerKineticModels.TracerKineticModels.HighFlowSingleInletTwoCompartmentGadoxetateModelFixedVe: ' + str(e))
             logger.error('TracerKineticModels.HighFlowSingleInletTwoCompartmentGadoxetateModelFixedVe:' + str(e) )
 
-
-
-def CurveFit(modelName: str, times, AIFConcs, VIFConcs, concROI, paramArray, constrain: bool):
+def CurveFit(modelName: str, times, AIFConcs, VIFConcs, concROI, 
+             paramArray, constrain: bool, fixVe: bool):
     """This function calls the curve_fit function imported from scipy.optimize 
     to fit the time/conconcentration data calculated by a model in this module 
     to actual Region of Interest (ROI) concentration/time data using   
@@ -367,24 +368,23 @@ def CurveFit(modelName: str, times, AIFConcs, VIFConcs, concROI, paramArray, con
                             bounds=([0.0,0.0001,0.0,0.0001], [1., 0.9999, 100.0, 100.0]))
             
         elif modelName == 'HF1-2CFM':
-            return curve_fit(HighFlowSingleInletTwoCompartmentGadoxetateModel, 
-                             timeInputConcs2DArray, concROI, paramArray,
-                             bounds=([0.0001,0.0,0.0001], [0.9999, 100.0, 100.0]))
-        # Ve, Khe, Kbh
-        elif modelName == 'HF1-2CFM-FixVe':
-            #Ve is fixed at 0.23
-            Ve = paramArray[0] 
-            Khe = paramArray[1]
-            Kbh = paramArray[2]
-            params = []
-            params.append(Khe)
-            params.append(Kbh)
-            #print('params ='+ str(params))
-            hep_conc = (concROI - Ve*AIFConcs)/(1-Ve)
-            return curve_fit(HighFlowSingleInletTwoCompartmentGadoxetateModelFixedVe, 
+            if fixVe:
+                Ve = paramArray[0] 
+                Khe = paramArray[1]
+                Kbh = paramArray[2]
+                params = []
+                params.append(Khe)
+                params.append(Kbh)
+            
+                hep_conc = (concROI - Ve*AIFConcs)/(1-Ve)
+                return curve_fit(HighFlowSingleInletTwoCompartmentGadoxetateModelFixedVe, 
                              timeInputConcs2DArray, hep_conc, params,
                              bounds=([0.0,0.0001], [100.0, 100.0]))
-
+            else:
+                return curve_fit(HighFlowSingleInletTwoCompartmentGadoxetateModel, 
+                             timeInputConcs2DArray, concROI, paramArray,
+                             bounds=([0.0001,0.0,0.0001], [0.9999, 100.0, 100.0]))
+            
     except ValueError as ve:
         print ('TracerKineticModels.CurveFit Value Error: ' + str(ve))
     except RuntimeError as re:
