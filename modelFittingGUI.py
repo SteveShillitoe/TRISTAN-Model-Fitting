@@ -395,6 +395,7 @@ class ModelFittingApp(QWidget):
         #self.cmbModels.addItems(TracerKineticModels.modelNames)
         self.cmbModels.addItems(TracerKineticModels.GetListModels())
         self.cmbModels.setCurrentIndex(0) #Display "Select a Model"
+        self.cmbModels.currentIndexChanged.connect(self.UncheckFixParameterCheckBoxes)
         self.cmbModels.currentIndexChanged.connect(self.DisplayModelImage)
         self.cmbModels.currentIndexChanged.connect(self.ConfigureGUIForEachModel)
         self.cmbModels.currentIndexChanged.connect(lambda: self.ClearOptimisedParamaterList('cmbModels')) 
@@ -1557,11 +1558,6 @@ class ModelFittingApp(QWidget):
             #Block signals from spinboxes, so that setting initial values
             #does not trigger an event.
             self.BlockSpinBoxSignals(True)
-            self.ckbAFF.setChecked(False)
-            self.ckbParameter1.setChecked(False)
-            self.ckbParameter2.setChecked(False)
-            self.ckbParameter3.setChecked(False)
-            self.ckbParameter4.setChecked(False)
             self.spinBoxArterialFlowFactor.setValue(DEFAULT_VALUE_Fa)
             
             modelName = str(self.cmbModels.currentText())
