@@ -1888,7 +1888,10 @@ class ModelFittingApp(QWidget):
             logger.info('Function BatchProcessAllCSVDataFiles called.')
             
             #Create a list of csv files in the selected directory
-            csvDataFiles = [file for file in os.listdir(self.directory) if file.lower().endswith('.csv')]
+            csvDataFiles = [file 
+                            for file in os.listdir(self.directory) 
+                            if file.lower().endswith('.csv')]
+
             numCSVFiles = len(csvDataFiles)
 
             self.lblBatchProcessing.clear()
