@@ -147,6 +147,8 @@ import StyleSheet
 #Import PDF report writer class
 from PDFWriter import PDF
 
+from ExcelWriter import ExcelWriter
+
 #Initialise global dictionary to hold concentration data
 _concentrationData={}
 #Initialise global list to hold concentrations calculated using the selected model
@@ -540,7 +542,6 @@ class ModelFittingApp(QWidget):
         modelHorizontalLayoutArterialFlowFactor.addWidget(self.spinBoxArterialFlowFactor)
         modelHorizontalLayoutArterialFlowFactor.addWidget(self.ckbAFF)
         modelHorizontalLayoutArterialFlowFactor.addWidget(self.lblAFFConfInt)
-       
 
         modelHorizontalLayout5.addWidget(self.labelParameter1)
         modelHorizontalLayout5.addWidget(self.spinBoxParameter1)
@@ -1935,7 +1936,7 @@ class ModelFittingApp(QWidget):
 
             modelName = str(self.cmbModels.currentText())
 
-            cvsSummary, batchSummaryFileName = self.BatchProcessingCreateCSVBatchSummaryFile(self.directory)
+            cvsSummary, batchSummaryFileName, ssObject = self.BatchProcessingCreateCSVBatchSummaryFile(self.directory)
             for file in csvDataFiles:
                 if str(file) == batchSummaryFileName:
                     continue #Do not process the batch summary file
@@ -1956,20 +1957,23 @@ class ModelFittingApp(QWidget):
                 #Load current file
                 fileLoadedOK, failureReason = self.BatchProcessingLoadDataFile(self.directory + '/' + _dataFileName)
                 if not fileLoadedOK:
-                    cvsSummary.writerow(
-                        [_dataFileName + ' could not be loaded because ' + failureReason])
+                    ssObject.RecordSkippedFiles(_dataFileName, failureReason)
+                   # cvsSummary.writerow(
+                     #   [_dataFileName + ' could not be loaded because ' + failureReason])
                     continue  #Skip this iteration if problems loading file
+                
                 self.PlotConcentrations('BatchProcessAllCSVDataFiles') #Plot data                
                 self.RunCurveFit() #Fit curve to model 
                 self.SaveCSVFile(csvPlotDataFolder + '/plot' + file) #Save plot data to CSV file               
                 parameterDict = self.CreatePDFReport(pdfReportFolder + '/' + os.path.splitext(file)[0]) #Save PDF Report                
-                self.BatchProcessWriteOptimumParamsToSummary(cvsSummary, 
+                self.BatchProcessWriteOptimumParamsToSummary(ssObject, 
                            _dataFileName,  modelName, parameterDict)
                 self.pbar.setValue(count)
                 QApplication.processEvents()
 
             self.lblBatchProcessing.setText("Processing complete.")
             self.toggleEnabled(True)
+            ssObject.SaveSpreadSheet()
             
 
         except Exception as e:
@@ -1989,6 +1993,10 @@ class ModelFittingApp(QWidget):
            #Check that the user did not press Cancel on the create file dialog
             if not CSVFileName:
                 CSVFileName = pathToFolder + "//BatchSummary.csv"
+           
+            
+            spreadSheet = ExcelWriter(CSVFileName.replace('csv', 'xlsx')) 
+            
 
             logger.info('Function BatchProcessingCreateCSVBatchSummaryFile - csv file name = ' + CSVFileName)
 
@@ -2000,7 +2008,7 @@ class ModelFittingApp(QWidget):
             writeCSV = csv.writer(csvfile,  dialect='excel', delimiter=',')
             #write header row
             writeCSV.writerow(['Data File', 'Model', 'Parameter', 'Value', 'Lower', 'Upper'])
-            return writeCSV, CSVFileName
+            return writeCSV, CSVFileName, spreadSheet
          
         except csv.Error:
             print('CSV Writer error in function BatchProcessingCreateCSVBatchSummaryFile: file %s, line %d: %s' % (CSVFileName, WriteCSV.line_num, csv.Error))
@@ -2024,7 +2032,8 @@ class ModelFittingApp(QWidget):
                 value = str(round(paramList[0],3))
                 lower = paramList[1]
                 upper = paramList[2]
-                cvsFileObj.writerow([fileName, modelName, paramName, value, lower, upper])
+                cvsFileObj.RecordParameterValues(fileName, modelName, paramName, value, lower, upper)
+                #cvsFileObj.writerow([fileName, modelName, paramName, value, lower, upper])
         except Exception as e:
             print('Error in function BatchProcessWriteOptimumParamsToSummary: ' + str(e))
             logger.error('Error in function BatchProcessWriteOptimumParamsToSummary: ' + str(e))
@@ -2063,7 +2072,7 @@ class ModelFittingApp(QWidget):
                     line = csvfile.readline()
                     if line.count(',') < (MIN_NUM_COLUMNS_CSV_FILE - 1):
                         boolFileFormatOK = False
-                        failureReason = " at least 3 columns of data are expected"
+                        failureReason = " At least 3 columns of data are expected"
                         errorStr = 'Batch Processing: CSV file {} must acontain at least 3 columns of data separated by commas.'.format(fullFilePath)
                         logger.info(errorStr)
                         
@@ -2080,7 +2089,7 @@ class ModelFittingApp(QWidget):
                             if len(failureReason) > 0:
                                 join = " and "
                             failureReason = failureReason + join + \
-                           " first column must contain time data, with the word 'time' as a header"
+                           " First column must contain time data, with the word 'time' as a header"
                             errorStr = 'Batch Processing: The first column in {} must contain time data.'.format(fullFilePath)
                             logger.info(errorStr)
                       
