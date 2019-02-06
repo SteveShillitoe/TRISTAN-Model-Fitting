@@ -1936,11 +1936,8 @@ class ModelFittingApp(QWidget):
 
             modelName = str(self.cmbModels.currentText())
 
-            cvsSummary, batchSummaryFileName, ssObject = self.BatchProcessingCreateCSVBatchSummaryFile(self.directory)
+            objSpreadSheet = self.BatchProcessingCreateBatchSummaryExcelSpreadSheet(self.directory)
             for file in csvDataFiles:
-                if str(file) == batchSummaryFileName:
-                    continue #Do not process the batch summary file
-
                 if boolUseParameterDefaultValues:
                     self.InitialiseParameterSpinBoxes() #Reset default values
                 else:
@@ -1957,73 +1954,71 @@ class ModelFittingApp(QWidget):
                 #Load current file
                 fileLoadedOK, failureReason = self.BatchProcessingLoadDataFile(self.directory + '/' + _dataFileName)
                 if not fileLoadedOK:
-                    ssObject.RecordSkippedFiles(_dataFileName, failureReason)
-                   # cvsSummary.writerow(
-                     #   [_dataFileName + ' could not be loaded because ' + failureReason])
+                    objSpreadSheet.RecordSkippedFiles(_dataFileName, failureReason)
                     continue  #Skip this iteration if problems loading file
                 
                 self.PlotConcentrations('BatchProcessAllCSVDataFiles') #Plot data                
                 self.RunCurveFit() #Fit curve to model 
                 self.SaveCSVFile(csvPlotDataFolder + '/plot' + file) #Save plot data to CSV file               
                 parameterDict = self.CreatePDFReport(pdfReportFolder + '/' + os.path.splitext(file)[0]) #Save PDF Report                
-                self.BatchProcessWriteOptimumParamsToSummary(ssObject, 
+                self.BatchProcessWriteOptimumParamsToSummary(objSpreadSheet, 
                            _dataFileName,  modelName, parameterDict)
                 self.pbar.setValue(count)
                 QApplication.processEvents()
 
             self.lblBatchProcessing.setText("Processing complete.")
             self.toggleEnabled(True)
-            ssObject.SaveSpreadSheet()
-            
+            objSpreadSheet.SaveSpreadSheet()
 
         except Exception as e:
             print('Error in function BatchProcessAllCSVDataFiles: ' + str(e) )
             logger.error('Error in function BatchProcessAllCSVDataFiles: ' + str(e) )
-                  
+            self.toggleEnabled(True)      
 
-    def BatchProcessingCreateCSVBatchSummaryFile(self, pathToFolder):
-        """Creates a CSV to hold a summary of model fitting a batch of datafiles""" 
+    def BatchProcessingCreateBatchSummaryExcelSpreadSheet(self, pathToFolder):
+        """Creates an Excel spreadsheet to hold a summary of model fitting a batch of datafiles""" 
         try:
-            logger.info('Function BatchProcessingCreateCSVBatchSummaryFile called.')
+            boolExcelFileCreatedOK = True
+            logger.info('Function BatchProcessingCreateBatchSummaryExcelSpreadSheet called.')
 
-            #Ask the user to specify the path & name of the CSV file. The name of the model is suggested as a default file name.
-            CSVFileName, _ = QFileDialog.getSaveFileName(self, caption="Batch Summary CSV file name", 
-                           directory=pathToFolder + "//BatchSummary", filter="*.csv")
+            #Ask the user to specify the path & name of the Excel spreadsheet file. 
+            ExcelFileName, _ = QFileDialog.getSaveFileName(self, caption="Batch Summary Excel file name", 
+                           directory=pathToFolder + "//BatchSummary", filter="*.xlsx")
 
            #Check that the user did not press Cancel on the create file dialog
-            if not CSVFileName:
-                CSVFileName = pathToFolder + "//BatchSummary.csv"
+            if not ExcelFileName:
+                ExcelFileName = pathToFolder + "//BatchSummary.xlsx"
            
+            logger.info('Function BatchProcessingCreateBatchSummaryExcelSpreadSheet - Excel file name = ' + ExcelFileName)
+
+            #If ExcelFileName already exists, delete it
+            if os.path.exists(ExcelFileName):
+                os.remove(ExcelFileName)
             
-            spreadSheet = ExcelWriter(CSVFileName.replace('csv', 'xlsx')) 
+            #Create spreadsheet object
+            spreadSheet = ExcelWriter(ExcelFileName)
             
-
-            logger.info('Function BatchProcessingCreateCSVBatchSummaryFile - csv file name = ' + CSVFileName)
-
-            #If CSVFileName already exists, delete it
-            if os.path.exists(CSVFileName):
-                os.remove(CSVFileName)
-
-            csvfile = open(CSVFileName, 'w',  newline='')
-            writeCSV = csv.writer(csvfile,  dialect='excel', delimiter=',')
-            #write header row
-            writeCSV.writerow(['Data File', 'Model', 'Parameter', 'Value', 'Lower', 'Upper'])
-            return writeCSV, CSVFileName, spreadSheet
-         
-        except csv.Error:
-            print('CSV Writer error in function BatchProcessingCreateCSVBatchSummaryFile: file %s, line %d: %s' % (CSVFileName, WriteCSV.line_num, csv.Error))
-            logger.error('CSV Writer error in function BatchProcessingCreateCSVBatchSummaryFile: file %s, line %d: %s' % (CSVFileName, WriteCSV.line_num, csv.Error))
-        except IOError as IOe:
-            print ('IOError in function BatchProcessingCreateCSVBatchSummaryFile: cannot open file ' + CSVFileName + ' or read its data: ' + str(IOe))
-            logger.error ('IOError in function BatchProcessingCreateCSVBatchSummaryFile: cannot open file ' + CSVFileName + ' or read its data; ' + str(IOe))
+            return spreadSheet, boolExcelFileCreatedOK
+        except OSError as ose:
+            print (ExcelFileName + ' is open. It must be closed. Error =' + str(ose))
+            logger.error (ExcelFileName + 'is open. It must be closed. Error =' + str(ose))
+            #Display messagebox
+            self.toggleEnabled(True)
+            boolExcelFileCreatedOK = False
         except RuntimeError as re:
-            print('Runtime error in function BatchProcessingCreateCSVBatchSummaryFile: ' + str(re))
-            logger.error('Runtime error in function BatchProcessingCreateCSVBatchSummaryFile: ' + str(re))
+            print('Runtime error in function BatchProcessingCreateBatchSummaryExcelSpreadSheet: ' + str(re))
+            logger.error('Runtime error in function BatchProcessingCreateBatchSummaryExcelSpreadSheet: ' + str(re))
+            self.toggleEnabled(True)
+            boolExcelFileCreatedOK = False
         except Exception as e:
-            print('Error in function BatchProcessingCreateCSVBatchSummaryFile: ' + str(e) + ' at line in CSV file ', WriteCSV.line_num)
-            logger.error('Error in function BatchProcessingCreateCSVBatchSummaryFile: ' + str(e) + ' at line in CSV file ', WriteCSV.line_num)    
+            print('Error in function BatchProcessingCreateBatchSummaryExcelSpreadSheet: ' + str(e))
+            logger.error('Error in function BatchProcessingCreateBatchSummaryExcelSpreadSheet: ' + str(e))    
+            self.toggleEnabled(True)
+            boolExcelFileCreatedOK = False
+        finally:
+            return None, boolExcelFileCreatedOK
 
-    def BatchProcessWriteOptimumParamsToSummary(self, cvsFileObj, fileName, modelName, paramDict):
+    def BatchProcessWriteOptimumParamsToSummary(self, objExcelFile, fileName, modelName, paramDict):
         try:
             for paramName, paramList in paramDict.items(): 
                 paramName.replace('\n', '')
@@ -2032,12 +2027,12 @@ class ModelFittingApp(QWidget):
                 value = str(round(paramList[0],3))
                 lower = paramList[1]
                 upper = paramList[2]
-                cvsFileObj.RecordParameterValues(fileName, modelName, paramName, value, lower, upper)
-                #cvsFileObj.writerow([fileName, modelName, paramName, value, lower, upper])
+                objExcelFile.RecordParameterValues(fileName, modelName, paramName, value, lower, upper)
+                
         except Exception as e:
             print('Error in function BatchProcessWriteOptimumParamsToSummary: ' + str(e))
             logger.error('Error in function BatchProcessWriteOptimumParamsToSummary: ' + str(e))
-                  
+            self.toggleEnabled(True)      
 
     def BatchProcessingLoadDataFile(self, fullFilePath):
         """Loads the contents of a CSV file containing time and concentration data
@@ -2072,7 +2067,7 @@ class ModelFittingApp(QWidget):
                     line = csvfile.readline()
                     if line.count(',') < (MIN_NUM_COLUMNS_CSV_FILE - 1):
                         boolFileFormatOK = False
-                        failureReason = " At least 3 columns of data are expected"
+                        failureReason = "At least 3 columns of data are expected"
                         errorStr = 'Batch Processing: CSV file {} must acontain at least 3 columns of data separated by commas.'.format(fullFilePath)
                         logger.info(errorStr)
                         
@@ -2089,7 +2084,7 @@ class ModelFittingApp(QWidget):
                             if len(failureReason) > 0:
                                 join = " and "
                             failureReason = failureReason + join + \
-                           " First column must contain time data, with the word 'time' as a header"
+                           "First column must contain time data, with the word 'time' as a header"
                             errorStr = 'Batch Processing: The first column in {} must contain time data.'.format(fullFilePath)
                             logger.info(errorStr)
                       
@@ -2144,6 +2139,7 @@ class ModelFittingApp(QWidget):
             logger.error('Error in function BatchProcessingLoadDataFile: ' + str(e) + ' at line {} in the CSV file'.format( readCSV.line_num))
             failureReason = "Error reading CSV file at line {} - {}".format(readCSV.line_num, e)
         finally:
+            self.toggleEnabled(True)
             return boolFileFormatOK, failureReason 
 
     def BatchProcessingCheckAllInputDataPresent(self, headers):
@@ -2182,6 +2178,7 @@ class ModelFittingApp(QWidget):
             logger.error('Error in function BatchProcessingCheckAllInputDataPresent: ' + str(e))
             failureReason = failureReason + " " + str(e)
             return boolDataOK, failureReason
+            self.toggleEnabled(True)
 
     def BatchProcessingHaveParamsChanged(self) -> bool:
         """Returns True if the user has changed parameter spinbox values from the defaults"""
@@ -2213,7 +2210,8 @@ class ModelFittingApp(QWidget):
         except Exception as e:
             print('Error in function BatchProcessingHaveParamsChanged: ' + str(e) )
             logger.error('Error in function BatchProcessingHaveParamsChanged: ' + str(e) )
-                
+            self.toggleEnabled(True)
+            
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     main = ModelFittingApp()

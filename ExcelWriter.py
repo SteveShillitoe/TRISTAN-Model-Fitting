@@ -43,10 +43,10 @@ class ExcelWriter():
                 nextRow = row_count + 1
                 thisWS['A' + str(nextRow)] = fileName
                 thisWS['B' + str(nextRow)] = failureReason
-                        
                     
             logger.info('In module ' + __name__ 
                     + '.RecordSkippedFiles.')
+
         except Exception as e:
             print('ExcelWriter.RecordSkippedFiles: ' + str(e)) 
             logger.error('ExcelWriter.RecordSkippedFiles: ' + str(e)) 
