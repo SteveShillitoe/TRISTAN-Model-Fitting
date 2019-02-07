@@ -1936,39 +1936,41 @@ class ModelFittingApp(QWidget):
 
             modelName = str(self.cmbModels.currentText())
 
-            objSpreadSheet = self.BatchProcessingCreateBatchSummaryExcelSpreadSheet(self.directory)
-            for file in csvDataFiles:
-                if boolUseParameterDefaultValues:
-                    self.InitialiseParameterSpinBoxes() #Reset default values
-                else:
-                    #Reset parameters to values selected by the user before
-                    #the start of batch processing
-                    self.setParameterSpinBoxValues(initialParameterArray)
+            objSpreadSheet, boolExcelFileCreatedOK = self.BatchProcessingCreateBatchSummaryExcelSpreadSheet(self.directory)
+            
+            if boolExcelFileCreatedOK:
+                for file in csvDataFiles:
+                    if boolUseParameterDefaultValues:
+                        self.InitialiseParameterSpinBoxes() #Reset default values
+                    else:
+                        #Reset parameters to values selected by the user before
+                        #the start of batch processing
+                        self.setParameterSpinBoxValues(initialParameterArray)
 
-                #Set global filename to name of file in current iteration 
-                #as this variable used to write datafile name in the PDF report
-                _dataFileName = str(file) 
-                self.statusbar.showMessage('File ' + _dataFileName + ' loaded.')
-                count +=1
-                self.lblBatchProcessing.setText("Processing {}".format(_dataFileName))
-                #Load current file
-                fileLoadedOK, failureReason = self.BatchProcessingLoadDataFile(self.directory + '/' + _dataFileName)
-                if not fileLoadedOK:
-                    objSpreadSheet.RecordSkippedFiles(_dataFileName, failureReason)
-                    continue  #Skip this iteration if problems loading file
+                    #Set global filename to name of file in current iteration 
+                    #as this variable used to write datafile name in the PDF report
+                    _dataFileName = str(file) 
+                    self.statusbar.showMessage('File ' + _dataFileName + ' loaded.')
+                    count +=1
+                    self.lblBatchProcessing.setText("Processing {}".format(_dataFileName))
+                    #Load current file
+                    fileLoadedOK, failureReason = self.BatchProcessingLoadDataFile(self.directory + '/' + _dataFileName)
+                    if not fileLoadedOK:
+                        objSpreadSheet.RecordSkippedFiles(_dataFileName, failureReason)
+                        continue  #Skip this iteration if problems loading file
                 
-                self.PlotConcentrations('BatchProcessAllCSVDataFiles') #Plot data                
-                self.RunCurveFit() #Fit curve to model 
-                self.SaveCSVFile(csvPlotDataFolder + '/plot' + file) #Save plot data to CSV file               
-                parameterDict = self.CreatePDFReport(pdfReportFolder + '/' + os.path.splitext(file)[0]) #Save PDF Report                
-                self.BatchProcessWriteOptimumParamsToSummary(objSpreadSheet, 
-                           _dataFileName,  modelName, parameterDict)
-                self.pbar.setValue(count)
-                QApplication.processEvents()
+                    self.PlotConcentrations('BatchProcessAllCSVDataFiles') #Plot data                
+                    self.RunCurveFit() #Fit curve to model 
+                    self.SaveCSVFile(csvPlotDataFolder + '/plot' + file) #Save plot data to CSV file               
+                    parameterDict = self.CreatePDFReport(pdfReportFolder + '/' + os.path.splitext(file)[0]) #Save PDF Report                
+                    self.BatchProcessWriteOptimumParamsToSummary(objSpreadSheet, 
+                               _dataFileName,  modelName, parameterDict)
+                    self.pbar.setValue(count)
+                    QApplication.processEvents()
 
-            self.lblBatchProcessing.setText("Processing complete.")
-            self.toggleEnabled(True)
-            objSpreadSheet.SaveSpreadSheet()
+                self.lblBatchProcessing.setText("Processing complete.")
+                self.toggleEnabled(True)
+                objSpreadSheet.SaveSpreadSheet()
 
         except Exception as e:
             print('Error in function BatchProcessAllCSVDataFiles: ' + str(e) )
@@ -2000,22 +2002,26 @@ class ModelFittingApp(QWidget):
             
             return spreadSheet, boolExcelFileCreatedOK
         except OSError as ose:
-            print (ExcelFileName + ' is open. It must be closed. Error =' + str(ose))
+            #print (ExcelFileName + ' is open. It must be closed. Error =' + str(ose))
             logger.error (ExcelFileName + 'is open. It must be closed. Error =' + str(ose))
-            #Display messagebox
+            QMessageBox.warning(self, 'Spreadsheet open in Excel', 
+                       "Close the batch summary spreadsheet and try again", 
+                       QMessageBox.Ok, 
+                       QMessageBox.Ok)
             self.toggleEnabled(True)
             boolExcelFileCreatedOK = False
+            return None, boolExcelFileCreatedOK
         except RuntimeError as re:
             print('Runtime error in function BatchProcessingCreateBatchSummaryExcelSpreadSheet: ' + str(re))
             logger.error('Runtime error in function BatchProcessingCreateBatchSummaryExcelSpreadSheet: ' + str(re))
             self.toggleEnabled(True)
             boolExcelFileCreatedOK = False
+            return None, boolExcelFileCreatedOK
         except Exception as e:
             print('Error in function BatchProcessingCreateBatchSummaryExcelSpreadSheet: ' + str(e))
             logger.error('Error in function BatchProcessingCreateBatchSummaryExcelSpreadSheet: ' + str(e))    
             self.toggleEnabled(True)
             boolExcelFileCreatedOK = False
-        finally:
             return None, boolExcelFileCreatedOK
 
     def BatchProcessWriteOptimumParamsToSummary(self, objExcelFile, fileName, modelName, paramDict):
