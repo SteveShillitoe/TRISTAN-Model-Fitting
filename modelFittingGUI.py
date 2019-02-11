@@ -296,7 +296,7 @@ class ModelFittingApp(QWidget):
             'Opens file dialog box to select the configuration file')
         self.btnLoadConfigFile.setShortcut("Ctrl+C")
         self.btnLoadConfigFile.setAutoDefault(False)
-        self.btnLoadConfigFile.clicked.connet(self.LoadConfigFile)
+        self.btnLoadConfigFile.clicked.connect(self.LoadConfigFile)
 
         #Create Load Data File Button
         self.btnLoadDataFile = QPushButton('Load Data File')
@@ -312,8 +312,9 @@ class ModelFittingApp(QWidget):
         #the top of the Load Data button is level with the MATPLOTLIB toolbar 
         #in the central vertical layout.
         verticalSpacer = QSpacerItem(20, 60, QSizePolicy.Minimum, QSizePolicy.Minimum)
+        #Add Load configuration file button to the top of the vertical layout
+        layout.addWidget(self.btnLoadConfigFile)
         layout.addItem(verticalSpacer)
-        #Add Load data file button to the top of the vertical layout
         layout.addWidget(self.btnLoadDataFile)
         layout.addItem(verticalSpacer)
         #Create dropdown list for selection of ROI
@@ -1325,7 +1326,9 @@ class ModelFittingApp(QWidget):
             
             if not reportFileName:
                 #Ask the user to specify the path & name of PDF report. A default report name is suggested, see the Constant declarations at the top of this file
-                reportFileName, _ = QFileDialog.getSaveFileName(self, caption="Enter PDF file name", directory=DEFAULT_REPORT_FILE_PATH_NAME, filter="*.pdf")
+                reportFileName, _ = QFileDialog.getSaveFileName(self, caption="Enter PDF file name", 
+                                                                directory=DEFAULT_REPORT_FILE_PATH_NAME, 
+                                                                filter="*.pdf")
 
             if reportFileName:
                 #If the user has entered the name of a new file, then we will have to add the .pdf extension
@@ -1377,18 +1380,23 @@ class ModelFittingApp(QWidget):
         try:
             #get the xml file in XML format
             #filter parameter set so that the user can only open an XML file
-            fullFilePath, _ = QFileDialog.getOpenFileName(parent=self, caption="Select csv file", filter="*.xml")
+            defaultPath ="config\\";
+            fullFilePath, _ = QFileDialog.getOpenFileName(parent=self, 
+                caption="Select configuration file", 
+                directory=defaultPath,
+                filter="*.xml")
+
             if os.path.exists(fullFilePath):
                 logger.info('Config file {} loaded'.format(fullFilePath))
                 #Extract data filename from the full data file path
                 folderName, _configFileName = os.path.split(fullFilePath)
-                self.statusbar.showMessage('File ' + _configFileName + ' loaded')
+                self.statusbar.showMessage('Configuration file ' + _configFileName + ' loaded')
 
                 self.btnLoadDataFile.show()
-
-        except csv.Error:
-            print('CSV Reader error in function LoadDataFile: file {}, line {}: error={}'.format(_dataFileName, readCSV.line_num, csv.Error))
-            logger.error('CSV Reader error in function LoadDataFile: file {}, line {}: error ={}'.format(_dataFileName, readCSV.line_num, csv.Error))
+            else:
+                self.btnLoadDataFile.hide()
+                self.HideAllControlsOnGUI()
+            
         except IOError:
             print ('IOError in function LoadDataFile: cannot open file' + _dataFileName + ' or read its data')
             logger.error ('IOError in function LoadDataFile: cannot open file' + _dataFileName + ' or read its data')
@@ -1396,9 +1404,9 @@ class ModelFittingApp(QWidget):
             print('Runtime error in function LoadDataFile: ' + str(re))
             logger.error('Runtime error in function LoadDataFile: ' + str(re))
         except Exception as e:
-            print('Error in function LoadDataFile: ' + str(e) + ' at line {} in the CSV file'.format( readCSV.line_num))
-            logger.error('Error in function LoadDataFile: ' + str(e) + ' at line {} in the CSV file'.format( readCSV.line_num))
-            QMessageBox().warning(self, "CSV data file", "Error reading CSV file at line {} - {}".format(readCSV.line_num, e), QMessageBox.Ok)
+            print('Error in function LoadDataFile: ' + str(e))
+            logger.error('Error in function LoadDataFile: ' + str(e))
+            QMessageBox().warning(self, "XML configuration file", "Error reading XML file ", QMessageBox.Ok)
        
     def LoadDataFile(self):
         """Loads the contents of a CSV file containing time and concentration data
