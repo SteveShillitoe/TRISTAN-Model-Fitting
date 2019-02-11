@@ -149,6 +149,8 @@ from PDFWriter import PDF
 
 from ExcelWriter import ExcelWriter
 
+from XMLReader import XMLReader
+
 #Initialise global dictionary to hold concentration data
 _concentrationData={}
 #Initialise global list to hold concentrations calculated using the selected model
@@ -403,9 +405,6 @@ class ModelFittingApp(QWidget):
         self.modelLabel.setAlignment(QtCore.Qt.AlignRight)
         self.cmbModels = QComboBox()
         self.cmbModels.setToolTip('Select a model to fit to the data')
-        #Populate the combo box with names of models in the modelNames list
-        #self.cmbModels.addItems(TracerKineticModels.modelNames)
-        self.cmbModels.addItems(TracerKineticModels.GetListModels())
         self.cmbModels.setCurrentIndex(0) #Display "Select a Model"
         self.cmbModels.currentIndexChanged.connect(self.UncheckFixParameterCheckBoxes)
         self.cmbModels.currentIndexChanged.connect(self.DisplayModelImage)
@@ -1387,25 +1386,31 @@ class ModelFittingApp(QWidget):
                 filter="*.xml")
 
             if os.path.exists(fullFilePath):
-                logger.info('Config file {} loaded'.format(fullFilePath))
-                #Extract data filename from the full data file path
-                folderName, _configFileName = os.path.split(fullFilePath)
-                self.statusbar.showMessage('Configuration file ' + _configFileName + ' loaded')
+                configData = XMLReader(fullFilePath)
+                
+                if configData.XMLFileParsedOK:
+                    logger.info('Config file {} loaded'.format(fullFilePath))
+                    #Extract data filename from the full data file path
+                    folderName, _configFileName = os.path.split(fullFilePath)
+                    self.statusbar.showMessage('Configuration file ' + _configFileName + ' loaded')
 
-                self.btnLoadDataFile.show()
-            else:
-                self.btnLoadDataFile.hide()
-                self.HideAllControlsOnGUI()
+                    #Populate the combo box with names of models in the config' file
+                    self.cmbModels.addItems(
+                        configData.returnListModelShortNames())
+                    self.btnLoadDataFile.show()
+                else:
+                    self.btnLoadDataFile.hide()
+                    self.HideAllControlsOnGUI()
             
         except IOError:
-            print ('IOError in function LoadDataFile: cannot open file' + _dataFileName + ' or read its data')
-            logger.error ('IOError in function LoadDataFile: cannot open file' + _dataFileName + ' or read its data')
+            print ('IOError in function LoadConfigFile: cannot open file' + _dataFileName + ' or read its data')
+            logger.error ('IOError in function LoadConfigFile: cannot open file' + _dataFileName + ' or read its data')
         except RuntimeError as re:
-            print('Runtime error in function LoadDataFile: ' + str(re))
-            logger.error('Runtime error in function LoadDataFile: ' + str(re))
+            print('Runtime error in function LoadConfigFile: ' + str(re))
+            logger.error('Runtime error in function LoadConfigFile: ' + str(re))
         except Exception as e:
-            print('Error in function LoadDataFile: ' + str(e))
-            logger.error('Error in function LoadDataFile: ' + str(e))
+            print('Error in function LoadConfigFile: ' + str(e))
+            logger.error('Error in function LoadConfigFile: ' + str(e))
             QMessageBox().warning(self, "XML configuration file", "Error reading XML file ", QMessageBox.Ok)
        
     def LoadDataFile(self):
