@@ -757,36 +757,37 @@ class ModelFittingApp(QWidget):
             
             modelName = str(self.cmbModels.currentText())
       
-            if modelName == 'HF1-2CFM':
-                if self.ckbParameter1.isChecked():
-                    parameterValue = self.spinBoxParameter1.value()
-                    lowerLimit = "N/A"
-                    upperLimit = "N/A"
+            if modelName == 'HF1-2CFM' and self.ckbParameter1.isChecked():
+                parameterValue = self.spinBoxParameter1.value()
+                lowerLimit = "N/A"
+                upperLimit = "N/A"
+                suffix = '%'
+                tempList = [parameterValue, lowerLimit, upperLimit]
+                _optimisedParamaterList.insert(0, tempList)
+            else:
+                parameterValue = round(_optimisedParamaterList[nextIndex][0], 3)
+                lowerLimit = round(_optimisedParamaterList[nextIndex][1], 3)
+                upperLimit = round(_optimisedParamaterList[nextIndex][2], 3)
+                if self.spinBoxParameter1.suffix() == '%':
+                    #convert from decimal fraction to %
                     suffix = '%'
-                    tempList = [parameterValue, lowerLimit, upperLimit]
-                    _optimisedParamaterList.insert(0, tempList)
+                    parameterValue = round(parameterValue * 100.0, 3)
+                    lowerLimit = round(lowerLimit * 100.0,3)
+                    upperLimit = round(upperLimit * 100.0,3)
+                    confidenceStr = '[{}     {}]'.format(lowerLimit, upperLimit)
+                    self.lblParam1ConfInt.setText(confidenceStr)
+                    nextIndex +=1
                 else:
-                    parameterValue = round(_optimisedParamaterList[nextIndex][0], 3)
-                    lowerLimit = round(_optimisedParamaterList[nextIndex][1], 3)
-                    upperLimit = round(_optimisedParamaterList[nextIndex][2], 3)
-                    if self.spinBoxParameter1.suffix() == '%':
-                        #convert from decimal fraction to %
-                        suffix = '%'
-                        parameterValue = round(parameterValue * 100.0, 3)
-                        lowerLimit = round(lowerLimit * 100.0,3)
-                        upperLimit = round(upperLimit * 100.0,3)
-                    else:
-                        suffix = ''
-                    #For display in the PDF report, overwrite decimal volume fraction values in  _optimisedParamaterList
-                    #with the % equivalent
-                    _optimisedParamaterList[nextIndex][0] = parameterValue
-                    _optimisedParamaterList[nextIndex][1] = lowerLimit
-                    _optimisedParamaterList[nextIndex][2] = upperLimit
-
-            confidenceStr = '[{}     {}]'.format(lowerLimit, upperLimit)
-            self.lblParam1ConfInt.setText(confidenceStr)
+                    suffix = ''
+                #For display in the PDF report, overwrite decimal volume fraction values in  _optimisedParamaterList
+                #with the % equivalent
+                _optimisedParamaterList[nextIndex][0] = parameterValue
+                _optimisedParamaterList[nextIndex][1] = lowerLimit
+                _optimisedParamaterList[nextIndex][2] = upperLimit
+                confidenceStr = '[{}     {}]'.format(lowerLimit, upperLimit)
+                self.lblParam1ConfInt.setText(confidenceStr)
+                nextIndex +=1
             
-            nextIndex +=1
             parameterValue = round(_optimisedParamaterList[nextIndex][0], 3)
             lowerLimit = round(_optimisedParamaterList[nextIndex][1], 3)
             upperLimit = round(_optimisedParamaterList[nextIndex][2], 3)
