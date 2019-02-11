@@ -290,14 +290,23 @@ class ModelFittingApp(QWidget):
         """
         Creates widgets and places them on the left-handside vertical layout. 
         """
+        #Create Load Configuration XML file Button
+        self.btnLoadConfigFile = QPushButton('Load Configuration File')
+        self.btnLoadConfigFile.setToolTip(
+            'Opens file dialog box to select the configuration file')
+        self.btnLoadConfigFile.setShortcut("Ctrl+C")
+        self.btnLoadConfigFile.setAutoDefault(False)
+        self.btnLoadConfigFile.clicked.connet(self.LoadConfigFile)
+
         #Create Load Data File Button
-        self.btnLoadDisplayData = QPushButton('Load and display data.')
-        self.btnLoadDisplayData.setToolTip('Open file dialog box to select the data file')
-        self.btnLoadDisplayData.setShortcut("Ctrl+L")
-        self.btnLoadDisplayData.setAutoDefault(False)
-        self.btnLoadDisplayData.resize(self.btnLoadDisplayData.minimumSizeHint())
+        self.btnLoadDataFile = QPushButton('Load Data File')
+        self.btnLoadDataFile.hide()
+        self.btnLoadDataFile.setToolTip('Opens file dialog box to select the data file')
+        self.btnLoadDataFile.setShortcut("Ctrl+L")
+        self.btnLoadDataFile.setAutoDefault(False)
+        self.btnLoadDataFile.resize(self.btnLoadDataFile.minimumSizeHint())
         #Method LoadDataFile is executed in the clicked event of this button
-        self.btnLoadDisplayData.clicked.connect(self.LoadDataFile)
+        self.btnLoadDataFile.clicked.connect(self.LoadDataFile)
         
         #Add a vertical spacer to the top of vertical layout to ensure
         #the top of the Load Data button is level with the MATPLOTLIB toolbar 
@@ -305,7 +314,7 @@ class ModelFittingApp(QWidget):
         verticalSpacer = QSpacerItem(20, 60, QSizePolicy.Minimum, QSizePolicy.Minimum)
         layout.addItem(verticalSpacer)
         #Add Load data file button to the top of the vertical layout
-        layout.addWidget(self.btnLoadDisplayData)
+        layout.addWidget(self.btnLoadDataFile)
         layout.addItem(verticalSpacer)
         #Create dropdown list for selection of ROI
         self.lblROI = QLabel("Region of Interest:")
@@ -1358,6 +1367,38 @@ class ModelFittingApp(QWidget):
         except Exception as e:
             print('Error in function CreatePDFReport: ' + str(e))
             logger.error('Error in function CreatePDFReport: ' + str(e))
+
+    def LoadConfigFile(self):
+        """Loads the contents of an XML file containing model(s) configuration data"""
+        
+        global _configFileName 
+        self.HideAllControlsOnGUI()
+        
+        try:
+            #get the xml file in XML format
+            #filter parameter set so that the user can only open an XML file
+            fullFilePath, _ = QFileDialog.getOpenFileName(parent=self, caption="Select csv file", filter="*.xml")
+            if os.path.exists(fullFilePath):
+                logger.info('Config file {} loaded'.format(fullFilePath))
+                #Extract data filename from the full data file path
+                folderName, _configFileName = os.path.split(fullFilePath)
+                self.statusbar.showMessage('File ' + _configFileName + ' loaded')
+
+                self.btnLoadDataFile.show()
+
+        except csv.Error:
+            print('CSV Reader error in function LoadDataFile: file {}, line {}: error={}'.format(_dataFileName, readCSV.line_num, csv.Error))
+            logger.error('CSV Reader error in function LoadDataFile: file {}, line {}: error ={}'.format(_dataFileName, readCSV.line_num, csv.Error))
+        except IOError:
+            print ('IOError in function LoadDataFile: cannot open file' + _dataFileName + ' or read its data')
+            logger.error ('IOError in function LoadDataFile: cannot open file' + _dataFileName + ' or read its data')
+        except RuntimeError as re:
+            print('Runtime error in function LoadDataFile: ' + str(re))
+            logger.error('Runtime error in function LoadDataFile: ' + str(re))
+        except Exception as e:
+            print('Error in function LoadDataFile: ' + str(e) + ' at line {} in the CSV file'.format( readCSV.line_num))
+            logger.error('Error in function LoadDataFile: ' + str(e) + ' at line {} in the CSV file'.format( readCSV.line_num))
+            QMessageBox().warning(self, "CSV data file", "Error reading CSV file at line {} - {}".format(readCSV.line_num, e), QMessageBox.Ok)
        
     def LoadDataFile(self):
         """Loads the contents of a CSV file containing time and concentration data
@@ -1399,10 +1440,10 @@ class ModelFittingApp(QWidget):
                             QMessageBox().warning(self, "CSV data file", "The first column must contain time data.", QMessageBox.Ok)
                             raise RuntimeError('The first column in the CSV file must contain time data.')    
 
-                    logger.info('CSV data file {} loaded'.format(_dataFileName))
+                    logger.info('CSV data file {} loaded'.format(fullFilePath))
                     
                     #Extract data filename from the full data file path
-                    #_dataFileName = os.path.basename(_dataFileName)
+
                     folderName = os.path.basename(os.path.dirname(fullFilePath))
                     self.directory, _dataFileName = os.path.split(fullFilePath)
                     self.statusbar.showMessage('File ' + _dataFileName + ' loaded')
@@ -1861,7 +1902,7 @@ class ModelFittingApp(QWidget):
 
     def toggleEnabled(self, boolEnabled=False):
         self.btnExit.setEnabled(boolEnabled)
-        self.btnLoadDisplayData.setEnabled(boolEnabled)
+        self.btnLoadDataFile.setEnabled(boolEnabled)
         self.cmbROI.setEnabled(boolEnabled)
         self.cmbAIF.setEnabled(boolEnabled)
         self.cmbVIF.setEnabled(boolEnabled)
