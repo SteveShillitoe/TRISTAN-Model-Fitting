@@ -13,6 +13,7 @@ using non-linear least squares.
 
 import Tools as tools
 from scipy.optimize import curve_fit
+from lmfit import minimize, Parameters, Model
 import numpy as np
 import logging
 
