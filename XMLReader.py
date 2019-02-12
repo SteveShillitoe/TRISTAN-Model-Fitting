@@ -2,7 +2,7 @@ import xml.etree.ElementTree as ET
 import logging
 
 logger = logging.getLogger(__name__)
-
+#/models/model[@id='2-2CFM']/parameters/parameter[position()=3]
 class XMLReader():
     def __init__(self, fullFilePath): 
         try:
@@ -32,10 +32,11 @@ class XMLReader():
 
     def returnListModelShortNames(self):
         try:
-            tempList = []
             shortModelNames = self.root.findall('./model/name/short')
             tempList = [name.text 
                         for name in shortModelNames]
+            tempList.insert(0, 'Please Select')
+            
             return tempList
 
         except ET.ParseError as et:
@@ -45,4 +46,17 @@ class XMLReader():
             print('Error in XMLReader.returnListModelShortNames: ' + str(e)) 
             logger.error('Error in XMLReader.returnListModelShortNames: ' + str(e)) 
 
-
+    def returnImageName(self, modelID):
+        try:
+            logger.info('XMLReader.returnImageName called with modelID= ' + modelID)
+            if len(modelID) > 0:
+                xPath='/model[@id=' + modelID + ']/image/text()'
+                imageName = self.root.find('xPath')
+                return imageName
+            else:
+                return None
+           
+        except Exception as e:
+            print('Error in XMLReader.returnImageName: ' + str(e)) 
+            logger.error('Error in XMLReader.returnImageName: ' + str(e)) 
+            return None

@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <models>
-  <model>
+  <model id="2-2CFM">
     <name>
       <short>2-2CFM</short>
       <long>2 Inlet - Two Compartment Filtration Model</long>
@@ -9,7 +9,7 @@
     <image>DualInletTwoCompartmentGadoxetateModel.png</image>
     <inlet_type>dual</inlet_type>
     <parameters>
-      <parameter>
+      <parameter id="Fa">
       <name>
         <short>Fa</short>
         <long>Arterial Flow Fraction</long>
@@ -21,7 +21,7 @@
         <upper>100.00</upper>
       </constraints>
     </parameter>
-      <parameter>
+      <parameter id="Ve">
         <name>
           <short>Ve</short>
           <long>Extracellular Volume Fraction</long>
@@ -33,7 +33,7 @@
           <upper>100.00</upper>
         </constraints>
       </parameter>
-      <parameter>
+      <parameter id="Fp">
         <name>
           <short>Fp</short>
           <long>Total Plasma Inflow</long>
@@ -45,7 +45,7 @@
           <upper>0.9999</upper>
         </constraints>
       </parameter>
-      <parameter>
+      <parameter id="Kbh">
         <name>
           <short>Kbh</short>
           <long>Biliary Efflux Rate</long>
@@ -57,7 +57,7 @@
           <upper>100.0</upper>
         </constraints>
       </parameter>
-      <parameter>
+      <parameter id="Khe">
         <name>
           <short>Khe</short>
           <long>Hepatocyte Uptake Rate</long>
@@ -71,7 +71,7 @@
       </parameter>
     </parameters>
   </model>
-  <model>
+  <model id="HF2-2CFM">
     <name>
       <short>HF2-2CFM</short>
       <long>High Flow 2 Inlet - Two Compartment Filtration Model</long>
@@ -80,7 +80,7 @@
     <image>HighFlowDualInletTwoCompartmentGadoxetateModel.png</image>
     <inlet_type>dual</inlet_type>
     <parameters>
-      <parameter>
+      <parameter id="Fa">
         <name>
           <short>Fa</short>
           <long>Arterial Flow Fraction</long>
@@ -92,7 +92,7 @@
           <upper>100.00</upper>
         </constraints>
       </parameter>
-      <parameter>
+      <parameter id="Ve">
         <name>
           <short>Ve</short>
           <long>Extracellular Volume Fraction</long>
@@ -104,7 +104,7 @@
           <upper>100.00</upper>
         </constraints>
       </parameter>
-      <parameter>
+      <parameter id="Kbh">
         <name>
           <short>Kbh</short>
           <long>Biliary Efflux Rate</long>
@@ -116,7 +116,7 @@
           <upper>100.0</upper>
         </constraints>
       </parameter>
-      <parameter>
+      <parameter id="Khe">
         <name>
           <short>Khe</short>
           <long>Hepatocyte Uptake Rate</long>
@@ -130,7 +130,7 @@
       </parameter>
     </parameters>
   </model>
-  <model>
+  <model id="HF1-2CFM">
     <name>
       <short>HF1-2CFM</short>
       <long>High Flow 1 Inlet - Two Compartment Filtration Model</long>
@@ -139,7 +139,7 @@
     <image>HighFlowSingleInletTwoCompartmentGadoxetateModel.png'</image>
     <inlet_type>single</inlet_type>
     <parameters>
-      <parameter>
+      <parameter id="Ve">
         <name>
           <short>Ve</short>
           <long>Extracellular Volume Fraction</long>
@@ -151,7 +151,7 @@
           <upper>0.9999</upper>
         </constraints>
       </parameter>
-      <parameter>
+      <parameter id="Kbh">
         <name>
           <short>Kbh</short>
           <long>Biliary Efflux Rate</long>
@@ -163,7 +163,7 @@
           <upper>100.0</upper>
         </constraints>
       </parameter>
-      <parameter>
+      <parameter id="Khe">
         <name>
           <short>Khe</short>
           <long>Hepatocyte Uptake Rate</long>
@@ -177,7 +177,7 @@
       </parameter>
     </parameters>
   </model>
-  <model>
+  <model id="HF1-2CFM-FixVe">
     <name>
       <short>HF1-2CFM-FixVe</short>
       <long>High Flow 1 Inlet - Two Compartment Filtration Model\n - Fixed Extracellular Vol Fraction</long>
@@ -186,7 +186,7 @@
     <image>HighFlowSingleInletTwoCompartmentGadoxetateModel_fixedve.png</image>
     <inlet_type>single</inlet_type>
     <parameters>
-      <parameter fixed="true">
+      <parameter  id="Ve" fixed="true">
         <name>
           <short>Ve</short>
           <long>Extracellular Volume Fraction</long>
@@ -198,7 +198,7 @@
           <upper>0.23001</upper>
         </constraints>
       </parameter>
-      <parameter>
+      <parameter id="Kbh">
         <name>
           <short>Kbh</short>
           <long>Biliary Efflux Rate</long>
@@ -210,7 +210,7 @@
           <upper>100.0</upper>
         </constraints>
       </parameter>
-      <parameter>
+      <parameter id="Khe">
         <name>
           <short>Khe</short>
           <long>Hepatocyte Uptake Rate</long>

@@ -149,7 +149,7 @@ from PDFWriter import PDF
 
 from ExcelWriter import ExcelWriter
 
-from XMLReader import XMLReader
+import xml.etree.ElementTree as ET 
 
 #Initialise global dictionary to hold concentration data
 _concentrationData={}
@@ -163,7 +163,7 @@ _optimisedParamaterList = []
 #Global boolean that indicates if the curve fitting routine has been just run or not.
 #Used by the PDF report writer to determine if displaying confidence limits is appropriate
 _boolCurveFittingDone = False
-
+_rootXMLConfigFile = ET.ElementTree
 ########################################
 ##              CONSTANTS             ##
 ########################################
@@ -466,32 +466,26 @@ class ModelFittingApp(QWidget):
         modelHorizontalLayoutReset.addWidget(self.cboxConstaint)
         modelHorizontalLayoutReset.addWidget(self.btnReset)
         
-        #Create spinboxes and their labels
-        #Label text set in function ConfigureGUIForEachModel when the model is selected
-        self.lblArterialFlowFactor = QLabel("Arterial Flow Fraction, \n fa (%)") 
-        self.lblArterialFlowFactor.hide()
-        self.ckbAFF = QCheckBox("Fix")
-        self.ckbAFF.hide()
-        self.lblAFFConfInt = QLabel("")
-        self.lblAFFConfInt.setAlignment(QtCore.Qt.AlignCenter)
-
         self.lblConfInt = QLabel("95% Confidence Interval")
         self.lblConfInt.hide()
         self.lblConfInt.setAlignment(QtCore.Qt.AlignRight)
         gridLayoutParamLabels.addWidget(self.lblConfInt, 1,4)
-        
-        self.labelParameter1 = QLabel("")
+
+        #Create spinboxes and their labels
+        #Label text set in function ConfigureGUIForEachModel when the model is selected
+        self.labelParameter1 = QLabel("") 
+        self.labelParameter1.hide()
         self.ckbParameter1 = QCheckBox("Fix")
         self.ckbParameter1.hide()
-        self.ckbParameter1.clicked.connect(self.OptimumParameterChanged)
-        self.ckbParameter1.clicked.connect(self.DisplayModelImage)
-        self.ckbParameter1.clicked.connect(lambda:  self.PlotConcentrations('ckbParameter1'))
         self.lblParam1ConfInt = QLabel("")
         self.lblParam1ConfInt.setAlignment(QtCore.Qt.AlignCenter)
         
         self.labelParameter2 = QLabel("")
         self.ckbParameter2 = QCheckBox("Fix")
         self.ckbParameter2.hide()
+        self.ckbParameter2.clicked.connect(self.OptimumParameterChanged)
+        self.ckbParameter2.clicked.connect(self.DisplayModelImage)
+        self.ckbParameter2.clicked.connect(lambda:  self.PlotConcentrations('ckbParameter2'))
         self.lblParam2ConfInt = QLabel("")
         self.lblParam2ConfInt.setAlignment(QtCore.Qt.AlignCenter)
         
@@ -500,77 +494,85 @@ class ModelFittingApp(QWidget):
         self.ckbParameter3.hide()
         self.lblParam3ConfInt = QLabel("")
         self.lblParam3ConfInt.setAlignment(QtCore.Qt.AlignCenter)
-
+        
         self.labelParameter4 = QLabel("")
         self.ckbParameter4 = QCheckBox("Fix")
         self.ckbParameter4.hide()
         self.lblParam4ConfInt = QLabel("")
         self.lblParam4ConfInt.setAlignment(QtCore.Qt.AlignCenter)
 
+        self.labelParameter5 = QLabel("")
+        self.ckbParameter5 = QCheckBox("Fix")
+        self.ckbParameter5.hide()
+        self.lblParam5ConfInt = QLabel("")
+        self.lblParam5ConfInt.setAlignment(QtCore.Qt.AlignCenter)
+
         self.labelParameter1.setWordWrap(True)
         self.labelParameter2.setWordWrap(True)
         self.labelParameter3.setWordWrap(True)
         self.labelParameter4.setWordWrap(True)
+        self.labelParameter5.setWordWrap(True)
 
-        self.spinBoxArterialFlowFactor = QDoubleSpinBox()
-        self.spinBoxArterialFlowFactor.setRange(0, 100)
-        self.spinBoxArterialFlowFactor.setDecimals(2)
-        self.spinBoxArterialFlowFactor.setSingleStep(0.01)
-        self.spinBoxArterialFlowFactor.setValue(DEFAULT_VALUE_Fa)
-        self.spinBoxArterialFlowFactor.setSuffix('%')
-        self.spinBoxArterialFlowFactor.hide()
+        #self.spinBoxParameter1 = QDoubleSpinBox()
+        #self.spinBoxParameter1.setRange(0, 100)
+        #self.spinBoxParameter1.setDecimals(2)
+        #self.spinBoxParameter1.setSingleStep(0.01)
+        #self.spinBoxParameter1.setValue(DEFAULT_VALUE_Fa)
+        #self.spinBoxParameter1.setSuffix('%')
         
         self.spinBoxParameter1 = QDoubleSpinBox()
         self.spinBoxParameter2 = QDoubleSpinBox()
         self.spinBoxParameter3 = QDoubleSpinBox()
         self.spinBoxParameter4 = QDoubleSpinBox()
+        self.spinBoxParameter5 = QDoubleSpinBox()
         
         self.spinBoxParameter1.hide()
         self.spinBoxParameter2.hide()
         self.spinBoxParameter3.hide()
         self.spinBoxParameter4.hide()
+        self.spinBoxParameter5.hide()
 
         #If a parameter value is changed, replot the concentration and model data
-        self.spinBoxArterialFlowFactor.valueChanged.connect(lambda: self.PlotConcentrations('spinBoxArterialFlowFactor')) 
         self.spinBoxParameter1.valueChanged.connect(lambda: self.PlotConcentrations('spinBoxParameter1')) 
         self.spinBoxParameter2.valueChanged.connect(lambda: self.PlotConcentrations('spinBoxParameter2')) 
-        self.spinBoxParameter3.valueChanged.connect(lambda: self.PlotConcentrations('spinBoxParameter3'))
+        self.spinBoxParameter3.valueChanged.connect(lambda: self.PlotConcentrations('spinBoxParameter3')) 
         self.spinBoxParameter4.valueChanged.connect(lambda: self.PlotConcentrations('spinBoxParameter4'))
+        self.spinBoxParameter5.valueChanged.connect(lambda: self.PlotConcentrations('spinBoxParameter5'))
         #Set a global boolean variable, _boolCurveFittingDone to false to indicate that 
         #the value of a model parameter has been changed manually rather than by curve fitting
-        self.spinBoxArterialFlowFactor.valueChanged.connect(self.OptimumParameterChanged) 
         self.spinBoxParameter1.valueChanged.connect(self.OptimumParameterChanged) 
         self.spinBoxParameter2.valueChanged.connect(self.OptimumParameterChanged) 
-        self.spinBoxParameter3.valueChanged.connect(self.OptimumParameterChanged)
+        self.spinBoxParameter3.valueChanged.connect(self.OptimumParameterChanged) 
         self.spinBoxParameter4.valueChanged.connect(self.OptimumParameterChanged)
+        self.spinBoxParameter5.valueChanged.connect(self.OptimumParameterChanged)
         
         #Place spin boxes and their labels in horizontal layouts
         #modelHorizontalLayoutParamLabels
 
-        modelHorizontalLayoutArterialFlowFactor.addWidget(self.lblArterialFlowFactor)
-        modelHorizontalLayoutArterialFlowFactor.addWidget(self.spinBoxArterialFlowFactor)
-        modelHorizontalLayoutArterialFlowFactor.addWidget(self.ckbAFF)
-        modelHorizontalLayoutArterialFlowFactor.addWidget(self.lblAFFConfInt)
+        modelHorizontalLayoutArterialFlowFactor.addWidget(self.labelParameter2)
+        modelHorizontalLayoutArterialFlowFactor.addWidget(self.spinBoxParameter1)
+        modelHorizontalLayoutArterialFlowFactor.addWidget(self.ckbParameter1)
+        modelHorizontalLayoutArterialFlowFactor.addWidget(self.lblParam1ConfInt)
 
-        modelHorizontalLayout5.addWidget(self.labelParameter1)
-        modelHorizontalLayout5.addWidget(self.spinBoxParameter1)
-        modelHorizontalLayout5.addWidget(self.ckbParameter1)
-        modelHorizontalLayout5.addWidget(self.lblParam1ConfInt)
+        modelHorizontalLayout5.addWidget(self.labelParameter2)
+        modelHorizontalLayout5.addWidget(self.spinBoxParameter2)
+        modelHorizontalLayout5.addWidget(self.ckbParameter2)
+        modelHorizontalLayout5.addWidget(self.lblParam2ConfInt)
 
-        modelHorizontalLayout6.addWidget(self.labelParameter2)
-        modelHorizontalLayout6.addWidget(self.spinBoxParameter2)
+        modelHorizontalLayout6.addWidget(self.labelParameter3)
+        modelHorizontalLayout6.addWidget(self.spinBoxParameter3)
         modelHorizontalLayout6.addWidget(self.ckbParameter2)
         modelHorizontalLayout6.addWidget(self.lblParam2ConfInt)
 
-        modelHorizontalLayout7.addWidget(self.labelParameter3)
-        modelHorizontalLayout7.addWidget(self.spinBoxParameter3)
+        modelHorizontalLayout7.addWidget(self.labelParameter4)
+        modelHorizontalLayout7.addWidget(self.spinBoxParameter4)
         modelHorizontalLayout7.addWidget(self.ckbParameter3)
-        modelHorizontalLayout7.addWidget(self.lblParam3ConfInt)
+        modelHorizontalLayout7.addWidget(self.lblParam4ConfInt)
 
-        modelHorizontalLayoutPara4.addWidget(self.labelParameter4)
-        modelHorizontalLayoutPara4.addWidget(self.spinBoxParameter4)
-        modelHorizontalLayoutPara4.addWidget(self.ckbParameter4)
-        modelHorizontalLayoutPara4.addWidget(self.lblParam4ConfInt)
+        modelHorizontalLayoutPara4.addWidget(self.labelParameter5)
+        modelHorizontalLayoutPara4.addWidget(self.spinBoxParameter5)
+        modelHorizontalLayoutPara4.addWidget(self.ckbParameter5)
+        modelHorizontalLayoutPara4.addWidget(self.lblParam5ConfInt)
        
         
         self.btnFitModel = QPushButton('Fit Model')
@@ -701,20 +703,25 @@ class ModelFittingApp(QWidget):
             shortModelName = str(self.cmbModels.currentText())
         
             if shortModelName != 'Select a model':
-                if self.ckbParameter1.isChecked():
-                    boolFixVe = True
-                else:
-                    boolFixVe = False
-                modelImageName = TracerKineticModels.GetModelImageName(shortModelName, boolFixVe)
-                pixmapModelImage = QPixmap(modelImageName)
+                #if self.ckbParameter2.isChecked():
+               #     boolFixVe = True
+                #else:
+                #    boolFixVe = False
+               # modelImageName = TracerKineticModels.GetModelImageName(shortModelName, boolFixVe)
+                #modelImageName = _configData.returnImageName(shortModelName)
+                 
+                xPath='./model[@id=' + chr(34) + shortModelName + chr(34) + ']/image'
+                imageName = _rootXMLConfigFile.find(xPath)
+                imagePath = 'images\\' + imageName.text
+                pixmapModelImage = QPixmap(imagePath)
                 #Increase the size of the model image
                 pMapWidth = pixmapModelImage.width() * 1.35
                 pMapHeight = pixmapModelImage.height() * 1.35
                 pixmapModelImage = pixmapModelImage.scaled(pMapWidth, pMapHeight, 
                       QtCore.Qt.KeepAspectRatio, QtCore.Qt.SmoothTransformation)
                 self.lblModelImage.setPixmap(pixmapModelImage)
-                longModelName = TracerKineticModels.GetLongModelName(shortModelName, boolFixVe)
-                self.lblModelName.setText(longModelName)
+                #longModelName = TracerKineticModels.GetLongModelName(shortModelName, boolFixVe)
+                #self.lblModelName.setText(longModelName)
             else:
                 self.lblModelImage.clear()
                 self.lblModelName.setText('')
@@ -744,7 +751,7 @@ class ModelFittingApp(QWidget):
         try:
             logger.info('Function ProcessOptimumParametersAfterCurveFit called.')
             self.lblConfInt.show()
-            if self.spinBoxArterialFlowFactor.isHidden() == False:
+            if self.spinBoxParameter1.isHidden() == False:
                 parameterValue = _optimisedParamaterList[0][0]
                 lowerLimit = _optimisedParamaterList[0][1]
                 upperLimit = _optimisedParamaterList[0][2]
@@ -759,15 +766,15 @@ class ModelFittingApp(QWidget):
                 _optimisedParamaterList[0][2] = upperLimit
                
                 confidenceStr = '[{}     {}]'.format(lowerLimit, upperLimit)
-                self.lblAFFConfInt.setText(confidenceStr)
+                self.lblParam1ConfInt.setText(confidenceStr)
                 nextIndex=1
             else:
                 nextIndex = 0
             
             modelName = str(self.cmbModels.currentText())
       
-            if modelName == 'HF1-2CFM' and self.ckbParameter1.isChecked():
-                parameterValue = self.spinBoxParameter1.value()
+            if modelName == 'HF1-2CFM' and self.ckbParameter2.isChecked():
+                parameterValue = self.spinBoxParameter2.value()
                 lowerLimit = "N/A"
                 upperLimit = "N/A"
                 suffix = '%'
@@ -777,14 +784,14 @@ class ModelFittingApp(QWidget):
                 parameterValue = round(_optimisedParamaterList[nextIndex][0], 3)
                 lowerLimit = round(_optimisedParamaterList[nextIndex][1], 3)
                 upperLimit = round(_optimisedParamaterList[nextIndex][2], 3)
-                if self.spinBoxParameter1.suffix() == '%':
+                if self.spinBoxParameter2.suffix() == '%':
                     #convert from decimal fraction to %
                     suffix = '%'
                     parameterValue = round(parameterValue * 100.0, 3)
                     lowerLimit = round(lowerLimit * 100.0,3)
                     upperLimit = round(upperLimit * 100.0,3)
                     confidenceStr = '[{}     {}]'.format(lowerLimit, upperLimit)
-                    self.lblParam1ConfInt.setText(confidenceStr)
+                    self.lblParam2ConfInt.setText(confidenceStr)
                     nextIndex +=1
                 else:
                     suffix = ''
@@ -794,14 +801,14 @@ class ModelFittingApp(QWidget):
                 _optimisedParamaterList[nextIndex][1] = lowerLimit
                 _optimisedParamaterList[nextIndex][2] = upperLimit
                 confidenceStr = '[{}     {}]'.format(lowerLimit, upperLimit)
-                self.lblParam1ConfInt.setText(confidenceStr)
+                self.lblParam2ConfInt.setText(confidenceStr)
                 nextIndex +=1
             
             parameterValue = round(_optimisedParamaterList[nextIndex][0], 3)
             lowerLimit = round(_optimisedParamaterList[nextIndex][1], 3)
             upperLimit = round(_optimisedParamaterList[nextIndex][2], 3)
 
-            if self.spinBoxParameter2.suffix() == '%':
+            if self.spinBoxParameter3.suffix() == '%':
                 suffix = '%'
                 parameterValue = round(parameterValue * 100.0,3)
                 lowerLimit = round(lowerLimit * 100.0,3)
@@ -818,27 +825,6 @@ class ModelFittingApp(QWidget):
             self.lblParam2ConfInt.setText(confidenceStr) 
             
             nextIndex += 1
-            if self.spinBoxParameter3.isHidden() == False:
-                parameterValue = round(_optimisedParamaterList[nextIndex][0], 3)
-                lowerLimit = round(_optimisedParamaterList[nextIndex][1], 3)
-                upperLimit = round(_optimisedParamaterList[nextIndex][2], 3)
-                nextIndex += 1
-                if self.spinBoxParameter3.suffix() == '%':
-                    suffix = '%'
-                    parameterValue = round(parameterValue * 100.0, 3)
-                    lowerLimit = round(lowerLimit * 100.0, 3)
-                    upperLimit = round(upperLimit * 100.0, 3)
-                    #For display in the PDF report, overwrite decimal volume fraction values in  _optimisedParamaterList
-                    #with the % equivalent
-                    _optimisedParamaterList[nextIndex][0] = parameterValue
-                    _optimisedParamaterList[nextIndex][1] = lowerLimit
-                    _optimisedParamaterList[nextIndex][2] = upperLimit
-                else:
-                    suffix = ''
-                
-                confidenceStr = '[{}     {}]'.format(lowerLimit, upperLimit)
-                self.lblParam3ConfInt.setText(confidenceStr)
-
             if self.spinBoxParameter4.isHidden() == False:
                 parameterValue = round(_optimisedParamaterList[nextIndex][0], 3)
                 lowerLimit = round(_optimisedParamaterList[nextIndex][1], 3)
@@ -859,6 +845,27 @@ class ModelFittingApp(QWidget):
                 
                 confidenceStr = '[{}     {}]'.format(lowerLimit, upperLimit)
                 self.lblParam4ConfInt.setText(confidenceStr)
+
+            if self.spinBoxParameter5.isHidden() == False:
+                parameterValue = round(_optimisedParamaterList[nextIndex][0], 3)
+                lowerLimit = round(_optimisedParamaterList[nextIndex][1], 3)
+                upperLimit = round(_optimisedParamaterList[nextIndex][2], 3)
+                nextIndex += 1
+                if self.spinBoxParameter5.suffix() == '%':
+                    suffix = '%'
+                    parameterValue = round(parameterValue * 100.0, 3)
+                    lowerLimit = round(lowerLimit * 100.0, 3)
+                    upperLimit = round(upperLimit * 100.0, 3)
+                    #For display in the PDF report, overwrite decimal volume fraction values in  _optimisedParamaterList
+                    #with the % equivalent
+                    _optimisedParamaterList[nextIndex][0] = parameterValue
+                    _optimisedParamaterList[nextIndex][1] = lowerLimit
+                    _optimisedParamaterList[nextIndex][2] = upperLimit
+                else:
+                    suffix = ''
+                
+                confidenceStr = '[{}     {}]'.format(lowerLimit, upperLimit)
+                self.lblParam5ConfInt.setText(confidenceStr)
             
         except Exception as e:
             print('Error in function ProcessOptimumParametersAfterCurveFit: ' + str(e))
@@ -871,11 +878,11 @@ class ModelFittingApp(QWidget):
         try:
             logger.info('Function ClearOptimumParamaterConfLimitsOnGUI called.')
             self.lblConfInt.hide()
-            self.lblParam1ConfInt.clear()
             self.lblParam2ConfInt.clear()
-            self.lblParam3ConfInt.clear()
+            self.lblParam2ConfInt.clear()
             self.lblParam4ConfInt.clear()
-            self.lblAFFConfInt.clear()
+            self.lblParam5ConfInt.clear()
+            self.lblParam1ConfInt.clear()
             
         except Exception as e:
             print('Error in function ClearOptimumParamaterConfLimitsOnGUI: ' + str(e))
@@ -952,11 +959,11 @@ class ModelFittingApp(QWidget):
 
     def DisplayArterialFlowFactorSpinBox(self):
         if str(self.cmbVIF.currentText()) == 'Please Select':
-            self.lblArterialFlowFactor.hide()
-            self.spinBoxArterialFlowFactor.hide()
+            self.labelParameter2.hide()
+            self.spinBoxParameter1.hide()
         else:
-            self.lblArterialFlowFactor.show()
-            self.spinBoxArterialFlowFactor.show()
+            self.labelParameter2.show()
+            self.spinBoxParameter1.show()
 
     def DisplayFitModelSaveCSVButtons(self):
         """Displays the Fit Model and Save CSV buttons if both a ROI & AIF 
@@ -1003,32 +1010,32 @@ class ModelFittingApp(QWidget):
 
             #Only add the Arterial Flow Factor if a VIF has been selected
             #and the Arterial Flow Factor spinbox is therefore visible.
-            if self.spinBoxArterialFlowFactor.isHidden() == False:
-                arterialFlowFactor = self.spinBoxArterialFlowFactor.value()/100
+            if self.spinBoxParameter1.isHidden() == False:
+                arterialFlowFactor = self.spinBoxParameter1.value()/100
                 initialParametersArray.append(arterialFlowFactor)
 
-            parameter1 = self.spinBoxParameter1.value()
-            if self.spinBoxParameter1.suffix() == '%':
+            parameter1 = self.spinBoxParameter2.value()
+            if self.spinBoxParameter2.suffix() == '%':
                 #This is a volume fraction so convert % to a decimal fraction
                 parameter1 = parameter1/100.0
             initialParametersArray.append(parameter1)
         
-            parameter2 = self.spinBoxParameter2.value()
-            if self.spinBoxParameter2.suffix() == '%':
+            parameter2 = self.spinBoxParameter3.value()
+            if self.spinBoxParameter3.suffix() == '%':
                  #This is a volume fraction so convert % to a decimal fraction
                 parameter2 = parameter2/100.0
             initialParametersArray.append(parameter2)
         
-            if self.spinBoxParameter3.isHidden() == False:
-                parameter3 = self.spinBoxParameter3.value()
-                if self.spinBoxParameter3.suffix() == '%':
+            if self.spinBoxParameter4.isHidden() == False:
+                parameter3 = self.spinBoxParameter4.value()
+                if self.spinBoxParameter4.suffix() == '%':
                      #This is a volume fraction so convert % to a decimal fraction
                     parameter3 = parameter3/100.0
                 initialParametersArray.append(parameter3)
 
-            if self.spinBoxParameter4.isHidden() == False:
-                parameter4 = self.spinBoxParameter4.value()
-                if self.spinBoxParameter4.suffix() == '%':
+            if self.spinBoxParameter5.isHidden() == False:
+                parameter4 = self.spinBoxParameter5.value()
+                if self.spinBoxParameter5.suffix() == '%':
                      #This is a volume fraction so convert % to a decimal fraction
                     parameter4 = parameter4/100.0
                 initialParametersArray.append(parameter4)
@@ -1043,11 +1050,11 @@ class ModelFittingApp(QWidget):
            Thus allowing spinbox values to be set programmatically 
            without causing a method connected to one of their events to be executed."""
         logger.info('Function BlockSpinBoxSignals called.')
-        self.spinBoxArterialFlowFactor.blockSignals(boolBlockSignal)
         self.spinBoxParameter1.blockSignals(boolBlockSignal)
         self.spinBoxParameter2.blockSignals(boolBlockSignal)
         self.spinBoxParameter3.blockSignals(boolBlockSignal)
         self.spinBoxParameter4.blockSignals(boolBlockSignal)
+        self.spinBoxParameter5.blockSignals(boolBlockSignal)
 
     def setParameterSpinBoxValues(self, parameterList):
         """Sets the value displayed in the model parameter spinboxes 
@@ -1066,38 +1073,38 @@ class ModelFittingApp(QWidget):
 
             modelName = str(self.cmbModels.currentText())
             
-            if self.spinBoxArterialFlowFactor.isHidden() == False:
-                self.spinBoxArterialFlowFactor.setValue(parameterList[0]* 100) #Convert decimal fraction to %
+            if self.spinBoxParameter1.isHidden() == False:
+                self.spinBoxParameter1.setValue(parameterList[0]* 100) #Convert decimal fraction to %
                 nextIndex = 1
             else:
                 nextIndex = 0
                 
             if modelName == 'HF1-2CFM':
-                if not self.ckbParameter1.isChecked():
-                    if self.spinBoxParameter1.suffix() == '%':
-                        self.spinBoxParameter1.setValue(parameterList[nextIndex]* 100) #Convert Volume fraction to %
+                if not self.ckbParameter2.isChecked():
+                    if self.spinBoxParameter2.suffix() == '%':
+                        self.spinBoxParameter2.setValue(parameterList[nextIndex]* 100) #Convert Volume fraction to %
                     else:
-                        self.spinBoxParameter1.setValue(parameterList[nextIndex])
+                        self.spinBoxParameter2.setValue(parameterList[nextIndex])
                     nextIndex += 1
 
-            if self.spinBoxParameter2.suffix() == '%':
-                self.spinBoxParameter2.setValue(parameterList[nextIndex]* 100) #Convert Volume fraction to %
+            if self.spinBoxParameter3.suffix() == '%':
+                self.spinBoxParameter3.setValue(parameterList[nextIndex]* 100) #Convert Volume fraction to %
             else:
-                self.spinBoxParameter2.setValue(parameterList[nextIndex])
+                self.spinBoxParameter3.setValue(parameterList[nextIndex])
             nextIndex += 1
-
-            if self.spinBoxParameter3.isHidden() == False:
-                if self.spinBoxParameter3.suffix() == '%':
-                    self.spinBoxParameter3.setValue(parameterList[nextIndex]* 100) #Convert Volume fraction to %
-                else:
-                    self.spinBoxParameter3.setValue(parameterList[nextIndex])
-                nextIndex += 1
 
             if self.spinBoxParameter4.isHidden() == False:
                 if self.spinBoxParameter4.suffix() == '%':
                     self.spinBoxParameter4.setValue(parameterList[nextIndex]* 100) #Convert Volume fraction to %
                 else:
                     self.spinBoxParameter4.setValue(parameterList[nextIndex])
+                nextIndex += 1
+
+            if self.spinBoxParameter5.isHidden() == False:
+                if self.spinBoxParameter5.suffix() == '%':
+                    self.spinBoxParameter5.setValue(parameterList[nextIndex]* 100) #Convert Volume fraction to %
+                else:
+                    self.spinBoxParameter5.setValue(parameterList[nextIndex])
        
             self.BlockSpinBoxSignals(False)
         except Exception as e:
@@ -1187,7 +1194,7 @@ class ModelFittingApp(QWidget):
             #Get the name of the model to be fitted to the ROI curve
             modelName = str(self.cmbModels.currentText())
             #Call curve fitting routine
-            if self.ckbParameter1.isChecked():
+            if self.ckbParameter2.isChecked():
                 boolFixVe = True
             else:
                 boolFixVe = False
@@ -1234,74 +1241,74 @@ class ModelFittingApp(QWidget):
             parameterDictionary = {}
            
             index = 0
-            if self.spinBoxArterialFlowFactor.isHidden() == False:
+            if self.spinBoxParameter1.isHidden() == False:
                 parameterList1 = []
                 if confidenceLimitsArray != None:
                     parameterList1.append(confidenceLimitsArray[index][0]) #Parameter Value
                     parameterList1.append(confidenceLimitsArray[index][1]) #Lower Limit
                     parameterList1.append(confidenceLimitsArray[index][2]) #Upper Limit
                 else:
-                    parameterList1.append(round(self.spinBoxArterialFlowFactor.value(), 2))
+                    parameterList1.append(round(self.spinBoxParameter1.value(), 2))
                     parameterList1.append('N/A')
                     parameterList1.append('N/A')
                 
-                parameterDictionary[self.lblArterialFlowFactor.text()] = parameterList1
+                parameterDictionary[self.labelParameter2.text()] = parameterList1
                 index +=1
 
-            if self.spinBoxParameter1.isHidden() == False:
+            if self.spinBoxParameter2.isHidden() == False:
                 parameterList2=[]
                 if confidenceLimitsArray != None:
                     parameterList2.append(confidenceLimitsArray[index][0]) #Parameter Value
                     parameterList2.append(confidenceLimitsArray[index][1]) #Lower Limit
                     parameterList2.append(confidenceLimitsArray[index][2]) #Upper Limit
                 else:
-                    parameterList2.append(round(self.spinBoxParameter1.value(), 2))
+                    parameterList2.append(round(self.spinBoxParameter2.value(), 2))
                     parameterList2.append('N/A')
                     parameterList2.append('N/A')
                 
-                parameterDictionary[self.labelParameter1.text()] = parameterList2
+                parameterDictionary[self.labelParameter2.text()] = parameterList2
                 index +=1
 
-            if self.spinBoxParameter2.isHidden() == False:
+            if self.spinBoxParameter3.isHidden() == False:
                 parameterList3 =[]
                 if confidenceLimitsArray != None:
                     parameterList3.append(confidenceLimitsArray[index][0]) #Parameter Value
                     parameterList3.append(confidenceLimitsArray[index][1]) #Lower Limit
                     parameterList3.append(confidenceLimitsArray[index][2]) #Upper Limit
                 else:
-                    parameterList3.append(round(self.spinBoxParameter2.value(), 2))
+                    parameterList3.append(round(self.spinBoxParameter3.value(), 2))
                     parameterList3.append('N/A')
                     parameterList3.append('N/A')
                 
-                parameterDictionary[self.labelParameter2.text()] = parameterList3
+                parameterDictionary[self.labelParameter3.text()] = parameterList3
                 index +=1
 
-            if self.spinBoxParameter3.isHidden() == False:
+            if self.spinBoxParameter4.isHidden() == False:
                 parameterList4 = []
                 if confidenceLimitsArray != None:
                     parameterList4.append(confidenceLimitsArray[index][0]) #Parameter Value
                     parameterList4.append(confidenceLimitsArray[index][1]) #Lower Limit
                     parameterList4.append(confidenceLimitsArray[index][2]) #Upper Limit
                 else:
-                    parameterList4.append(round(self.spinBoxParameter3.value(), 3))
+                    parameterList4.append(round(self.spinBoxParameter4.value(), 3))
                     parameterList4.append('N/A')
                     parameterList4.append('N/A')
                 
-                parameterDictionary[self.labelParameter3.text()] = parameterList4
+                parameterDictionary[self.labelParameter4.text()] = parameterList4
                 index +=1
 
-            if self.spinBoxParameter4.isHidden() == False:
+            if self.spinBoxParameter5.isHidden() == False:
                 parameterList5=[]
                 if confidenceLimitsArray != None:
                     parameterList5.append(confidenceLimitsArray[index][0]) #Parameter Value
                     parameterList5.append(confidenceLimitsArray[index][1]) #Lower Limit
                     parameterList5.append(confidenceLimitsArray[index][2]) #Upper Limit
                 else:
-                    parameterList5.append(round(self.spinBoxParameter4.value(), 4))
+                    parameterList5.append(round(self.spinBoxParameter5.value(), 4))
                     parameterList5.append('N/A')
                     parameterList5.append('N/A')
                 
-                parameterDictionary[self.labelParameter4.text()] = parameterList5
+                parameterDictionary[self.labelParameter5.text()] = parameterList5
                 #print('parameterDictionary = {}'.format(parameterDictionary))
 
             return parameterDictionary
@@ -1340,7 +1347,7 @@ class ModelFittingApp(QWidget):
                     #delete existing copy of PDF called reportFileName
                     os.remove(reportFileName)   
                 shortModelName = str(self.cmbModels.currentText())
-                if self.ckbParameter1.isChecked():
+                if self.ckbParameter2.isChecked():
                     boolFixVe = True
                 else:
                     boolFixVe = False
@@ -1374,6 +1381,8 @@ class ModelFittingApp(QWidget):
         """Loads the contents of an XML file containing model(s) configuration data"""
         
         global _configFileName 
+        global _rootXMLConfigFile
+        
         self.HideAllControlsOnGUI()
         
         try:
@@ -1386,33 +1395,47 @@ class ModelFittingApp(QWidget):
                 filter="*.xml")
 
             if os.path.exists(fullFilePath):
-                configData = XMLReader(fullFilePath)
-                
-                if configData.XMLFileParsedOK:
-                    logger.info('Config file {} loaded'.format(fullFilePath))
-                    #Extract data filename from the full data file path
-                    folderName, _configFileName = os.path.split(fullFilePath)
-                    self.statusbar.showMessage('Configuration file ' + _configFileName + ' loaded')
+                tree = ET.parse(fullFilePath)
+                _rootXMLConfigFile = tree.getroot()
 
-                    #Populate the combo box with names of models in the config' file
-                    self.cmbModels.addItems(
-                        configData.returnListModelShortNames())
-                    self.btnLoadDataFile.show()
-                else:
-                    self.btnLoadDataFile.hide()
-                    self.HideAllControlsOnGUI()
+                #Uncomment to test XML file loaded OK
+                #print(ET.tostring(_rootXMLConfigFile, encoding='utf8').decode('utf8'))
+                
+                logger.info('Config file {} loaded'.format(fullFilePath))
+                #Extract data filename from the full data file path
+                folderName, _configFileName = os.path.split(fullFilePath)
+                self.statusbar.showMessage('Configuration file ' + _configFileName + ' loaded')
+
+                #Populate the combo box with names of models in the config' file
+                shortModelNames = _rootXMLConfigFile.findall('./model/name/short')
+                tempList = [name.text 
+                            for name in shortModelNames]
+                tempList.insert(0, 'Please Select')
+                self.cmbModels.blockSignals(True)
+                self.cmbModels.addItems(tempList)
+                self.cmbModels.blockSignals(False)
+                self.btnLoadDataFile.show()
+            else:
+                self.btnLoadDataFile.hide()
+                self.HideAllControlsOnGUI()
             
         except IOError:
-            print ('IOError in function LoadConfigFile: cannot open file' + _dataFileName + ' or read its data')
-            logger.error ('IOError in function LoadConfigFile: cannot open file' + _dataFileName + ' or read its data')
+            print ('IOError in function LoadConfigFile: cannot open file' 
+                   + _dataFileName + ' or read its data')
+            logger.error ('IOError in function LoadConfigFile: cannot open file' 
+                   + _dataFileName + ' or read its data')
+        except ET.ParseError as et:
+            print('LoadConfigFile parse error: ' + str(et)) 
+            logger.error('LoadConfigFile parse error: ' + str(et))
         except RuntimeError as re:
             print('Runtime error in function LoadConfigFile: ' + str(re))
-            logger.error('Runtime error in function LoadConfigFile: ' + str(re))
+            logger.error('Runtime error in function LoadConfigFile: ' 
+                         + str(re))
         except Exception as e:
             print('Error in function LoadConfigFile: ' + str(e))
             logger.error('Error in function LoadConfigFile: ' + str(e))
             QMessageBox().warning(self, "XML configuration file", "Error reading XML file ", QMessageBox.Ok)
-       
+
     def LoadDataFile(self):
         """Loads the contents of a CSV file containing time and concentration data
         into a dictionary of lists. The key is the name of the organ or 'time' and 
@@ -1434,7 +1457,10 @@ class ModelFittingApp(QWidget):
         try:
             #get the data file in csv format
             #filter parameter set so that the user can only open a csv file
-            fullFilePath, _ = QFileDialog.getOpenFileName(parent=self, caption="Select csv file", filter="*.csv")
+            fullFilePath, _ = QFileDialog.getOpenFileName(parent=self, 
+                                                          caption="Select csv file", 
+                                                          directory="C:\TRISTAN Data\PreClinical",
+                                                          filter="*.csv")
             if os.path.exists(fullFilePath):
                 with open(fullFilePath, newline='') as csvfile:
                     line = csvfile.readline()
@@ -1587,92 +1613,92 @@ class ModelFittingApp(QWidget):
 
     def UncheckFixParameterCheckBoxes(self):
         logger.info('Function UncheckFixParameterCheckBoxes called')
-        self.ckbAFF.blockSignals(True)
         self.ckbParameter1.blockSignals(True)
         self.ckbParameter2.blockSignals(True)
+        self.ckbParameter2.blockSignals(True)
         self.ckbParameter3.blockSignals(True)
-        self.ckbParameter4.blockSignals(True)
+        self.ckbParameter5.blockSignals(True)
 
-        self.ckbAFF.setChecked(False)
         self.ckbParameter1.setChecked(False)
         self.ckbParameter2.setChecked(False)
+        self.ckbParameter2.setChecked(False)
         self.ckbParameter3.setChecked(False)
-        self.ckbParameter4.setChecked(False)
+        self.ckbParameter5.setChecked(False)
         
-        self.ckbAFF.blockSignals(False)
         self.ckbParameter1.blockSignals(False)
         self.ckbParameter2.blockSignals(False)
+        self.ckbParameter2.blockSignals(False)
         self.ckbParameter3.blockSignals(False)
-        self.ckbParameter4.blockSignals(False)
+        self.ckbParameter5.blockSignals(False)
 
     def InitialiseParameterSpinBoxes(self):
         """Reset model parameter spinboxes with typical initial values for each model"""
         try:
             #Remove suffixes from the first spinboxes 
-            self.spinBoxParameter1.setSuffix('')
+            self.spinBoxParameter2.setSuffix('')
            
             #Block signals from spinboxes, so that setting initial values
             #does not trigger an event.
             self.BlockSpinBoxSignals(True)
-            self.spinBoxArterialFlowFactor.setValue(DEFAULT_VALUE_Fa)
+            self.spinBoxParameter1.setValue(DEFAULT_VALUE_Fa)
             
             modelName = str(self.cmbModels.currentText())
             logger.info('Function InitialiseParameterSpinBoxes called when model = ' + modelName)
             if modelName == '2-2CFM':
-                self.spinBoxParameter1.setDecimals(2)
-                self.spinBoxParameter1.setRange(0.01, 99.99)
-                self.spinBoxParameter1.setSingleStep(0.1)
-                self.spinBoxParameter1.setValue(DEFAULT_VALUE_Ve_2_2CFM)
-                self.spinBoxParameter1.setSuffix('%')
-
                 self.spinBoxParameter2.setDecimals(2)
-                self.spinBoxParameter2.setRange(0, 100.0)
+                self.spinBoxParameter2.setRange(0.01, 99.99)
                 self.spinBoxParameter2.setSingleStep(0.1)
-                self.spinBoxParameter2.setValue(DEFAULT_VALUE_Fp_2_2CFM)
+                self.spinBoxParameter2.setValue(DEFAULT_VALUE_Ve_2_2CFM)
+                self.spinBoxParameter2.setSuffix('%')
+
+                self.spinBoxParameter3.setDecimals(2)
+                self.spinBoxParameter3.setRange(0, 100.0)
+                self.spinBoxParameter3.setSingleStep(0.1)
+                self.spinBoxParameter3.setValue(DEFAULT_VALUE_Fp_2_2CFM)
+
+                self.spinBoxParameter4.setDecimals(3)
+                self.spinBoxParameter4.setRange(0.0, 100.0)
+                self.spinBoxParameter4.setSingleStep(0.1)
+                self.spinBoxParameter4.setValue(DEFAULT_VALUE_Khe_2_2CFM)
+                
+                self.spinBoxParameter5.setDecimals(4)
+                self.spinBoxParameter5.setRange(0.0001, 100.0)
+                self.spinBoxParameter5.setSingleStep(0.1)
+                self.spinBoxParameter5.setValue(DEFAULT_VALUE_Kbh_2_2CFM)
+                
+            elif modelName == 'HF2-2CFM':
+                self.spinBoxParameter2.setDecimals(2)
+                self.spinBoxParameter2.setRange(0.01, 99.99)
+                self.spinBoxParameter2.setSingleStep(0.1)
+                self.spinBoxParameter2.setValue(DEFAULT_VALUE_Ve)
+                self.spinBoxParameter2.setSuffix('%')
 
                 self.spinBoxParameter3.setDecimals(3)
                 self.spinBoxParameter3.setRange(0.0, 100.0)
                 self.spinBoxParameter3.setSingleStep(0.1)
-                self.spinBoxParameter3.setValue(DEFAULT_VALUE_Khe_2_2CFM)
+                self.spinBoxParameter3.setValue(DEFAULT_VALUE_Khe)
                 
                 self.spinBoxParameter4.setDecimals(4)
                 self.spinBoxParameter4.setRange(0.0001, 100.0)
                 self.spinBoxParameter4.setSingleStep(0.1)
-                self.spinBoxParameter4.setValue(DEFAULT_VALUE_Kbh_2_2CFM)
-                
-            elif modelName == 'HF2-2CFM':
-                self.spinBoxParameter1.setDecimals(2)
-                self.spinBoxParameter1.setRange(0.01, 99.99)
-                self.spinBoxParameter1.setSingleStep(0.1)
-                self.spinBoxParameter1.setValue(DEFAULT_VALUE_Ve)
-                self.spinBoxParameter1.setSuffix('%')
-
-                self.spinBoxParameter2.setDecimals(3)
-                self.spinBoxParameter2.setRange(0.0, 100.0)
-                self.spinBoxParameter2.setSingleStep(0.1)
-                self.spinBoxParameter2.setValue(DEFAULT_VALUE_Khe)
-                
-                self.spinBoxParameter3.setDecimals(4)
-                self.spinBoxParameter3.setRange(0.0001, 100.0)
-                self.spinBoxParameter3.setSingleStep(0.1)
-                self.spinBoxParameter3.setValue(DEFAULT_VALUE_Kbh)
+                self.spinBoxParameter4.setValue(DEFAULT_VALUE_Kbh)
 
             elif modelName == 'HF1-2CFM':
-                self.spinBoxParameter1.setDecimals(2)
-                self.spinBoxParameter1.setRange(0.01, 99.99)
-                self.spinBoxParameter1.setSingleStep(0.1)
-                self.spinBoxParameter1.setValue(DEFAULT_VALUE_Ve)
-                self.spinBoxParameter1.setSuffix('%')
-
-                self.spinBoxParameter2.setDecimals(3)
-                self.spinBoxParameter2.setRange(0.0, 100.0)
+                self.spinBoxParameter2.setDecimals(2)
+                self.spinBoxParameter2.setRange(0.01, 99.99)
                 self.spinBoxParameter2.setSingleStep(0.1)
-                self.spinBoxParameter2.setValue(DEFAULT_VALUE_Khe)
-                
-                self.spinBoxParameter3.setDecimals(4)
-                self.spinBoxParameter3.setRange(0.0001, 100.0)
+                self.spinBoxParameter2.setValue(DEFAULT_VALUE_Ve)
+                self.spinBoxParameter2.setSuffix('%')
+
+                self.spinBoxParameter3.setDecimals(3)
+                self.spinBoxParameter3.setRange(0.0, 100.0)
                 self.spinBoxParameter3.setSingleStep(0.1)
-                self.spinBoxParameter3.setValue(DEFAULT_VALUE_Kbh)
+                self.spinBoxParameter3.setValue(DEFAULT_VALUE_Khe)
+                
+                self.spinBoxParameter4.setDecimals(4)
+                self.spinBoxParameter4.setRange(0.0001, 100.0)
+                self.spinBoxParameter4.setSingleStep(0.1)
+                self.spinBoxParameter4.setValue(DEFAULT_VALUE_Kbh)
 
             self.BlockSpinBoxSignals(False)
         except Exception as e:
@@ -1699,43 +1725,43 @@ class ModelFittingApp(QWidget):
             self.cmbAIF.show()
             self.lblVIF.show()
             self.cmbVIF.show()
-            self.spinBoxParameter1.show()
             self.spinBoxParameter2.show()
             self.spinBoxParameter3.show()
+            self.spinBoxParameter4.show()
 
             self.pbar.reset()
-            self.ckbParameter1.hide()
+            self.ckbParameter2.hide()
             
             #Configure parameter spinbox labels for each model
             if modelName == '2-2CFM':
-                self.labelParameter1.setText(LABEL_PARAMETER_Ve)
-                self.labelParameter1.show()
-                self.labelParameter2.setText(LABEL_PARAMETER_Fp)
+                self.labelParameter2.setText(LABEL_PARAMETER_Ve)
+                self.labelParameter2.show()
+                self.labelParameter3.setText(LABEL_PARAMETER_Fp)
+                self.labelParameter3.show()
+                self.labelParameter4.setText(LABEL_PARAMETER_Khe)
+                self.labelParameter4.show()
+                self.labelParameter5.setText(LABEL_PARAMETER_Kbh)
+                self.labelParameter5.show()
+                self.spinBoxParameter5.show()
+            elif modelName == 'HF2-2CFM':
+                self.labelParameter2.setText(LABEL_PARAMETER_Ve)
                 self.labelParameter2.show()
                 self.labelParameter3.setText(LABEL_PARAMETER_Khe)
                 self.labelParameter3.show()
                 self.labelParameter4.setText(LABEL_PARAMETER_Kbh)
                 self.labelParameter4.show()
-                self.spinBoxParameter4.show()
-            elif modelName == 'HF2-2CFM':
-                self.labelParameter1.setText(LABEL_PARAMETER_Ve)
-                self.labelParameter1.show()
-                self.labelParameter2.setText(LABEL_PARAMETER_Khe)
-                self.labelParameter2.show()
-                self.labelParameter3.setText(LABEL_PARAMETER_Kbh)
-                self.labelParameter3.show()
-                self.labelParameter4.hide()
-                self.spinBoxParameter4.hide()
+                self.labelParameter5.hide()
+                self.spinBoxParameter5.hide()
             elif modelName == 'HF1-2CFM':
-                self.labelParameter1.setText(LABEL_PARAMETER_Ve)
-                self.labelParameter1.show()
-                self.ckbParameter1.show()
-                self.labelParameter2.setText(LABEL_PARAMETER_Khe)
+                self.labelParameter2.setText(LABEL_PARAMETER_Ve)
                 self.labelParameter2.show()
-                self.labelParameter3.setText(LABEL_PARAMETER_Kbh)
+                self.ckbParameter2.show()
+                self.labelParameter3.setText(LABEL_PARAMETER_Khe)
                 self.labelParameter3.show()
-                self.labelParameter4.hide()
-                self.spinBoxParameter4.hide()
+                self.labelParameter4.setText(LABEL_PARAMETER_Kbh)
+                self.labelParameter4.show()
+                self.labelParameter5.hide()
+                self.spinBoxParameter5.hide()
                 self.lblVIF.hide()
                 self.cmbVIF.hide()
                 self.cmbVIF.setCurrentIndex(0)
@@ -1747,16 +1773,16 @@ class ModelFittingApp(QWidget):
                 self.cboxDelay.hide()
                 self.cboxConstaint.hide()
                 self.btnReset.hide()
-                self.spinBoxParameter1.hide()
                 self.spinBoxParameter2.hide()
                 self.spinBoxParameter3.hide()
                 self.spinBoxParameter4.hide()
-                self.spinBoxArterialFlowFactor.hide()
-                self.labelParameter1.clear()
+                self.spinBoxParameter5.hide()
+                self.spinBoxParameter1.hide()
                 self.labelParameter2.clear()
                 self.labelParameter3.clear()
                 self.labelParameter4.clear()
-                self.lblArterialFlowFactor.hide()
+                self.labelParameter5.clear()
+                self.labelParameter2.hide()
                 
                 self.cmbAIF.setCurrentIndex(0)
                 self.cmbVIF.setCurrentIndex(0)
@@ -1868,7 +1894,7 @@ class ModelFittingApp(QWidget):
                 boolVIFSelected = True
                     
             #Plot concentration curve from the model
-            if self.ckbParameter1.isChecked():
+            if self.ckbParameter2.isChecked():
                 boolFixVe = True
             else:
                 boolFixVe = False
@@ -1925,17 +1951,17 @@ class ModelFittingApp(QWidget):
         self.btnReset.setEnabled(boolEnabled)
         self.btnFitModel.setEnabled(boolEnabled)
         self.btnSaveCSV.setEnabled(boolEnabled)
-        self.spinBoxArterialFlowFactor.setEnabled(boolEnabled)
-        self.spinBoxParameter1.setEnabled(boolEnabled) 
+        self.spinBoxParameter1.setEnabled(boolEnabled)
         self.spinBoxParameter2.setEnabled(boolEnabled) 
         self.spinBoxParameter3.setEnabled(boolEnabled) 
-        self.spinBoxParameter4.setEnabled(boolEnabled)
+        self.spinBoxParameter4.setEnabled(boolEnabled) 
+        self.spinBoxParameter5.setEnabled(boolEnabled)
         self.btnBatchProc.setEnabled(boolEnabled)
-        self.ckbAFF.setEnabled(boolEnabled)
         self.ckbParameter1.setEnabled(boolEnabled)
         self.ckbParameter2.setEnabled(boolEnabled)
+        self.ckbParameter2.setEnabled(boolEnabled)
         self.ckbParameter3.setEnabled(boolEnabled)
-        self.ckbParameter4.setEnabled(boolEnabled)
+        self.ckbParameter5.setEnabled(boolEnabled)
         
 
     def BatchProcessAllCSVDataFiles(self):
@@ -2249,22 +2275,22 @@ class ModelFittingApp(QWidget):
             logger.info('Function BatchProcessingHaveParamsChanged called when model = ' + modelName)
 
             if modelName == '2-2CFM':
-                if (self.spinBoxArterialFlowFactor.value() != DEFAULT_VALUE_Fa or
-                    self.spinBoxParameter1.value() != DEFAULT_VALUE_Ve_2_2CFM or
-                    self.spinBoxParameter2.value() != DEFAULT_VALUE_Fp_2_2CFM or
-                    self.spinBoxParameter3.value() != DEFAULT_VALUE_Khe_2_2CFM or
-                    self.spinBoxParameter4.value() !=DEFAULT_VALUE_Kbh_2_2CFM):
+                if (self.spinBoxParameter1.value() != DEFAULT_VALUE_Fa or
+                    self.spinBoxParameter2.value() != DEFAULT_VALUE_Ve_2_2CFM or
+                    self.spinBoxParameter3.value() != DEFAULT_VALUE_Fp_2_2CFM or
+                    self.spinBoxParameter4.value() != DEFAULT_VALUE_Khe_2_2CFM or
+                    self.spinBoxParameter5.value() !=DEFAULT_VALUE_Kbh_2_2CFM):
                     boolParameterChanged = True
             elif modelName == 'HF2-2CFM':
-                if (self.spinBoxArterialFlowFactor.value() != DEFAULT_VALUE_Fa or
+                if (self.spinBoxParameter1.value() != DEFAULT_VALUE_Fa or
                     self.spinBoxParameter1.value() != DEFAULT_VALUE_Ve or
-                    self.spinBoxParameter2.value() != DEFAULT_VALUE_Khe or
-                    self.spinBoxParameter3.value() != DEFAULT_VALUE_Kbh):
+                    self.spinBoxParameter3.value() != DEFAULT_VALUE_Khe or
+                    self.spinBoxParameter4.value() != DEFAULT_VALUE_Kbh):
                     boolParameterChanged = True
             elif modelName == 'HF1-2CFM':
                 if (self.spinBoxParameter1.value() != DEFAULT_VALUE_Ve or
-                    self.spinBoxParameter2.value() != DEFAULT_VALUE_Khe or
-                    self.spinBoxParameter3.value() != DEFAULT_VALUE_Kbh):
+                    self.spinBoxParameter3.value() != DEFAULT_VALUE_Khe or
+                    self.spinBoxParameter4.value() != DEFAULT_VALUE_Kbh):
                     boolParameterChanged = True
 
             return boolParameterChanged    
