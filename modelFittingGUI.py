@@ -710,7 +710,7 @@ class ModelFittingApp(QWidget):
             shortModelName = str(self.cmbModels.currentText())
         
             if shortModelName != 'Select a model':
-                imageName = _objXMLReader.returnImageName(shortModelName)
+                imageName = _objXMLReader.getImageName(shortModelName)
                 imagePath = 'images\\' + imageName
                 pixmapModelImage = QPixmap(imagePath)
                 #Increase the size of the model image
@@ -720,7 +720,7 @@ class ModelFittingApp(QWidget):
                       QtCore.Qt.KeepAspectRatio, QtCore.Qt.SmoothTransformation)
                 self.lblModelImage.setPixmap(pixmapModelImage)
                 
-                longModelName = _objXMLReader.returnLongModelName(shortModelName)
+                longModelName = _objXMLReader.getLongModelName(shortModelName)
                 self.lblModelName.setText(longModelName)
             else:
                 self.lblModelImage.clear()
@@ -1394,7 +1394,7 @@ class ModelFittingApp(QWidget):
                 filter="*.xml")
 
             if os.path.exists(fullFilePath):
-                _objXMLReader.ParseConfigFile(fullFilePath)
+                _objXMLReader.parseConfigFile(fullFilePath)
                 
                 if _objXMLReader.XMLFileParsedOK:
                     logger.info('Config file {} loaded'.format(fullFilePath))
@@ -1402,7 +1402,7 @@ class ModelFittingApp(QWidget):
                     folderName, configFileName = os.path.split(fullFilePath)
                     self.statusbar.showMessage('Configuration file ' + configFileName + ' loaded')
 
-                    tempList = _objXMLReader.returnListModelShortNames()
+                    tempList = _objXMLReader.getListModelShortNames()
                     self.cmbModels.blockSignals(True)
                     self.cmbModels.addItems(tempList)
                     self.cmbModels.blockSignals(False)
@@ -1446,10 +1446,11 @@ class ModelFittingApp(QWidget):
         try:
             #get the data file in csv format
             #filter parameter set so that the user can only open a csv file
+            dataFileFolder = _objXMLReader.getDataFileFolder()
             fullFilePath, _ = QFileDialog.getOpenFileName(parent=self, 
-                                                          caption="Select csv file", 
-                                                          directory="C:\TRISTAN Data\PreClinical",
-                                                          filter="*.csv")
+                                                     caption="Select csv file", 
+                                                     directory=dataFileFolder,
+                                                     filter="*.csv")
             if os.path.exists(fullFilePath):
                 with open(fullFilePath, newline='') as csvfile:
                     line = csvfile.readline()
@@ -1620,6 +1621,16 @@ class ModelFittingApp(QWidget):
         self.ckbParameter3.blockSignals(False)
         self.ckbParameter5.blockSignals(False)
 
+    def SetUpParameterSpinBoxes(self):
+        try:
+            modelName = str(self.cmbModels.currentText())
+            numParams = _objXMLReader.getNumberOfParameters(modelName)
+            print('Num params ={}'.format(numParams))
+            print(_objXMLReader.getParameterName(modelName, 1))
+        except Exception as e:
+            print('Error in function SetUpParameterSpinBoxes: ' + str(e) )
+            logger.error('Error in function SetUpParameterSpinBoxes: ' + str(e) )
+
     def InitialiseParameterSpinBoxes(self):
         """Reset model parameter spinboxes with typical initial values for each model"""
         try:
@@ -1702,7 +1713,7 @@ class ModelFittingApp(QWidget):
             modelName = str(self.cmbModels.currentText())
             logger.info('Function ConfigureGUIForEachModel called when model = ' + modelName)
             
-            inletType = _objXMLReader.returnModelInletType(modelName)
+            inletType = _objXMLReader.getModelInletType(modelName)
             self.lblAIF.show() #Common to all models
             self.cmbAIF.show() #Common to all models
             if inletType == 'single':
@@ -1719,6 +1730,7 @@ class ModelFittingApp(QWidget):
             self.btnReset.show()
             self.btnSaveReport.show()
             
+            self.SetUpParameterSpinBoxes()
             self.InitialiseParameterSpinBoxes() #Typical initial values for each model
             #Show widgets common to all models
             

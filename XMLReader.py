@@ -17,7 +17,7 @@ class XMLReader():
             print('Error in XMLReader.__init__: ' + str(e)) 
             logger.error('Error in XMLReader.__init__: ' + str(e)) 
             
-    def ParseConfigFile(self, fullFilePath): 
+    def parseConfigFile(self, fullFilePath): 
         try:
             self.XMLFileParsedOK = True
             self.fullFilePath = fullFilePath
@@ -28,22 +28,22 @@ class XMLReader():
             #print(ET.tostring(self.root, encoding='utf8').decode('utf8'))
            
             logger.info('In module ' + __name__ 
-                    + '. parsed ' + fullFilePath)
+                    + '.parseConfigFile ' + fullFilePath)
 
         except ET.ParseError as et:
-            print('XMLReader.__init__ parse error: ' + str(et)) 
-            logger.error('XMLReader.__init__parse error: ' + str(et))
+            print('XMLReader.parseConfigFile error: ' + str(et)) 
+            logger.error('XMLReader.parseConfigFile error: ' + str(et))
             self.XMLFileParsedOK = False
             
         except Exception as e:
-            print('Error in XMLReader.__init__: ' + str(e)) 
-            logger.error('Error in XMLReader.__init__: ' + str(e)) 
+            print('Error in XMLReader.parseConfigFile: ' + str(e)) 
+            logger.error('Error in XMLReader.parseConfigFile: ' + str(e)) 
             self.XMLFileParsedOK = False
 
     def XMLFileParsedOK(self) ->bool:
         return self.hasXMLFileParsedOK
 
-    def returnListModelShortNames(self):
+    def getListModelShortNames(self):
         try:
             shortModelNames = self.root.findall('./model/name/short')
             tempList = [name.text 
@@ -53,62 +53,238 @@ class XMLReader():
             return tempList
 
         except ET.ParseError as et:
-            print('XMLReader.returnListModelShortNames XPath error: ' + str(et)) 
-            logger.error('XMLReader.returnListModelShortNames XPath error: ' + str(et))
+            print('XMLReader.getListModelShortNames XPath error: ' + str(et)) 
+            logger.error('XMLReader.getListModelShortNames XPath error: ' + str(et))
         except Exception as e:
-            print('Error in XMLReader.returnListModelShortNames: ' + str(e)) 
-            logger.error('Error in XMLReader.returnListModelShortNames: ' + str(e)) 
+            print('Error in XMLReader.getListModelShortNames: ' + str(e)) 
+            logger.error('Error in XMLReader.getListModelShortNames: ' + str(e)) 
 
-    def returnImageName(self, shortModelName):
+    def getImageName(self, shortModelName):
         try:
-            logger.info('XMLReader.returnImageName called with short model name= ' + shortModelName)
+            logger.info('XMLReader.getImageName called with short model name= ' + shortModelName)
             if len(shortModelName) > 0:
                 xPath='./model[@id=' + chr(34) + shortModelName + chr(34) + ']/image'
                 imageName = self.root.find(xPath)
-                logger.info('XMLReader.returnImageName found image ' + imageName.text)
-                return imageName.text
+                if imageName.text:
+                    logger.info('XMLReader.getImageName found image ' + imageName.text)
+                    return imageName.text
+                else:
+                    return None
             else:
                 return None
            
         except Exception as e:
-            print('Error in XMLReader.returnImageName when shortModelName ={}: '.format(shortModelName) 
+            print('Error in XMLReader.getImageName when shortModelName ={}: '.format(shortModelName) 
                   + str(e)) 
-            logger.error('Error in XMLReader.returnImageName when shortModelName ={}: '.format(shortModelName) 
+            logger.error('Error in XMLReader.getImageName when shortModelName ={}: '.format(shortModelName) 
                   + str(e)) 
             return None
 
-    def returnLongModelName(self, shortModelName):
+    def getLongModelName(self, shortModelName):
         try:
-            logger.info('XMLReader.returnLongModelName called with short model name= ' + shortModelName)
+            logger.info('XMLReader.getLongModelName called with short model name= ' + shortModelName)
             if len(shortModelName) > 0:
-                xPath='./model[@id=' + chr(34) + shortModelName + chr(34) + ']/name/long'
+                xPath='./model[@id=' + chr(34) + shortModelName + chr(34) + \
+                    ']/name/long'
                 modelName = self.root.find(xPath)
-                logger.info('XMLReader.returnLongModelName found long model name ' + modelName.text)
-                return modelName.text
+                if modelName:
+                    logger.info('XMLReader.getLongModelName found long model name ' + \
+                        modelName.text)
+                    return modelName.text
+                else:
+                    return None
             else:
                 return None
            
         except Exception as e:
-            print('Error in XMLReader.returnLongModelName when shortModelName ={}: '.format(shortModelName) 
+            print('Error in XMLReader.getLongModelName when shortModelName ={}: '.format(shortModelName) 
                   + str(e)) 
-            logger.error('Error in XMLReader.returnLongModelName when shortModelName ={}: '.format(shortModelName) 
+            logger.error('Error in XMLReader.getLongModelName when shortModelName ={}: '.format(shortModelName) 
                   + str(e)) 
             return None
 
-    def returnModelInletType(self, shortModelName):
+
+    def getModelInletType(self, shortModelName):
         try:
-            logger.info('XMLReader.returnModelInletType called with short model name= ' + shortModelName)
+            logger.info('XMLReader.getModelInletType called with short model name= ' + shortModelName)
             if len(shortModelName) > 0:
                 xPath='./model[@id=' + chr(34) + shortModelName + chr(34) + ']/inlet_type'
                 modelInletType= self.root.find(xPath)
-                logger.info('XMLReader.returnModelInletType found long model name ' + modelInletType.text)
-                return modelInletType.text
+                if modelInletType.text:
+                    logger.info('XMLReader.getModelInletType found model inlet type ' + modelInletType.text)
+                    return modelInletType.text
+                else:
+                    return None
             else:
                 return None
            
         except Exception as e:
-            print('Error in XMLReader.returnModelInletType when shortModelName ={}: '.format(shortModelName) 
+            print('Error in XMLReader.getModelInletType when shortModelName ={}: '.format(shortModelName) 
                   + str(e)) 
-            logger.error('Error in XMLReader.returnModelInletType when shortModelName ={}: '.format(shortModelName) 
+            logger.error('Error in XMLReader.getModelInletType when shortModelName ={}: '.format(shortModelName) 
                   + str(e)) 
             return None
+
+
+    def getNumberOfParameters(self, shortModelName) ->int:
+        try:
+            logger.info('XMLReader.getNumberOfParameters called with short model name= ' + shortModelName)
+            if len(shortModelName) > 0:
+                xPath='./model[@id=' + chr(34) + shortModelName + chr(34) + \
+                    ']/parameters/parameter'
+                parameters = self.root.findall(xPath)
+                if parameters:
+                    numParams = len(self.root.findall(xPath))
+                    return numParams
+                else:
+                    return 0
+            else:
+                return 0
+
+        except Exception as e:
+            print('Error in XMLReader.getNumberOfParameters when shortModelName ={} and xPath={}: '.format(shortModelName, xPath) 
+                  + str(e)) 
+            logger.error('Error in XMLReader.getNumberOfParameters when shortModelName ={} and xPath={}: '.format(shortModelName, xPath) 
+                  + str(e)) 
+            return 0
+
+
+    def getParameterName(self, shortModelName, positionNumber):
+        try:
+            logger.info('XMLReader.getParameterName called with short model name= {} and position={} '.format(shortModelName,positionNumber) )
+            boolIsPercentage = False
+            if len(shortModelName) > 0:
+                xPath='./model[@id=' + chr(34) + shortModelName + chr(34) + \
+                    ']/parameters/parameter[' + str(positionNumber) + ']/name/short'
+                shortName = self.root.find(xPath)
+
+                xPath='./model[@id=' + chr(34) + shortModelName + chr(34) + \
+                    ']/parameters/parameter[' + str(positionNumber) + ']/name/long'
+                longName = self.root.find(xPath)
+
+                xPath='./model[@id=' + chr(34) + shortModelName + chr(34) + \
+                    ']/parameters/parameter[' + str(positionNumber) + ']/units'
+                units = self.root.find(xPath)
+                if units.text == '%':
+                    boolIsPercentage = True
+
+                fullName = longName.text + ', ' + \
+                            shortName.text + \
+                            '(' + units.text + ')'
+
+                return boolIsPercentage, fullName
+             
+        except Exception as e:
+            print('Error in XMLReader.getParameterName when shortModelName ={} and xPath={}: '.format(shortModelName, xPath) 
+                  + str(e)) 
+            logger.error('Error in XMLReader.getParameterName when shortModelName ={} and xPath={}: '.format(shortModelName, xPath) 
+                  + str(e)) 
+            return None, ''
+
+
+    def getParameterDefault(self, shortModelName, positionNumber)->float:
+        try:
+            logger.info('XMLReader.getParameterDefault called with short model name= {} and position={} '.format(shortModelName,positionNumber) )
+            
+            if len(shortModelName) > 0:
+                xPath='./model[@id=' + chr(34) + shortModelName + chr(34) + \
+                    ']/parameters/parameter[' + str(positionNumber) + ']/default'
+                default = self.root.find(xPath)
+
+                if default:
+                    return float(default)
+                else:
+                    return 0.0
+
+        except Exception as e:
+            print('Error in XMLReader.getParameterDefault when shortModelName ={} and xPath={}: '.format(shortModelName, xPath) 
+                  + str(e)) 
+            logger.error('Error in XMLReader.getParameterDefault when shortModelName ={} and xPath={}: '.format(shortModelName, xPath) 
+                  + str(e)) 
+            return 0.0
+
+
+    def getParameterStep(self, shortModelName, positionNumber)->float:
+        try:
+            logger.info('XMLReader.getParameterStep called with short model name= {} and position={} '.format(shortModelName,positionNumber) )
+            
+            if len(shortModelName) > 0:
+                xPath='./model[@id=' + chr(34) + shortModelName + chr(34) + \
+                    ']/parameters/parameter[' + str(positionNumber) + ']/step'
+                step = self.root.find(xPath)
+
+                if default:
+                    return float(step)
+                else:
+                    return 0.0
+
+        except Exception as e:
+            print('Error in XMLReader.getParameterStep when shortModelName ={} and xPath={}: '.format(shortModelName, xPath) 
+                  + str(e)) 
+            logger.error('Error in XMLReader.getParameterStep when shortModelName ={} and xPath={}: '.format(shortModelName, xPath) 
+                  + str(e)) 
+            return 0.0
+
+
+    def getParameterLowerValue(self, shortModelName, positionNumber)->float:
+        try:
+            logger.info('XMLReader.getParameterLowerValue called with short model name= {} and position={} '.format(shortModelName,positionNumber) )
+            
+            if len(shortModelName) > 0:
+                xPath='./model[@id=' + chr(34) + shortModelName + chr(34) + \
+                    ']/parameters/parameter[' + str(positionNumber) + ']/constraints/lower'
+                lower = self.root.find(xPath)
+
+                if default:
+                    return float(lower)
+                else:
+                    return 0.0
+
+        except Exception as e:
+            print('Error in XMLReader.getParameterLowerValue when shortModelName ={} and xPath={}: '.format(shortModelName, xPath) 
+                  + str(e)) 
+            logger.error('Error in XMLReader.getParameterLowerValue when shortModelName ={} and xPath={}: '.format(shortModelName, xPath) 
+                  + str(e)) 
+            return 0.0
+
+
+    def getParameterUpperValue(self, shortModelName, positionNumber)->float:
+        try:
+            logger.info('XMLReader.getParameterLowerValue called with short model name= {} and position={} '.format(shortModelName,positionNumber) )
+            
+            if len(shortModelName) > 0:
+                xPath='./model[@id=' + chr(34) + shortModelName + chr(34) + \
+                    ']/parameters/parameter[' + str(positionNumber) + ']/constraints/upper'
+                upper = self.root.find(xPath)
+
+                if default:
+                    return float(upper)
+                else:
+                    return 0.0
+
+        except Exception as e:
+            print('Error in XMLReader.getParameterUpperValue when shortModelName ={} and xPath={}: '.format(shortModelName, xPath) 
+                  + str(e)) 
+            logger.error('Error in XMLReader.getParameterUpperValue when shortModelName ={} and xPath={}: '.format(shortModelName, xPath) 
+                  + str(e)) 
+            return 0.0
+    
+    def getDataFileFolder(self)->str:
+        try:
+            logger.info('XMLReader.getDataFileFolder')
+           
+            xPath='./data_file_path'
+            dataFileFolder = self.root.find(xPath)
+
+            if dataFileFolder.text:
+                return dataFileFolder.text
+            else:
+                return ''
+
+        except Exception as e:
+            print('Error in XMLReader.getDataFileFolder:' 
+                  + str(e)) 
+            logger.error('Error in XMLReader.getDataFileFolder:' 
+                  + str(e)) 
+            return ''
+        
