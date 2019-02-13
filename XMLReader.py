@@ -2,7 +2,7 @@ import xml.etree.ElementTree as ET
 import logging
 
 logger = logging.getLogger(__name__)
-#/models/model[@id='2-2CFM']/parameters/parameter[position()=3]
+
 class XMLReader():
     def __init__(self): 
         try:
