@@ -149,7 +149,7 @@ from PDFWriter import PDF
 
 from ExcelWriter import ExcelWriter
 
-import xml.etree.ElementTree as ET 
+from XMLReader import XMLReader
 
 #Initialise global dictionary to hold concentration data
 _concentrationData={}
@@ -163,7 +163,8 @@ _optimisedParamaterList = []
 #Global boolean that indicates if the curve fitting routine has been just run or not.
 #Used by the PDF report writer to determine if displaying confidence limits is appropriate
 _boolCurveFittingDone = False
-_rootXMLConfigFile = ET.ElementTree
+#Create global XML reader object to process XML configuration file
+_objXMLReader = XMLReader()  
 ########################################
 ##              CONSTANTS             ##
 ########################################
@@ -525,6 +526,12 @@ class ModelFittingApp(QWidget):
         self.spinBoxParameter3 = QDoubleSpinBox()
         self.spinBoxParameter4 = QDoubleSpinBox()
         self.spinBoxParameter5 = QDoubleSpinBox()
+
+        self.spinBoxParameter1.setSingleStep(0.1)
+        self.spinBoxParameter2.setSingleStep(0.1)
+        self.spinBoxParameter3.setSingleStep(0.1)
+        self.spinBoxParameter4.setSingleStep(0.1)
+        self.spinBoxParameter5.setSingleStep(0.1)
         
         self.spinBoxParameter1.hide()
         self.spinBoxParameter2.hide()
@@ -703,16 +710,8 @@ class ModelFittingApp(QWidget):
             shortModelName = str(self.cmbModels.currentText())
         
             if shortModelName != 'Select a model':
-                #if self.ckbParameter2.isChecked():
-               #     boolFixVe = True
-                #else:
-                #    boolFixVe = False
-               # modelImageName = TracerKineticModels.GetModelImageName(shortModelName, boolFixVe)
-                #modelImageName = _configData.returnImageName(shortModelName)
-                 
-                xPath='./model[@id=' + chr(34) + shortModelName + chr(34) + ']/image'
-                imageName = _rootXMLConfigFile.find(xPath)
-                imagePath = 'images\\' + imageName.text
+                imageName = _objXMLReader.returnImageName(shortModelName)
+                imagePath = 'images\\' + imageName
                 pixmapModelImage = QPixmap(imagePath)
                 #Increase the size of the model image
                 pMapWidth = pixmapModelImage.width() * 1.35
@@ -720,8 +719,9 @@ class ModelFittingApp(QWidget):
                 pixmapModelImage = pixmapModelImage.scaled(pMapWidth, pMapHeight, 
                       QtCore.Qt.KeepAspectRatio, QtCore.Qt.SmoothTransformation)
                 self.lblModelImage.setPixmap(pixmapModelImage)
-                #longModelName = TracerKineticModels.GetLongModelName(shortModelName, boolFixVe)
-                #self.lblModelName.setText(longModelName)
+                
+                longModelName = _objXMLReader.returnLongModelName(shortModelName)
+                self.lblModelName.setText(longModelName)
             else:
                 self.lblModelImage.clear()
                 self.lblModelName.setText('')
@@ -1379,54 +1379,43 @@ class ModelFittingApp(QWidget):
 
     def LoadConfigFile(self):
         """Loads the contents of an XML file containing model(s) configuration data"""
-        
-        global _configFileName 
-        global _rootXMLConfigFile
+         
+        global _objXMLReader
         
         self.HideAllControlsOnGUI()
         
         try:
-            #get the xml file in XML format
+            #get the configuration file in XML format
             #filter parameter set so that the user can only open an XML file
-            defaultPath ="config\\";
+            defaultPath = "config\\"
             fullFilePath, _ = QFileDialog.getOpenFileName(parent=self, 
                 caption="Select configuration file", 
                 directory=defaultPath,
                 filter="*.xml")
 
             if os.path.exists(fullFilePath):
-                tree = ET.parse(fullFilePath)
-                _rootXMLConfigFile = tree.getroot()
-
-                #Uncomment to test XML file loaded OK
-                #print(ET.tostring(_rootXMLConfigFile, encoding='utf8').decode('utf8'))
+                _objXMLReader.ParseConfigFile(fullFilePath)
                 
-                logger.info('Config file {} loaded'.format(fullFilePath))
-                #Extract data filename from the full data file path
-                folderName, _configFileName = os.path.split(fullFilePath)
-                self.statusbar.showMessage('Configuration file ' + _configFileName + ' loaded')
+                if _objXMLReader.XMLFileParsedOK:
+                    logger.info('Config file {} loaded'.format(fullFilePath))
+                    
+                    folderName, configFileName = os.path.split(fullFilePath)
+                    self.statusbar.showMessage('Configuration file ' + configFileName + ' loaded')
 
-                #Populate the combo box with names of models in the config' file
-                shortModelNames = _rootXMLConfigFile.findall('./model/name/short')
-                tempList = [name.text 
-                            for name in shortModelNames]
-                tempList.insert(0, 'Please Select')
-                self.cmbModels.blockSignals(True)
-                self.cmbModels.addItems(tempList)
-                self.cmbModels.blockSignals(False)
-                self.btnLoadDataFile.show()
-            else:
-                self.btnLoadDataFile.hide()
-                self.HideAllControlsOnGUI()
+                    tempList = _objXMLReader.returnListModelShortNames()
+                    self.cmbModels.blockSignals(True)
+                    self.cmbModels.addItems(tempList)
+                    self.cmbModels.blockSignals(False)
+                    self.btnLoadDataFile.show()
+                else:
+                    self.btnLoadDataFile.hide()
+                    self.HideAllControlsOnGUI()
+                    QMessageBox().warning(self, "XML configuration file", "Error reading XML file ", QMessageBox.Ok)
             
-        except IOError:
-            print ('IOError in function LoadConfigFile: cannot open file' 
-                   + _dataFileName + ' or read its data')
+        except IOError as ioe:
+            print ('IOError in function LoadConfigFile:' + str(ioe))
             logger.error ('IOError in function LoadConfigFile: cannot open file' 
-                   + _dataFileName + ' or read its data')
-        except ET.ParseError as et:
-            print('LoadConfigFile parse error: ' + str(et)) 
-            logger.error('LoadConfigFile parse error: ' + str(et))
+                   + str(ioe))
         except RuntimeError as re:
             print('Runtime error in function LoadConfigFile: ' + str(re))
             logger.error('Runtime error in function LoadConfigFile: ' 
@@ -1434,7 +1423,7 @@ class ModelFittingApp(QWidget):
         except Exception as e:
             print('Error in function LoadConfigFile: ' + str(e))
             logger.error('Error in function LoadConfigFile: ' + str(e))
-            QMessageBox().warning(self, "XML configuration file", "Error reading XML file ", QMessageBox.Ok)
+            
 
     def LoadDataFile(self):
         """Loads the contents of a CSV file containing time and concentration data
@@ -1713,6 +1702,17 @@ class ModelFittingApp(QWidget):
             modelName = str(self.cmbModels.currentText())
             logger.info('Function ConfigureGUIForEachModel called when model = ' + modelName)
             
+            inletType = _objXMLReader.returnModelInletType(modelName)
+            self.lblAIF.show() #Common to all models
+            self.cmbAIF.show() #Common to all models
+            if inletType == 'single':
+                self.lblVIF.hide()
+                self.cmbVIF.hide()
+            elif inletType == 'dual':
+                self.lblVIF.show()
+                self.cmbVIF.show()
+
+                
             #self.cboxDelay.show()
             #self.cboxConstaint.show()
             self.cboxConstaint.setChecked(False)
@@ -1721,13 +1721,12 @@ class ModelFittingApp(QWidget):
             
             self.InitialiseParameterSpinBoxes() #Typical initial values for each model
             #Show widgets common to all models
-            self.lblAIF.show()
-            self.cmbAIF.show()
-            self.lblVIF.show()
-            self.cmbVIF.show()
+            
+            self.spinBoxParameter1.show()
             self.spinBoxParameter2.show()
             self.spinBoxParameter3.show()
             self.spinBoxParameter4.show()
+            self.spinBoxParameter5.show()
 
             self.pbar.reset()
             self.ckbParameter2.hide()

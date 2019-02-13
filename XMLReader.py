@@ -4,7 +4,20 @@ import logging
 logger = logging.getLogger(__name__)
 #/models/model[@id='2-2CFM']/parameters/parameter[position()=3]
 class XMLReader():
-    def __init__(self, fullFilePath): 
+    def __init__(self): 
+        try:
+            self.XMLFileParsedOK = True
+            self.fullFilePath = ""
+            self.tree = None
+            self.root = None
+           
+            logger.info('In module ' + __name__ + ' Created XML Reader Object')
+
+        except Exception as e:
+            print('Error in XMLReader.__init__: ' + str(e)) 
+            logger.error('Error in XMLReader.__init__: ' + str(e)) 
+            
+    def ParseConfigFile(self, fullFilePath): 
         try:
             self.XMLFileParsedOK = True
             self.fullFilePath = fullFilePath
@@ -46,17 +59,56 @@ class XMLReader():
             print('Error in XMLReader.returnListModelShortNames: ' + str(e)) 
             logger.error('Error in XMLReader.returnListModelShortNames: ' + str(e)) 
 
-    def returnImageName(self, modelID):
+    def returnImageName(self, shortModelName):
         try:
-            logger.info('XMLReader.returnImageName called with modelID= ' + modelID)
-            if len(modelID) > 0:
-                xPath='/model[@id=' + modelID + ']/image/text()'
-                imageName = self.root.find('xPath')
-                return imageName
+            logger.info('XMLReader.returnImageName called with short model name= ' + shortModelName)
+            if len(shortModelName) > 0:
+                xPath='./model[@id=' + chr(34) + shortModelName + chr(34) + ']/image'
+                imageName = self.root.find(xPath)
+                logger.info('XMLReader.returnImageName found image ' + imageName.text)
+                return imageName.text
             else:
                 return None
            
         except Exception as e:
-            print('Error in XMLReader.returnImageName: ' + str(e)) 
-            logger.error('Error in XMLReader.returnImageName: ' + str(e)) 
+            print('Error in XMLReader.returnImageName when shortModelName ={}: '.format(shortModelName) 
+                  + str(e)) 
+            logger.error('Error in XMLReader.returnImageName when shortModelName ={}: '.format(shortModelName) 
+                  + str(e)) 
+            return None
+
+    def returnLongModelName(self, shortModelName):
+        try:
+            logger.info('XMLReader.returnLongModelName called with short model name= ' + shortModelName)
+            if len(shortModelName) > 0:
+                xPath='./model[@id=' + chr(34) + shortModelName + chr(34) + ']/name/long'
+                modelName = self.root.find(xPath)
+                logger.info('XMLReader.returnLongModelName found long model name ' + modelName.text)
+                return modelName.text
+            else:
+                return None
+           
+        except Exception as e:
+            print('Error in XMLReader.returnLongModelName when shortModelName ={}: '.format(shortModelName) 
+                  + str(e)) 
+            logger.error('Error in XMLReader.returnLongModelName when shortModelName ={}: '.format(shortModelName) 
+                  + str(e)) 
+            return None
+
+    def returnModelInletType(self, shortModelName):
+        try:
+            logger.info('XMLReader.returnModelInletType called with short model name= ' + shortModelName)
+            if len(shortModelName) > 0:
+                xPath='./model[@id=' + chr(34) + shortModelName + chr(34) + ']/inlet_type'
+                modelInletType= self.root.find(xPath)
+                logger.info('XMLReader.returnModelInletType found long model name ' + modelInletType.text)
+                return modelInletType.text
+            else:
+                return None
+           
+        except Exception as e:
+            print('Error in XMLReader.returnModelInletType when shortModelName ={}: '.format(shortModelName) 
+                  + str(e)) 
+            logger.error('Error in XMLReader.returnModelInletType when shortModelName ={}: '.format(shortModelName) 
+                  + str(e)) 
             return None

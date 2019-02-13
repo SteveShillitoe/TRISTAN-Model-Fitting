@@ -136,7 +136,7 @@
       <long>High Flow 1 Inlet - Two Compartment Filtration Model</long>
     </name>
     <function>HighFlowSingleInletTwoCompartmentGadoxetateModel</function>
-    <image>HighFlowSingleInletTwoCompartmentGadoxetateModel.png'</image>
+    <image>HighFlowSingleInletTwoCompartmentGadoxetateModel.png</image>
     <inlet_type>single</inlet_type>
     <parameters>
       <parameter id="Ve">
