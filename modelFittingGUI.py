@@ -374,7 +374,7 @@ class ModelFittingApp(QWidget):
         modelHorizontalLayout2 = QHBoxLayout()
         modelHorizontalLayoutParamLabels = QHBoxLayout()
         gridLayoutParamLabels = QGridLayout()
-        modelHorizontalLayoutArterialFlowFactor = QHBoxLayout()
+        modelHorizontalLayoutParameter1 = QHBoxLayout()
         modelHorizontalLayout3 = QHBoxLayout()
         modelHorizontalLayout4 = QHBoxLayout()
         modelHorizontalLayoutReset = QHBoxLayout()
@@ -392,7 +392,7 @@ class ModelFittingApp(QWidget):
         modelVerticalLayout.addLayout(modelHorizontalLayoutReset)
         modelVerticalLayout.addLayout(modelHorizontalLayoutParamLabels)
         modelHorizontalLayoutParamLabels.addLayout(gridLayoutParamLabels)
-        modelVerticalLayout.addLayout(modelHorizontalLayoutArterialFlowFactor)
+        modelVerticalLayout.addLayout(modelHorizontalLayoutParameter1)
         modelVerticalLayout.addLayout(modelHorizontalLayout5)
         modelVerticalLayout.addLayout(modelHorizontalLayout6)
         modelVerticalLayout.addLayout(modelHorizontalLayout7)
@@ -556,10 +556,10 @@ class ModelFittingApp(QWidget):
         #Place spin boxes and their labels in horizontal layouts
         #modelHorizontalLayoutParamLabels
 
-        modelHorizontalLayoutArterialFlowFactor.addWidget(self.labelParameter2)
-        modelHorizontalLayoutArterialFlowFactor.addWidget(self.spinBoxParameter1)
-        modelHorizontalLayoutArterialFlowFactor.addWidget(self.ckbParameter1)
-        modelHorizontalLayoutArterialFlowFactor.addWidget(self.lblParam1ConfInt)
+        modelHorizontalLayoutParameter1.addWidget(self.labelParameter1)
+        modelHorizontalLayoutParameter1.addWidget(self.spinBoxParameter1)
+        modelHorizontalLayoutParameter1.addWidget(self.ckbParameter1)
+        modelHorizontalLayoutParameter1.addWidget(self.lblParam1ConfInt)
 
         modelHorizontalLayout5.addWidget(self.labelParameter2)
         modelHorizontalLayout5.addWidget(self.spinBoxParameter2)
@@ -1625,8 +1625,26 @@ class ModelFittingApp(QWidget):
         try:
             modelName = str(self.cmbModels.currentText())
             numParams = _objXMLReader.getNumberOfParameters(modelName)
-            print('Num params ={}'.format(numParams))
-            print(_objXMLReader.getParameterName(modelName, 1))
+            if numParams >= 1:
+                isPercentage, paramName =_objXMLReader.getParameterLabel(modelName, 1)
+                precision = _objXMLReader.getParameterStep(modelName, 1)
+                lower, upper = _objXMLReader.getParameterConstraints(modelName, 1)
+                step = _objXMLReader.getParameterStep(modelName, 1)
+                default = _objXMLReader.getParameterDefault(modelName, 1)
+                
+                objLabel = getattr(self, 'labelParameter' + str(1))
+                objSpinBox = getattr(self, 'spinBoxParameter' + str(1))
+                objLabel.setText(paramName)
+                objLabel.show()
+
+                objSpinBox.setDecimals(precision)
+                objSpinBox.setRange(lower, upper)
+                objSpinBox.setSingleStep(step)
+                objSpinBox.setValue(default)
+                if isPercentage:
+                    objSpinBox.setSuffix('%')
+                objSpinBox.show()
+
         except Exception as e:
             print('Error in function SetUpParameterSpinBoxes: ' + str(e) )
             logger.error('Error in function SetUpParameterSpinBoxes: ' + str(e) )

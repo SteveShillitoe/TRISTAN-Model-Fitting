@@ -149,9 +149,9 @@ class XMLReader():
             return 0
 
 
-    def getParameterName(self, shortModelName, positionNumber):
+    def getParameterLabel(self, shortModelName, positionNumber):
         try:
-            logger.info('XMLReader.getParameterName called with short model name= {} and position={} '.format(shortModelName,positionNumber) )
+            logger.info('XMLReader.getParameterLabel called with short model name= {} and position={} '.format(shortModelName,positionNumber) )
             boolIsPercentage = False
             if len(shortModelName) > 0:
                 xPath='./model[@id=' + chr(34) + shortModelName + chr(34) + \
@@ -175,9 +175,9 @@ class XMLReader():
                 return boolIsPercentage, fullName
              
         except Exception as e:
-            print('Error in XMLReader.getParameterName when shortModelName ={} and xPath={}: '.format(shortModelName, xPath) 
+            print('Error in XMLReader.getParameterLabel when shortModelName ={} and xPath={}: '.format(shortModelName, xPath) 
                   + str(e)) 
-            logger.error('Error in XMLReader.getParameterName when shortModelName ={} and xPath={}: '.format(shortModelName, xPath) 
+            logger.error('Error in XMLReader.getParameterLabel when shortModelName ={} and xPath={}: '.format(shortModelName, xPath) 
                   + str(e)) 
             return None, ''
 
@@ -191,8 +191,8 @@ class XMLReader():
                     ']/parameters/parameter[' + str(positionNumber) + ']/default'
                 default = self.root.find(xPath)
 
-                if default:
-                    return float(default)
+                if default.text:
+                    return float(default.text)
                 else:
                     return 0.0
 
@@ -213,8 +213,8 @@ class XMLReader():
                     ']/parameters/parameter[' + str(positionNumber) + ']/step'
                 step = self.root.find(xPath)
 
-                if default:
-                    return float(step)
+                if step.text:
+                    return float(step.text)
                 else:
                     return 0.0
 
@@ -225,49 +225,51 @@ class XMLReader():
                   + str(e)) 
             return 0.0
 
-
-    def getParameterLowerValue(self, shortModelName, positionNumber)->float:
+    def getParameterPrecision(self, shortModelName, positionNumber)->int:
         try:
-            logger.info('XMLReader.getParameterLowerValue called with short model name= {} and position={} '.format(shortModelName,positionNumber) )
+            logger.info('XMLReader.getParameterPrecision called with short model name= {} and position={} '.format(shortModelName,positionNumber) )
+            
+            if len(shortModelName) > 0:
+                xPath='./model[@id=' + chr(34) + shortModelName + chr(34) + \
+                    ']/parameters/parameter[' + str(positionNumber) + ']/precision'
+                precision = self.root.find(xPath)
+
+                if precision.text:
+                    return int(precision.text)
+                else:
+                    return 0.0
+
+        except Exception as e:
+            print('Error in XMLReader.getParameterPrecision when shortModelName ={} and xPath={}: '.format(shortModelName, xPath) 
+                  + str(e)) 
+            logger.error('Error in XMLReader.getParameterPrecision when shortModelName ={} and xPath={}: '.format(shortModelName, xPath) 
+                  + str(e)) 
+            return 0.0
+
+    def getParameterConstraints(self, shortModelName, positionNumber)->float:
+        try:
+            logger.info('XMLReader.getParameterConstraints called with short model name= {} and position={} '.format(shortModelName,positionNumber) )
             
             if len(shortModelName) > 0:
                 xPath='./model[@id=' + chr(34) + shortModelName + chr(34) + \
                     ']/parameters/parameter[' + str(positionNumber) + ']/constraints/lower'
                 lower = self.root.find(xPath)
 
-                if default:
-                    return float(lower)
-                else:
-                    return 0.0
-
-        except Exception as e:
-            print('Error in XMLReader.getParameterLowerValue when shortModelName ={} and xPath={}: '.format(shortModelName, xPath) 
-                  + str(e)) 
-            logger.error('Error in XMLReader.getParameterLowerValue when shortModelName ={} and xPath={}: '.format(shortModelName, xPath) 
-                  + str(e)) 
-            return 0.0
-
-
-    def getParameterUpperValue(self, shortModelName, positionNumber)->float:
-        try:
-            logger.info('XMLReader.getParameterLowerValue called with short model name= {} and position={} '.format(shortModelName,positionNumber) )
-            
-            if len(shortModelName) > 0:
                 xPath='./model[@id=' + chr(34) + shortModelName + chr(34) + \
                     ']/parameters/parameter[' + str(positionNumber) + ']/constraints/upper'
                 upper = self.root.find(xPath)
 
-                if default:
-                    return float(upper)
+                if lower.text and upper.text:
+                    return float(lower.text), float(upper.text)
                 else:
-                    return 0.0
+                    return 0.0, 0.0
 
         except Exception as e:
-            print('Error in XMLReader.getParameterUpperValue when shortModelName ={} and xPath={}: '.format(shortModelName, xPath) 
+            print('Error in XMLReader.getParameterConstraints when shortModelName ={} and xPath={}: '.format(shortModelName, xPath) 
                   + str(e)) 
-            logger.error('Error in XMLReader.getParameterUpperValue when shortModelName ={} and xPath={}: '.format(shortModelName, xPath) 
+            logger.error('Error in XMLReader.getParameterConstraints when shortModelName ={} and xPath={}: '.format(shortModelName, xPath) 
                   + str(e)) 
-            return 0.0
+            return 0.0, 0.0
     
     def getDataFileFolder(self)->str:
         try:

@@ -18,6 +18,7 @@
       <units>%</units>
       <default>17.0</default>
       <step>1.0</step>
+      <precision>2</precision>
       <constraints>
         <lower>0.0</lower>
         <upper>100.00</upper>
@@ -31,6 +32,7 @@
         <units>%</units>
         <default>20.0</default>
         <step>1.0</step>
+        <precision>2</precision>
         <constraints>
           <lower>0.0</lower>
           <upper>100.00</upper>
@@ -44,6 +46,7 @@
         <units>mL/min/mL</units>
         <default>1.0</default>
         <step>0.1</step>
+        <precision>2</precision>
         <constraints>
           <lower>0.0001</lower>
           <upper>0.9999</upper>
@@ -57,6 +60,7 @@
         <units>mL/min/mL</units>
         <default>0.017</default>
         <step>0.01</step>
+        <precision>3</precision>
         <constraints>
           <lower>0.0</lower>
           <upper>100.0</upper>
@@ -70,6 +74,7 @@
         <units>mL/min/mL</units>
         <default>0.22</default>
         <step>0.01</step>
+        <precision>3</precision>
         <constraints>
           <lower>0.0</lower>
           <upper>100.0</upper>
@@ -94,6 +99,7 @@
         <units>%</units>
         <default>17.0</default>
         <step>1.0</step>
+        <precision>2</precision>
         <constraints>
           <lower>0.0</lower>
           <upper>100.00</upper>
@@ -107,6 +113,7 @@
         <units>%</units>
         <default>23.0</default>
         <step>1.0</step>
+        <precision>2</precision>
         <constraints>
           <lower>0.0</lower>
           <upper>100.00</upper>
@@ -120,6 +127,7 @@
         <units>mL/min/mL</units>
         <default>0.0918</default>
         <step>0.01</step>
+        <precision>4</precision>
         <constraints>
           <lower>0.0</lower>
           <upper>100.0</upper>
@@ -133,6 +141,7 @@
         <units>mL/min/mL</units>
         <default>2.358</default>
         <step>0.01</step>
+        <precision>3</precision>
         <constraints>
           <lower>0.0</lower>
           <upper>100.0</upper>
@@ -157,6 +166,7 @@
         <units>%</units>
         <default>23.0</default>
         <step>1.0</step>
+        <precision>2</precision>
         <constraints>
           <lower>0.0001</lower>
           <upper>0.9999</upper>
@@ -170,6 +180,7 @@
         <units>mL/min/mL</units>
         <default>0.0918</default>
         <step>0.01</step>
+        <precision>4</precision>
         <constraints>
           <lower>0.0</lower>
           <upper>100.0</upper>
@@ -183,6 +194,7 @@
         <units>mL/min/mL</units>
         <default>2.358</default>
         <step>0.1</step>
+        <precision>3</precision>
         <constraints>
           <lower>0.0001</lower>
           <upper>100.0</upper>
@@ -207,6 +219,7 @@
         <units>%</units>
         <default>23.0</default>
         <step>1.0</step>
+        <precision>2</precision>
         <constraints>
           <lower>0.22999</lower>
           <upper>0.23001</upper>
@@ -220,6 +233,7 @@
         <units>mL/min/mL</units>
         <default>0.0918</default>
         <step>0.01</step>
+        <precision>4</precision>
         <constraints>
           <lower>0.0</lower>
           <upper>100.0</upper>
@@ -233,6 +247,7 @@
         <units>mL/min/mL</units>
         <default>2.358</default>
         <step>0.01</step>
+        <precision>3</precision>
         <constraints>
           <lower>0.0001</lower>
           <upper>100.0</upper>
