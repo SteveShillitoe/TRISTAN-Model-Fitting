@@ -198,16 +198,6 @@ DEFAULT_VALUE_Ktrans = 0.10
 DEFAULT_VALUE_Kce = 0.025
 DEFAULT_VALUE_Kbc = 0.003
 DEFAULT_VALUE_Fa = 17.0 #Arterial Flow Fraction
-
-LABEL_PARAMETER_Vp = 'Plasma Volume Fraction,\n Vp (%)'
-LABEL_PARAMETER_Vh = 'Hepatocyte Volume Fraction,\n Vh (%)'
-LABEL_PARAMETER_Vb = 'Intrahepatic Bile Duct Volume Fraction,\n Vb (%)'
-LABEL_PARAMETER_Kce = 'Hepatocellular Uptake Rate, \n Kce (mL/100mL/min)'
-LABEL_PARAMETER_Ve = 'Extracellular Vol Fraction,\n Ve (%)'
-LABEL_PARAMETER_Fp = 'Total Plasma Inflow, \n Fp (mL/min/mL)'
-LABEL_PARAMETER_Ktrans = 'Transfer Rate Constant, \n Ktrans (1/min)'
-LABEL_PARAMETER_Kbh = 'Biliary Efflux Rate, \n Kbh (mL/min/mL)'
-LABEL_PARAMETER_Khe = 'Hepatocyte Uptake Rate, \n Khe (mL/min/mL)'
 #######################################
 
 #Create and configure the logger
@@ -513,25 +503,12 @@ class ModelFittingApp(QWidget):
         self.labelParameter3.setWordWrap(True)
         self.labelParameter4.setWordWrap(True)
         self.labelParameter5.setWordWrap(True)
-
-        #self.spinBoxParameter1 = QDoubleSpinBox()
-        #self.spinBoxParameter1.setRange(0, 100)
-        #self.spinBoxParameter1.setDecimals(2)
-        #self.spinBoxParameter1.setSingleStep(0.01)
-        #self.spinBoxParameter1.setValue(DEFAULT_VALUE_Fa)
-        #self.spinBoxParameter1.setSuffix('%')
         
         self.spinBoxParameter1 = QDoubleSpinBox()
         self.spinBoxParameter2 = QDoubleSpinBox()
         self.spinBoxParameter3 = QDoubleSpinBox()
         self.spinBoxParameter4 = QDoubleSpinBox()
         self.spinBoxParameter5 = QDoubleSpinBox()
-
-        self.spinBoxParameter1.setSingleStep(0.1)
-        self.spinBoxParameter2.setSingleStep(0.1)
-        self.spinBoxParameter3.setSingleStep(0.1)
-        self.spinBoxParameter4.setSingleStep(0.1)
-        self.spinBoxParameter5.setSingleStep(0.1)
         
         self.spinBoxParameter1.hide()
         self.spinBoxParameter2.hide()
@@ -711,17 +688,21 @@ class ModelFittingApp(QWidget):
         
             if shortModelName != 'Select a model':
                 imageName = _objXMLReader.getImageName(shortModelName)
-                imagePath = 'images\\' + imageName
-                pixmapModelImage = QPixmap(imagePath)
-                #Increase the size of the model image
-                pMapWidth = pixmapModelImage.width() * 1.35
-                pMapHeight = pixmapModelImage.height() * 1.35
-                pixmapModelImage = pixmapModelImage.scaled(pMapWidth, pMapHeight, 
-                      QtCore.Qt.KeepAspectRatio, QtCore.Qt.SmoothTransformation)
-                self.lblModelImage.setPixmap(pixmapModelImage)
+                if imageName:
+                    imagePath = 'images\\' + imageName
+                    pixmapModelImage = QPixmap(imagePath)
+                    #Increase the size of the model image
+                    pMapWidth = pixmapModelImage.width() * 1.35
+                    pMapHeight = pixmapModelImage.height() * 1.35
+                    pixmapModelImage = pixmapModelImage.scaled(pMapWidth, pMapHeight, 
+                          QtCore.Qt.KeepAspectRatio, QtCore.Qt.SmoothTransformation)
+                    self.lblModelImage.setPixmap(pixmapModelImage)
                 
-                longModelName = _objXMLReader.getLongModelName(shortModelName)
-                self.lblModelName.setText(longModelName)
+                    longModelName = _objXMLReader.getLongModelName(shortModelName)
+                    self.lblModelName.setText(longModelName)
+                else:
+                    self.lblModelImage.clear()
+                    self.lblModelName.setText('')
             else:
                 self.lblModelImage.clear()
                 self.lblModelName.setText('')
@@ -1621,107 +1602,109 @@ class ModelFittingApp(QWidget):
         self.ckbParameter3.blockSignals(False)
         self.ckbParameter5.blockSignals(False)
 
-    def SetUpParameterSpinBoxes(self):
+    def populateParameterLabelAndSpinBox(self, modelName, paramNumber):
+        try:
+            isPercentage, paramName =_objXMLReader.getParameterLabel(modelName, paramNumber)
+            precision = _objXMLReader.getParameterPrecision(modelName, paramNumber)
+            lower, upper = _objXMLReader.getParameterConstraints(modelName, paramNumber)
+            step = _objXMLReader.getParameterStep(modelName, paramNumber)
+            default = _objXMLReader.getParameterDefault(modelName, paramNumber)
+        
+            objLabel = getattr(self, 'labelParameter' + str(paramNumber))
+            objLabel.setText(paramName)
+            objLabel.show()
+        
+            objSpinBox = getattr(self, 'spinBoxParameter' + str(paramNumber))
+            objSpinBox.blockSignals(True)
+            objSpinBox.setDecimals(precision)
+            objSpinBox.setRange(lower, upper)
+            objSpinBox.setSingleStep(step)
+            objSpinBox.setValue(default)
+            if isPercentage:
+                objSpinBox.setSuffix('%')
+            else:
+                objSpinBox.setSuffix('')
+            objSpinBox.blockSignals(False)
+            objSpinBox.show()
+
+        except Exception as e:
+            print('Error in function populateParameterLabelAndSpinBox: ' + str(e) )
+            logger.error('Error in function populateParameterLabelAndSpinBox: ' + str(e) )
+
+    def setParameterSpinBoxToDefault(self, modelName, paramNumber):
+        try:
+            logger.info(
+                'setParameterSpinBoxToDefault called with paramNumber=' 
+                + str(paramNumber))
+            default = _objXMLReader.getParameterDefault(modelName, paramNumber)
+        
+            objSpinBox = getattr(self, 'spinBoxParameter' + str(paramNumber))
+            objSpinBox.blockSignals(True)
+            objSpinBox.setValue(default)
+            objSpinBox.blockSignals(False)
+            
+        except Exception as e:
+            print('Error in function populateParameterLabelAndSpinBox: ' + str(e) )
+            logger.error('Error in function populateParameterLabelAndSpinBox: ' + str(e) )
+
+    def InitialiseParameterSpinBoxes(self):
+        try:
+            modelName = str(self.cmbModels.currentText())
+            logger.info(
+                'Function InitialiseParameterSpinBoxes called when model = ' 
+                + modelName)
+
+            numParams = _objXMLReader.getNumberOfParameters(modelName)
+            if numParams >= 1:
+                self.setParameterSpinBoxToDefault(modelName, 1)
+            if numParams >= 2:
+                self.setParameterSpinBoxToDefault(modelName, 2)
+            if numParams >= 3:
+                self.setParameterSpinBoxToDefault(modelName, 3)
+            if numParams >= 4:
+                self.setParameterSpinBoxToDefault(modelName, 4)
+            if numParams >= 5:
+                self.setParameterSpinBoxToDefault(modelName, 5)
+
+        except Exception as e:
+            print('Error in function InitialiseParameterSpinBoxes: ' + str(e) )
+            logger.error('Error in function InitialiseParameterSpinBoxes: ' + str(e) )
+
+    def SetUpParameterLabelsAndSpinBoxes(self):
         try:
             modelName = str(self.cmbModels.currentText())
             numParams = _objXMLReader.getNumberOfParameters(modelName)
             if numParams >= 1:
-                isPercentage, paramName =_objXMLReader.getParameterLabel(modelName, 1)
-                precision = _objXMLReader.getParameterStep(modelName, 1)
-                lower, upper = _objXMLReader.getParameterConstraints(modelName, 1)
-                step = _objXMLReader.getParameterStep(modelName, 1)
-                default = _objXMLReader.getParameterDefault(modelName, 1)
-                
-                objLabel = getattr(self, 'labelParameter' + str(1))
-                objSpinBox = getattr(self, 'spinBoxParameter' + str(1))
-                objLabel.setText(paramName)
-                objLabel.show()
-
-                objSpinBox.setDecimals(precision)
-                objSpinBox.setRange(lower, upper)
-                objSpinBox.setSingleStep(step)
-                objSpinBox.setValue(default)
-                if isPercentage:
-                    objSpinBox.setSuffix('%')
-                objSpinBox.show()
+                self.populateParameterLabelAndSpinBox(modelName, 1)
+            if numParams >= 2:
+                self.populateParameterLabelAndSpinBox(modelName, 2)
+            if numParams >= 3:
+                self.populateParameterLabelAndSpinBox(modelName, 3)
+            if numParams >= 4:
+                self.populateParameterLabelAndSpinBox(modelName, 4)
+            if numParams >= 5:
+                self.populateParameterLabelAndSpinBox(modelName, 5)
 
         except Exception as e:
-            print('Error in function SetUpParameterSpinBoxes: ' + str(e) )
-            logger.error('Error in function SetUpParameterSpinBoxes: ' + str(e) )
+            print('Error in function SetUpParameterLabelsAndSpinBoxes: ' + str(e) )
+            logger.error('Error in function SetUpParameterLabelsAndSpinBoxes: ' + str(e) )
 
-    def InitialiseParameterSpinBoxes(self):
-        """Reset model parameter spinboxes with typical initial values for each model"""
-        try:
-            #Remove suffixes from the first spinboxes 
-            self.spinBoxParameter2.setSuffix('')
-           
-            #Block signals from spinboxes, so that setting initial values
-            #does not trigger an event.
-            self.BlockSpinBoxSignals(True)
-            self.spinBoxParameter1.setValue(DEFAULT_VALUE_Fa)
-            
-            modelName = str(self.cmbModels.currentText())
-            logger.info('Function InitialiseParameterSpinBoxes called when model = ' + modelName)
-            if modelName == '2-2CFM':
-                self.spinBoxParameter2.setDecimals(2)
-                self.spinBoxParameter2.setRange(0.01, 99.99)
-                self.spinBoxParameter2.setSingleStep(0.1)
-                self.spinBoxParameter2.setValue(DEFAULT_VALUE_Ve_2_2CFM)
-                self.spinBoxParameter2.setSuffix('%')
-
-                self.spinBoxParameter3.setDecimals(2)
-                self.spinBoxParameter3.setRange(0, 100.0)
-                self.spinBoxParameter3.setSingleStep(0.1)
-                self.spinBoxParameter3.setValue(DEFAULT_VALUE_Fp_2_2CFM)
-
-                self.spinBoxParameter4.setDecimals(3)
-                self.spinBoxParameter4.setRange(0.0, 100.0)
-                self.spinBoxParameter4.setSingleStep(0.1)
-                self.spinBoxParameter4.setValue(DEFAULT_VALUE_Khe_2_2CFM)
-                
-                self.spinBoxParameter5.setDecimals(4)
-                self.spinBoxParameter5.setRange(0.0001, 100.0)
-                self.spinBoxParameter5.setSingleStep(0.1)
-                self.spinBoxParameter5.setValue(DEFAULT_VALUE_Kbh_2_2CFM)
-                
-            elif modelName == 'HF2-2CFM':
-                self.spinBoxParameter2.setDecimals(2)
-                self.spinBoxParameter2.setRange(0.01, 99.99)
-                self.spinBoxParameter2.setSingleStep(0.1)
-                self.spinBoxParameter2.setValue(DEFAULT_VALUE_Ve)
-                self.spinBoxParameter2.setSuffix('%')
-
-                self.spinBoxParameter3.setDecimals(3)
-                self.spinBoxParameter3.setRange(0.0, 100.0)
-                self.spinBoxParameter3.setSingleStep(0.1)
-                self.spinBoxParameter3.setValue(DEFAULT_VALUE_Khe)
-                
-                self.spinBoxParameter4.setDecimals(4)
-                self.spinBoxParameter4.setRange(0.0001, 100.0)
-                self.spinBoxParameter4.setSingleStep(0.1)
-                self.spinBoxParameter4.setValue(DEFAULT_VALUE_Kbh)
-
-            elif modelName == 'HF1-2CFM':
-                self.spinBoxParameter2.setDecimals(2)
-                self.spinBoxParameter2.setRange(0.01, 99.99)
-                self.spinBoxParameter2.setSingleStep(0.1)
-                self.spinBoxParameter2.setValue(DEFAULT_VALUE_Ve)
-                self.spinBoxParameter2.setSuffix('%')
-
-                self.spinBoxParameter3.setDecimals(3)
-                self.spinBoxParameter3.setRange(0.0, 100.0)
-                self.spinBoxParameter3.setSingleStep(0.1)
-                self.spinBoxParameter3.setValue(DEFAULT_VALUE_Khe)
-                
-                self.spinBoxParameter4.setDecimals(4)
-                self.spinBoxParameter4.setRange(0.0001, 100.0)
-                self.spinBoxParameter4.setSingleStep(0.1)
-                self.spinBoxParameter4.setValue(DEFAULT_VALUE_Kbh)
-
-            self.BlockSpinBoxSignals(False)
-        except Exception as e:
-            print('Error in function InitialiseParameterSpinBoxes: ' + str(e) )
-            logger.error('Error in function InitialiseParameterSpinBoxes: ' + str(e) )
+    def ClearAndHideParameterLabelsAndSpinBoxes(self):
+        self.spinBoxParameter1.hide()
+        self.spinBoxParameter2.hide()
+        self.spinBoxParameter3.hide()
+        self.spinBoxParameter4.hide()
+        self.spinBoxParameter5.hide()
+        self.spinBoxParameter1.clear()
+        self.spinBoxParameter2.clear()
+        self.spinBoxParameter3.clear()
+        self.spinBoxParameter4.clear()
+        self.spinBoxParameter5.clear()
+        self.labelParameter1.clear()
+        self.labelParameter2.clear()
+        self.labelParameter3.clear()
+        self.labelParameter4.clear()
+        self.labelParameter5.clear()
 
     def ConfigureGUIForEachModel(self):
         """When a model is selected, this method configures the appearance of the GUI
@@ -1729,72 +1712,17 @@ class ModelFittingApp(QWidget):
         given an appropriate label."""
         try:
             modelName = str(self.cmbModels.currentText())
-            logger.info('Function ConfigureGUIForEachModel called when model = ' + modelName)
-            
-            inletType = _objXMLReader.getModelInletType(modelName)
-            self.lblAIF.show() #Common to all models
-            self.cmbAIF.show() #Common to all models
-            if inletType == 'single':
-                self.lblVIF.hide()
-                self.cmbVIF.hide()
-            elif inletType == 'dual':
-                self.lblVIF.show()
-                self.cmbVIF.show()
-
-                
+            logger.info('Function ConfigureGUIForEachModel called when model = ' + modelName)   
             #self.cboxDelay.show()
             #self.cboxConstaint.show()
             self.cboxConstaint.setChecked(False)
             self.btnReset.show()
             self.btnSaveReport.show()
-            
-            self.SetUpParameterSpinBoxes()
-            self.InitialiseParameterSpinBoxes() #Typical initial values for each model
-            #Show widgets common to all models
-            
-            self.spinBoxParameter1.show()
-            self.spinBoxParameter2.show()
-            self.spinBoxParameter3.show()
-            self.spinBoxParameter4.show()
-            self.spinBoxParameter5.show()
-
             self.pbar.reset()
             self.ckbParameter2.hide()
             
-            #Configure parameter spinbox labels for each model
-            if modelName == '2-2CFM':
-                self.labelParameter2.setText(LABEL_PARAMETER_Ve)
-                self.labelParameter2.show()
-                self.labelParameter3.setText(LABEL_PARAMETER_Fp)
-                self.labelParameter3.show()
-                self.labelParameter4.setText(LABEL_PARAMETER_Khe)
-                self.labelParameter4.show()
-                self.labelParameter5.setText(LABEL_PARAMETER_Kbh)
-                self.labelParameter5.show()
-                self.spinBoxParameter5.show()
-            elif modelName == 'HF2-2CFM':
-                self.labelParameter2.setText(LABEL_PARAMETER_Ve)
-                self.labelParameter2.show()
-                self.labelParameter3.setText(LABEL_PARAMETER_Khe)
-                self.labelParameter3.show()
-                self.labelParameter4.setText(LABEL_PARAMETER_Kbh)
-                self.labelParameter4.show()
-                self.labelParameter5.hide()
-                self.spinBoxParameter5.hide()
-            elif modelName == 'HF1-2CFM':
-                self.labelParameter2.setText(LABEL_PARAMETER_Ve)
-                self.labelParameter2.show()
-                self.ckbParameter2.show()
-                self.labelParameter3.setText(LABEL_PARAMETER_Khe)
-                self.labelParameter3.show()
-                self.labelParameter4.setText(LABEL_PARAMETER_Kbh)
-                self.labelParameter4.show()
-                self.labelParameter5.hide()
-                self.spinBoxParameter5.hide()
-                self.lblVIF.hide()
-                self.cmbVIF.hide()
-                self.cmbVIF.setCurrentIndex(0)
-            else:  #No model is selected
+            ##Configure parameter spinboxes and their labels for each model
+            if modelName == 'Please Select':
                 self.lblAIF.hide()
                 self.cmbAIF.hide()
                 self.lblVIF.hide()
@@ -1802,23 +1730,26 @@ class ModelFittingApp(QWidget):
                 self.cboxDelay.hide()
                 self.cboxConstaint.hide()
                 self.btnReset.hide()
-                self.spinBoxParameter2.hide()
-                self.spinBoxParameter3.hide()
-                self.spinBoxParameter4.hide()
-                self.spinBoxParameter5.hide()
-                self.spinBoxParameter1.hide()
-                self.labelParameter2.clear()
-                self.labelParameter3.clear()
-                self.labelParameter4.clear()
-                self.labelParameter5.clear()
-                self.labelParameter2.hide()
-                
                 self.cmbAIF.setCurrentIndex(0)
                 self.cmbVIF.setCurrentIndex(0)
                 self.btnFitModel.hide()
                 self.btnSaveReport.hide()
                 self.btnSaveCSV.hide()
                 self.groupBoxBatchProcessing.hide()
+            else:
+                self.ClearAndHideParameterLabelsAndSpinBoxes()
+                self.SetUpParameterLabelsAndSpinBoxes()
+                
+                self.lblAIF.show() #Common to all models
+                self.cmbAIF.show() #Common to all models
+                inletType = _objXMLReader.getModelInletType(modelName)
+                if inletType == 'single':
+                    self.lblVIF.hide()
+                    self.cmbVIF.hide()
+                elif inletType == 'dual':
+                    self.lblVIF.show()
+                    self.cmbVIF.show()
+
         except Exception as e:
             print('Error in function ConfigureGUIForEachModel: ' + str(e) )
             logger.error('Error in function ConfigureGUIForEachModel: ' + str(e) )

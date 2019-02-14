@@ -190,7 +190,7 @@ class XMLReader():
                 xPath='./model[@id=' + chr(34) + shortModelName + chr(34) + \
                     ']/parameters/parameter[' + str(positionNumber) + ']/default'
                 default = self.root.find(xPath)
-
+                #print('Default ={} when position={}'.format(default.text, positionNumber))
                 if default.text:
                     return float(default.text)
                 else:

@@ -168,8 +168,8 @@
         <step>1.0</step>
         <precision>2</precision>
         <constraints>
-          <lower>0.0001</lower>
-          <upper>0.9999</upper>
+          <lower>0.01</lower>
+          <upper>99.99</upper>
         </constraints>
       </parameter>
       <parameter id="Kbh">
@@ -221,8 +221,8 @@
         <step>1.0</step>
         <precision>2</precision>
         <constraints>
-          <lower>0.22999</lower>
-          <upper>0.23001</upper>
+          <lower>0.1</lower>
+          <upper>99.99</upper>
         </constraints>
       </parameter>
       <parameter id="Kbh">
