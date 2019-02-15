@@ -48,7 +48,7 @@ class XMLReader():
             shortModelNames = self.root.findall('./model/name/short')
             tempList = [name.text 
                         for name in shortModelNames]
-            tempList.insert(0, 'Please Select')
+            tempList.insert(0, 'Select a model')
             
             return tempList
 

@@ -545,12 +545,12 @@ class ModelFittingApp(QWidget):
 
         modelHorizontalLayout6.addWidget(self.labelParameter3)
         modelHorizontalLayout6.addWidget(self.spinBoxParameter3)
-        modelHorizontalLayout6.addWidget(self.ckbParameter2)
-        modelHorizontalLayout6.addWidget(self.lblParam2ConfInt)
+        modelHorizontalLayout6.addWidget(self.ckbParameter3)
+        modelHorizontalLayout6.addWidget(self.lblParam3ConfInt)
 
         modelHorizontalLayout7.addWidget(self.labelParameter4)
         modelHorizontalLayout7.addWidget(self.spinBoxParameter4)
-        modelHorizontalLayout7.addWidget(self.ckbParameter3)
+        modelHorizontalLayout7.addWidget(self.ckbParameter4)
         modelHorizontalLayout7.addWidget(self.lblParam4ConfInt)
 
         modelHorizontalLayoutPara4.addWidget(self.labelParameter5)
@@ -1362,7 +1362,10 @@ class ModelFittingApp(QWidget):
         """Loads the contents of an XML file containing model(s) configuration data"""
          
         global _objXMLReader
-        
+        #Clear the list of models, ready to accept 
+        #a new list of models from the XML configuration
+        #file about to be loaded
+        self.cmbModels.clear()
         self.HideAllControlsOnGUI()
         
         try:
@@ -1515,6 +1518,7 @@ class ModelFittingApp(QWidget):
         self.lblROI.hide()
         self.cmbROI.hide()
         self.groupBoxModel.hide()
+        self.btnSaveReport.hide()
         self.btnFitModel.hide()
         self.btnSaveCSV.hide()
         self.groupBoxBatchProcessing.hide()
@@ -1627,6 +1631,10 @@ class ModelFittingApp(QWidget):
             objSpinBox.blockSignals(False)
             objSpinBox.show()
 
+            objCheckBox = getattr(self, 'ckbParameter' + str(paramNumber))
+            objCheckBox.setChecked(False)
+            objCheckBox.show()
+
         except Exception as e:
             print('Error in function populateParameterLabelAndSpinBox: ' + str(e) )
             logger.error('Error in function populateParameterLabelAndSpinBox: ' + str(e) )
@@ -1705,6 +1713,17 @@ class ModelFittingApp(QWidget):
         self.labelParameter3.clear()
         self.labelParameter4.clear()
         self.labelParameter5.clear()
+        self.ckbParameter1.hide()
+        self.ckbParameter2.hide()
+        self.ckbParameter3.hide()
+        self.ckbParameter4.hide()
+        self.ckbParameter5.hide()
+        self.ckbParameter1.setChecked(False)
+        self.ckbParameter2.setChecked(False)
+        self.ckbParameter3.setChecked(False)
+        self.ckbParameter4.setChecked(False)
+        self.ckbParameter5.setChecked(False)
+
 
     def ConfigureGUIForEachModel(self):
         """When a model is selected, this method configures the appearance of the GUI
@@ -1715,14 +1734,14 @@ class ModelFittingApp(QWidget):
             logger.info('Function ConfigureGUIForEachModel called when model = ' + modelName)   
             #self.cboxDelay.show()
             #self.cboxConstaint.show()
-            self.cboxConstaint.setChecked(False)
+            #self.cboxConstaint.setChecked(False)
             self.btnReset.show()
             self.btnSaveReport.show()
             self.pbar.reset()
-            self.ckbParameter2.hide()
+            self.ClearAndHideParameterLabelsAndSpinBoxes()
             
             ##Configure parameter spinboxes and their labels for each model
-            if modelName == 'Please Select':
+            if modelName == 'Select a model':
                 self.lblAIF.hide()
                 self.cmbAIF.hide()
                 self.lblVIF.hide()
@@ -1736,10 +1755,10 @@ class ModelFittingApp(QWidget):
                 self.btnSaveReport.hide()
                 self.btnSaveCSV.hide()
                 self.groupBoxBatchProcessing.hide()
+                self.lblConfInt.hide()
             else:
-                self.ClearAndHideParameterLabelsAndSpinBoxes()
                 self.SetUpParameterLabelsAndSpinBoxes()
-                
+                self.lblConfInt.show()
                 self.lblAIF.show() #Common to all models
                 self.cmbAIF.show() #Common to all models
                 inletType = _objXMLReader.getModelInletType(modelName)
