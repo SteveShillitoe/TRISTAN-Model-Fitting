@@ -3,7 +3,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-class ExcelWriter():
+class ExcelWriter:
     def __init__(self, fullFilePath): 
         try:
             self.fullFilePath = fullFilePath

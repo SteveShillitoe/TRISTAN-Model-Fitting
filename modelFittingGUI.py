@@ -732,51 +732,46 @@ class ModelFittingApp(QWidget):
         try:
             logger.info('Function ProcessOptimumParametersAfterCurveFit called.')
             self.lblConfInt.show()
-            if self.spinBoxParameter1.isHidden() == False:
-                parameterValue = _optimisedParamaterList[0][0]
-                lowerLimit = _optimisedParamaterList[0][1]
-                upperLimit = _optimisedParamaterList[0][2]
-                suffix = '%'
-                parameterValue = round(parameterValue * 100.0, 2)
-                lowerLimit = round(lowerLimit * 100.0, 2)
-                upperLimit = round(upperLimit * 100.0, 2)
-                #For display in the PDF report, overwrite decimal volume fraction values in  _optimisedParamaterList
-                #with the % equivalent
-                _optimisedParamaterList[0][0] = parameterValue
-                _optimisedParamaterList[0][1] = lowerLimit
-                _optimisedParamaterList[0][2] = upperLimit
-               
-                confidenceStr = '[{}     {}]'.format(lowerLimit, upperLimit)
-                self.lblParam1ConfInt.setText(confidenceStr)
-                nextIndex=1
-            else:
-                nextIndex = 0
             
-            modelName = str(self.cmbModels.currentText())
-      
-            if modelName == 'HF1-2CFM' and self.ckbParameter2.isChecked():
-                parameterValue = self.spinBoxParameter2.value()
-                lowerLimit = "N/A"
-                upperLimit = "N/A"
-                suffix = '%'
-                tempList = [parameterValue, lowerLimit, upperLimit]
-                _optimisedParamaterList.insert(0, tempList)
-            else:
-                parameterValue = round(_optimisedParamaterList[nextIndex][0], 3)
-                lowerLimit = round(_optimisedParamaterList[nextIndex][1], 3)
-                upperLimit = round(_optimisedParamaterList[nextIndex][2], 3)
+            nextIndex = 0
+
+            parameterValue = _optimisedParamaterList[nextIndex][0]
+            lowerLimit = _optimisedParamaterList[nextIndex][1]
+            upperLimit = _optimisedParamaterList[nextIndex][2]
+            if self.spinBoxParameter1.suffix() == '%':
+                parameterValue = parameterValue * 100.0
+                lowerLimit = lowerLimit * 100.0
+                upperLimit = upperLimit * 100.0
+
+            parameterValue = round(parameterValue, 3)
+            lowerLimit = round(lowerLimit, 3)
+            upperLimit = round(upperLimit, 3)
+            #For display in the PDF report, 
+            #overwrite decimal volume fraction values 
+            #in  _optimisedParamaterList with the % equivalent
+            _optimisedParamaterList[nextIndex][0] = parameterValue
+            _optimisedParamaterList[nextIndex][1] = lowerLimit
+            _optimisedParamaterList[nextIndex][2] = upperLimit
+               
+            confidenceStr = '[{}     {}]'.format(lowerLimit, upperLimit)
+            self.lblParam1ConfInt.setText(confidenceStr)
+            nextIndex +=1
+            
+            if self.spinBoxParameter2.isHidden() == False:
+                parameterValue = _optimisedParamaterList[nextIndex][0]
+                lowerLimit = _optimisedParamaterList[nextIndex][1]
+                upperLimit = _optimisedParamaterList[nextIndex][2]
                 if self.spinBoxParameter2.suffix() == '%':
                     #convert from decimal fraction to %
-                    suffix = '%'
-                    parameterValue = round(parameterValue * 100.0, 3)
-                    lowerLimit = round(lowerLimit * 100.0,3)
-                    upperLimit = round(upperLimit * 100.0,3)
-                    confidenceStr = '[{}     {}]'.format(lowerLimit, upperLimit)
-                    self.lblParam2ConfInt.setText(confidenceStr)
-                    nextIndex +=1
-                else:
-                    suffix = ''
-                #For display in the PDF report, overwrite decimal volume fraction values in  _optimisedParamaterList
+                    parameterValue = parameterValue * 100.0
+                    lowerLimit = lowerLimit * 100.0
+                    upperLimit = upperLimit * 100.0
+
+                parameterValue = round(parameterValue, 3)
+                lowerLimit = round(lowerLimit,3)
+                upperLimit = round(upperLimit,3)
+                #For display in the PDF report, overwrite decimal volume 
+                #fraction values in  _optimisedParamaterList
                 #with the % equivalent
                 _optimisedParamaterList[nextIndex][0] = parameterValue
                 _optimisedParamaterList[nextIndex][1] = lowerLimit
@@ -785,65 +780,69 @@ class ModelFittingApp(QWidget):
                 self.lblParam2ConfInt.setText(confidenceStr)
                 nextIndex +=1
             
-            parameterValue = round(_optimisedParamaterList[nextIndex][0], 3)
-            lowerLimit = round(_optimisedParamaterList[nextIndex][1], 3)
-            upperLimit = round(_optimisedParamaterList[nextIndex][2], 3)
+            if self.spinBoxParameter3.isHidden() == False:
+                parameterValue = round(_optimisedParamaterList[nextIndex][0], 3)
+                lowerLimit = round(_optimisedParamaterList[nextIndex][1], 3)
+                upperLimit = round(_optimisedParamaterList[nextIndex][2], 3)
+                if self.spinBoxParameter3.suffix() == '%':
+                    parameterValue = parameterValue * 100.0
+                    lowerLimit = lowerLimit * 100.0
+                    upperLimit = upperLimit * 100.0
 
-            if self.spinBoxParameter3.suffix() == '%':
-                suffix = '%'
-                parameterValue = round(parameterValue * 100.0,3)
-                lowerLimit = round(lowerLimit * 100.0,3)
-                upperLimit = round(upperLimit * 100.0,3)
+                parameterValue = round(parameterValue,3)
+                lowerLimit = round(lowerLimit,3)
+                upperLimit = round(upperLimit,3)
                 #For display in the PDF report, overwrite decimal volume fraction values in  _optimisedParamaterList
                 #with the % equivalent
                 _optimisedParamaterList[nextIndex][0] = parameterValue
                 _optimisedParamaterList[nextIndex][1] = lowerLimit
                 _optimisedParamaterList[nextIndex][2] = upperLimit
-            else:
-                suffix = ''
-            
-            confidenceStr = '[{}     {}]'.format(lowerLimit, upperLimit)
-            self.lblParam2ConfInt.setText(confidenceStr) 
-            
-            nextIndex += 1
-            if self.spinBoxParameter4.isHidden() == False:
-                parameterValue = round(_optimisedParamaterList[nextIndex][0], 3)
-                lowerLimit = round(_optimisedParamaterList[nextIndex][1], 3)
-                upperLimit = round(_optimisedParamaterList[nextIndex][2], 3)
-                nextIndex += 1
-                if self.spinBoxParameter4.suffix() == '%':
-                    suffix = '%'
-                    parameterValue = round(parameterValue * 100.0, 3)
-                    lowerLimit = round(lowerLimit * 100.0, 3)
-                    upperLimit = round(upperLimit * 100.0, 3)
-                    #For display in the PDF report, overwrite decimal volume fraction values in  _optimisedParamaterList
-                    #with the % equivalent
-                    _optimisedParamaterList[nextIndex][0] = parameterValue
-                    _optimisedParamaterList[nextIndex][1] = lowerLimit
-                    _optimisedParamaterList[nextIndex][2] = upperLimit
-                else:
-                    suffix = ''
                 
                 confidenceStr = '[{}     {}]'.format(lowerLimit, upperLimit)
+                self.lblParam3ConfInt.setText(confidenceStr) 
+                nextIndex += 1
+
+            if self.spinBoxParameter4.isHidden() == False:
+                parameterValue = _optimisedParamaterList[nextIndex][0]
+                lowerLimit = _optimisedParamaterList[nextIndex][1]
+                upperLimit = _optimisedParamaterList[nextIndex][2]
+                
+                if self.spinBoxParameter4.suffix() == '%':
+                    parameterValue = parameterValue * 100.0
+                    lowerLimit = lowerLimit * 100.0
+                    upperLimit = upperLimit * 100.0
+                
+                parameterValue = round(parameterValue, 3)
+                lowerLimit = round(lowerLimit, 3)
+                upperLimit = round(upperLimit, 3)
+                #For display in the PDF report, overwrite decimal volume fraction values in  _optimisedParamaterList
+                #with the % equivalent
+                _optimisedParamaterList[nextIndex][0] = parameterValue
+                _optimisedParamaterList[nextIndex][1] = lowerLimit
+                _optimisedParamaterList[nextIndex][2] = upperLimit
+  
+                confidenceStr = '[{}     {}]'.format(lowerLimit, upperLimit)
                 self.lblParam4ConfInt.setText(confidenceStr)
+                nextIndex += 1
 
             if self.spinBoxParameter5.isHidden() == False:
-                parameterValue = round(_optimisedParamaterList[nextIndex][0], 3)
-                lowerLimit = round(_optimisedParamaterList[nextIndex][1], 3)
-                upperLimit = round(_optimisedParamaterList[nextIndex][2], 3)
-                nextIndex += 1
+                parameterValue = _optimisedParamaterList[nextIndex][0]
+                lowerLimit = _optimisedParamaterList[nextIndex][1]
+                upperLimit = _optimisedParamaterList[nextIndex][2]
+                
                 if self.spinBoxParameter5.suffix() == '%':
-                    suffix = '%'
-                    parameterValue = round(parameterValue * 100.0, 3)
-                    lowerLimit = round(lowerLimit * 100.0, 3)
-                    upperLimit = round(upperLimit * 100.0, 3)
-                    #For display in the PDF report, overwrite decimal volume fraction values in  _optimisedParamaterList
-                    #with the % equivalent
-                    _optimisedParamaterList[nextIndex][0] = parameterValue
-                    _optimisedParamaterList[nextIndex][1] = lowerLimit
-                    _optimisedParamaterList[nextIndex][2] = upperLimit
-                else:
-                    suffix = ''
+                    parameterValue = parameterValue * 100.0
+                    lowerLimit = lowerLimit * 100.0
+                    upperLimit = upperLimit * 100.0
+                
+                parameterValue = round(parameterValue, 3)
+                lowerLimit = round(lowerLimit, 3)
+                upperLimit = round(upperLimit, 3)
+                #For display in the PDF report, overwrite decimal volume fraction values in  _optimisedParamaterList
+                #with the % equivalent
+                _optimisedParamaterList[nextIndex][0] = parameterValue
+                _optimisedParamaterList[nextIndex][1] = lowerLimit
+                _optimisedParamaterList[nextIndex][2] = upperLimit
                 
                 confidenceStr = '[{}     {}]'.format(lowerLimit, upperLimit)
                 self.lblParam5ConfInt.setText(confidenceStr)
@@ -859,11 +858,12 @@ class ModelFittingApp(QWidget):
         try:
             logger.info('Function ClearOptimumParamaterConfLimitsOnGUI called.')
             self.lblConfInt.hide()
+            self.lblParam1ConfInt.clear()
             self.lblParam2ConfInt.clear()
-            self.lblParam2ConfInt.clear()
+            self.lblParam3ConfInt.clear()
             self.lblParam4ConfInt.clear()
             self.lblParam5ConfInt.clear()
-            self.lblParam1ConfInt.clear()
+            
             
         except Exception as e:
             print('Error in function ClearOptimumParamaterConfLimitsOnGUI: ' + str(e))
@@ -989,37 +989,39 @@ class ModelFittingApp(QWidget):
             logger.info('Function BuildParameterArray called.')
             initialParametersArray = []
 
-            #Only add the Arterial Flow Factor if a VIF has been selected
-            #and the Arterial Flow Factor spinbox is therefore visible.
-            if self.spinBoxParameter1.isHidden() == False:
-                arterialFlowFactor = self.spinBoxParameter1.value()/100
-                initialParametersArray.append(arterialFlowFactor)
-
-            parameter1 = self.spinBoxParameter2.value()
-            if self.spinBoxParameter2.suffix() == '%':
+            parameter1 = self.spinBoxParameter1.value()
+            if self.spinBoxParameter1.suffix() == '%':
                 #This is a volume fraction so convert % to a decimal fraction
                 parameter1 = parameter1/100.0
             initialParametersArray.append(parameter1)
-        
-            parameter2 = self.spinBoxParameter3.value()
-            if self.spinBoxParameter3.suffix() == '%':
-                 #This is a volume fraction so convert % to a decimal fraction
-                parameter2 = parameter2/100.0
-            initialParametersArray.append(parameter2)
-        
-            if self.spinBoxParameter4.isHidden() == False:
-                parameter3 = self.spinBoxParameter4.value()
-                if self.spinBoxParameter4.suffix() == '%':
+
+            if self.spinBoxParameter2.isHidden() == False:
+                parameter2 = self.spinBoxParameter2.value()
+                if self.spinBoxParameter2.suffix() == '%':
+                    #This is a volume fraction so convert % to a decimal fraction
+                    parameter2 = parameter2/100.0
+                initialParametersArray.append(parameter2)
+            
+            if self.spinBoxParameter3.isHidden() == False:
+                parameter3 = self.spinBoxParameter3.value()
+                if self.spinBoxParameter3.suffix() == '%':
                      #This is a volume fraction so convert % to a decimal fraction
                     parameter3 = parameter3/100.0
                 initialParametersArray.append(parameter3)
-
-            if self.spinBoxParameter5.isHidden() == False:
-                parameter4 = self.spinBoxParameter5.value()
-                if self.spinBoxParameter5.suffix() == '%':
+        
+            if self.spinBoxParameter4.isHidden() == False:
+                parameter4 = self.spinBoxParameter4.value()
+                if self.spinBoxParameter4.suffix() == '%':
                      #This is a volume fraction so convert % to a decimal fraction
                     parameter4 = parameter4/100.0
                 initialParametersArray.append(parameter4)
+
+            if self.spinBoxParameter5.isHidden() == False:
+                parameter5 = self.spinBoxParameter5.value()
+                if self.spinBoxParameter5.suffix() == '%':
+                     #This is a volume fraction so convert % to a decimal fraction
+                    parameter5 = parameter5/100.0
+                initialParametersArray.append(parameter5)
 
             return initialParametersArray
         except Exception as e:
@@ -1054,25 +1056,27 @@ class ModelFittingApp(QWidget):
 
             modelName = str(self.cmbModels.currentText())
             
-            if self.spinBoxParameter1.isHidden() == False:
-                self.spinBoxParameter1.setValue(parameterList[0]* 100) #Convert decimal fraction to %
-                nextIndex = 1
+            if self.spinBoxParameter1.suffix() == '%':
+                #Convert decimal fraction to %
+                self.spinBoxParameter1.setValue(parameterList[0]* 100) 
             else:
-                nextIndex = 0
-                
-            if modelName == 'HF1-2CFM':
-                if not self.ckbParameter2.isChecked():
-                    if self.spinBoxParameter2.suffix() == '%':
-                        self.spinBoxParameter2.setValue(parameterList[nextIndex]* 100) #Convert Volume fraction to %
-                    else:
-                        self.spinBoxParameter2.setValue(parameterList[nextIndex])
-                    nextIndex += 1
+                self.spinBoxParameter1.setValue(parameterList[0])
+            nextIndex = 1
+              
+            if self.spinBoxParameter2.isHidden() == False:
+                if self.spinBoxParameter2.suffix() == '%':
+                    #Convert Volume fraction to %
+                    self.spinBoxParameter2.setValue(parameterList[nextIndex]* 100) 
+                else:
+                    self.spinBoxParameter2.setValue(parameterList[nextIndex])
+                nextIndex += 1
 
-            if self.spinBoxParameter3.suffix() == '%':
-                self.spinBoxParameter3.setValue(parameterList[nextIndex]* 100) #Convert Volume fraction to %
-            else:
-                self.spinBoxParameter3.setValue(parameterList[nextIndex])
-            nextIndex += 1
+            if self.spinBoxParameter3.isHidden() == False:  
+                if self.spinBoxParameter3.suffix() == '%':
+                    self.spinBoxParameter3.setValue(parameterList[nextIndex]* 100) #Convert Volume fraction to %
+                else:
+                    self.spinBoxParameter3.setValue(parameterList[nextIndex])
+                nextIndex += 1
 
             if self.spinBoxParameter4.isHidden() == False:
                 if self.spinBoxParameter4.suffix() == '%':
@@ -1877,7 +1881,7 @@ class ModelFittingApp(QWidget):
                 boolFixVe = True
             else:
                 boolFixVe = False
-            if TracerKineticModels.GetModelInletType(modelName) == 'dual':
+            if  _objXMLReader.getModelInletType(modelName) == 'dual':
                 if boolAIFSelected and boolVIFSelected:
                     parameterArray = self.BuildParameterArray()
                     logger.info('TracerKineticModels.ModelSelector called when model ={}, parameter array = {} and boolFixVe={}'. format(modelName, parameterArray, boolFixVe))        
@@ -1885,7 +1889,7 @@ class ModelFittingApp(QWidget):
                        arrayAIFConcs, parameterArray, boolFixVe, arrayVIFConcs)
                     arrayModel =  np.array(_listModel, dtype='float')
                     ax.plot(arrayTimes, arrayModel, 'g--', label= modelName + ' model')
-            elif TracerKineticModels.GetModelInletType(modelName) == 'single':
+            elif _objXMLReader.getModelInletType(modelName) == 'single':
                 if boolAIFSelected:
                     parameterArray = self.BuildParameterArray()
                     logger.info('TracerKineticModels.ModelSelector called when model ={} and parameter array = {} and boolFixVe={}'. format(modelName, parameterArray, boolFixVe))        

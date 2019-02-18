@@ -3,7 +3,9 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-class XMLReader():
+FIRST_ITEM_MODEL_LIST = 'Select a model'
+
+class XMLReader:
     def __init__(self): 
         try:
             self.XMLFileParsedOK = True
@@ -48,7 +50,7 @@ class XMLReader():
             shortModelNames = self.root.findall('./model/name/short')
             tempList = [name.text 
                         for name in shortModelNames]
-            tempList.insert(0, 'Select a model')
+            tempList.insert(0, FIRST_ITEM_MODEL_LIST)
             
             return tempList
 
@@ -107,7 +109,7 @@ class XMLReader():
     def getModelInletType(self, shortModelName):
         try:
             logger.info('XMLReader.getModelInletType called with short model name= ' + shortModelName)
-            if len(shortModelName) > 0:
+            if len(shortModelName) > 0 and shortModelName != FIRST_ITEM_MODEL_LIST:
                 xPath='./model[@id=' + chr(34) + shortModelName + chr(34) + ']/inlet_type'
                 modelInletType= self.root.find(xPath)
                 if modelInletType.text:
