@@ -89,7 +89,7 @@ class XMLReader:
                 xPath='./model[@id=' + chr(34) + shortModelName + chr(34) + \
                     ']/name/long'
                 modelName = self.root.find(xPath)
-                if modelName:
+                if modelName.text:
                     logger.info('XMLReader.getLongModelName found long model name ' + \
                         modelName.text)
                     return modelName.text
@@ -170,7 +170,7 @@ class XMLReader:
                 if units.text == '%':
                     boolIsPercentage = True
 
-                fullName = longName.text + ', ' + \
+                fullName = longName.text + ', \n' + \
                             shortName.text + \
                             '(' + units.text + ')'
 

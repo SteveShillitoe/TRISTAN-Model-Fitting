@@ -16,9 +16,8 @@ TRISTAN_LOGO = 'images\\TRISTAN LOGO.jpg'
 #Create logger
 logger = logging.getLogger(__name__)
 
-#This is a global variable used to hold the current date and time 
-#displayed in the footer of the PDF report.
-currentDateTime = str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+
+
 
 
 #header and footer methods in FPDF render the page header and footer.
@@ -53,6 +52,7 @@ class PDF(FPDF):
         # Page number - centred
         self.cell(0, 10, 'Page ' + str(self.page_no()), 0, 0, 'C')
         # Current Date & Time - Right justified
+        currentDateTime = str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
         self.cell(0, 10, currentDateTime, 0, 0, 'R')
 
     def CreateAndSavePDFReport(self, fileName, dataFileName, modelName, imageName, 

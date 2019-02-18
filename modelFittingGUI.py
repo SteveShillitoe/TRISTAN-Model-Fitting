@@ -180,24 +180,6 @@ MIN_NUM_COLUMNS_CSV_FILE = 3
 TRISTAN_LOGO = 'images\\TRISTAN LOGO.jpg'
 LARGE_TRISTAN_LOGO ='images\\logo-tristan.png'
 UNI_OF_LEEDS_LOGO ='images\\uni-leeds-logo.jpg'
-
-#Model 1: 2-2CFM
-DEFAULT_VALUE_Ve_2_2CFM = 20.0
-DEFAULT_VALUE_Fp_2_2CFM = 1.0
-DEFAULT_VALUE_Kbh_2_2CFM = 0.017
-DEFAULT_VALUE_Khe_2_2CFM = 0.22
-#Other models
-DEFAULT_VALUE_Ve = 23.0
-DEFAULT_VALUE_Kbh = 0.0918
-DEFAULT_VALUE_Khe = 2.358
-DEFAULT_VALUE_Fp = 0.0001
-DEFAULT_VALUE_Vp = 10.0
-DEFAULT_VALUE_Vh = 75.0
-DEFAULT_VALUE_Vb = 2.0
-DEFAULT_VALUE_Ktrans = 0.10
-DEFAULT_VALUE_Kce = 0.025
-DEFAULT_VALUE_Kbc = 0.003
-DEFAULT_VALUE_Fa = 17.0 #Arterial Flow Fraction
 #######################################
 
 #Create and configure the logger
@@ -958,7 +940,7 @@ class ModelFittingApp(QWidget):
             AIF = str(self.cmbAIF.currentText())
             VIF = str(self.cmbVIF.currentText())
             modelName = str(self.cmbModels.currentText())
-            modelInletType = TracerKineticModels.GetModelInletType(modelName)
+            modelInletType = _objXMLReader.getModelInletType(modelName)
             logger.info("Function DisplayFitModelSaveCSVButtons called. Model is " + modelName)
             if modelInletType == 'single':
                 if ROI != 'Please Select' and AIF != 'Please Select':
@@ -1171,23 +1153,14 @@ class ModelFittingApp(QWidget):
                 #TracerKineticModels.CurveFit function call 
                 arrayVIFConcs = []
             
-            if self.cboxConstaint.isChecked():
-                addConstraint = True
-            else:
-                addConstraint = False
-
             #Get the name of the model to be fitted to the ROI curve
             modelName = str(self.cmbModels.currentText())
-            #Call curve fitting routine
-            if self.ckbParameter2.isChecked():
-                boolFixVe = True
-            else:
-                boolFixVe = False
-            logger.info('TracerKineticModels.CurveFit called with model {}, parameters {}, Constraint = {} and boolFixVe = {}'.format(modelName, initialParametersArray, addConstraint, boolFixVe))
+            inletType = _objXMLReader.getModelInletType(modelName)
+            logger.info('TracerKineticModels.CurveFit called with model {} and parameters {}'.format(modelName, initialParametersArray))
             optimumParams, paramCovarianceMatrix = TracerKineticModels.CurveFit(
                 modelName, arrayTimes, 
                 arrayAIFConcs, arrayVIFConcs, arrayROIConcs,
-                initialParametersArray, addConstraint, boolFixVe)
+                initialParametersArray, inletType)
             
             _boolCurveFittingDone = True 
             logger.info('TracerKineticModels.CurveFit returned optimum parameters {} with confidence levels {}'.format(optimumParams, paramCovarianceMatrix))
@@ -1237,7 +1210,7 @@ class ModelFittingApp(QWidget):
                     parameterList1.append('N/A')
                     parameterList1.append('N/A')
                 
-                parameterDictionary[self.labelParameter2.text()] = parameterList1
+                parameterDictionary[self.labelParameter1.text()] = parameterList1
                 index +=1
 
             if self.spinBoxParameter2.isHidden() == False:
@@ -1330,14 +1303,11 @@ class ModelFittingApp(QWidget):
                     reportFileName = reportFileName + '.pdf'
                 if os.path.exists(reportFileName):
                     #delete existing copy of PDF called reportFileName
-                    os.remove(reportFileName)   
-                shortModelName = str(self.cmbModels.currentText())
-                if self.ckbParameter2.isChecked():
-                    boolFixVe = True
-                else:
-                    boolFixVe = False
-                longModelName = TracerKineticModels.GetLongModelName(shortModelName, boolFixVe)
-                
+                    os.remove(reportFileName) 
+                    
+                shortModelName = self.cmbModels.currentText()
+                longModelName = _objXMLReader.getLongModelName(shortModelName)
+
                 #Save a png of the concentration/time plot for display 
                 #in the PDF report.
                 self.figure.savefig(fname=IMAGE_NAME, dpi=150)  #dpi=150 so as to get a clear image in the PDF report
@@ -1769,6 +1739,7 @@ class ModelFittingApp(QWidget):
                 if inletType == 'single':
                     self.lblVIF.hide()
                     self.cmbVIF.hide()
+                    self.cmbVIF.setCurrentIndex(0)
                 elif inletType == 'dual':
                     self.lblVIF.show()
                     self.cmbVIF.show()
@@ -2257,25 +2228,31 @@ class ModelFittingApp(QWidget):
             modelName = str(self.cmbModels.currentText())
             logger.info('Function BatchProcessingHaveParamsChanged called when model = ' + modelName)
 
-            if modelName == '2-2CFM':
-                if (self.spinBoxParameter1.value() != DEFAULT_VALUE_Fa or
-                    self.spinBoxParameter2.value() != DEFAULT_VALUE_Ve_2_2CFM or
-                    self.spinBoxParameter3.value() != DEFAULT_VALUE_Fp_2_2CFM or
-                    self.spinBoxParameter4.value() != DEFAULT_VALUE_Khe_2_2CFM or
-                    self.spinBoxParameter5.value() !=DEFAULT_VALUE_Kbh_2_2CFM):
+            if self.spinBoxParameter1.isVisible() == True:
+                if (self.spinBoxParameter1.value() != 
+                   _objXMLReader.getParameterDefault(modelName, 1)):
                     boolParameterChanged = True
-            elif modelName == 'HF2-2CFM':
-                if (self.spinBoxParameter1.value() != DEFAULT_VALUE_Fa or
-                    self.spinBoxParameter1.value() != DEFAULT_VALUE_Ve or
-                    self.spinBoxParameter3.value() != DEFAULT_VALUE_Khe or
-                    self.spinBoxParameter4.value() != DEFAULT_VALUE_Kbh):
+           
+            if self.spinBoxParameter2.isVisible() == True:
+                if (self.spinBoxParameter2.value() != 
+                   _objXMLReader.getParameterDefault(modelName, 2)):
                     boolParameterChanged = True
-            elif modelName == 'HF1-2CFM':
-                if (self.spinBoxParameter1.value() != DEFAULT_VALUE_Ve or
-                    self.spinBoxParameter3.value() != DEFAULT_VALUE_Khe or
-                    self.spinBoxParameter4.value() != DEFAULT_VALUE_Kbh):
+                    
+            if self.spinBoxParameter3.isVisible() == True:
+                if (self.spinBoxParameter3.value() != 
+                   _objXMLReader.getParameterDefault(modelName,3)):
+                    boolParameterChanged = True  
+                    
+            if self.spinBoxParameter4.isVisible() == True:
+                if (self.spinBoxParameter4.value() != 
+                   _objXMLReader.getParameterDefault(modelName, 4)):
                     boolParameterChanged = True
 
+            if self.spinBoxParameter5.isVisible() == True:
+                if (self.spinBoxParameter5.value() != 
+                   _objXMLReader.getParameterDefault(modelName, 5)):
+                    boolParameterChanged = True
+            
             return boolParameterChanged    
         except Exception as e:
             print('Error in function BatchProcessingHaveParamsChanged: ' + str(e) )

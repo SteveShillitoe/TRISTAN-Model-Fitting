@@ -41,22 +41,6 @@ modelInletTypeDict = {'2-2CFM':'dual',
 PARAMETER_UPPER_BOUND_VOL_FRACTION = 1.0
 PARAMETER_UPPER_BOUND_RATE = np.inf
 
-def GetListModels():
-    return list(modelDict.keys())
-
-def GetLongModelName(shortModelName, fixVe:bool = False) -> str:
-    """Returns the full name of a model whose short name is shortModelName."""
-    longName =  modelDict.get(shortModelName)
-    if fixVe:
-       longName = longName + '-Fixed Ve'
-    return longName
-
-def GetModelImageName(shortModelName, fixVe:bool = False) -> str:
-    """Returns the file path and name of the image that represents schematically
-    the model whose short name is shortModelName."""
-    if fixVe:
-        shortModelName = shortModelName + '-FixVe'
-    return modelImageDict.get(shortModelName)
 
 def GetModelInletType(shortModelName) -> str:
     """Returns the inlet type (single or dual) of the model whose short name is shortModelName."""
@@ -307,7 +291,7 @@ def HighFlowSingleInletTwoCompartmentGadoxetateModelFixedVe(xData2DArray,
             logger.error('TracerKineticModels.HighFlowSingleInletTwoCompartmentGadoxetateModelFixedVe:' + str(e) )
 
 def CurveFit(modelName: str, times, AIFConcs, VIFConcs, concROI, 
-             paramArray, constrain: bool, fixVe: bool):
+             paramArray, inletType):
     """This function calls the curve_fit function imported from scipy.optimize 
     to fit the time/conconcentration data calculated by a model in this module 
     to actual Region of Interest (ROI) concentration/time data using   
@@ -339,9 +323,6 @@ def CurveFit(modelName: str, times, AIFConcs, VIFConcs, concROI,
 
         paramArray - list of model input parameter values.
 
-        constrain - Boolean that indicates if a contraint should be 
-            applied to the input parameters during curve fitting.
-
         Returns
         ------
         optimumParams - An array of optimum values of the model input parameters
@@ -350,11 +331,13 @@ def CurveFit(modelName: str, times, AIFConcs, VIFConcs, concROI,
             Used to calculate 95% confidence limits.
     """
     try:
-        logger.info('Function TracerKineticModels.CurveFit called with model={}, parameters = {} and constrain={}'.format(modelName,paramArray, constrain) )
+        logger.info(
+            'Function TracerKineticModels.CurveFit called with model={},parameters = {}'
+            .format(modelName,paramArray) )
         
-        if GetModelInletType(modelName) == 'dual':
+        if inletType == 'dual':
             timeInputConcs2DArray = np.column_stack((times, AIFConcs, VIFConcs))
-        else:
+        elif inletType == 'single':
             timeInputConcs2DArray = np.column_stack((times, AIFConcs))
 
         if modelName ==  '2-2CFM':
@@ -369,20 +352,7 @@ def CurveFit(modelName: str, times, AIFConcs, VIFConcs, concROI,
                             bounds=([0.0,0.0001,0.0,0.0001], [1., 0.9999, 100.0, 100.0]))
             
         elif modelName == 'HF1-2CFM':
-            if fixVe:
-                Ve = paramArray[0] 
-                Khe = paramArray[1]
-                Kbh = paramArray[2]
-                params = []
-                params.append(Khe)
-                params.append(Kbh)
-            
-                hep_conc = (concROI - Ve*AIFConcs)/(1-Ve)
-                return curve_fit(HighFlowSingleInletTwoCompartmentGadoxetateModelFixedVe, 
-                             timeInputConcs2DArray, hep_conc, params,
-                             bounds=([0.0,0.0001], [100.0, 100.0]))
-            else:
-                return curve_fit(HighFlowSingleInletTwoCompartmentGadoxetateModel, 
+            return curve_fit(HighFlowSingleInletTwoCompartmentGadoxetateModel, 
                              timeInputConcs2DArray, concROI, paramArray,
                              bounds=([0.0001,0.0,0.0001], [0.9999, 100.0, 100.0]))
             
