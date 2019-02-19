@@ -947,7 +947,7 @@ class ModelFittingApp(QWidget):
             print('Error in function SetParameterSpinBoxValue ' + str(e))
             logger.error('Error in function SetParameterSpinBoxValue '  + str(e))
 
-    def setParameterSpinBoxValues(self, parameterList):
+    def SetParameterSpinBoxValues(self, parameterList):
         """Sets the value displayed in the model parameter spinboxes 
            to the calculated optimum model parameter values.
         
@@ -956,7 +956,7 @@ class ModelFittingApp(QWidget):
             parameterList - Array of optimum model input parameter values.
         """
         try:
-            logger.info('Function setParameterSpinBoxValues called with parameterList = {}'.format(parameterList))
+            logger.info('Function SetParameterSpinBoxValues called with parameterList = {}'.format(parameterList))
            
             modelName = str(self.cmbModels.currentText())
             numParams = _objXMLReader.getNumberOfParameters(modelName)
@@ -973,8 +973,8 @@ class ModelFittingApp(QWidget):
                 self.SetParameterSpinBoxValue(5, 4, parameterList)
             
         except Exception as e:
-            print('Error in function setParameterSpinBoxValues ' + str(e))
-            logger.error('Error in function setParameterSpinBoxValues '  + str(e))
+            print('Error in function SetParameterSpinBoxValues ' + str(e))
+            logger.error('Error in function SetParameterSpinBoxValues '  + str(e))
 
     def Calculate95ConfidenceLimits(self, numDataPoints: int, numParams: int, 
                                     optimumParams, paramCovarianceMatrix):
@@ -1065,7 +1065,7 @@ class ModelFittingApp(QWidget):
             
             #Display results of curve fitting  
             #(optimum model parameter values) on GUI.
-            self.setParameterSpinBoxValues(optimumParams)
+            self.SetParameterSpinBoxValues(optimumParams)
 
             #Plot the best curve on the graph
             self.PlotConcentrations('RunCurveFit')
@@ -1480,10 +1480,10 @@ class ModelFittingApp(QWidget):
             print('Error in function populateParameterLabelAndSpinBox: ' + str(e) )
             logger.error('Error in function populateParameterLabelAndSpinBox: ' + str(e) )
 
-    def setParameterSpinBoxToDefault(self, modelName, paramNumber):
+    def SetParameterSpinBoxToDefault(self, modelName, paramNumber):
         try:
             logger.info(
-                'setParameterSpinBoxToDefault called with paramNumber=' 
+                'SetParameterSpinBoxToDefault called with paramNumber=' 
                 + str(paramNumber))
             default = _objXMLReader.getParameterDefault(modelName, paramNumber)
         
@@ -1505,15 +1505,15 @@ class ModelFittingApp(QWidget):
 
             numParams = _objXMLReader.getNumberOfParameters(modelName)
             if numParams >= 1:
-                self.setParameterSpinBoxToDefault(modelName, 1)
+                self.SetParameterSpinBoxToDefault(modelName, 1)
             if numParams >= 2:
-                self.setParameterSpinBoxToDefault(modelName, 2)
+                self.SetParameterSpinBoxToDefault(modelName, 2)
             if numParams >= 3:
-                self.setParameterSpinBoxToDefault(modelName, 3)
+                self.SetParameterSpinBoxToDefault(modelName, 3)
             if numParams >= 4:
-                self.setParameterSpinBoxToDefault(modelName, 4)
+                self.SetParameterSpinBoxToDefault(modelName, 4)
             if numParams >= 5:
-                self.setParameterSpinBoxToDefault(modelName, 5)
+                self.SetParameterSpinBoxToDefault(modelName, 5)
 
         except Exception as e:
             print('Error in function InitialiseParameterSpinBoxes: ' + str(e) )
@@ -1844,7 +1844,7 @@ class ModelFittingApp(QWidget):
                     else:
                         #Reset parameters to values selected by the user before
                         #the start of batch processing
-                        self.setParameterSpinBoxValues(initialParameterArray)
+                        self.SetParameterSpinBoxValues(initialParameterArray)
 
                     #Set global filename to name of file in current iteration 
                     #as this variable used to write datafile name in the PDF report
