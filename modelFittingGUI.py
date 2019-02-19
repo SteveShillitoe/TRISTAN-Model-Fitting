@@ -403,7 +403,6 @@ class ModelFittingApp(QWidget):
         self.cmbAIF.activated.connect(lambda: self.PlotConcentrations('cmbAIF'))
         #When an AIF is selected display the Fit Model and Save plot CVS buttons.
         self.cmbAIF.currentIndexChanged.connect(self.DisplayFitModelSaveCSVButtons)
-        self.cmbVIF.currentIndexChanged.connect(self.DisplayArterialFlowFactorSpinBox)
         self.cmbVIF.currentIndexChanged.connect(self.DisplayFitModelSaveCSVButtons)
         #When a VIF is selected plot its concentration data on the graph.
         self.cmbVIF.activated.connect(lambda: self.PlotConcentrations('cmbVIF'))
@@ -456,9 +455,6 @@ class ModelFittingApp(QWidget):
         self.labelParameter2 = QLabel("")
         self.ckbParameter2 = QCheckBox("Fix")
         self.ckbParameter2.hide()
-        self.ckbParameter2.clicked.connect(self.OptimumParameterChanged)
-        self.ckbParameter2.clicked.connect(self.DisplayModelImage)
-        self.ckbParameter2.clicked.connect(lambda:  self.PlotConcentrations('ckbParameter2'))
         self.lblParam2ConfInt = QLabel("")
         self.lblParam2ConfInt.setAlignment(QtCore.Qt.AlignCenter)
         
@@ -539,7 +535,6 @@ class ModelFittingApp(QWidget):
         modelHorizontalLayoutPara4.addWidget(self.spinBoxParameter5)
         modelHorizontalLayoutPara4.addWidget(self.ckbParameter5)
         modelHorizontalLayoutPara4.addWidget(self.lblParam5ConfInt)
-       
         
         self.btnFitModel = QPushButton('Fit Model')
         self.btnFitModel.setToolTip('Use non-linear least squares to fit the selected model to the data')
@@ -575,7 +570,6 @@ class ModelFittingApp(QWidget):
         self.pbar = QProgressBar(self)
         verticalLayout.addWidget(self.pbar)
         self.pbar.hide()
-        
 
     def DisplayModelFittingGroupBox(self):
         """Shows the model fitting group box if a ROI is selected. 
@@ -773,8 +767,6 @@ class ModelFittingApp(QWidget):
             self.lblParam3ConfInt.clear()
             self.lblParam4ConfInt.clear()
             self.lblParam5ConfInt.clear()
-            
-            
         except Exception as e:
             print('Error in function ClearOptimumParamaterConfLimitsOnGUI: ' + str(e))
             logger.error('Error in function ClearOptimumParamaterConfLimitsOnGUI: ' + str(e))
@@ -847,14 +839,6 @@ class ModelFittingApp(QWidget):
         except Exception as e:
             print('Error in function ClearOptimisedParamaterList: ' + str(e)) 
             logger.error('Error in function ClearOptimisedParamaterList: ' + str(e))
-
-    def DisplayArterialFlowFactorSpinBox(self):
-        if str(self.cmbVIF.currentText()) == 'Please Select':
-            self.labelParameter2.hide()
-            self.spinBoxParameter1.hide()
-        else:
-            self.labelParameter2.show()
-            self.spinBoxParameter1.show()
 
     def DisplayFitModelSaveCSVButtons(self):
         """Displays the Fit Model and Save CSV buttons if both a ROI & AIF 
@@ -1458,7 +1442,7 @@ class ModelFittingApp(QWidget):
             objLabel = getattr(self, 'labelParameter' + str(paramNumber))
             objLabel.setText(paramName)
             objLabel.show()
-        
+            
             objSpinBox = getattr(self, 'spinBoxParameter' + str(paramNumber))
             objSpinBox.blockSignals(True)
             objSpinBox.setDecimals(precision)
