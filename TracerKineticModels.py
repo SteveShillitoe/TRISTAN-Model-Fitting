@@ -20,33 +20,9 @@ import logging
 #Create logger
 logger = logging.getLogger(__name__)
 
-#Dictionary of model names - short name:long name pairs
-modelDict = {'Select a model':'Select a model',
-                   '2-2CFM':'2 Inlet - Two Compartment Filtration Model',
-                   'HF2-2CFM':'High Flow 2 Inlet - Two Compartment Filtration Model',
-                   'HF1-2CFM':'High Flow 1 Inlet - Two Compartment Filtration Model'}
 
-#Dictionary linking the model with a graphic file containing its visual representation.
-modelImageDict = {'2-2CFM':'images\\DualInletTwoCompartmentGadoxetateModel.png',
-                   'HF2-2CFM':'images\\HighFlowDualInletTwoCompartmentGadoxetateModel.png',
-                   'HF1-2CFM':'images\\HighFlowSingleInletTwoCompartmentGadoxetateModel.png',
-                   'HF1-2CFM-FixVe':'images\\HighFlowSingleInletTwoCompartmentGadoxetateModel_fixedve.png'}
-
-#Dictionary linking a model with its input type:single or dual
-modelInletTypeDict = {'2-2CFM':'dual',
-                    'HF2-2CFM':'dual',
-                     'HF1-2CFM':'single'}
-
-#Constants
-PARAMETER_UPPER_BOUND_VOL_FRACTION = 1.0
-PARAMETER_UPPER_BOUND_RATE = np.inf
-
-
-def GetModelInletType(shortModelName) -> str:
-    """Returns the inlet type (single or dual) of the model whose short name is shortModelName."""
-    return modelInletTypeDict.get(shortModelName)
-
-def ModelSelector(modelName: str, times, AIFConcentration, parameterArray, fixVe: bool,
+def ModelSelector(modelName: str, times, AIFConcentration, 
+                  parameterArray,
                   VIFConcentration=[]):
     """Function called in the GUI of the model fitting application to select the 
     function corresponding to each model.
@@ -102,11 +78,7 @@ def ModelSelector(modelName: str, times, AIFConcentration, parameterArray, fixVe
         Ve = parameterArray[0]
         Khe = parameterArray[1]
         Kbh = parameterArray[2]
-        if fixVe:
-            return HighFlowSingleInletTwoCompartmentGadoxetateModelFixedVe(
-                timeInputConcs2DArray, Khe, Kbh)
-        else:
-            return HighFlowSingleInletTwoCompartmentGadoxetateModel(
+        return HighFlowSingleInletTwoCompartmentGadoxetateModel(
                 timeInputConcs2DArray, Ve, Khe, Kbh)
         
 #Note: The input paramaters for the volume fractions and rate constants in

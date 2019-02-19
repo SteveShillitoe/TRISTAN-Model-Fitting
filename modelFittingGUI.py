@@ -705,26 +705,20 @@ class ModelFittingApp(QWidget):
         _boolCurveFittingDone=False
         self.ClearOptimisedParamaterList('Function-OptimumParameterChanged')
 
-    def ProcessOptimumParametersAfterCurveFit(self):
-        """Displays the optimum parameter values resulting from curve fitting 
-        with their confidence limits on the right-hand side of the GUI. These
-        values are stored in the global list _optimisedParamaterList
-        
-        Where appropriate decimal fractions are converted to %"""
+    def PopulateConfIntervalLabel(self, paramNumber, nextIndex):
+        logger.info('Function PopulateConfIntervalLabel called.')
         try:
-            logger.info('Function ProcessOptimumParametersAfterCurveFit called.')
-            self.lblConfInt.show()
-            
-            nextIndex = 0
-
+            objSpinBox = getattr(self, 'spinBoxParameter' + str(paramNumber))
+            objLabel = getattr(self, 'lblParam' + str(paramNumber) + 'ConfInt')
+        
             parameterValue = _optimisedParamaterList[nextIndex][0]
             lowerLimit = _optimisedParamaterList[nextIndex][1]
             upperLimit = _optimisedParamaterList[nextIndex][2]
-            if self.spinBoxParameter1.suffix() == '%':
+            if objSpinBox.suffix() == '%':
                 parameterValue = parameterValue * 100.0
                 lowerLimit = lowerLimit * 100.0
                 upperLimit = upperLimit * 100.0
-
+        
             parameterValue = round(parameterValue, 3)
             lowerLimit = round(lowerLimit, 3)
             upperLimit = round(upperLimit, 3)
@@ -734,100 +728,34 @@ class ModelFittingApp(QWidget):
             _optimisedParamaterList[nextIndex][0] = parameterValue
             _optimisedParamaterList[nextIndex][1] = lowerLimit
             _optimisedParamaterList[nextIndex][2] = upperLimit
-               
+           
             confidenceStr = '[{}     {}]'.format(lowerLimit, upperLimit)
-            self.lblParam1ConfInt.setText(confidenceStr)
-            nextIndex +=1
-            
-            if self.spinBoxParameter2.isHidden() == False:
-                parameterValue = _optimisedParamaterList[nextIndex][0]
-                lowerLimit = _optimisedParamaterList[nextIndex][1]
-                upperLimit = _optimisedParamaterList[nextIndex][2]
-                if self.spinBoxParameter2.suffix() == '%':
-                    #convert from decimal fraction to %
-                    parameterValue = parameterValue * 100.0
-                    lowerLimit = lowerLimit * 100.0
-                    upperLimit = upperLimit * 100.0
+            objLabel.setText(confidenceStr)
+        except Exception as e:
+            print('Error in function PopulateConfIntervalLabel: ' + str(e))
+            logger.error('Error in function PopulateConfIntervalLabel: ' + str(e))
 
-                parameterValue = round(parameterValue, 3)
-                lowerLimit = round(lowerLimit,3)
-                upperLimit = round(upperLimit,3)
-                #For display in the PDF report, overwrite decimal volume 
-                #fraction values in  _optimisedParamaterList
-                #with the % equivalent
-                _optimisedParamaterList[nextIndex][0] = parameterValue
-                _optimisedParamaterList[nextIndex][1] = lowerLimit
-                _optimisedParamaterList[nextIndex][2] = upperLimit
-                confidenceStr = '[{}     {}]'.format(lowerLimit, upperLimit)
-                self.lblParam2ConfInt.setText(confidenceStr)
-                nextIndex +=1
-            
-            if self.spinBoxParameter3.isHidden() == False:
-                parameterValue = round(_optimisedParamaterList[nextIndex][0], 3)
-                lowerLimit = round(_optimisedParamaterList[nextIndex][1], 3)
-                upperLimit = round(_optimisedParamaterList[nextIndex][2], 3)
-                if self.spinBoxParameter3.suffix() == '%':
-                    parameterValue = parameterValue * 100.0
-                    lowerLimit = lowerLimit * 100.0
-                    upperLimit = upperLimit * 100.0
-
-                parameterValue = round(parameterValue,3)
-                lowerLimit = round(lowerLimit,3)
-                upperLimit = round(upperLimit,3)
-                #For display in the PDF report, overwrite decimal volume fraction values in  _optimisedParamaterList
-                #with the % equivalent
-                _optimisedParamaterList[nextIndex][0] = parameterValue
-                _optimisedParamaterList[nextIndex][1] = lowerLimit
-                _optimisedParamaterList[nextIndex][2] = upperLimit
-                
-                confidenceStr = '[{}     {}]'.format(lowerLimit, upperLimit)
-                self.lblParam3ConfInt.setText(confidenceStr) 
-                nextIndex += 1
-
-            if self.spinBoxParameter4.isHidden() == False:
-                parameterValue = _optimisedParamaterList[nextIndex][0]
-                lowerLimit = _optimisedParamaterList[nextIndex][1]
-                upperLimit = _optimisedParamaterList[nextIndex][2]
-                
-                if self.spinBoxParameter4.suffix() == '%':
-                    parameterValue = parameterValue * 100.0
-                    lowerLimit = lowerLimit * 100.0
-                    upperLimit = upperLimit * 100.0
-                
-                parameterValue = round(parameterValue, 3)
-                lowerLimit = round(lowerLimit, 3)
-                upperLimit = round(upperLimit, 3)
-                #For display in the PDF report, overwrite decimal volume fraction values in  _optimisedParamaterList
-                #with the % equivalent
-                _optimisedParamaterList[nextIndex][0] = parameterValue
-                _optimisedParamaterList[nextIndex][1] = lowerLimit
-                _optimisedParamaterList[nextIndex][2] = upperLimit
-  
-                confidenceStr = '[{}     {}]'.format(lowerLimit, upperLimit)
-                self.lblParam4ConfInt.setText(confidenceStr)
-                nextIndex += 1
-
-            if self.spinBoxParameter5.isHidden() == False:
-                parameterValue = _optimisedParamaterList[nextIndex][0]
-                lowerLimit = _optimisedParamaterList[nextIndex][1]
-                upperLimit = _optimisedParamaterList[nextIndex][2]
-                
-                if self.spinBoxParameter5.suffix() == '%':
-                    parameterValue = parameterValue * 100.0
-                    lowerLimit = lowerLimit * 100.0
-                    upperLimit = upperLimit * 100.0
-                
-                parameterValue = round(parameterValue, 3)
-                lowerLimit = round(lowerLimit, 3)
-                upperLimit = round(upperLimit, 3)
-                #For display in the PDF report, overwrite decimal volume fraction values in  _optimisedParamaterList
-                #with the % equivalent
-                _optimisedParamaterList[nextIndex][0] = parameterValue
-                _optimisedParamaterList[nextIndex][1] = lowerLimit
-                _optimisedParamaterList[nextIndex][2] = upperLimit
-                
-                confidenceStr = '[{}     {}]'.format(lowerLimit, upperLimit)
-                self.lblParam5ConfInt.setText(confidenceStr)
+    def ProcessOptimumParametersAfterCurveFit(self):
+        """Displays the optimum parameter values resulting from curve fitting 
+        with their confidence limits on the right-hand side of the GUI. These
+        values are stored in the global list _optimisedParamaterList
+        
+        Where appropriate decimal fractions are converted to %"""
+        try:
+            logger.info('Function ProcessOptimumParametersAfterCurveFit called.')
+            self.lblConfInt.show()
+            modelName = str(self.cmbModels.currentText())
+            numParams = _objXMLReader.getNumberOfParameters(modelName)
+            if numParams >= 1:
+                self.PopulateConfIntervalLabel(1,0)
+            if numParams >= 2:
+                self.PopulateConfIntervalLabel(2,1)
+            if numParams >= 3:
+                self.PopulateConfIntervalLabel(3,2)
+            if numParams >= 4:
+                self.PopulateConfIntervalLabel(4,3)
+            if numParams >= 5:
+                self.PopulateConfIntervalLabel(5,4)
             
         except Exception as e:
             print('Error in function ProcessOptimumParametersAfterCurveFit: ' + str(e))
@@ -959,6 +887,20 @@ class ModelFittingApp(QWidget):
             print('Error in function DisplayFitModelSaveCSVButtons: ' + str(e))
             logger.error('Error in function DisplayFitModelSaveCSVButtons: ' + str(e))
 
+    def GetSpinBoxValue(self, paramNumber, initialParametersArray):
+        logger.info('Function GetSpinBoxValue called.')
+        try:
+            objSpinBox = getattr(self, 'spinBoxParameter' + str(paramNumber))
+            parameter = objSpinBox.value()
+            if objSpinBox.suffix() == '%':
+                #This is a volume fraction so convert % to a decimal fraction
+                parameter = parameter/100.0
+            initialParametersArray.append(parameter)
+
+        except Exception as e:
+            print('Error in function GetSpinBoxValue: ' + str(e))
+            logger.error('Error in function GetSpinBoxValue: ' + str(e))
+    
     def BuildParameterArray(self) -> List[float]:
         """Forms a 1D array of model input parameters.  Volume fractions are converted 
             from percentages to decimal fractions.
@@ -971,55 +913,39 @@ class ModelFittingApp(QWidget):
             logger.info('Function BuildParameterArray called.')
             initialParametersArray = []
 
-            parameter1 = self.spinBoxParameter1.value()
-            if self.spinBoxParameter1.suffix() == '%':
-                #This is a volume fraction so convert % to a decimal fraction
-                parameter1 = parameter1/100.0
-            initialParametersArray.append(parameter1)
+            modelName = str(self.cmbModels.currentText())
+            numParams = _objXMLReader.getNumberOfParameters(modelName)
 
-            if self.spinBoxParameter2.isHidden() == False:
-                parameter2 = self.spinBoxParameter2.value()
-                if self.spinBoxParameter2.suffix() == '%':
-                    #This is a volume fraction so convert % to a decimal fraction
-                    parameter2 = parameter2/100.0
-                initialParametersArray.append(parameter2)
-            
-            if self.spinBoxParameter3.isHidden() == False:
-                parameter3 = self.spinBoxParameter3.value()
-                if self.spinBoxParameter3.suffix() == '%':
-                     #This is a volume fraction so convert % to a decimal fraction
-                    parameter3 = parameter3/100.0
-                initialParametersArray.append(parameter3)
-        
-            if self.spinBoxParameter4.isHidden() == False:
-                parameter4 = self.spinBoxParameter4.value()
-                if self.spinBoxParameter4.suffix() == '%':
-                     #This is a volume fraction so convert % to a decimal fraction
-                    parameter4 = parameter4/100.0
-                initialParametersArray.append(parameter4)
-
-            if self.spinBoxParameter5.isHidden() == False:
-                parameter5 = self.spinBoxParameter5.value()
-                if self.spinBoxParameter5.suffix() == '%':
-                     #This is a volume fraction so convert % to a decimal fraction
-                    parameter5 = parameter5/100.0
-                initialParametersArray.append(parameter5)
+            if numParams >= 1:
+                self.GetSpinBoxValue(1, initialParametersArray)
+            if numParams >= 2:
+                self.GetSpinBoxValue(2, initialParametersArray)
+            if numParams >= 3:
+                self.GetSpinBoxValue(3, initialParametersArray)
+            if numParams >= 4:
+                self.GetSpinBoxValue(4, initialParametersArray)
+            if numParams >= 5:
+                self.GetSpinBoxValue(5, initialParametersArray)
 
             return initialParametersArray
         except Exception as e:
             print('Error in function BuildParameterArray ' + str(e))
             logger.error('Error in function BuildParameterArray '  + str(e))
 
-    def BlockSpinBoxSignals(self, boolBlockSignal: bool):
-        """Blocks signals from spinboxes that fire events.  
-           Thus allowing spinbox values to be set programmatically 
-           without causing a method connected to one of their events to be executed."""
-        logger.info('Function BlockSpinBoxSignals called.')
-        self.spinBoxParameter1.blockSignals(boolBlockSignal)
-        self.spinBoxParameter2.blockSignals(boolBlockSignal)
-        self.spinBoxParameter3.blockSignals(boolBlockSignal)
-        self.spinBoxParameter4.blockSignals(boolBlockSignal)
-        self.spinBoxParameter5.blockSignals(boolBlockSignal)
+
+    def SetParameterSpinBoxValue(self, paramNumber, index, parameterList):
+        logger.info('Function SetParameterSpinBoxValue called.')
+        try:
+            objSpinBox = getattr(self, 'spinBoxParameter' + str(paramNumber))
+            objSpinBox.blockSignals(True)
+            if objSpinBox.suffix() == '%':
+                objSpinBox.setValue(parameterList[index]* 100) 
+            else:
+                objSpinBox.setValue(parameterList[index])
+            objSpinBox.blockSignals(False)
+        except Exception as e:
+            print('Error in function SetParameterSpinBoxValue ' + str(e))
+            logger.error('Error in function SetParameterSpinBoxValue '  + str(e))
 
     def setParameterSpinBoxValues(self, parameterList):
         """Sets the value displayed in the model parameter spinboxes 
@@ -1031,49 +957,21 @@ class ModelFittingApp(QWidget):
         """
         try:
             logger.info('Function setParameterSpinBoxValues called with parameterList = {}'.format(parameterList))
-            #Block signals from spinboxes, so that setting values
-            #returned from curve fitting does not trigger an event. 
-
-            self.BlockSpinBoxSignals(True)
-
+           
             modelName = str(self.cmbModels.currentText())
+            numParams = _objXMLReader.getNumberOfParameters(modelName)
+
+            if numParams >= 1:
+                self.SetParameterSpinBoxValue(1, 0, parameterList)
+            if numParams >= 2:
+                self.SetParameterSpinBoxValue(2, 1, parameterList)
+            if numParams >= 3:
+                self.SetParameterSpinBoxValue(3, 2, parameterList)
+            if numParams >= 4:
+                self.SetParameterSpinBoxValue(4, 3, parameterList)
+            if numParams >= 5:
+                self.SetParameterSpinBoxValue(5, 4, parameterList)
             
-            if self.spinBoxParameter1.suffix() == '%':
-                #Convert decimal fraction to %
-                self.spinBoxParameter1.setValue(parameterList[0]* 100) 
-            else:
-                self.spinBoxParameter1.setValue(parameterList[0])
-            nextIndex = 1
-              
-            if self.spinBoxParameter2.isHidden() == False:
-                if self.spinBoxParameter2.suffix() == '%':
-                    #Convert Volume fraction to %
-                    self.spinBoxParameter2.setValue(parameterList[nextIndex]* 100) 
-                else:
-                    self.spinBoxParameter2.setValue(parameterList[nextIndex])
-                nextIndex += 1
-
-            if self.spinBoxParameter3.isHidden() == False:  
-                if self.spinBoxParameter3.suffix() == '%':
-                    self.spinBoxParameter3.setValue(parameterList[nextIndex]* 100) #Convert Volume fraction to %
-                else:
-                    self.spinBoxParameter3.setValue(parameterList[nextIndex])
-                nextIndex += 1
-
-            if self.spinBoxParameter4.isHidden() == False:
-                if self.spinBoxParameter4.suffix() == '%':
-                    self.spinBoxParameter4.setValue(parameterList[nextIndex]* 100) #Convert Volume fraction to %
-                else:
-                    self.spinBoxParameter4.setValue(parameterList[nextIndex])
-                nextIndex += 1
-
-            if self.spinBoxParameter5.isHidden() == False:
-                if self.spinBoxParameter5.suffix() == '%':
-                    self.spinBoxParameter5.setValue(parameterList[nextIndex]* 100) #Convert Volume fraction to %
-                else:
-                    self.spinBoxParameter5.setValue(parameterList[nextIndex])
-       
-            self.BlockSpinBoxSignals(False)
         except Exception as e:
             print('Error in function setParameterSpinBoxValues ' + str(e))
             logger.error('Error in function setParameterSpinBoxValues '  + str(e))
@@ -1187,6 +1085,28 @@ class ModelFittingApp(QWidget):
             print('Error in function RunCurveFit with model ' + modelName + ': ' + str(e))
             logger.error('Error in function RunCurveFit with model ' + modelName + ': ' + str(e))
     
+    def GetValuesForOneParameter(self, paramNumber, index,
+                    confidenceLimitsArray, parameterDictionary):
+        try:
+            logger.info('Function GetValuesForOneParameter called.')
+            parameterList = []
+            objLabel = getattr(self, 'labelParameter' + str(paramNumber))
+            objSpinBox = getattr(self, 'spinBoxParameter' + str(paramNumber))
+            if confidenceLimitsArray != None:
+                parameterList.append(confidenceLimitsArray[index][0]) #Parameter Value
+                parameterList.append(confidenceLimitsArray[index][1]) #Lower Limit
+                parameterList.append(confidenceLimitsArray[index][2]) #Upper Limit
+            else:
+                parameterList.append(round(objSpinBox.value(), 2))
+                parameterList.append('N/A')
+                parameterList.append('N/A')
+            
+            parameterDictionary[objLabel.text()] = parameterList
+
+        except Exception as e:
+            print('Error in function GetValuesForOneParameter with model: ' + str(e))
+            logger.error('Error in function GetValuesForOneParameter with model: ' + str(e))
+
     def BuildParameterDictionary(self, confidenceLimitsArray = None):
         """Builds a dictionary of values and their confidence limits 
         (if curve fitting is performed) for each model input parameter (dictionary key)
@@ -1197,78 +1117,25 @@ class ModelFittingApp(QWidget):
             logger.info('BuildParameterDictionary called with confidence limits array = {}'
                         .format(confidenceLimitsArray))
             parameterDictionary = {}
+            modelName = str(self.cmbModels.currentText())
+            numParams = _objXMLReader.getNumberOfParameters(modelName)
+
+            if numParams >= 1:
+                self.GetValuesForOneParameter(1, 0,
+                    confidenceLimitsArray, parameterDictionary)
+            if numParams >= 2:
+                self.GetValuesForOneParameter(2, 1,
+                    confidenceLimitsArray, parameterDictionary)
+            if numParams >= 3:
+                self.GetValuesForOneParameter(3, 2,
+                    confidenceLimitsArray, parameterDictionary)
+            if numParams >= 4:
+                self.GetValuesForOneParameter(4, 3,
+                    confidenceLimitsArray, parameterDictionary)
+            if numParams >= 5:
+                self.GetValuesForOneParameter(5, 4,
+                    confidenceLimitsArray, parameterDictionary)
            
-            index = 0
-            if self.spinBoxParameter1.isHidden() == False:
-                parameterList1 = []
-                if confidenceLimitsArray != None:
-                    parameterList1.append(confidenceLimitsArray[index][0]) #Parameter Value
-                    parameterList1.append(confidenceLimitsArray[index][1]) #Lower Limit
-                    parameterList1.append(confidenceLimitsArray[index][2]) #Upper Limit
-                else:
-                    parameterList1.append(round(self.spinBoxParameter1.value(), 2))
-                    parameterList1.append('N/A')
-                    parameterList1.append('N/A')
-                
-                parameterDictionary[self.labelParameter1.text()] = parameterList1
-                index +=1
-
-            if self.spinBoxParameter2.isHidden() == False:
-                parameterList2=[]
-                if confidenceLimitsArray != None:
-                    parameterList2.append(confidenceLimitsArray[index][0]) #Parameter Value
-                    parameterList2.append(confidenceLimitsArray[index][1]) #Lower Limit
-                    parameterList2.append(confidenceLimitsArray[index][2]) #Upper Limit
-                else:
-                    parameterList2.append(round(self.spinBoxParameter2.value(), 2))
-                    parameterList2.append('N/A')
-                    parameterList2.append('N/A')
-                
-                parameterDictionary[self.labelParameter2.text()] = parameterList2
-                index +=1
-
-            if self.spinBoxParameter3.isHidden() == False:
-                parameterList3 =[]
-                if confidenceLimitsArray != None:
-                    parameterList3.append(confidenceLimitsArray[index][0]) #Parameter Value
-                    parameterList3.append(confidenceLimitsArray[index][1]) #Lower Limit
-                    parameterList3.append(confidenceLimitsArray[index][2]) #Upper Limit
-                else:
-                    parameterList3.append(round(self.spinBoxParameter3.value(), 2))
-                    parameterList3.append('N/A')
-                    parameterList3.append('N/A')
-                
-                parameterDictionary[self.labelParameter3.text()] = parameterList3
-                index +=1
-
-            if self.spinBoxParameter4.isHidden() == False:
-                parameterList4 = []
-                if confidenceLimitsArray != None:
-                    parameterList4.append(confidenceLimitsArray[index][0]) #Parameter Value
-                    parameterList4.append(confidenceLimitsArray[index][1]) #Lower Limit
-                    parameterList4.append(confidenceLimitsArray[index][2]) #Upper Limit
-                else:
-                    parameterList4.append(round(self.spinBoxParameter4.value(), 3))
-                    parameterList4.append('N/A')
-                    parameterList4.append('N/A')
-                
-                parameterDictionary[self.labelParameter4.text()] = parameterList4
-                index +=1
-
-            if self.spinBoxParameter5.isHidden() == False:
-                parameterList5=[]
-                if confidenceLimitsArray != None:
-                    parameterList5.append(confidenceLimitsArray[index][0]) #Parameter Value
-                    parameterList5.append(confidenceLimitsArray[index][1]) #Lower Limit
-                    parameterList5.append(confidenceLimitsArray[index][2]) #Upper Limit
-                else:
-                    parameterList5.append(round(self.spinBoxParameter5.value(), 4))
-                    parameterList5.append('N/A')
-                    parameterList5.append('N/A')
-                
-                parameterDictionary[self.labelParameter5.text()] = parameterList5
-                #print('parameterDictionary = {}'.format(parameterDictionary))
-
             return parameterDictionary
     
         except Exception as e:
@@ -1833,7 +1700,9 @@ class ModelFittingApp(QWidget):
             AIF = str(self.cmbAIF.currentText())
             VIF = str(self.cmbVIF.currentText())
 
-            logger.info('Function plot called from ' + nameCallingFunction + ' when ROI={}, AIF={} and VIF={}'.format(ROI, AIF, VIF))
+            logger.info('Function plot called from ' 
+                        + nameCallingFunction + 
+                        ' when ROI={}, AIF={} and VIF={}'.format(ROI, AIF, VIF))
 
             if AIF != 'Please Select':
                 #Plot AIF curve
@@ -1848,27 +1717,22 @@ class ModelFittingApp(QWidget):
                 boolVIFSelected = True
                     
             #Plot concentration curve from the model
-            if self.ckbParameter2.isChecked():
-                boolFixVe = True
-            else:
-                boolFixVe = False
             if  _objXMLReader.getModelInletType(modelName) == 'dual':
                 if boolAIFSelected and boolVIFSelected:
                     parameterArray = self.BuildParameterArray()
-                    logger.info('TracerKineticModels.ModelSelector called when model ={}, parameter array = {} and boolFixVe={}'. format(modelName, parameterArray, boolFixVe))        
+                    logger.info('TracerKineticModels.ModelSelector called when model ={}, parameter array = {}'. format(modelName, parameterArray))        
                     _listModel = TracerKineticModels.ModelSelector(modelName, arrayTimes, 
-                       arrayAIFConcs, parameterArray, boolFixVe, arrayVIFConcs)
+                       arrayAIFConcs, parameterArray, arrayVIFConcs)
                     arrayModel =  np.array(_listModel, dtype='float')
                     ax.plot(arrayTimes, arrayModel, 'g--', label= modelName + ' model')
             elif _objXMLReader.getModelInletType(modelName) == 'single':
                 if boolAIFSelected:
                     parameterArray = self.BuildParameterArray()
-                    logger.info('TracerKineticModels.ModelSelector called when model ={} and parameter array = {} and boolFixVe={}'. format(modelName, parameterArray, boolFixVe))        
+                    logger.info('TracerKineticModels.ModelSelector called when model ={} and parameter array = {}'. format(modelName, parameterArray))        
                     _listModel = TracerKineticModels.ModelSelector(modelName, arrayTimes, 
-                       arrayAIFConcs, parameterArray, boolFixVe)
+                       arrayAIFConcs, parameterArray)
                     arrayModel =  np.array(_listModel, dtype='float')
                     ax.plot(arrayTimes, arrayModel, 'g--', label= modelName + ' model')
-
 
             if ROI != 'Please Select':  
                 ax.set_xlabel('Time (mins)', fontsize=xyAxisLabelSize)
