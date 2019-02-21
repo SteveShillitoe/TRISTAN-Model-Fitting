@@ -7,51 +7,67 @@ How to Use.
    The TRISTAN-Model-Fitting application allows the user to analyse organ time/concentration data
    by fitting a model to the Region Of Interest (ROI) time/concentration curve. 
    The TRISTAN-Model-Fitting application provides the following functionality:
-        1. Load a CSV file of concentration/time data.  The first column must contain time data 
+        1. Load an XML configuration file that describes the models to be fitted
+            to the concentration/time data.
+        2. Then load a CSV file of concentration/time data.  The first column must contain time data 
 			in seconds. The remaining columns of data must contain concentration data in 
 			millimoles (mM) for individual organs at the time points in the time column. 
 			There must be at least 2 columns of concentration data.  
 			There is no upper limit on the number of columns of concentration data.
 			Each time a CSV file is loaded, the screen is reset to its initial state.
-        2. Select a Region Of Interest (ROI) and display a plot of its concentration against
+        3. Select a Region Of Interest (ROI) and display a plot of its concentration against
             time.
-        3. The user can then select a model they would like to fit to the ROI data.  
+        4. The user can then select a model they would like to fit to the ROI data.  
             When a model is selected, a schematic representation of it is displayed on the 
             right-hand side of the screen.
-        4. Depending on the model selected the user can then select an Arterial Input Function(AIF)
+        5. Depending on the model selected the user can then select an Arterial Input Function(AIF)
             and/or a Venous Input Function (VIF) and display a plot(s) of its/their concentration 
             against time on the same axes as the ROI.
-        5. After step 4 is performed, the selected model is used to create a time/concentration series
+        6. After step 4 is performed, the selected model is used to create a time/concentration series
            based on default values for the models input parameters.  This data series is also plotted 
            on the above axes.
-        6. The default model parameters are displayed on the form and the user may vary them
+        7. The default model parameters are displayed on the form and the user may vary them
            and observe the effect on the curve generated in step 5.
-        7. Clicking the 'Reset' button resets the model input parameters to their default values.
-        8. By clicking the 'Fit Model' button, the model is fitted to the ROI data and the resulting
+        8. Clicking the 'Reset' button resets the model input parameters to their default values.
+        9. By clicking the 'Fit Model' button, the model is fitted to the ROI data and the resulting
            values of the model input parameters are displayed on the screen together with 
            their 95% confidence limits.
-        9. By clicking the 'Save plot data to CSV file' button the data plotted on the screen is saved
+        10. By clicking the 'Save plot data to CSV file' button the data plotted on the screen is saved
             to a CSV file - one column for each plot and a column for time.
             A file dialog box is displayed allowing the user to select a location 
             and enter a file name.
-        10. By clicking the 'Save Report in PDF Format', the current state of the model fitting session
+        11. By clicking the 'Save Report in PDF Format', the current state of the model fitting session
             is saved in PDF format.  This includes a image of the plot, name of the model, name of the 
             data file and the values of the model input parameters. If curve fitting has been carried 
             out and the values of the model input parameters have not been manually adjusted, then
             the report will contain the 95% confidence limits of the model input parameter values 
             arrived at by curve fitting.
-        11. While this application is running, events & function calls with data where appropriate 
+        12. While this application is running, events & function calls with data where appropriate 
             are logged to a file called TRISTAN.log, stored at the same location as the 
             source code or executable. This file will used as a debugging aid. 
             When a new instance of the application is started, 
             TRISTAN.log from the last session will be deleted and a new log file started.
-        12. Clicking the 'Exit' button closes the application.
+        13. Clicking the 'Start Batch Processing' button applies model fitting
+            to the concentration/time data in all the files in the folder containing
+            the data file selected in step 2.  For each file, a PDF report is created
+            as in step 11. Also, a Microsoft Excel spread sheet summarising all
+            the results is generated.
+        14. Clicking the 'Exit' button closes the application.
 
 Application Module Structure.
 ---------------------------
 The modelFittingGUI.py class module is the start up module in the TRISTAN-Model-Fitting application. 
 It defines the GUI and the logic providing the application's functionality.
 The GUI was built using PyQT5.
+
+The XMLReader.py class module uses the xml.etree.ElementTree package to parse
+the XML configuration file that describes all the models to be made available
+for curve fitting.  It also contains functions that query the XML tree using
+XPath notation and return data.
+
+The ExcelWriter.py class module uses the openpyxl package to create an Excel
+spreadsheet and write a summary of the results from the batch processing of
+data files.
 
 The styleSheet.py module contains style instructions using CSS notation for each control/widget.
 
@@ -62,29 +78,38 @@ Objects of the following 2 classes are created in modelFittingGUI.py and provide
 to this class:
 The PDFWrite.py class module creates and saves a report of a model fitting session in a PDF file.
 
-The TracerkineticModels.py module contains functions that calculate the variation of concentration
+The TracerkineticModels.py module contains functions that use 
+tracer kinetic models to calculate the variation of concentration
 with time according to several tracer kinetic models. 
 
 GUI Structure
 --------------
-The GUI is based on the QDialog class, which is the base class of dialog windows.
-The GUI contains a single form.  Controls are arranged in three verticals on this form.
+The GUI is based on the QWidget class.
+The GUI contains a single form.  Controls are arranged in two vertical columns on this form
+using Vertical Layout widgets.
 Consequently, a horizontal layout control in placed on this form. Within this horizontal
-layout is placed 3 vertical layout controls.
+layout are placed 2 vertical layout controls.
 
-The left-hand side vertical layout holds controls pertaining to the input and selection of data
-and the selection of a model to analyse the data.
-
-The central vertical layout holds a canvas widget for the graphical display of the data.
+The left-hand side vertical layout holds controls pertaining to the input and 
+selection of data and the selection of a model to analyse the data. The results
+of curve fitting, optimum parameter values and their confidence limits
+are displayed next to their parameter input values.
 
 The right-hand side vertical layout holds controls for the display of a schematic 
-representation of the chosen model and the optimum model input parameters resulting
-from fitting the curve to the Region of Interest (ROI) concentration/time curve.
+representation of the chosen model and a canvas widget for the 
+graphical display of the data.
 
 The appearance of the GUI is controlled by the CSS commands in styleSheet.py
 
 Reading Data into the Application.
 ----------------------------------
+The function LoadConfigFile loads and parses the contents of the XML file that
+describes the models to be used for curve fitting.  If parsing is successful,
+the XML tree is stored in memory and used to build a list of models for display
+in a combo box on the GUI, and the 'Load Data File' button is made visible.
+See the README file for a detailed description of the XML configuration file.
+
+Clicking the 'Load Data File' button executes the LoadDataFile function.
 The function LoadDataFile loads the contents of a CSV file containing time and 
 concentration data into a dictionary of lists. The key is the name of the organ 
 or 'time' and the corresponding value is a list of concentrations for that organ
@@ -194,31 +219,31 @@ logger = logging.getLogger(__name__)
 
 class ModelFittingApp(QWidget):   
     """This class defines the TRISTAN Model Fitting software 
-       based on a QDialog window.
+       based on QWidget class that provides the GUI.
        This includes seting up the GUI and defining the methods 
        that are executed when events associated with widgets on
        the GUI are executed."""
-    
+     
     def __init__(self, parent=None):
-        """Creates the GUI. Controls on the GUI are grouped into 3 vertical
+        """Creates the GUI. Controls on the GUI are placed onto 2 vertical
            layout panals placed on a horizontal layout panal.
            The appearance of the widgets is determined by CSS 
            commands in the module styleSheet.py. 
            
            The left-handside vertical layout panal holds widgets for the 
            input of data & the selection of the model to fit to the data.
+           Optimum parameter data and their confidence limits resulting
+           from the model fit are also displayed.
            
-           The middle vertical layout panal holds the graph displaying the
-           data and the fitted model.
-           
-           The right-hand vertical layout panal displays parameter data and
-           their confidence limits pertaining to the model fit. 
+           The right-handside vertical layout panal holds the graph 
+           displaying the time/concentration data and the fitted model.
+           Above this graph is displayed a schematic representation of the
+           model.
            
            This method coordinates the calling of methods that set up the 
-           widgets on the 3 vertical layout panals."""
+           widgets on the 2 vertical layout panals."""
 
         super(ModelFittingApp, self).__init__(parent)
-      
         self.setWindowTitle(WINDOW_TITLE)
         self.setWindowIcon(QIcon(TRISTAN_LOGO))
         width, height = self.GetScreenResolution()
@@ -1183,14 +1208,28 @@ class ModelFittingApp(QWidget):
             print('Error in function CreatePDFReport: ' + str(e))
             logger.error('Error in function CreatePDFReport: ' + str(e))
 
+    def PopulateModelListCombo(self):
+        try:
+            logger.info('Function PopulateModelListCombo called.')
+            #Clear the list of models, ready to accept 
+            #a new list of models from the XML configuration
+            #file just loaded
+            self.cmbModels.clear()
+
+            tempList = _objXMLReader.getListModelShortNames()
+            self.cmbModels.blockSignals(True)
+            self.cmbModels.addItems(tempList)
+            self.cmbModels.blockSignals(False)
+
+        except Exception as e:
+            print('Error in function PopulateModelListCombo: ' + str(e))
+            logger.error('Error in function PopulateModelListCombo: ' + str(e))
+
     def LoadConfigFile(self):
         """Loads the contents of an XML file containing model(s) configuration data"""
          
         global _objXMLReader
-        #Clear the list of models, ready to accept 
-        #a new list of models from the XML configuration
-        #file about to be loaded
-        self.cmbModels.clear()
+        
         self.HideAllControlsOnGUI()
         
         try:
@@ -1210,12 +1249,8 @@ class ModelFittingApp(QWidget):
                     
                     folderName, configFileName = os.path.split(fullFilePath)
                     self.statusbar.showMessage('Configuration file ' + configFileName + ' loaded')
-
-                    tempList = _objXMLReader.getListModelShortNames()
-                    self.cmbModels.blockSignals(True)
-                    self.cmbModels.addItems(tempList)
-                    self.cmbModels.blockSignals(False)
                     self.btnLoadDataFile.show()
+                    self.PopulateModelListCombo()
                 else:
                     self.btnLoadDataFile.hide()
                     self.HideAllControlsOnGUI()

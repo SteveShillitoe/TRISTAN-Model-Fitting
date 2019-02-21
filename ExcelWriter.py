@@ -16,7 +16,7 @@ class ExcelWriter:
             print('ExcelWriter.__init__: ' + str(e)) 
             logger.error('ExcelWriter.__init__: ' + str(e)) 
 
-    def isWorksheet(self, title):
+    def isWorksheet(self, title) -> bool:
         boolWSExists = False
         for sheet in self.wb:
             if sheet.title == title:
