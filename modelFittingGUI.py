@@ -205,6 +205,7 @@ MIN_NUM_COLUMNS_CSV_FILE = 3
 TRISTAN_LOGO = 'images\\TRISTAN LOGO.jpg'
 LARGE_TRISTAN_LOGO ='images\\logo-tristan.png'
 UNI_OF_LEEDS_LOGO ='images\\uni-leeds-logo.jpg'
+IMAGE_FOLDER = 'images\\'
 #######################################
 
 #Create and configure the logger
@@ -260,7 +261,7 @@ class ModelFittingApp(QWidget):
         self.SetUpLeftVerticalLayout(verticalLayoutLeft)
 
         #Set up the graph to plot concentration data on
-        # the middle vertical layout
+        # the right-hand side vertical layout
         self.SetUpPlotArea(verticalLayoutRight)
         
         logger.info("GUI created successfully.")
@@ -306,19 +307,19 @@ class ModelFittingApp(QWidget):
         self.btnLoadDataFile.setShortcut("Ctrl+L")
         self.btnLoadDataFile.setAutoDefault(False)
         self.btnLoadDataFile.resize(self.btnLoadDataFile.minimumSizeHint())
-        #Method LoadDataFile is executed in the clicked event of this button
         self.btnLoadDataFile.clicked.connect(self.LoadDataFile)
         
         #Add a vertical spacer to the top of vertical layout to ensure
         #the top of the Load Data button is level with the MATPLOTLIB toolbar 
         #in the central vertical layout.
-        verticalSpacer = QSpacerItem(20, 60, QSizePolicy.Minimum, QSizePolicy.Minimum)
+        verticalSpacer = QSpacerItem(20, 60, QSizePolicy.Minimum, 
+                          QSizePolicy.Minimum)
         #Add Load configuration file button to the top of the vertical layout
         layout.addWidget(self.btnLoadConfigFile)
         layout.addItem(verticalSpacer)
         layout.addWidget(self.btnLoadDataFile)
         layout.addItem(verticalSpacer)
-        #Create dropdown list for selection of ROI
+        #Create dropdown list & label for selection of ROI
         self.lblROI = QLabel("Region of Interest:")
         self.lblROI.setAlignment(QtCore.Qt.AlignRight)
         self.cmbROI = QComboBox()
@@ -341,7 +342,8 @@ class ModelFittingApp(QWidget):
         
         self.btnSaveReport = QPushButton('Save Report in PDF Format')
         self.btnSaveReport.hide()
-        self.btnSaveReport.setToolTip('Insert an image of the graph opposite and associated data in a PDF file')
+        self.btnSaveReport.setToolTip(
+        'Insert an image of the graph opposite and associated data in a PDF file')
         layout.addWidget(self.btnSaveReport, QtCore.Qt.AlignTop)
         self.btnSaveReport.clicked.connect(self.CreatePDFReport)
 
@@ -364,39 +366,38 @@ class ModelFittingApp(QWidget):
         #The group box is hidden until a ROI is selected.
         self.groupBoxModel.hide()
         layout.addWidget(self.groupBoxModel)
-        #layout.addItem(verticalSpacer)
         
         #Create horizontal layouts, one row of widgets to 
         #each horizontal layout. Then add them to a vertical layout, 
         #then add the vertical layout to the group box
-        modelHorizontalLayout2 = QHBoxLayout()
+        modelHorizontalLayoutModelList = QHBoxLayout()
         modelHorizontalLayoutParamLabels = QHBoxLayout()
         gridLayoutParamLabels = QGridLayout()
-        modelHorizontalLayoutParameter1 = QHBoxLayout()
-        modelHorizontalLayout3 = QHBoxLayout()
-        modelHorizontalLayout4 = QHBoxLayout()
+        modelHorizontalLayoutAIF = QHBoxLayout()
+        modelHorizontalLayoutVIF = QHBoxLayout()
         modelHorizontalLayoutReset = QHBoxLayout()
-        modelHorizontalLayout5 = QHBoxLayout()
-        modelHorizontalLayout6 = QHBoxLayout()
-        modelHorizontalLayout7 = QHBoxLayout()
-        modelHorizontalLayoutPara4 = QHBoxLayout()
-        modelHorizontalLayout8 = QHBoxLayout()
-        modelHorizontalLayout9 = QHBoxLayout()
+        modelHorizontalLayoutParameter1 = QHBoxLayout()
+        modelHorizontalLayoutParameter2 = QHBoxLayout()
+        modelHorizontalLayoutParameter3 = QHBoxLayout()
+        modelHorizontalLayoutParameter4 = QHBoxLayout()
+        modelHorizontalLayoutParameter5 = QHBoxLayout()
+        modelHorizontalLayoutFitModelBtn = QHBoxLayout()
+        modelHorizontalLayoutSaveCSVBtn = QHBoxLayout()
         modelVerticalLayout = QVBoxLayout()
         modelVerticalLayout.setAlignment(QtCore.Qt.AlignTop) 
-        modelVerticalLayout.addLayout(modelHorizontalLayout2)
-        modelVerticalLayout.addLayout(modelHorizontalLayout3)
-        modelVerticalLayout.addLayout(modelHorizontalLayout4)
+        modelVerticalLayout.addLayout(modelHorizontalLayoutModelList)
+        modelVerticalLayout.addLayout(modelHorizontalLayoutAIF)
+        modelVerticalLayout.addLayout(modelHorizontalLayoutVIF)
         modelVerticalLayout.addLayout(modelHorizontalLayoutReset)
         modelVerticalLayout.addLayout(modelHorizontalLayoutParamLabels)
         modelHorizontalLayoutParamLabels.addLayout(gridLayoutParamLabels)
         modelVerticalLayout.addLayout(modelHorizontalLayoutParameter1)
-        modelVerticalLayout.addLayout(modelHorizontalLayout5)
-        modelVerticalLayout.addLayout(modelHorizontalLayout6)
-        modelVerticalLayout.addLayout(modelHorizontalLayout7)
-        modelVerticalLayout.addLayout(modelHorizontalLayoutPara4)
-        modelVerticalLayout.addLayout(modelHorizontalLayout8)
-        modelVerticalLayout.addLayout(modelHorizontalLayout9)
+        modelVerticalLayout.addLayout(modelHorizontalLayoutParameter2)
+        modelVerticalLayout.addLayout(modelHorizontalLayoutParameter3)
+        modelVerticalLayout.addLayout(modelHorizontalLayoutParameter4)
+        modelVerticalLayout.addLayout(modelHorizontalLayoutParameter5)
+        modelVerticalLayout.addLayout(modelHorizontalLayoutFitModelBtn)
+        modelVerticalLayout.addLayout(modelHorizontalLayoutSaveCSVBtn)
         self.groupBoxModel.setLayout(modelVerticalLayout)
         
         #Create dropdown list to hold names of models
@@ -409,7 +410,7 @@ class ModelFittingApp(QWidget):
         self.cmbModels.currentIndexChanged.connect(self.DisplayModelImage)
         self.cmbModels.currentIndexChanged.connect(self.ConfigureGUIForEachModel)
         self.cmbModels.currentIndexChanged.connect(lambda: self.ClearOptimisedParamaterList('cmbModels')) 
-        self.cmbModels.currentIndexChanged.connect(self.DisplayFitModelSaveCSVButtons)
+        self.cmbModels.currentIndexChanged.connect(self.DisplayFitModelAndSaveCSVButtons)
         self.cmbModels.activated.connect(lambda:  self.PlotConcentrations('cmbModels'))
 
         #Create dropdown lists for selection of AIF & VIF
@@ -428,8 +429,8 @@ class ModelFittingApp(QWidget):
         #When an AIF is selected plot its concentration data on the graph.
         self.cmbAIF.activated.connect(lambda: self.PlotConcentrations('cmbAIF'))
         #When an AIF is selected display the Fit Model and Save plot CVS buttons.
-        self.cmbAIF.currentIndexChanged.connect(self.DisplayFitModelSaveCSVButtons)
-        self.cmbVIF.currentIndexChanged.connect(self.DisplayFitModelSaveCSVButtons)
+        self.cmbAIF.currentIndexChanged.connect(self.DisplayFitModelAndSaveCSVButtons)
+        self.cmbVIF.currentIndexChanged.connect(self.DisplayFitModelAndSaveCSVButtons)
         #When a VIF is selected plot its concentration data on the graph.
         self.cmbVIF.activated.connect(lambda: self.PlotConcentrations('cmbVIF'))
         self.lblAIF.hide()
@@ -441,13 +442,13 @@ class ModelFittingApp(QWidget):
         self.cmbVIF.setSizeAdjustPolicy(QComboBox.AdjustToContents)
         
         #Add combo boxes and their labels to the horizontal layouts
-        modelHorizontalLayout2.insertStretch (0, 2)
-        modelHorizontalLayout2.addWidget(self.modelLabel)
-        modelHorizontalLayout2.addWidget(self.cmbModels)
-        modelHorizontalLayout3.addWidget(self.lblAIF)
-        modelHorizontalLayout3.addWidget(self.cmbAIF)
-        modelHorizontalLayout4.addWidget(self.lblVIF)
-        modelHorizontalLayout4.addWidget(self.cmbVIF)
+        modelHorizontalLayoutModelList.insertStretch (0, 2)
+        modelHorizontalLayoutModelList.addWidget(self.modelLabel)
+        modelHorizontalLayoutModelList.addWidget(self.cmbModels)
+        modelHorizontalLayoutAIF.addWidget(self.lblAIF)
+        modelHorizontalLayoutAIF.addWidget(self.cmbAIF)
+        modelHorizontalLayoutVIF.addWidget(self.lblVIF)
+        modelHorizontalLayoutVIF.addWidget(self.cmbVIF)
         
         self.cboxDelay = QCheckBox('Delay', self)
         self.cboxConstaint = QCheckBox('Constraint', self)
@@ -458,7 +459,8 @@ class ModelFittingApp(QWidget):
         self.btnReset.hide()
         self.btnReset.clicked.connect(self.InitialiseParameterSpinBoxes)
         self.btnReset.clicked.connect(self.OptimumParameterChanged)
-        #If parameters reset to their default values, replot the concentration and model data
+        #If parameters reset to their default values, 
+        #replot the concentration and model data
         self.btnReset.clicked.connect(lambda: self.PlotConcentrations('Reset Button'))
         modelHorizontalLayoutReset.addWidget(self.cboxDelay)
         modelHorizontalLayoutReset.addWidget(self.cboxConstaint)
@@ -470,7 +472,7 @@ class ModelFittingApp(QWidget):
         gridLayoutParamLabels.addWidget(self.lblConfInt, 1,4)
 
         #Create spinboxes and their labels
-        #Label text set in function ConfigureGUIForEachModel when the model is selected
+        #Label text set when the model is selected
         self.labelParameter1 = QLabel("") 
         self.labelParameter1.hide()
         self.ckbParameter1 = QCheckBox("Fix")
@@ -526,8 +528,9 @@ class ModelFittingApp(QWidget):
         self.spinBoxParameter3.valueChanged.connect(lambda: self.PlotConcentrations('spinBoxParameter3')) 
         self.spinBoxParameter4.valueChanged.connect(lambda: self.PlotConcentrations('spinBoxParameter4'))
         self.spinBoxParameter5.valueChanged.connect(lambda: self.PlotConcentrations('spinBoxParameter5'))
-        #Set a global boolean variable, _boolCurveFittingDone to false to indicate that 
-        #the value of a model parameter has been changed manually rather than by curve fitting
+        #Set a global boolean variable, _boolCurveFittingDone to false to 
+        #indicate that the value of a model parameter
+        #has been changed manually rather than by curve fitting
         self.spinBoxParameter1.valueChanged.connect(self.OptimumParameterChanged) 
         self.spinBoxParameter2.valueChanged.connect(self.OptimumParameterChanged) 
         self.spinBoxParameter3.valueChanged.connect(self.OptimumParameterChanged) 
@@ -535,43 +538,41 @@ class ModelFittingApp(QWidget):
         self.spinBoxParameter5.valueChanged.connect(self.OptimumParameterChanged)
         
         #Place spin boxes and their labels in horizontal layouts
-        #modelHorizontalLayoutParamLabels
-
         modelHorizontalLayoutParameter1.addWidget(self.labelParameter1)
         modelHorizontalLayoutParameter1.addWidget(self.spinBoxParameter1)
         modelHorizontalLayoutParameter1.addWidget(self.ckbParameter1)
         modelHorizontalLayoutParameter1.addWidget(self.lblParam1ConfInt)
 
-        modelHorizontalLayout5.addWidget(self.labelParameter2)
-        modelHorizontalLayout5.addWidget(self.spinBoxParameter2)
-        modelHorizontalLayout5.addWidget(self.ckbParameter2)
-        modelHorizontalLayout5.addWidget(self.lblParam2ConfInt)
+        modelHorizontalLayoutParameter2.addWidget(self.labelParameter2)
+        modelHorizontalLayoutParameter2.addWidget(self.spinBoxParameter2)
+        modelHorizontalLayoutParameter2.addWidget(self.ckbParameter2)
+        modelHorizontalLayoutParameter2.addWidget(self.lblParam2ConfInt)
 
-        modelHorizontalLayout6.addWidget(self.labelParameter3)
-        modelHorizontalLayout6.addWidget(self.spinBoxParameter3)
-        modelHorizontalLayout6.addWidget(self.ckbParameter3)
-        modelHorizontalLayout6.addWidget(self.lblParam3ConfInt)
+        modelHorizontalLayoutParameter3.addWidget(self.labelParameter3)
+        modelHorizontalLayoutParameter3.addWidget(self.spinBoxParameter3)
+        modelHorizontalLayoutParameter3.addWidget(self.ckbParameter3)
+        modelHorizontalLayoutParameter3.addWidget(self.lblParam3ConfInt)
 
-        modelHorizontalLayout7.addWidget(self.labelParameter4)
-        modelHorizontalLayout7.addWidget(self.spinBoxParameter4)
-        modelHorizontalLayout7.addWidget(self.ckbParameter4)
-        modelHorizontalLayout7.addWidget(self.lblParam4ConfInt)
+        modelHorizontalLayoutParameter4.addWidget(self.labelParameter4)
+        modelHorizontalLayoutParameter4.addWidget(self.spinBoxParameter4)
+        modelHorizontalLayoutParameter4.addWidget(self.ckbParameter4)
+        modelHorizontalLayoutParameter4.addWidget(self.lblParam4ConfInt)
 
-        modelHorizontalLayoutPara4.addWidget(self.labelParameter5)
-        modelHorizontalLayoutPara4.addWidget(self.spinBoxParameter5)
-        modelHorizontalLayoutPara4.addWidget(self.ckbParameter5)
-        modelHorizontalLayoutPara4.addWidget(self.lblParam5ConfInt)
+        modelHorizontalLayoutParameter5.addWidget(self.labelParameter5)
+        modelHorizontalLayoutParameter5.addWidget(self.spinBoxParameter5)
+        modelHorizontalLayoutParameter5.addWidget(self.ckbParameter5)
+        modelHorizontalLayoutParameter5.addWidget(self.lblParam5ConfInt)
         
         self.btnFitModel = QPushButton('Fit Model')
         self.btnFitModel.setToolTip('Use non-linear least squares to fit the selected model to the data')
         self.btnFitModel.hide()
-        modelHorizontalLayout8.addWidget(self.btnFitModel)
+        modelHorizontalLayoutFitModelBtn.addWidget(self.btnFitModel)
         self.btnFitModel.clicked.connect(self.RunCurveFit)
         
         self.btnSaveCSV = QPushButton('Save plot data to CSV file')
         self.btnSaveCSV.setToolTip('Save the data plotted on the graph to a CSV file')
         self.btnSaveCSV.hide()
-        modelHorizontalLayout9.addWidget(self.btnSaveCSV)
+        modelHorizontalLayoutSaveCSVBtn.addWidget(self.btnSaveCSV)
         self.btnSaveCSV.clicked.connect(self.SaveCSVFile)
 
     def SetUpBatchProcessingGroupBox(self, layout):
@@ -617,7 +618,8 @@ class ModelFittingApp(QWidget):
             logger.error('Error in function DisplayModelFittingGroupBox: ' + str(e))
 
     def SetUpPlotArea(self, layout):
-        """Adds widgets for the display of the graph onto the right-hand side vertical layout."""
+        """Adds widgets for the display of the graph onto the 
+        right-hand side vertical layout."""
         layout.setAlignment(QtCore.Qt.AlignTop)
         verticalSpacer = QSpacerItem(20, 35, QSizePolicy.Minimum, QSizePolicy.Minimum)
         layout.addItem(verticalSpacer)
@@ -631,7 +633,8 @@ class ModelFittingApp(QWidget):
 
         self.figure = plt.figure(figsize=(5, 9), dpi=100) 
         # this is the Canvas Widget that displays the `figure`
-        # it takes the `figure` instance as a parameter to its __init__
+        # it takes the `figure` instance as a parameter 
+        # to its __init__ function
         self.canvas = FigureCanvas(self.figure)
         # this is the Navigation widget
         # it takes the Canvas widget as a parent
@@ -675,6 +678,7 @@ class ModelFittingApp(QWidget):
         """Modifies the appearance of the GUI using CSS instructions"""
         try:
             self.setStyleSheet(StyleSheet.TRISTAN_GREY)
+            logger.info('Style Sheet applied.')
         except Exception as e:
             print('Error in function ApplyStyleSheet: ' + str(e))
             logger.error('Error in function ApplyStyleSheet: ' + str(e))
@@ -691,7 +695,7 @@ class ModelFittingApp(QWidget):
             if shortModelName != 'Select a model':
                 imageName = _objXMLReader.getImageName(shortModelName)
                 if imageName:
-                    imagePath = 'images\\' + imageName
+                    imagePath = IMAGE_FOLDER + imageName
                     pixmapModelImage = QPixmap(imagePath)
                     #Increase the size of the model image
                     pMapWidth = pixmapModelImage.width() * 1.35
@@ -726,6 +730,14 @@ class ModelFittingApp(QWidget):
         self.ClearOptimisedParamaterList('Function-OptimumParameterChanged')
 
     def PopulateConfIntervalLabel(self, paramNumber, nextIndex):
+        """Called by the ProcessOptimumParametersAfterCurveFit function,
+        this function populates the label that displays the upper and lower
+        confidence limits for each calculated optimum parameter value.
+
+        Where necessary decimal fractions are converted to % and the
+        corresponding value in the global list _optimisedParamaterList
+        is updated, which is also the source of this data.
+        """
         logger.info('Function PopulateConfIntervalLabel called.')
         try:
             objSpinBox = getattr(self, 'spinBoxParameter' + str(paramNumber))
@@ -756,11 +768,8 @@ class ModelFittingApp(QWidget):
             logger.error('Error in function PopulateConfIntervalLabel: ' + str(e))
 
     def ProcessOptimumParametersAfterCurveFit(self):
-        """Displays the optimum parameter values resulting from curve fitting 
-        with their confidence limits on the right-hand side of the GUI. These
-        values are stored in the global list _optimisedParamaterList
-        
-        Where appropriate decimal fractions are converted to %"""
+        """Displays the confidence limits for the optimum parameter values 
+           resulting from curve fitting on the right-hand side of the GUI."""
         try:
             logger.info('Function ProcessOptimumParametersAfterCurveFit called.')
             self.lblConfInt.show()
@@ -866,7 +875,7 @@ class ModelFittingApp(QWidget):
             print('Error in function ClearOptimisedParamaterList: ' + str(e)) 
             logger.error('Error in function ClearOptimisedParamaterList: ' + str(e))
 
-    def DisplayFitModelSaveCSVButtons(self):
+    def DisplayFitModelAndSaveCSVButtons(self):
         """Displays the Fit Model and Save CSV buttons if both a ROI & AIF 
         are selected.  Otherwise hides them."""
         try:
@@ -879,25 +888,29 @@ class ModelFittingApp(QWidget):
             VIF = str(self.cmbVIF.currentText())
             modelName = str(self.cmbModels.currentText())
             modelInletType = _objXMLReader.getModelInletType(modelName)
-            logger.info("Function DisplayFitModelSaveCSVButtons called. Model is " + modelName)
+            logger.info("Function DisplayFitModelAndSaveCSVButtons called. Model is " + modelName)
             if modelInletType == 'single':
                 if ROI != 'Please Select' and AIF != 'Please Select':
                     self.btnFitModel.show()
                     self.btnSaveCSV.show()
                     self.groupBoxBatchProcessing.show() 
-                    logger.info("Function DisplayFitModelSaveCSVButtons called when ROI = {} and AIF = {}".format(ROI, AIF))
+                    logger.info("Function DisplayFitModelAndSaveCSVButtons called when ROI = {} and AIF = {}".format(ROI, AIF))
             elif modelInletType == 'dual':
                 if ROI != 'Please Select' and AIF != 'Please Select' and VIF != 'Please Select' :
                     self.btnFitModel.show()
                     self.btnSaveCSV.show()
                     self.groupBoxBatchProcessing.show() 
-                    logger.info("Function DisplayFitModelSaveCSVButtons called when ROI = {}, AIF = {} & VIF ={}".format(ROI, AIF, VIF)) 
+                    logger.info("Function DisplayFitModelAndSaveCSVButtons called when ROI = {}, AIF = {} & VIF ={}".format(ROI, AIF, VIF)) 
         
         except Exception as e:
-            print('Error in function DisplayFitModelSaveCSVButtons: ' + str(e))
-            logger.error('Error in function DisplayFitModelSaveCSVButtons: ' + str(e))
+            print('Error in function DisplayFitModelAndSaveCSVButtons: ' + str(e))
+            logger.error('Error in function DisplayFitModelAndSaveCSVButtons: ' + str(e))
 
     def GetSpinBoxValue(self, paramNumber, initialParametersArray):
+        """
+        Gets the value in a parameter spinbox. Converts a % to a decimal 
+        fraction if necessary. This value is then appended to an array.
+        """
         logger.info('Function GetSpinBoxValue called.')
         try:
             objSpinBox = getattr(self, 'spinBoxParameter' + str(paramNumber))
@@ -912,8 +925,7 @@ class ModelFittingApp(QWidget):
             logger.error('Error in function GetSpinBoxValue: ' + str(e))
     
     def BuildParameterArray(self) -> List[float]:
-        """Forms a 1D array of model input parameters.  Volume fractions are converted 
-            from percentages to decimal fractions.
+        """Forms a 1D array of model input parameters.  
             
             Returns
             -------
@@ -944,6 +956,10 @@ class ModelFittingApp(QWidget):
 
 
     def SetParameterSpinBoxValue(self, paramNumber, index, parameterList):
+        """
+        Sets the value of an individual parameter spinbox.  If necessary
+        converts a decimal fraction to a %.
+        """
         logger.info('Function SetParameterSpinBoxValue called.')
         try:
             objSpinBox = getattr(self, 'spinBoxParameter' + str(paramNumber))
@@ -1095,18 +1111,37 @@ class ModelFittingApp(QWidget):
             print('Error in function RunCurveFit with model ' + modelName + ': ' + str(e))
             logger.error('Error in function RunCurveFit with model ' + modelName + ': ' + str(e))
     
-    def GetValuesForOneParameter(self, paramNumber, index,
+    def GetValuesForEachParameter(self, paramNumber, index,
                     confidenceLimitsArray, parameterDictionary):
+        """Called by the function, BuildParameterDictionary, for each
+        parameter spinbox, this function builds a list containing the
+        spinbox value and the upper and lower confidence limits (if
+        curve fitting has just been done). This list is then added
+        to the dictionary, parameterDictionary as the value with the
+        full parameter name as the key.  
+        
+         Inputs
+         ------
+         paramNumber - Ordinal number of the parameter on the GUI, which number
+                    from 1 (top) to 5 (bottom).
+         index - Used to reference the upper & lower confidence limits for each
+            parameter in confidenceLimitsArray.
+         confidenceLimitsArray - An array of upper and lower confidence limits
+                    for the optimum value of each model parameter obtained
+                    after curve fitting.  
+        """
         try:
-            logger.info('Function GetValuesForOneParameter called.')
+            logger.info('Function GetValuesForEachParameter called.')
             parameterList = []
             objLabel = getattr(self, 'labelParameter' + str(paramNumber))
             objSpinBox = getattr(self, 'spinBoxParameter' + str(paramNumber))
             if confidenceLimitsArray != None:
+                #curve fitting has just been done
                 parameterList.append(confidenceLimitsArray[index][0]) #Parameter Value
                 parameterList.append(confidenceLimitsArray[index][1]) #Lower Limit
                 parameterList.append(confidenceLimitsArray[index][2]) #Upper Limit
             else:
+                #Curve fitting has not just been done
                 parameterList.append(round(objSpinBox.value(), 2))
                 parameterList.append('N/A')
                 parameterList.append('N/A')
@@ -1114,15 +1149,25 @@ class ModelFittingApp(QWidget):
             parameterDictionary[objLabel.text()] = parameterList
 
         except Exception as e:
-            print('Error in function GetValuesForOneParameter with model: ' + str(e))
-            logger.error('Error in function GetValuesForOneParameter with model: ' + str(e))
+            print('Error in function GetValuesForEachParameter with model: ' + str(e))
+            logger.error('Error in function GetValuesForEachParameter with model: ' + str(e))
 
     def BuildParameterDictionary(self, confidenceLimitsArray = None):
         """Builds a dictionary of values and their confidence limits 
-        (if curve fitting is performed) for each model input parameter (dictionary key)
-        This dictionary is used in the creation of a parameter values table in the
-        creation of the PDF report.  It orders the input parameters in the same 
-       vertical order as the parameters on the GUI, top to bottom."""
+        (if curve fitting is performed) for each model input parameter 
+        (dictionary key). This dictionary is used in the creation of a 
+        parameter values table in the creation of the PDF report.  
+        It orders the input parameters in the same 
+       vertical order as the parameters on the GUI, top to bottom.
+       
+       Inputs
+       ------
+       confidenceLimitsArray - An array of upper and lower confidence limits
+                    for the optimum value of each model parameter obtained
+                    after curve fitting.  If curve fitting has not just
+                    been performed then the default value of None is passed
+                    into this function. 
+       """
         try:
             logger.info('BuildParameterDictionary called with confidence limits array = {}'
                         .format(confidenceLimitsArray))
@@ -1131,19 +1176,19 @@ class ModelFittingApp(QWidget):
             numParams = _objXMLReader.getNumberOfParameters(modelName)
 
             if numParams >= 1:
-                self.GetValuesForOneParameter(1, 0,
+                self.GetValuesForEachParameter(1, 0,
                     confidenceLimitsArray, parameterDictionary)
             if numParams >= 2:
-                self.GetValuesForOneParameter(2, 1,
+                self.GetValuesForEachParameter(2, 1,
                     confidenceLimitsArray, parameterDictionary)
             if numParams >= 3:
-                self.GetValuesForOneParameter(3, 2,
+                self.GetValuesForEachParameter(3, 2,
                     confidenceLimitsArray, parameterDictionary)
             if numParams >= 4:
-                self.GetValuesForOneParameter(4, 3,
+                self.GetValuesForEachParameter(4, 3,
                     confidenceLimitsArray, parameterDictionary)
             if numParams >= 5:
-                self.GetValuesForOneParameter(5, 4,
+                self.GetValuesForEachParameter(5, 4,
                     confidenceLimitsArray, parameterDictionary)
            
             return parameterDictionary
@@ -1210,6 +1255,10 @@ class ModelFittingApp(QWidget):
             logger.error('Error in function CreatePDFReport: ' + str(e))
 
     def PopulateModelListCombo(self):
+        """
+        Builds a list of model short names from data in the XML configuration
+        file and adds this list to the cmbModels combo box for display on the GUI.
+        """
         try:
             logger.info('Function PopulateModelListCombo called.')
             #Clear the list of models, ready to accept 
@@ -1226,8 +1275,12 @@ class ModelFittingApp(QWidget):
             print('Error in function PopulateModelListCombo: ' + str(e))
             logger.error('Error in function PopulateModelListCombo: ' + str(e))
 
+
     def LoadConfigFile(self):
-        """Loads the contents of an XML file containing model(s) configuration data"""
+        """Loads the contents of an XML file containing model(s) 
+        configuration data.  If the XML file parses successfully,
+        display the 'Load Data FIle' button and build the list 
+        of model short names."""
          
         global _objXMLReader
         
@@ -1448,6 +1501,7 @@ class ModelFittingApp(QWidget):
     
 
     def UncheckFixParameterCheckBoxes(self):
+        """Uncheckes all the fix parameter checkboxes."""
         logger.info('Function UncheckFixParameterCheckBoxes called')
         self.ckbParameter1.blockSignals(True)
         self.ckbParameter2.blockSignals(True)
@@ -1468,6 +1522,10 @@ class ModelFittingApp(QWidget):
         self.ckbParameter5.blockSignals(False)
 
     def populateParameterLabelAndSpinBox(self, modelName, paramNumber):
+        """
+        When a model is selected, this function is called.  
+        Each model may have upto 5 parameters
+        """
         try:
             isPercentage, paramName =_objXMLReader.getParameterLabel(modelName, paramNumber)
             precision = _objXMLReader.getParameterPrecision(modelName, paramNumber)
