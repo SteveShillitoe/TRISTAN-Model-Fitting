@@ -249,11 +249,12 @@ class ModelFittingApp(QWidget):
         width, height = self.GetScreenResolution()
         self.setGeometry(width*0.05, height*0.05, width*0.9, height*0.9)
         self.setWindowFlags(QtCore.Qt.WindowMinMaxButtonsHint |  QtCore.Qt.WindowCloseButtonHint)
-        self.directory = ""
+        #Store path to time/concentration data files for use in batch processing.
+        self.directory = ""  
         self.ApplyStyleSheet()
        
         #Setup the layouts, the containers for widgets
-        verticalLayoutLeft, verticalLayoutRight = self.SetUpLayouts() #verticalLayoutMiddle,
+        verticalLayoutLeft, verticalLayoutRight = self.SetUpLayouts() 
         
         #Add widgets to the left-hand side vertical layout
         self.SetUpLeftVerticalLayout(verticalLayoutLeft)
