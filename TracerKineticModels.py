@@ -58,28 +58,17 @@ def ModelSelector(modelName: str, times, AIFConcentration,
 
     if modelName == '2-2CFM':
         timeInputConcs2DArray = np.column_stack((times, AIFConcentration, VIFConcentration))
-        arterialFlowFraction = parameterArray[0]
-        Ve = parameterArray[1]
-        Fp = parameterArray[2]
-        Khe = parameterArray[3]
-        Kbh = parameterArray[4]
-        return DualInputTwoCompartmentFiltrationModel(timeInputConcs2DArray, arterialFlowFraction,
-            Ve, Fp, Khe, Kbh)
+        return DualInputTwoCompartmentFiltrationModel(timeInputConcs2DArray, 
+                  *parameterArray)
     elif modelName == 'HF2-2CFM':
-        timeInputConcs2DArray = np.column_stack((times, AIFConcentration, VIFConcentration))
-        arterialFlowFraction = parameterArray[0]
-        Ve = parameterArray[1]
-        Khe = parameterArray[2]
-        Kbh = parameterArray[3]
-        return HighFlowDualInletTwoCompartmentGadoxetateModel(timeInputConcs2DArray, arterialFlowFraction,
-              Ve, Khe, Kbh)
+        timeInputConcs2DArray = np.column_stack((times, AIFConcentration, VIFConcentration)) 
+        return HighFlowDualInletTwoCompartmentGadoxetateModel(
+                    timeInputConcs2DArray, 
+                     *parameterArray)
     elif modelName == 'HF1-2CFM':
         timeInputConcs2DArray = np.column_stack((times, AIFConcentration))
-        Ve = parameterArray[0]
-        Khe = parameterArray[1]
-        Kbh = parameterArray[2]
         return HighFlowSingleInletTwoCompartmentGadoxetateModel(
-                timeInputConcs2DArray, Ve, Khe, Kbh)
+                timeInputConcs2DArray, *parameterArray)
         
 #Note: The input paramaters for the volume fractions and rate constants in
 # the following model function definitions are listed in the same order as they are 
@@ -316,7 +305,6 @@ def CurveFit(modelName: str, times, AIFConcs, VIFConcs, concROI,
             return curve_fit(DualInputTwoCompartmentFiltrationModel, 
                              timeInputConcs2DArray, concROI, paramArray,
                              bounds=([0.0,0.0001,0.0,0.0,0.0001], [1., 0.9999, 100.0, 100.0, 100.0]))
-        #fAFF, Ve, Fp, Khe, Kbh
 
         elif modelName == 'HF2-2CFM':
             return curve_fit(HighFlowDualInletTwoCompartmentGadoxetateModel, 
