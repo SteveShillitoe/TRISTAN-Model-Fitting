@@ -65,22 +65,25 @@ the XML configuration file that describes all the models to be made available
 for curve fitting.  It also contains functions that query the XML tree using
 XPath notation and return data.
 
-The ExcelWriter.py class module uses the openpyxl package to create an Excel
-spreadsheet and write a summary of the results from the batch processing of
-data files.
-
 The styleSheet.py module contains style instructions using CSS notation for each control/widget.
 
 The Tools.py module contains a library of mathematical functions used to solve the equations in 
-the models in TracerKineticModels.py.
+the models in ModelFunctionsHelper.py.
 
-Objects of the following 2 classes are created in modelFittingGUI.py and provide services 
-to this class:
-The PDFWrite.py class module creates and saves a report of a model fitting session in a PDF file.
+Objects of the following 2 classes are created in modelFittingGUI.py 
+and provide services to this class:
+    1. The PDFWrite.py class module creates and saves a report 
+    of a model fitting session in a PDF file.
+    2. The ExcelWriter.py class module uses the openpyxl package 
+    to create an Excel spreadsheet and write a summary of the 
+    results from the batch processing of data files.
 
-The TracerkineticModels.py module contains functions that use 
+The ModelFunctions.py class module contains functions that use 
 tracer kinetic models to calculate the variation of concentration
 with time according to several tracer kinetic models. 
+
+The ModelFunctionsHelper module coordinates the calling of model 
+functions in ModelFunctions.py by functions in ModelFittingGUI.py
 
 GUI Structure
 --------------
@@ -164,7 +167,7 @@ class NavigationToolbar(NavigationToolbar):
                  t[0] in ('Home', 'Pan', 'Zoom', 'Save')]
 
 #Import module containing model definitions
-import TracerKineticModels
+import ModelFunctionsHelper
 
 #Import CSS file
 import StyleSheet
@@ -1074,20 +1077,20 @@ class ModelFittingApp(QWidget):
                 arrayVIFConcs = np.array(_concentrationData[VIF], dtype='float')
             else:
                 #Create empty dummy array to act as place holder in  
-                #TracerKineticModels.CurveFit function call 
+                #ModelFunctionsHelper.CurveFit function call 
                 arrayVIFConcs = []
             
             #Get the name of the model to be fitted to the ROI curve
             modelName = str(self.cmbModels.currentText())
+            functionName = _objXMLReader.getFunctionName(modelName)
             inletType = _objXMLReader.getModelInletType(modelName)
-            logger.info('TracerKineticModels.CurveFit called with model {} and parameters {}'.format(modelName, initialParametersArray))
-            optimumParams, paramCovarianceMatrix = TracerKineticModels.CurveFit(
-                modelName, arrayTimes, 
+            optimumParams, paramCovarianceMatrix = ModelFunctionsHelper.CurveFit(
+                functionName, arrayTimes, 
                 arrayAIFConcs, arrayVIFConcs, arrayROIConcs,
                 initialParametersArray, inletType)
             
             _boolCurveFittingDone = True 
-            logger.info('TracerKineticModels.CurveFit returned optimum parameters {} with confidence levels {}'.format(optimumParams, paramCovarianceMatrix))
+            logger.info('ModelFunctionsHelper.CurveFit returned optimum parameters {} with confidence levels {}'.format(optimumParams, paramCovarianceMatrix))
             
             #Display results of curve fitting  
             #(optimum model parameter values) on GUI.
@@ -1524,7 +1527,25 @@ class ModelFittingApp(QWidget):
     def populateParameterLabelAndSpinBox(self, modelName, paramNumber):
         """
         When a model is selected, this function is called.  
-        Each model may have upto 5 parameters
+        Each model may have upto 5 parameters.  Parameter labels,
+        parameter spinboxes and fix parameter checkboxes already exist
+        on the form but are hidden. The naming convention of these
+        widgets follows a fixed pattern. For the parameter label, this
+        is 'labelParameter' followed by a suffix 1, 2, 3, 4 or 5.
+        For the parameter spinbox, this is 'spinBoxParameter' 
+        followed by a suffix 1, 2, 3, 4 or 5.  For the checkbox
+        that indicates if a parameter should be constrainted during
+        curve fitting this is 'ckbParameter' followed by a 
+        suffix 1, 2, 3, 4 or 5.
+
+        This functions creates and configures the parameter label,
+        spinbox and checkbox for a given parameter according to the
+        data in the xml configuration file.
+
+        Input Parameters
+        ----------------
+        modelName  - Short name of the selected model.
+        paramNumber - Number, 1-5, of the parameter.
         """
         try:
             isPercentage, paramName =_objXMLReader.getParameterLabel(modelName, paramNumber)
@@ -1559,6 +1580,14 @@ class ModelFittingApp(QWidget):
             logger.error('Error in function populateParameterLabelAndSpinBox: ' + str(e) )
 
     def SetParameterSpinBoxToDefault(self, modelName, paramNumber):
+        """Resets the value of a parameter spinbox to the default
+        stored in the XML configuration file. 
+        
+        Input Parameters
+        ----------------
+        modelName  - Short name of the selected model.
+        paramNumber - Number, 1-5, of the parameter.
+        """
         try:
             logger.info(
                 'SetParameterSpinBoxToDefault called with paramNumber=' 
@@ -1575,6 +1604,9 @@ class ModelFittingApp(QWidget):
             logger.error('Error in function populateParameterLabelAndSpinBox: ' + str(e) )
 
     def InitialiseParameterSpinBoxes(self):
+        """Initialises all the parameter spinbox vales for the selected model
+        by coordinating the calling of the function 
+        SetParameterSpinBoxToDefault for each parameter spinbox. """
         try:
             modelName = str(self.cmbModels.currentText())
             logger.info(
@@ -1598,6 +1630,9 @@ class ModelFittingApp(QWidget):
             logger.error('Error in function InitialiseParameterSpinBoxes: ' + str(e) )
 
     def SetUpParameterLabelsAndSpinBoxes(self):
+        """Coordinates the calling of function
+       populateParameterLabelAndSpinBox to set up and show the 
+       parameter spinboxes for each model"""
         try:
             modelName = str(self.cmbModels.currentText())
             numParams = _objXMLReader.getNumberOfParameters(modelName)
@@ -1616,7 +1651,7 @@ class ModelFittingApp(QWidget):
             print('Error in function SetUpParameterLabelsAndSpinBoxes: ' + str(e) )
             logger.error('Error in function SetUpParameterLabelsAndSpinBoxes: ' + str(e) )
 
-    def ClearAndHideParameterLabelsAndSpinBoxes(self):
+    def ClearAndHideParameterLabelsSpinBoxesAndCheckBoxes(self):
         self.spinBoxParameter1.hide()
         self.spinBoxParameter2.hide()
         self.spinBoxParameter3.hide()
@@ -1645,8 +1680,9 @@ class ModelFittingApp(QWidget):
 
 
     def ConfigureGUIForEachModel(self):
-        """When a model is selected, this method configures the appearance of the GUI
-        accordingly.  For example, spinboxes for the input of model parameter values are
+        """When a model is selected, this method configures the appearance 
+        of the GUI accordingly.  
+        For example, spinboxes for the input of model parameter values are
         given an appropriate label."""
         try:
             modelName = str(self.cmbModels.currentText())
@@ -1657,7 +1693,7 @@ class ModelFittingApp(QWidget):
             self.btnReset.show()
             self.btnSaveReport.show()
             self.pbar.reset()
-            self.ClearAndHideParameterLabelsAndSpinBoxes()
+            self.ClearAndHideParameterLabelsSpinBoxesAndCheckBoxes()
             
             ##Configure parameter spinboxes and their labels for each model
             if modelName == 'Select a model':
@@ -1740,7 +1776,8 @@ class ModelFittingApp(QWidget):
     
     def PlotConcentrations(self, nameCallingFunction: str):
         """Plots the concentration against time curves for the ROI, AIF, VIF.  
-        Also, the concentration/time curve predicted by the selected model.
+        Also, plots the concentration/time curve predicted by the 
+        selected model.
         
         Input Parameter
         ----------------
@@ -1795,20 +1832,22 @@ class ModelFittingApp(QWidget):
                 boolVIFSelected = True
                     
             #Plot concentration curve from the model
+            parameterArray = self.BuildParameterArray()
             if  _objXMLReader.getModelInletType(modelName) == 'dual':
                 if boolAIFSelected and boolVIFSelected:
-                    parameterArray = self.BuildParameterArray()
-                    logger.info('TracerKineticModels.ModelSelector called when model ={}, parameter array = {}'. format(modelName, parameterArray))        
-                    _listModel = TracerKineticModels.ModelSelector(modelName, arrayTimes, 
-                       arrayAIFConcs, parameterArray, arrayVIFConcs)
+                    modelFunctionName = _objXMLReader.getFunctionName(modelName)
+                    logger.info('ModelFunctionsHelper.ModelSelector called when model={}, funtion ={} & parameter array = {}'. format(modelName, modelFunctionName, parameterArray))        
+                    _listModel = ModelFunctionsHelper.ModelSelector(modelFunctionName, 
+                         'dual', arrayTimes, arrayAIFConcs, parameterArray, 
+                       arrayVIFConcs)
                     arrayModel =  np.array(_listModel, dtype='float')
                     ax.plot(arrayTimes, arrayModel, 'g--', label= modelName + ' model')
             elif _objXMLReader.getModelInletType(modelName) == 'single':
                 if boolAIFSelected:
-                    parameterArray = self.BuildParameterArray()
-                    logger.info('TracerKineticModels.ModelSelector called when model ={} and parameter array = {}'. format(modelName, parameterArray))        
-                    _listModel = TracerKineticModels.ModelSelector(modelName, arrayTimes, 
-                       arrayAIFConcs, parameterArray)
+                    modelFunctionName = _objXMLReader.getFunctionName(modelName)
+                    logger.info('ModelFunctionsHelper.ModelSelector called when model ={}, funtion ={} & parameter array = {}'. format(modelName, modelFunctionName, parameterArray))        
+                    _listModel = ModelFunctionsHelper.ModelSelector(modelFunctionName, 
+                        'single', arrayTimes, arrayAIFConcs, parameterArray)
                     arrayModel =  np.array(_listModel, dtype='float')
                     ax.plot(arrayTimes, arrayModel, 'g--', label= modelName + ' model')
 
@@ -1836,6 +1875,8 @@ class ModelFittingApp(QWidget):
         sys.exit(0)  
 
     def toggleEnabled(self, boolEnabled=False):
+        """Used to disable all the controls on the form during batch processing
+       and to enable them again when batch processing is complete."""
         self.btnExit.setEnabled(boolEnabled)
         self.btnLoadDataFile.setEnabled(boolEnabled)
         self.cmbROI.setEnabled(boolEnabled)
@@ -1861,6 +1902,8 @@ class ModelFittingApp(QWidget):
         
 
     def BatchProcessAllCSVDataFiles(self):
+        """When a CSV data file is selected, the path to its folder is saved.
+       This function processes all the CSV data files in that folder by ."""
         try:
             global _dataFileName
             logger.info('Function BatchProcessAllCSVDataFiles called.')

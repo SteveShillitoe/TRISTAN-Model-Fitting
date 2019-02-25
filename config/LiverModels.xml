@@ -6,6 +6,11 @@
       <short>2-2CFM</short>
       <long>2 Inlet - Two Compartment Filtration Model</long>
     </name>
+    <return_value>
+      <name>Concentrations</name>
+      <units>mM</units>
+    </return_value>
+    <function>DualInputTwoCompartmentFiltrationModel</function>
     <image>DualInletTwoCompartmentGadoxetateModel.png</image>
     <inlet_type>dual</inlet_type>
     <parameters>
@@ -86,6 +91,7 @@
       <short>HF2-2CFM</short>
       <long>High Flow 2 Inlet - Two Compartment Filtration Model</long>
     </name>
+    <function>HighFlowDualInletTwoCompartmentGadoxetateModel</function>
     <image>HighFlowDualInletTwoCompartmentGadoxetateModel.png</image>
     <inlet_type>dual</inlet_type>
     <parameters>
@@ -152,6 +158,7 @@
       <short>HF1-2CFM</short>
       <long>High Flow 1 Inlet - Two Compartment Filtration Model</long>
     </name>
+    <function>HighFlowSingleInletTwoCompartmentGadoxetateModel</function>
     <image>HighFlowSingleInletTwoCompartmentGadoxetateModel.png</image>
     <inlet_type>single</inlet_type>
     <parameters>

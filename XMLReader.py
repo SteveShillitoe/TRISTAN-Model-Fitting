@@ -60,6 +60,27 @@ class XMLReader:
         except Exception as e:
             print('Error in XMLReader.getListModelShortNames: ' + str(e)) 
             logger.error('Error in XMLReader.getListModelShortNames: ' + str(e)) 
+    
+    def getFunctionName(self, shortModelName):
+        try:
+            logger.info('XMLReader.getFunctionName called with short model name= ' + shortModelName)
+            if len(shortModelName) > 0:
+                xPath='./model[@id=' + chr(34) + shortModelName + chr(34) + ']/function'
+                functionName = self.root.find(xPath)
+                if functionName.text:
+                    logger.info('XMLReader.getFunctionName found function name ' + functionName.text)
+                    return functionName.text
+                else:
+                    return None
+            else:
+                return None
+           
+        except Exception as e:
+            print('Error in XMLReader.getFunctionName when shortModelName ={}: '.format(shortModelName) 
+                  + str(e)) 
+            logger.error('Error in XMLReader.getFunctionName when shortModelName ={}: '.format(shortModelName) 
+                  + str(e)) 
+            return None
 
     def getImageName(self, shortModelName):
         try:
