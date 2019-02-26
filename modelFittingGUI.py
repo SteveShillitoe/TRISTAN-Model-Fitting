@@ -1854,7 +1854,7 @@ class ModelFittingApp(QWidget):
             if ROI != 'Please Select':  
                 ax.set_xlabel('Time (mins)', fontsize=xyAxisLabelSize)
                 ax.set_ylabel('Concentration (mM)', fontsize=xyAxisLabelSize)
-                ax.set_title('Tissue Concentrations', fontsize=titleSize, pad=25)
+                ax.set_title('Time Curves', fontsize=titleSize, pad=25)
                 ax.grid()
                 chartBox = ax.get_position()
                 ax.set_position([chartBox.x0*1.1, chartBox.y0, chartBox.width*0.9, chartBox.height])
@@ -1903,7 +1903,19 @@ class ModelFittingApp(QWidget):
 
     def BatchProcessAllCSVDataFiles(self):
         """When a CSV data file is selected, the path to its folder is saved.
-       This function processes all the CSV data files in that folder by ."""
+       This function processes all the CSV data files in that folder by 
+       performing curve fitting using the selected model. 
+       
+       The results for each data file are written to an Excel spreadsheet.  
+       If a CSV file cannot be read then its name is also recorded in the 
+       Excel spreadsheet together with the reason why it could not be read.
+       
+       As each data file is processed, a PDF report with a plot of the 
+       time/concentration curves is generated and stored in a sub-folder 
+       in the folder where the data files are held.  Likewise, a CSV file
+       holding the time and concentration data (including the model curve)
+       in the is created in another sub-folder in the folder where the 
+       data files are held."""
         try:
             global _dataFileName
             logger.info('Function BatchProcessAllCSVDataFiles called.')
@@ -1956,6 +1968,7 @@ class ModelFittingApp(QWidget):
 
             modelName = str(self.cmbModels.currentText())
 
+            #Create the Excel spreadsheet to record the results
             objSpreadSheet, boolExcelFileCreatedOK = self.BatchProcessingCreateBatchSummaryExcelSpreadSheet(self.directory)
             
             if boolExcelFileCreatedOK:
@@ -1998,7 +2011,8 @@ class ModelFittingApp(QWidget):
             self.toggleEnabled(True)      
 
     def BatchProcessingCreateBatchSummaryExcelSpreadSheet(self, pathToFolder):
-        """Creates an Excel spreadsheet to hold a summary of model fitting a batch of datafiles""" 
+        """Creates an Excel spreadsheet to hold a summary of model 
+        fitting a batch of data files""" 
         try:
             boolExcelFileCreatedOK = True
             logger.info('Function BatchProcessingCreateBatchSummaryExcelSpreadSheet called.')
@@ -2045,6 +2059,8 @@ class ModelFittingApp(QWidget):
             return None, boolExcelFileCreatedOK
 
     def BatchProcessWriteOptimumParamsToSummary(self, objExcelFile, fileName, modelName, paramDict):
+        """During batch processing of data files, writes the optimum
+        parameter values resulting from curve fitting to an Excel spreadsheet"""
         try:
             for paramName, paramList in paramDict.items(): 
                 paramName.replace('\n', '')
@@ -2169,6 +2185,11 @@ class ModelFittingApp(QWidget):
             return boolFileFormatOK, failureReason 
 
     def BatchProcessingCheckAllInputDataPresent(self, headers):
+        """This function checks that the current data file contains
+        data for the ROI, AIF and, if appropriate, the VIF.
+        
+        If data is missing, it returns false and a string indicating 
+        what data is missing."""
         boolDataOK = True
         join = ""
         failureReason = ""
@@ -2180,7 +2201,8 @@ class ModelFittingApp(QWidget):
             if ROI not in (lowerCaseHeaders):
                 boolDataOK = False
                 failureReason = ROI + " data missing"
-
+            
+            #Check AIF data is in the current data file
             AIF = str(self.cmbAIF.currentText().strip().lower())
             if AIF not in (lowerCaseHeaders):
                 boolDataOK = False
@@ -2189,6 +2211,7 @@ class ModelFittingApp(QWidget):
                 failureReason = failureReason + join + AIF + " data missing"
 
             if self.cmbVIF.isVisible():
+                #Check VIF data is in the current data file
                 VIF = str(self.cmbVIF.currentText().strip().lower())
                 if VIF not in (lowerCaseHeaders):
                     boolDataOK = False
@@ -2207,7 +2230,8 @@ class ModelFittingApp(QWidget):
             self.toggleEnabled(True)
 
     def BatchProcessingHaveParamsChanged(self) -> bool:
-        """Returns True if the user has changed parameter spinbox values from the defaults"""
+        """Returns True if the user has changed parameter 
+        spinbox values from the defaults"""
         try:
             boolParameterChanged = False
             modelName = str(self.cmbModels.currentText())

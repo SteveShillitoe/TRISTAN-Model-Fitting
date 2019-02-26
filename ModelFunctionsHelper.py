@@ -80,9 +80,7 @@ def CurveFit(functionName: str, times, AIFConcs, VIFConcs, concROI,
 
     Input Parameters
     ----------------
-        functionName - Name of the model taken from the selected value in the  
-            model name drop-down list on the GUI.  Used to select the 
-            function corresponding to that model.
+        functionName - The name of the function corresponding to the model.
 
         time - NumPy Array of time values stored as floats. Created from a 
             Python list.
