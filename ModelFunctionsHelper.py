@@ -10,12 +10,11 @@ to fit any of the models in this module to actual concentration/time data
 using non-linear least squares.  
 """
 
-from scipy.optimize import curve_fit
+#from scipy.optimize import curve_fit
 from lmfit import Parameters, Model
 import numpy as np
 import logging
-from ModelFunctions import Models
-objModel = Models()
+import ModelFunctions as modelFunctions
 
 #Create logger
 logger = logging.getLogger(__name__)
@@ -59,7 +58,7 @@ def ModelSelector(functionName: str, inletType:str, times,
         elif inletType == 'dual':
             timeInputConcs2DArray = np.column_stack((times, AIFConcentration, VIFConcentration))
        
-        modelFunction=getattr(objModel, functionName)
+        modelFunction=getattr(modelFunctions, functionName)
         
         return modelFunction(timeInputConcs2DArray, *parameterArray)
 
@@ -115,7 +114,7 @@ def CurveFit(functionName: str, paramList, times, AIFConcs,
         elif inletType == 'single':
             timeInputConcs2DArray = np.column_stack((times, AIFConcs))
 
-        modelFunction=getattr(objModel, functionName)
+        modelFunction=getattr(modelFunctions, functionName)
 
         params = Parameters()
         params.add_many(*paramList)
@@ -123,15 +122,15 @@ def CurveFit(functionName: str, paramList, times, AIFConcs,
         #loaded ok into the Parameter object
        #print(params.pretty_print())
 
-        concModel = Model(modelFunction)
-        print(concModel)
-        print(concModel.param_names, concModel.independent_vars)
+        objModel = Model(modelFunction)
+        #print(objModel.param_names, objModel.independent_vars)
 
-        result = concModel.fit(concROI, params=params, xData2DArray=timeInputConcs2DArray)
+        result = objModel.fit(concROI, params=params, xData2DArray=timeInputConcs2DArray)
         
-        print('best fit={}'.format(result.best_fit))
+        #print('best fit={}'.format(result.best_fit))
         print('best values={}'.format(result.best_values))
-        return result.best_fit
+       
+        return result.best_values
             
     except ValueError as ve:
         print ('ModelFunctionsHelper.CurveFit Value Error: ' + str(ve))

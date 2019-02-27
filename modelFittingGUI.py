@@ -1162,25 +1162,22 @@ class ModelFittingApp(QWidget):
             modelName = str(self.cmbModels.currentText())
             functionName = _objXMLReader.getFunctionName(modelName)
             inletType = _objXMLReader.getModelInletType(modelName)
-            ModelFunctionsHelper.CurveFit(
+            optimumParamsDict = ModelFunctionsHelper.CurveFit(
                 functionName, paramList, arrayTimes, 
                 arrayAIFConcs, arrayVIFConcs, arrayROIConcs,
                 inletType)
-
-            #optimumParams, paramCovarianceMatrix = ModelFunctionsHelper.CurveFit(
-            #    functionName, arrayTimes, 
-            #    arrayAIFConcs, arrayVIFConcs, arrayROIConcs,
-            #    initialParametersArray, inletType)
             
-            #_boolCurveFittingDone = True 
-            #logger.info('ModelFunctionsHelper.CurveFit returned optimum parameters {} with confidence levels {}'.format(optimumParams, paramCovarianceMatrix))
+            _boolCurveFittingDone = True 
+            logger.info('ModelFunctionsHelper.CurveFit returned optimum parameters {}'
+                        .format(optimumParamsDict))
             
-            ##Display results of curve fitting  
-            ##(optimum model parameter values) on GUI.
-            #self.SetParameterSpinBoxValues(optimumParams)
+            #Display results of curve fitting  
+            #(optimum model parameter values) on GUI.
+            optimumParamsList = list(optimumParamsDict.values())
+            self.SetParameterSpinBoxValues(optimumParamsList)
 
-            ##Plot the best curve on the graph
-            #self.PlotConcentrations('CurveFit')
+            #Plot the best curve on the graph
+            self.PlotConcentrations('CurveFit')
 
             ##Determine 95% confidence limits.
             #numDataPoints = arrayROIConcs.size

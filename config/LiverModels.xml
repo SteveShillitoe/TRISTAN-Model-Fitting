@@ -48,7 +48,7 @@ The <name></name> tags enclose the <short></short> and
       <step>1.0</step>
       <precision>2</precision>
       <constraints>
-        <lower>0.0</lower>
+        <lower>0.01</lower>
         <upper>100.00</upper>
       </constraints>
     </parameter>
@@ -62,7 +62,7 @@ The <name></name> tags enclose the <short></short> and
         <step>1.0</step>
         <precision>2</precision>
         <constraints>
-          <lower>0.0</lower>
+          <lower>0.1</lower>
           <upper>100.00</upper>
         </constraints>
       </parameter>
@@ -90,7 +90,7 @@ The <name></name> tags enclose the <short></short> and
         <step>0.01</step>
         <precision>3</precision>
         <constraints>
-          <lower>0.0</lower>
+          <lower>0.01</lower>
           <upper>100.0</upper>
         </constraints>
       </parameter>
@@ -104,7 +104,7 @@ The <name></name> tags enclose the <short></short> and
         <step>0.01</step>
         <precision>3</precision>
         <constraints>
-          <lower>0.0</lower>
+          <lower>0.01</lower>
           <upper>100.0</upper>
         </constraints>
       </parameter>
@@ -129,7 +129,7 @@ The <name></name> tags enclose the <short></short> and
         <step>1.0</step>
         <precision>2</precision>
         <constraints>
-          <lower>0.0</lower>
+          <lower>0.1</lower>
           <upper>100.00</upper>
         </constraints>
       </parameter>
@@ -143,7 +143,7 @@ The <name></name> tags enclose the <short></short> and
         <step>1.0</step>
         <precision>2</precision>
         <constraints>
-          <lower>0.0</lower>
+          <lower>0.1</lower>
           <upper>100.00</upper>
         </constraints>
       </parameter>
@@ -157,7 +157,7 @@ The <name></name> tags enclose the <short></short> and
         <step>0.01</step>
         <precision>4</precision>
         <constraints>
-          <lower>0.0</lower>
+          <lower>0.01</lower>
           <upper>100.0</upper>
         </constraints>
       </parameter>
@@ -171,7 +171,7 @@ The <name></name> tags enclose the <short></short> and
         <step>0.01</step>
         <precision>3</precision>
         <constraints>
-          <lower>0.0</lower>
+          <lower>0.01</lower>
           <upper>100.0</upper>
         </constraints>
       </parameter>
@@ -210,7 +210,7 @@ The <name></name> tags enclose the <short></short> and
         <step>0.01</step>
         <precision>4</precision>
         <constraints>
-          <lower>0.0</lower>
+          <lower>0.01</lower>
           <upper>100.0</upper>
         </constraints>
       </parameter>
