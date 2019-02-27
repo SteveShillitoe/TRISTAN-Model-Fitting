@@ -570,7 +570,7 @@ class ModelFittingApp(QWidget):
         self.btnFitModel.setToolTip('Use non-linear least squares to fit the selected model to the data')
         self.btnFitModel.hide()
         modelHorizontalLayoutFitModelBtn.addWidget(self.btnFitModel)
-        self.btnFitModel.clicked.connect(self.RunCurveFit)
+        self.btnFitModel.clicked.connect(self.CurveFit)
         
         self.btnSaveCSV = QPushButton('Save plot data to CSV file')
         self.btnSaveCSV.setToolTip('Save the data plotted on the graph to a CSV file')
@@ -1048,8 +1048,86 @@ class ModelFittingApp(QWidget):
         except Exception as e:
             print('Error in function Calculate95ConfidenceLimits ' + str(e))
             logger.error('Error in function Calculate95ConfidenceLimits '  + str(e))  
+    
+    def CurveFitGetParameterData(self, modelName, paramNumber):
+        """
+        Returns a tuple containing all data associated with a parameter
+        that is required by lmfit curve fitting; namely,
+        (parameter name, parameter value, fix parameter value (True/False),
+        minimum value, maximum value, expression, step size)
 
-    def RunCurveFit(self):
+        expression & step size are set to None.
+
+        Input Parameters
+        ----------------
+        modelName  - Short name of the selected model.
+        paramNumber - Number, 1-5, of the parameter.
+        """
+
+        logger.info('Function CurveFitGetParameterData called with modelName={} and paramNumber={}.'
+                        .format(modelName, paramNumber))
+        try:
+            paramShortName =_objXMLReader.getParameterShortName(modelName, paramNumber)
+            isPercentage, _ =_objXMLReader.getParameterLabel(modelName, paramNumber)
+            lower, upper = _objXMLReader.getParameterConstraints(modelName, paramNumber)
+        
+            objSpinBox = getattr(self, 'spinBoxParameter' + str(paramNumber))
+            value = objSpinBox.value()
+            if isPercentage:
+                value = value/100
+                lower = lower/100
+                upper = upper/100
+            
+            vary = True
+            objCheckBox = getattr(self, 'ckbParameter' + str(paramNumber))
+            if objCheckBox.isChecked():
+                vary = False
+    
+            tempTuple =(paramShortName, value, vary, lower, upper, None, None)
+            
+            return tempTuple
+
+        except Exception as e:
+            print('Error in function CurveFitGetParameterData: ' + str(e) )
+            logger.error('Error in function CurveFitGetParameterData: ' + str(e) )
+
+    def CurveFitCollateParameterData(self)-> List[float]:
+        """Forms a 1D array of model input parameters.  
+            
+            Returns
+            -------
+                A list of model input parameter values.
+            """
+        try:
+            logger.info('Function CurveFitCollateParameterData called.')
+            parameterDataList = []
+
+            modelName = str(self.cmbModels.currentText())
+            numParams = _objXMLReader.getNumberOfParameters(modelName)
+
+            if numParams >= 1:
+                parameterDataList.append(
+                    self.CurveFitGetParameterData(modelName, 1))
+            if numParams >= 2:
+                parameterDataList.append(
+                    self.CurveFitGetParameterData(modelName, 2))
+            if numParams >= 3:
+                parameterDataList.append(
+                    self.CurveFitGetParameterData(modelName, 3))
+            if numParams >= 4:
+                parameterDataList.append(
+                    self.CurveFitGetParameterData(modelName, 4))
+            if numParams >= 5:
+                parameterDataList.append(
+                    self.CurveFitGetParameterData(modelName, 5))
+
+            return parameterDataList
+        except Exception as e:
+            print('Error in function CurveFitCollateParameterData ' + str(e))
+            logger.error('Error in function CurveFitCollateParameterData '  + str(e))
+
+
+    def CurveFit(self):
         """Performs curve fitting to fit AIF (and VIF) data to the ROI curve.
         Then displays the optimum model input parameters on the GUI and calls 
         the plot function to display the line of best fit on the graph on the GUI
@@ -1060,8 +1138,8 @@ class ModelFittingApp(QWidget):
         """
         global _boolCurveFittingDone
         try:
-            initialParametersArray = self.BuildParameterArray()
-
+            paramList = self.CurveFitCollateParameterData()
+            
             #Get name of region of interest, arterial and venal input functions
             ROI = str(self.cmbROI.currentText())
             AIF = str(self.cmbAIF.currentText())
@@ -1084,35 +1162,40 @@ class ModelFittingApp(QWidget):
             modelName = str(self.cmbModels.currentText())
             functionName = _objXMLReader.getFunctionName(modelName)
             inletType = _objXMLReader.getModelInletType(modelName)
-            optimumParams, paramCovarianceMatrix = ModelFunctionsHelper.CurveFit(
-                functionName, arrayTimes, 
+            ModelFunctionsHelper.CurveFit(
+                functionName, paramList, arrayTimes, 
                 arrayAIFConcs, arrayVIFConcs, arrayROIConcs,
-                initialParametersArray, inletType)
-            
-            _boolCurveFittingDone = True 
-            logger.info('ModelFunctionsHelper.CurveFit returned optimum parameters {} with confidence levels {}'.format(optimumParams, paramCovarianceMatrix))
-            
-            #Display results of curve fitting  
-            #(optimum model parameter values) on GUI.
-            self.SetParameterSpinBoxValues(optimumParams)
+                inletType)
 
-            #Plot the best curve on the graph
-            self.PlotConcentrations('RunCurveFit')
-
-            #Determine 95% confidence limits.
-            numDataPoints = arrayROIConcs.size
-            numParams = len(initialParametersArray)
-            self.Calculate95ConfidenceLimits(numDataPoints, numParams, 
-                                    optimumParams, paramCovarianceMatrix)
+            #optimumParams, paramCovarianceMatrix = ModelFunctionsHelper.CurveFit(
+            #    functionName, arrayTimes, 
+            #    arrayAIFConcs, arrayVIFConcs, arrayROIConcs,
+            #    initialParametersArray, inletType)
             
-            self.ProcessOptimumParametersAfterCurveFit()
+            #_boolCurveFittingDone = True 
+            #logger.info('ModelFunctionsHelper.CurveFit returned optimum parameters {} with confidence levels {}'.format(optimumParams, paramCovarianceMatrix))
+            
+            ##Display results of curve fitting  
+            ##(optimum model parameter values) on GUI.
+            #self.SetParameterSpinBoxValues(optimumParams)
+
+            ##Plot the best curve on the graph
+            #self.PlotConcentrations('CurveFit')
+
+            ##Determine 95% confidence limits.
+            #numDataPoints = arrayROIConcs.size
+            #numParams = len(initialParametersArray)
+            #self.Calculate95ConfidenceLimits(numDataPoints, numParams, 
+            #                        optimumParams, paramCovarianceMatrix)
+            
+            #self.ProcessOptimumParametersAfterCurveFit()
             
         except ValueError as ve:
-            print ('Value Error: RunCurveFit with model ' + modelName + ': '+ str(ve))
-            logger.error('Value Error: RunCurveFit with model ' + modelName + ': '+ str(ve))
+            print ('Value Error: CurveFit with model ' + modelName + ': '+ str(ve))
+            logger.error('Value Error: CurveFit with model ' + modelName + ': '+ str(ve))
         except Exception as e:
-            print('Error in function RunCurveFit with model ' + modelName + ': ' + str(e))
-            logger.error('Error in function RunCurveFit with model ' + modelName + ': ' + str(e))
+            print('Error in function CurveFit with model ' + modelName + ': ' + str(e))
+            logger.error('Error in function CurveFit with model ' + modelName + ': ' + str(e))
     
     def GetValuesForEachParameter(self, paramNumber, index,
                     confidenceLimitsArray, parameterDictionary):
@@ -1547,7 +1630,10 @@ class ModelFittingApp(QWidget):
         modelName  - Short name of the selected model.
         paramNumber - Number, 1-5, of the parameter.
         """
+        
         try:
+            logger.info('Function populateParameterLabelAndSpinBox called with modelName={}, paramNumber={}'
+                        .format(modelName, paramNumber))
             isPercentage, paramName =_objXMLReader.getParameterLabel(modelName, paramNumber)
             precision = _objXMLReader.getParameterPrecision(modelName, paramNumber)
             lower, upper = _objXMLReader.getParameterConstraints(modelName, paramNumber)
@@ -1633,6 +1719,7 @@ class ModelFittingApp(QWidget):
         """Coordinates the calling of function
        populateParameterLabelAndSpinBox to set up and show the 
        parameter spinboxes for each model"""
+        logger.info('Function SetUpParameterLabelsAndSpinBoxes called. ')
         try:
             modelName = str(self.cmbModels.currentText())
             numParams = _objXMLReader.getNumberOfParameters(modelName)
@@ -1993,7 +2080,7 @@ class ModelFittingApp(QWidget):
                         continue  #Skip this iteration if problems loading file
                 
                     self.PlotConcentrations('BatchProcessAllCSVDataFiles') #Plot data                
-                    self.RunCurveFit() #Fit curve to model 
+                    self.CurveFit() #Fit curve to model 
                     self.SaveCSVFile(csvPlotDataFolder + '/plot' + file) #Save plot data to CSV file               
                     parameterDict = self.CreatePDFReport(pdfReportFolder + '/' + os.path.splitext(file)[0]) #Save PDF Report                
                     self.BatchProcessWriteOptimumParamsToSummary(objSpreadSheet, 

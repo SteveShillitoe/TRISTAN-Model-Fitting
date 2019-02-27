@@ -13,7 +13,8 @@ logger = logging.getLogger(__name__)
 # displayed in the GUI from top (first) to bottom (last) 
 
 class Models:
-    def DualInputTwoCompartmentFiltrationModel(self, xData2DArray, fAFF: float, 
+    @staticmethod
+    def DualInputTwoCompartmentFiltrationModel(xData2DArray, Fa: float, 
                                                Ve: float, Fp: float, Kbh: float, Khe: float):
         """This function contains the algorithm for calculating how concentration varies with time
                 using the Dual Input Two Compartment Filtration Model model.
@@ -33,7 +34,7 @@ class Models:
                 """ 
         try:
             logger.info('In function Models.DualInputTwoCompartmentFiltrationModel ' +
-              'with fAFF={}, Ve={}, Fp={}, Khe={} & Kbh={}'.format(fAFF, Ve, Fp, Khe, Kbh))
+              'with Fa={}, Ve={}, Fp={}, Khe={} & Kbh={}'.format(Fa, Ve, Fp, Khe, Kbh))
             #In order to use scipy.optimize.curve_fit, time and concentration must be
             #combined into one function input parameter, a 2D array, then separated into individual
             #1 D arrays 
@@ -42,10 +43,10 @@ class Models:
             VIFconcentrations = xData2DArray[:,2]
     
             #Calculate Venous Flow Factor, fVFF
-            fVFF = 1 - fAFF
+            fVFF = 1 - Fa
 
             #Determine an overall concentration
-            combinedConcentration = Fp*(fAFF*AIFconcentrations + fVFF*VIFconcentrations)
+            combinedConcentration = Fp*(Fa*AIFconcentrations + fVFF*VIFconcentrations)
       
             #Calculate Intracellular transit time, Th
             Th = (1-Ve)/Kbh
@@ -70,7 +71,7 @@ class Models:
                 logger.error('ModelFunctionsHelper.DualInputTwoCompartmentFiltrationModel:' + str(e) )
  
 
-    def HighFlowDualInletTwoCompartmentGadoxetateModel(self, xData2DArray, fAFF: float, 
+    def HighFlowDualInletTwoCompartmentGadoxetateModel(self, xData2DArray, Fa: float, 
                                                        Ve: float, Khe: float, Kbh: float):
         """This function contains the algorithm for calculating how concentration varies with time
                 using the High Flow Dual Inlet Two Compartment Gadoxetate Model model.
@@ -89,9 +90,9 @@ class Models:
                 """ 
         try:
             logger.info('In function ModelFunctionsHelper.HighFlowDualInletTwoCompartmentGadoxetateModel ' +
-              'with fAFF={}, Ve={}, Khe={} & Kbh={}'.format(fAFF, Ve, Khe, Kbh))
+              'with Fa={}, Ve={}, Khe={} & Kbh={}'.format(Fa, Ve, Khe, Kbh))
             #print('In function ModelFunctionsHelper.HighFlowDualInletTwoCompartmentGadoxetateModel ' +
-            #  'with fAFF={}, Ve={}, Khe={} & Kbh={}'.format(fAFF, Ve,  Khe, Kbh))
+            #  'with Fa={}, Ve={}, Khe={} & Kbh={}'.format(Fa, Ve,  Khe, Kbh))
             #In order to use scipy.optimize.curve_fit, time and concentration must be
             #combined into one function input parameter, a 2D array, then separated into individual
             #1 D arrays 
@@ -100,12 +101,12 @@ class Models:
             VIFconcentrations = xData2DArray[:,2]
 
             #Calculate Venous Flow Factor, fVFF
-            fVFF = 1 - fAFF
+            fVFF = 1 - Fa
 
             Th = (1-Ve)/Kbh
     
             #Determine an overall concentration
-            combinedConcentration = fAFF*AIFconcentrations + fVFF*VIFconcentrations 
+            combinedConcentration = Fa*AIFconcentrations + fVFF*VIFconcentrations 
     
             modelConcs = []
             modelConcs = (Ve*combinedConcentration + 
