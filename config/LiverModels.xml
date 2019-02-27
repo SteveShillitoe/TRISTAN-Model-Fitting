@@ -1,6 +1,35 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
+<!--Description of the XML Configuration file structure. 
+<models></models> is the root node.
+The root node contains a collection of 1 or more <model></model>
+tags that encapsulate the data that describes each model.
+
+Each opening <model id="2-2CFM"> tag has an id attribute that is
+set to the short name of the model.
+
+The <name></name> tags enclose the <short></short> and 
+<long></long> names of the model.
+
+The <function></function> tags enclose the name of the function
+in ModelFunctions.py that contains the algorithm for the model.
+
+The <image></image> tags enclose the name of the image file in the 
+images folder that represents schematically the model.
+
+The <inlet_type></inlet_type> tags enclose the inlet type 
+(single or dual) of the model.
+
+The <parameters></parameters> tags enclose a collection of 
+1 or more <parameter></parameter> tags that enclose the
+data that describe each model input parameter.
+
+The <name></name> tags enclose the <short></short> and 
+<long></long> names of the parameter.
+
+-->
 <models>
-  <model>
+  <data_file_path>C:\TRISTAN Data\PreClinical</data_file_path>
+  <model id="2-2CFM">
     <name>
       <short>2-2CFM</short>
       <long>2 Inlet - Two Compartment Filtration Model</long>
@@ -16,6 +45,8 @@
       </name>
       <units>%</units>
       <default>17.0</default>
+      <step>1.0</step>
+      <precision>2</precision>
       <constraints>
         <lower>0.0</lower>
         <upper>100.00</upper>
@@ -28,6 +59,8 @@
         </name>
         <units>%</units>
         <default>20.0</default>
+        <step>1.0</step>
+        <precision>2</precision>
         <constraints>
           <lower>0.0</lower>
           <upper>100.00</upper>
@@ -40,9 +73,11 @@
         </name>
         <units>mL/min/mL</units>
         <default>1.0</default>
+        <step>0.1</step>
+        <precision>2</precision>
         <constraints>
-          <lower>0.0001</lower>
-          <upper>0.9999</upper>
+          <lower>0.1</lower>
+          <upper>100.00</upper>
         </constraints>
       </parameter>
       <parameter>
@@ -52,6 +87,8 @@
         </name>
         <units>mL/min/mL</units>
         <default>0.017</default>
+        <step>0.01</step>
+        <precision>3</precision>
         <constraints>
           <lower>0.0</lower>
           <upper>100.0</upper>
@@ -64,6 +101,8 @@
         </name>
         <units>mL/min/mL</units>
         <default>0.22</default>
+        <step>0.01</step>
+        <precision>3</precision>
         <constraints>
           <lower>0.0</lower>
           <upper>100.0</upper>
@@ -71,7 +110,7 @@
       </parameter>
     </parameters>
   </model>
-  <model>
+  <model id="HF2-2CFM">
     <name>
       <short>HF2-2CFM</short>
       <long>High Flow 2 Inlet - Two Compartment Filtration Model</long>
@@ -87,6 +126,8 @@
         </name>
         <units>%</units>
         <default>17.0</default>
+        <step>1.0</step>
+        <precision>2</precision>
         <constraints>
           <lower>0.0</lower>
           <upper>100.00</upper>
@@ -99,6 +140,8 @@
         </name>
         <units>%</units>
         <default>23.0</default>
+        <step>1.0</step>
+        <precision>2</precision>
         <constraints>
           <lower>0.0</lower>
           <upper>100.00</upper>
@@ -111,6 +154,8 @@
         </name>
         <units>mL/min/mL</units>
         <default>0.0918</default>
+        <step>0.01</step>
+        <precision>4</precision>
         <constraints>
           <lower>0.0</lower>
           <upper>100.0</upper>
@@ -123,6 +168,8 @@
         </name>
         <units>mL/min/mL</units>
         <default>2.358</default>
+        <step>0.01</step>
+        <precision>3</precision>
         <constraints>
           <lower>0.0</lower>
           <upper>100.0</upper>
@@ -130,13 +177,13 @@
       </parameter>
     </parameters>
   </model>
-  <model>
+  <model id="HF1-2CFM">
     <name>
       <short>HF1-2CFM</short>
       <long>High Flow 1 Inlet - Two Compartment Filtration Model</long>
     </name>
     <function>HighFlowSingleInletTwoCompartmentGadoxetateModel</function>
-    <image>HighFlowSingleInletTwoCompartmentGadoxetateModel.png'</image>
+    <image>HighFlowSingleInletTwoCompartmentGadoxetateModel.png</image>
     <inlet_type>single</inlet_type>
     <parameters>
       <parameter>
@@ -146,9 +193,11 @@
         </name>
         <units>%</units>
         <default>23.0</default>
+        <step>1.0</step>
+        <precision>2</precision>
         <constraints>
-          <lower>0.0001</lower>
-          <upper>0.9999</upper>
+          <lower>0.01</lower>
+          <upper>99.99</upper>
         </constraints>
       </parameter>
       <parameter>
@@ -158,6 +207,8 @@
         </name>
         <units>mL/min/mL</units>
         <default>0.0918</default>
+        <step>0.01</step>
+        <precision>4</precision>
         <constraints>
           <lower>0.0</lower>
           <upper>100.0</upper>
@@ -170,53 +221,8 @@
         </name>
         <units>mL/min/mL</units>
         <default>2.358</default>
-        <constraints>
-          <lower>0.0001</lower>
-          <upper>100.0</upper>
-        </constraints>
-      </parameter>
-    </parameters>
-  </model>
-  <model>
-    <name>
-      <short>HF1-2CFM-FixVe</short>
-      <long>High Flow 1 Inlet - Two Compartment Filtration Model\n - Fixed Extracellular Vol Fraction</long>
-    </name>
-    <function>HighFlowSingleInletTwoCompartmentGadoxetateModel</function>
-    <image>HighFlowSingleInletTwoCompartmentGadoxetateModel_fixedve.png</image>
-    <inlet_type>single</inlet_type>
-    <parameters>
-      <parameter fixed="true">
-        <name>
-          <short>Ve</short>
-          <long>Extracellular Volume Fraction</long>
-        </name>
-        <units>%</units>
-        <default>23.0</default>
-        <constraints>
-          <lower>0.22999</lower>
-          <upper>0.23001</upper>
-        </constraints>
-      </parameter>
-      <parameter>
-        <name>
-          <short>Kbh</short>
-          <long>Biliary Efflux Rate</long>
-        </name>
-        <units>mL/min/mL</units>
-        <default>0.0918</default>
-        <constraints>
-          <lower>0.0</lower>
-          <upper>100.0</upper>
-        </constraints>
-      </parameter>
-      <parameter>
-        <name>
-          <short>Khe</short>
-          <long>Hepatocyte Uptake Rate</long>
-        </name>
-        <units>mL/min/mL</units>
-        <default>2.358</default>
+        <step>0.1</step>
+        <precision>3</precision>
         <constraints>
           <lower>0.0001</lower>
           <upper>100.0</upper>
@@ -225,6 +231,7 @@
     </parameters>
   </model>
 </models>
+
 
 
 

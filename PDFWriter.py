@@ -1,10 +1,10 @@
-"""This module creates and saves a report of a model fitting session in a PDF file. 
+"""This module contains functions for the creation and saving 
+of a report of a model fitting session in a PDF file. 
 In addition to a table of model parameter data, this report contains an image
 of the concentration/time plot at the time the CreateAndSavePDFReport method
 was called.
 
 This is done using the functionality in the FPDF library.
-
 """
 import datetime
 from fpdf import FPDF
@@ -15,11 +15,6 @@ TRISTAN_LOGO = 'images\\TRISTAN LOGO.jpg'
 
 #Create logger
 logger = logging.getLogger(__name__)
-
-#This is a global variable used to hold the current date and time 
-#displayed in the footer of the PDF report.
-currentDateTime = str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-
 
 #header and footer methods in FPDF render the page header and footer.
 #They are automatically called by add_page and close and should not be called 
@@ -53,6 +48,7 @@ class PDF(FPDF):
         # Page number - centred
         self.cell(0, 10, 'Page ' + str(self.page_no()), 0, 0, 'C')
         # Current Date & Time - Right justified
+        currentDateTime = str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
         self.cell(0, 10, currentDateTime, 0, 0, 'R')
 
     def CreateAndSavePDFReport(self, fileName, dataFileName, modelName, imageName, 
@@ -112,7 +108,7 @@ class PDF(FPDF):
                 #        paramList[0], paramList[1], paramList[2]))
                 #Create a row in the table
                 self.cell(col_width*3,textHeight*2, paramName.replace('\n', ''), border=1)
-                self.cell(col_width,textHeight*2, str(round(paramList[0],3)), border=1)
+                self.cell(col_width,textHeight*2, str(paramList[0]), border=1)
                 confidenceStr = '[{}     {}]'.format(paramList[1], paramList[2])
                 self.cell(col_width*2,textHeight*2, confidenceStr, border=1)
                 self.ln(textHeight*2)    

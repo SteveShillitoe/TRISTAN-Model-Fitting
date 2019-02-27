@@ -7,45 +7,52 @@ How to Use.
    The TRISTAN-Model-Fitting application allows the user to analyse organ time/concentration data
    by fitting a model to the Region Of Interest (ROI) time/concentration curve. 
    The TRISTAN-Model-Fitting application provides the following functionality:
-        1. Load a CSV file of concentration/time data.  The first column must contain time data 
+        1. Load an XML configuration file that describes the models to be fitted
+            to the concentration/time data.
+        2. Then load a CSV file of concentration/time data.  The first column must contain time data 
 			in seconds. The remaining columns of data must contain concentration data in 
 			millimoles (mM) for individual organs at the time points in the time column. 
 			There must be at least 2 columns of concentration data.  
 			There is no upper limit on the number of columns of concentration data.
 			Each time a CSV file is loaded, the screen is reset to its initial state.
-        2. Select a Region Of Interest (ROI) and display a plot of its concentration against
+        3. Select a Region Of Interest (ROI) and display a plot of its concentration against
             time.
-        3. The user can then select a model they would like to fit to the ROI data.  
+        4. The user can then select a model they would like to fit to the ROI data.  
             When a model is selected, a schematic representation of it is displayed on the 
             right-hand side of the screen.
-        4. Depending on the model selected the user can then select an Arterial Input Function(AIF)
+        5. Depending on the model selected the user can then select an Arterial Input Function(AIF)
             and/or a Venous Input Function (VIF) and display a plot(s) of its/their concentration 
             against time on the same axes as the ROI.
-        5. After step 4 is performed, the selected model is used to create a time/concentration series
+        6. After step 4 is performed, the selected model is used to create a time/concentration series
            based on default values for the models input parameters.  This data series is also plotted 
            on the above axes.
-        6. The default model parameters are displayed on the form and the user may vary them
+        7. The default model parameters are displayed on the form and the user may vary them
            and observe the effect on the curve generated in step 5.
-        7. Clicking the 'Reset' button resets the model input parameters to their default values.
-        8. By clicking the 'Fit Model' button, the model is fitted to the ROI data and the resulting
+        8. Clicking the 'Reset' button resets the model input parameters to their default values.
+        9. By clicking the 'Fit Model' button, the model is fitted to the ROI data and the resulting
            values of the model input parameters are displayed on the screen together with 
            their 95% confidence limits.
-        9. By clicking the 'Save plot data to CSV file' button the data plotted on the screen is saved
+        10. By clicking the 'Save plot data to CSV file' button the data plotted on the screen is saved
             to a CSV file - one column for each plot and a column for time.
             A file dialog box is displayed allowing the user to select a location 
             and enter a file name.
-        10. By clicking the 'Save Report in PDF Format', the current state of the model fitting session
+        11. By clicking the 'Save Report in PDF Format', the current state of the model fitting session
             is saved in PDF format.  This includes a image of the plot, name of the model, name of the 
             data file and the values of the model input parameters. If curve fitting has been carried 
             out and the values of the model input parameters have not been manually adjusted, then
             the report will contain the 95% confidence limits of the model input parameter values 
             arrived at by curve fitting.
-        11. While this application is running, events & function calls with data where appropriate 
+        12. While this application is running, events & function calls with data where appropriate 
             are logged to a file called TRISTAN.log, stored at the same location as the 
             source code or executable. This file will used as a debugging aid. 
             When a new instance of the application is started, 
             TRISTAN.log from the last session will be deleted and a new log file started.
-        12. Clicking the 'Exit' button closes the application.
+        13. Clicking the 'Start Batch Processing' button applies model fitting
+            to the concentration/time data in all the files in the folder containing
+            the data file selected in step 2.  For each file, a PDF report is created
+            as in step 11. Also, a Microsoft Excel spread sheet summarising all
+            the results is generated.
+        14. Clicking the 'Exit' button closes the application.
 
 Application Module Structure.
 ---------------------------
@@ -53,38 +60,59 @@ The modelFittingGUI.py class module is the start up module in the TRISTAN-Model-
 It defines the GUI and the logic providing the application's functionality.
 The GUI was built using PyQT5.
 
+The XMLReader.py class module uses the xml.etree.ElementTree package to parse
+the XML configuration file that describes all the models to be made available
+for curve fitting.  It also contains functions that query the XML tree using
+XPath notation and return data.
+
 The styleSheet.py module contains style instructions using CSS notation for each control/widget.
 
 The Tools.py module contains a library of mathematical functions used to solve the equations in 
-the models in TracerKineticModels.py.
+the models in ModelFunctionsHelper.py.
 
-Objects of the following 2 classes are created in modelFittingGUI.py and provide services 
-to this class:
-The PDFWrite.py class module creates and saves a report of a model fitting session in a PDF file.
+Objects of the following 2 classes are created in modelFittingGUI.py 
+and provide services to this class:
+    1. The PDFWrite.py class module creates and saves a report 
+    of a model fitting session in a PDF file.
+    2. The ExcelWriter.py class module uses the openpyxl package 
+    to create an Excel spreadsheet and write a summary of the 
+    results from the batch processing of data files.
 
-The TracerkineticModels.py module contains functions that calculate the variation of concentration
+The ModelFunctions.py class module contains functions that use 
+tracer kinetic models to calculate the variation of concentration
 with time according to several tracer kinetic models. 
+
+The ModelFunctionsHelper module coordinates the calling of model 
+functions in ModelFunctions.py by functions in ModelFittingGUI.py
 
 GUI Structure
 --------------
-The GUI is based on the QDialog class, which is the base class of dialog windows.
-The GUI contains a single form.  Controls are arranged in three verticals on this form.
+The GUI is based on the QWidget class.
+The GUI contains a single form.  Controls are arranged in two vertical columns on this form
+using Vertical Layout widgets.
 Consequently, a horizontal layout control in placed on this form. Within this horizontal
-layout is placed 3 vertical layout controls.
+layout are placed 2 vertical layout controls.
 
-The left-hand side vertical layout holds controls pertaining to the input and selection of data
-and the selection of a model to analyse the data.
-
-The central vertical layout holds a canvas widget for the graphical display of the data.
+The left-hand side vertical layout holds controls pertaining to the input and 
+selection of data and the selection of a model to analyse the data. The results
+of curve fitting, optimum parameter values and their confidence limits
+are displayed next to their parameter input values.
 
 The right-hand side vertical layout holds controls for the display of a schematic 
-representation of the chosen model and the optimum model input parameters resulting
-from fitting the curve to the Region of Interest (ROI) concentration/time curve.
+representation of the chosen model and a canvas widget for the 
+graphical display of the data.
 
 The appearance of the GUI is controlled by the CSS commands in styleSheet.py
 
 Reading Data into the Application.
 ----------------------------------
+The function LoadConfigFile loads and parses the contents of the XML file that
+describes the models to be used for curve fitting.  If parsing is successful,
+the XML tree is stored in memory and used to build a list of models for display
+in a combo box on the GUI, and the 'Load Data File' button is made visible.
+See the README file for a detailed description of the XML configuration file.
+
+Clicking the 'Load Data File' button executes the LoadDataFile function.
 The function LoadDataFile loads the contents of a CSV file containing time and 
 concentration data into a dictionary of lists. The key is the name of the organ 
 or 'time' and the corresponding value is a list of concentrations for that organ
@@ -139,7 +167,7 @@ class NavigationToolbar(NavigationToolbar):
                  t[0] in ('Home', 'Pan', 'Zoom', 'Save')]
 
 #Import module containing model definitions
-import TracerKineticModels
+import ModelFunctionsHelper
 
 #Import CSS file
 import StyleSheet
@@ -148,6 +176,8 @@ import StyleSheet
 from PDFWriter import PDF
 
 from ExcelWriter import ExcelWriter
+
+from XMLReader import XMLReader
 
 #Initialise global dictionary to hold concentration data
 _concentrationData={}
@@ -161,7 +191,8 @@ _optimisedParamaterList = []
 #Global boolean that indicates if the curve fitting routine has been just run or not.
 #Used by the PDF report writer to determine if displaying confidence limits is appropriate
 _boolCurveFittingDone = False
-
+#Create global XML reader object to process XML configuration file
+_objXMLReader = XMLReader()  
 ########################################
 ##              CONSTANTS             ##
 ########################################
@@ -177,34 +208,7 @@ MIN_NUM_COLUMNS_CSV_FILE = 3
 TRISTAN_LOGO = 'images\\TRISTAN LOGO.jpg'
 LARGE_TRISTAN_LOGO ='images\\logo-tristan.png'
 UNI_OF_LEEDS_LOGO ='images\\uni-leeds-logo.jpg'
-
-#Model 1: 2-2CFM
-DEFAULT_VALUE_Ve_2_2CFM = 20.0
-DEFAULT_VALUE_Fp_2_2CFM = 1.0
-DEFAULT_VALUE_Kbh_2_2CFM = 0.017
-DEFAULT_VALUE_Khe_2_2CFM = 0.22
-#Other models
-DEFAULT_VALUE_Ve = 23.0
-DEFAULT_VALUE_Kbh = 0.0918
-DEFAULT_VALUE_Khe = 2.358
-DEFAULT_VALUE_Fp = 0.0001
-DEFAULT_VALUE_Vp = 10.0
-DEFAULT_VALUE_Vh = 75.0
-DEFAULT_VALUE_Vb = 2.0
-DEFAULT_VALUE_Ktrans = 0.10
-DEFAULT_VALUE_Kce = 0.025
-DEFAULT_VALUE_Kbc = 0.003
-DEFAULT_VALUE_Fa = 17.0 #Arterial Flow Fraction
-
-LABEL_PARAMETER_Vp = 'Plasma Volume Fraction,\n Vp (%)'
-LABEL_PARAMETER_Vh = 'Hepatocyte Volume Fraction,\n Vh (%)'
-LABEL_PARAMETER_Vb = 'Intrahepatic Bile Duct Volume Fraction,\n Vb (%)'
-LABEL_PARAMETER_Kce = 'Hepatocellular Uptake Rate, \n Kce (mL/100mL/min)'
-LABEL_PARAMETER_Ve = 'Extracellular Vol Fraction,\n Ve (%)'
-LABEL_PARAMETER_Fp = 'Total Plasma Inflow, \n Fp (mL/min/mL)'
-LABEL_PARAMETER_Ktrans = 'Transfer Rate Constant, \n Ktrans (1/min)'
-LABEL_PARAMETER_Kbh = 'Biliary Efflux Rate, \n Kbh (mL/min/mL)'
-LABEL_PARAMETER_Khe = 'Hepatocyte Uptake Rate, \n Khe (mL/min/mL)'
+IMAGE_FOLDER = 'images\\'
 #######################################
 
 #Create and configure the logger
@@ -219,47 +223,48 @@ logger = logging.getLogger(__name__)
 
 class ModelFittingApp(QWidget):   
     """This class defines the TRISTAN Model Fitting software 
-       based on a QDialog window.
+       based on QWidget class that provides the GUI.
        This includes seting up the GUI and defining the methods 
        that are executed when events associated with widgets on
        the GUI are executed."""
-    
+     
     def __init__(self, parent=None):
-        """Creates the GUI. Controls on the GUI are grouped into 3 vertical
+        """Creates the GUI. Controls on the GUI are placed onto 2 vertical
            layout panals placed on a horizontal layout panal.
            The appearance of the widgets is determined by CSS 
            commands in the module styleSheet.py. 
            
            The left-handside vertical layout panal holds widgets for the 
            input of data & the selection of the model to fit to the data.
+           Optimum parameter data and their confidence limits resulting
+           from the model fit are also displayed.
            
-           The middle vertical layout panal holds the graph displaying the
-           data and the fitted model.
-           
-           The right-hand vertical layout panal displays parameter data and
-           their confidence limits pertaining to the model fit. 
+           The right-handside vertical layout panal holds the graph 
+           displaying the time/concentration data and the fitted model.
+           Above this graph is displayed a schematic representation of the
+           model.
            
            This method coordinates the calling of methods that set up the 
-           widgets on the 3 vertical layout panals."""
+           widgets on the 2 vertical layout panals."""
 
         super(ModelFittingApp, self).__init__(parent)
-      
         self.setWindowTitle(WINDOW_TITLE)
         self.setWindowIcon(QIcon(TRISTAN_LOGO))
         width, height = self.GetScreenResolution()
         self.setGeometry(width*0.05, height*0.05, width*0.9, height*0.9)
         self.setWindowFlags(QtCore.Qt.WindowMinMaxButtonsHint |  QtCore.Qt.WindowCloseButtonHint)
-        self.directory = ""
+        #Store path to time/concentration data files for use in batch processing.
+        self.directory = ""  
         self.ApplyStyleSheet()
        
         #Setup the layouts, the containers for widgets
-        verticalLayoutLeft, verticalLayoutRight = self.SetUpLayouts() #verticalLayoutMiddle,
+        verticalLayoutLeft, verticalLayoutRight = self.SetUpLayouts() 
         
         #Add widgets to the left-hand side vertical layout
         self.SetUpLeftVerticalLayout(verticalLayoutLeft)
 
         #Set up the graph to plot concentration data on
-        # the middle vertical layout
+        # the right-hand side vertical layout
         self.SetUpPlotArea(verticalLayoutRight)
         
         logger.info("GUI created successfully.")
@@ -290,24 +295,34 @@ class ModelFittingApp(QWidget):
         """
         Creates widgets and places them on the left-handside vertical layout. 
         """
+        #Create Load Configuration XML file Button
+        self.btnLoadConfigFile = QPushButton('Load Configuration File')
+        self.btnLoadConfigFile.setToolTip(
+            'Opens file dialog box to select the configuration file')
+        self.btnLoadConfigFile.setShortcut("Ctrl+C")
+        self.btnLoadConfigFile.setAutoDefault(False)
+        self.btnLoadConfigFile.clicked.connect(self.LoadConfigFile)
+
         #Create Load Data File Button
-        self.btnLoadDisplayData = QPushButton('Load and display data.')
-        self.btnLoadDisplayData.setToolTip('Open file dialog box to select the data file')
-        self.btnLoadDisplayData.setShortcut("Ctrl+L")
-        self.btnLoadDisplayData.setAutoDefault(False)
-        self.btnLoadDisplayData.resize(self.btnLoadDisplayData.minimumSizeHint())
-        #Method LoadDataFile is executed in the clicked event of this button
-        self.btnLoadDisplayData.clicked.connect(self.LoadDataFile)
+        self.btnLoadDataFile = QPushButton('Load Data File')
+        self.btnLoadDataFile.hide()
+        self.btnLoadDataFile.setToolTip('Opens file dialog box to select the data file')
+        self.btnLoadDataFile.setShortcut("Ctrl+L")
+        self.btnLoadDataFile.setAutoDefault(False)
+        self.btnLoadDataFile.resize(self.btnLoadDataFile.minimumSizeHint())
+        self.btnLoadDataFile.clicked.connect(self.LoadDataFile)
         
         #Add a vertical spacer to the top of vertical layout to ensure
         #the top of the Load Data button is level with the MATPLOTLIB toolbar 
         #in the central vertical layout.
-        verticalSpacer = QSpacerItem(20, 60, QSizePolicy.Minimum, QSizePolicy.Minimum)
+        verticalSpacer = QSpacerItem(20, 60, QSizePolicy.Minimum, 
+                          QSizePolicy.Minimum)
+        #Add Load configuration file button to the top of the vertical layout
+        layout.addWidget(self.btnLoadConfigFile)
         layout.addItem(verticalSpacer)
-        #Add Load data file button to the top of the vertical layout
-        layout.addWidget(self.btnLoadDisplayData)
+        layout.addWidget(self.btnLoadDataFile)
         layout.addItem(verticalSpacer)
-        #Create dropdown list for selection of ROI
+        #Create dropdown list & label for selection of ROI
         self.lblROI = QLabel("Region of Interest:")
         self.lblROI.setAlignment(QtCore.Qt.AlignRight)
         self.cmbROI = QComboBox()
@@ -330,7 +345,8 @@ class ModelFittingApp(QWidget):
         
         self.btnSaveReport = QPushButton('Save Report in PDF Format')
         self.btnSaveReport.hide()
-        self.btnSaveReport.setToolTip('Insert an image of the graph opposite and associated data in a PDF file')
+        self.btnSaveReport.setToolTip(
+        'Insert an image of the graph opposite and associated data in a PDF file')
         layout.addWidget(self.btnSaveReport, QtCore.Qt.AlignTop)
         self.btnSaveReport.clicked.connect(self.CreatePDFReport)
 
@@ -353,39 +369,38 @@ class ModelFittingApp(QWidget):
         #The group box is hidden until a ROI is selected.
         self.groupBoxModel.hide()
         layout.addWidget(self.groupBoxModel)
-        #layout.addItem(verticalSpacer)
         
         #Create horizontal layouts, one row of widgets to 
         #each horizontal layout. Then add them to a vertical layout, 
         #then add the vertical layout to the group box
-        modelHorizontalLayout2 = QHBoxLayout()
+        modelHorizontalLayoutModelList = QHBoxLayout()
         modelHorizontalLayoutParamLabels = QHBoxLayout()
         gridLayoutParamLabels = QGridLayout()
-        modelHorizontalLayoutArterialFlowFactor = QHBoxLayout()
-        modelHorizontalLayout3 = QHBoxLayout()
-        modelHorizontalLayout4 = QHBoxLayout()
+        modelHorizontalLayoutAIF = QHBoxLayout()
+        modelHorizontalLayoutVIF = QHBoxLayout()
         modelHorizontalLayoutReset = QHBoxLayout()
-        modelHorizontalLayout5 = QHBoxLayout()
-        modelHorizontalLayout6 = QHBoxLayout()
-        modelHorizontalLayout7 = QHBoxLayout()
-        modelHorizontalLayoutPara4 = QHBoxLayout()
-        modelHorizontalLayout8 = QHBoxLayout()
-        modelHorizontalLayout9 = QHBoxLayout()
+        modelHorizontalLayoutParameter1 = QHBoxLayout()
+        modelHorizontalLayoutParameter2 = QHBoxLayout()
+        modelHorizontalLayoutParameter3 = QHBoxLayout()
+        modelHorizontalLayoutParameter4 = QHBoxLayout()
+        modelHorizontalLayoutParameter5 = QHBoxLayout()
+        modelHorizontalLayoutFitModelBtn = QHBoxLayout()
+        modelHorizontalLayoutSaveCSVBtn = QHBoxLayout()
         modelVerticalLayout = QVBoxLayout()
         modelVerticalLayout.setAlignment(QtCore.Qt.AlignTop) 
-        modelVerticalLayout.addLayout(modelHorizontalLayout2)
-        modelVerticalLayout.addLayout(modelHorizontalLayout3)
-        modelVerticalLayout.addLayout(modelHorizontalLayout4)
+        modelVerticalLayout.addLayout(modelHorizontalLayoutModelList)
+        modelVerticalLayout.addLayout(modelHorizontalLayoutAIF)
+        modelVerticalLayout.addLayout(modelHorizontalLayoutVIF)
         modelVerticalLayout.addLayout(modelHorizontalLayoutReset)
         modelVerticalLayout.addLayout(modelHorizontalLayoutParamLabels)
         modelHorizontalLayoutParamLabels.addLayout(gridLayoutParamLabels)
-        modelVerticalLayout.addLayout(modelHorizontalLayoutArterialFlowFactor)
-        modelVerticalLayout.addLayout(modelHorizontalLayout5)
-        modelVerticalLayout.addLayout(modelHorizontalLayout6)
-        modelVerticalLayout.addLayout(modelHorizontalLayout7)
-        modelVerticalLayout.addLayout(modelHorizontalLayoutPara4)
-        modelVerticalLayout.addLayout(modelHorizontalLayout8)
-        modelVerticalLayout.addLayout(modelHorizontalLayout9)
+        modelVerticalLayout.addLayout(modelHorizontalLayoutParameter1)
+        modelVerticalLayout.addLayout(modelHorizontalLayoutParameter2)
+        modelVerticalLayout.addLayout(modelHorizontalLayoutParameter3)
+        modelVerticalLayout.addLayout(modelHorizontalLayoutParameter4)
+        modelVerticalLayout.addLayout(modelHorizontalLayoutParameter5)
+        modelVerticalLayout.addLayout(modelHorizontalLayoutFitModelBtn)
+        modelVerticalLayout.addLayout(modelHorizontalLayoutSaveCSVBtn)
         self.groupBoxModel.setLayout(modelVerticalLayout)
         
         #Create dropdown list to hold names of models
@@ -393,15 +408,12 @@ class ModelFittingApp(QWidget):
         self.modelLabel.setAlignment(QtCore.Qt.AlignRight)
         self.cmbModels = QComboBox()
         self.cmbModels.setToolTip('Select a model to fit to the data')
-        #Populate the combo box with names of models in the modelNames list
-        #self.cmbModels.addItems(TracerKineticModels.modelNames)
-        self.cmbModels.addItems(TracerKineticModels.GetListModels())
         self.cmbModels.setCurrentIndex(0) #Display "Select a Model"
         self.cmbModels.currentIndexChanged.connect(self.UncheckFixParameterCheckBoxes)
         self.cmbModels.currentIndexChanged.connect(self.DisplayModelImage)
         self.cmbModels.currentIndexChanged.connect(self.ConfigureGUIForEachModel)
         self.cmbModels.currentIndexChanged.connect(lambda: self.ClearOptimisedParamaterList('cmbModels')) 
-        self.cmbModels.currentIndexChanged.connect(self.DisplayFitModelSaveCSVButtons)
+        self.cmbModels.currentIndexChanged.connect(self.DisplayFitModelAndSaveCSVButtons)
         self.cmbModels.activated.connect(lambda:  self.PlotConcentrations('cmbModels'))
 
         #Create dropdown lists for selection of AIF & VIF
@@ -420,9 +432,8 @@ class ModelFittingApp(QWidget):
         #When an AIF is selected plot its concentration data on the graph.
         self.cmbAIF.activated.connect(lambda: self.PlotConcentrations('cmbAIF'))
         #When an AIF is selected display the Fit Model and Save plot CVS buttons.
-        self.cmbAIF.currentIndexChanged.connect(self.DisplayFitModelSaveCSVButtons)
-        self.cmbVIF.currentIndexChanged.connect(self.DisplayArterialFlowFactorSpinBox)
-        self.cmbVIF.currentIndexChanged.connect(self.DisplayFitModelSaveCSVButtons)
+        self.cmbAIF.currentIndexChanged.connect(self.DisplayFitModelAndSaveCSVButtons)
+        self.cmbVIF.currentIndexChanged.connect(self.DisplayFitModelAndSaveCSVButtons)
         #When a VIF is selected plot its concentration data on the graph.
         self.cmbVIF.activated.connect(lambda: self.PlotConcentrations('cmbVIF'))
         self.lblAIF.hide()
@@ -434,13 +445,13 @@ class ModelFittingApp(QWidget):
         self.cmbVIF.setSizeAdjustPolicy(QComboBox.AdjustToContents)
         
         #Add combo boxes and their labels to the horizontal layouts
-        modelHorizontalLayout2.insertStretch (0, 2)
-        modelHorizontalLayout2.addWidget(self.modelLabel)
-        modelHorizontalLayout2.addWidget(self.cmbModels)
-        modelHorizontalLayout3.addWidget(self.lblAIF)
-        modelHorizontalLayout3.addWidget(self.cmbAIF)
-        modelHorizontalLayout4.addWidget(self.lblVIF)
-        modelHorizontalLayout4.addWidget(self.cmbVIF)
+        modelHorizontalLayoutModelList.insertStretch (0, 2)
+        modelHorizontalLayoutModelList.addWidget(self.modelLabel)
+        modelHorizontalLayoutModelList.addWidget(self.cmbModels)
+        modelHorizontalLayoutAIF.addWidget(self.lblAIF)
+        modelHorizontalLayoutAIF.addWidget(self.cmbAIF)
+        modelHorizontalLayoutVIF.addWidget(self.lblVIF)
+        modelHorizontalLayoutVIF.addWidget(self.cmbVIF)
         
         self.cboxDelay = QCheckBox('Delay', self)
         self.cboxConstaint = QCheckBox('Constraint', self)
@@ -451,32 +462,24 @@ class ModelFittingApp(QWidget):
         self.btnReset.hide()
         self.btnReset.clicked.connect(self.InitialiseParameterSpinBoxes)
         self.btnReset.clicked.connect(self.OptimumParameterChanged)
-        #If parameters reset to their default values, replot the concentration and model data
+        #If parameters reset to their default values, 
+        #replot the concentration and model data
         self.btnReset.clicked.connect(lambda: self.PlotConcentrations('Reset Button'))
         modelHorizontalLayoutReset.addWidget(self.cboxDelay)
         modelHorizontalLayoutReset.addWidget(self.cboxConstaint)
         modelHorizontalLayoutReset.addWidget(self.btnReset)
         
-        #Create spinboxes and their labels
-        #Label text set in function ConfigureGUIForEachModel when the model is selected
-        self.lblArterialFlowFactor = QLabel("Arterial Flow Fraction, \n fa (%)") 
-        self.lblArterialFlowFactor.hide()
-        self.ckbAFF = QCheckBox("Fix")
-        self.ckbAFF.hide()
-        self.lblAFFConfInt = QLabel("")
-        self.lblAFFConfInt.setAlignment(QtCore.Qt.AlignCenter)
-
         self.lblConfInt = QLabel("95% Confidence Interval")
         self.lblConfInt.hide()
         self.lblConfInt.setAlignment(QtCore.Qt.AlignRight)
         gridLayoutParamLabels.addWidget(self.lblConfInt, 1,4)
-        
-        self.labelParameter1 = QLabel("")
+
+        #Create spinboxes and their labels
+        #Label text set when the model is selected
+        self.labelParameter1 = QLabel("") 
+        self.labelParameter1.hide()
         self.ckbParameter1 = QCheckBox("Fix")
         self.ckbParameter1.hide()
-        self.ckbParameter1.clicked.connect(self.OptimumParameterChanged)
-        self.ckbParameter1.clicked.connect(self.DisplayModelImage)
-        self.ckbParameter1.clicked.connect(lambda:  self.PlotConcentrations('ckbParameter1'))
         self.lblParam1ConfInt = QLabel("")
         self.lblParam1ConfInt.setAlignment(QtCore.Qt.AlignCenter)
         
@@ -491,89 +494,88 @@ class ModelFittingApp(QWidget):
         self.ckbParameter3.hide()
         self.lblParam3ConfInt = QLabel("")
         self.lblParam3ConfInt.setAlignment(QtCore.Qt.AlignCenter)
-
+        
         self.labelParameter4 = QLabel("")
         self.ckbParameter4 = QCheckBox("Fix")
         self.ckbParameter4.hide()
         self.lblParam4ConfInt = QLabel("")
         self.lblParam4ConfInt.setAlignment(QtCore.Qt.AlignCenter)
 
+        self.labelParameter5 = QLabel("")
+        self.ckbParameter5 = QCheckBox("Fix")
+        self.ckbParameter5.hide()
+        self.lblParam5ConfInt = QLabel("")
+        self.lblParam5ConfInt.setAlignment(QtCore.Qt.AlignCenter)
+
         self.labelParameter1.setWordWrap(True)
         self.labelParameter2.setWordWrap(True)
         self.labelParameter3.setWordWrap(True)
         self.labelParameter4.setWordWrap(True)
-
-        self.spinBoxArterialFlowFactor = QDoubleSpinBox()
-        self.spinBoxArterialFlowFactor.setRange(0, 100)
-        self.spinBoxArterialFlowFactor.setDecimals(2)
-        self.spinBoxArterialFlowFactor.setSingleStep(0.01)
-        self.spinBoxArterialFlowFactor.setValue(DEFAULT_VALUE_Fa)
-        self.spinBoxArterialFlowFactor.setSuffix('%')
-        self.spinBoxArterialFlowFactor.hide()
+        self.labelParameter5.setWordWrap(True)
         
         self.spinBoxParameter1 = QDoubleSpinBox()
         self.spinBoxParameter2 = QDoubleSpinBox()
         self.spinBoxParameter3 = QDoubleSpinBox()
         self.spinBoxParameter4 = QDoubleSpinBox()
+        self.spinBoxParameter5 = QDoubleSpinBox()
         
         self.spinBoxParameter1.hide()
         self.spinBoxParameter2.hide()
         self.spinBoxParameter3.hide()
         self.spinBoxParameter4.hide()
+        self.spinBoxParameter5.hide()
 
         #If a parameter value is changed, replot the concentration and model data
-        self.spinBoxArterialFlowFactor.valueChanged.connect(lambda: self.PlotConcentrations('spinBoxArterialFlowFactor')) 
         self.spinBoxParameter1.valueChanged.connect(lambda: self.PlotConcentrations('spinBoxParameter1')) 
         self.spinBoxParameter2.valueChanged.connect(lambda: self.PlotConcentrations('spinBoxParameter2')) 
-        self.spinBoxParameter3.valueChanged.connect(lambda: self.PlotConcentrations('spinBoxParameter3'))
+        self.spinBoxParameter3.valueChanged.connect(lambda: self.PlotConcentrations('spinBoxParameter3')) 
         self.spinBoxParameter4.valueChanged.connect(lambda: self.PlotConcentrations('spinBoxParameter4'))
-        #Set a global boolean variable, _boolCurveFittingDone to false to indicate that 
-        #the value of a model parameter has been changed manually rather than by curve fitting
-        self.spinBoxArterialFlowFactor.valueChanged.connect(self.OptimumParameterChanged) 
+        self.spinBoxParameter5.valueChanged.connect(lambda: self.PlotConcentrations('spinBoxParameter5'))
+        #Set a global boolean variable, _boolCurveFittingDone to false to 
+        #indicate that the value of a model parameter
+        #has been changed manually rather than by curve fitting
         self.spinBoxParameter1.valueChanged.connect(self.OptimumParameterChanged) 
         self.spinBoxParameter2.valueChanged.connect(self.OptimumParameterChanged) 
-        self.spinBoxParameter3.valueChanged.connect(self.OptimumParameterChanged)
+        self.spinBoxParameter3.valueChanged.connect(self.OptimumParameterChanged) 
         self.spinBoxParameter4.valueChanged.connect(self.OptimumParameterChanged)
+        self.spinBoxParameter5.valueChanged.connect(self.OptimumParameterChanged)
         
         #Place spin boxes and their labels in horizontal layouts
-        #modelHorizontalLayoutParamLabels
+        modelHorizontalLayoutParameter1.addWidget(self.labelParameter1)
+        modelHorizontalLayoutParameter1.addWidget(self.spinBoxParameter1)
+        modelHorizontalLayoutParameter1.addWidget(self.ckbParameter1)
+        modelHorizontalLayoutParameter1.addWidget(self.lblParam1ConfInt)
 
-        modelHorizontalLayoutArterialFlowFactor.addWidget(self.lblArterialFlowFactor)
-        modelHorizontalLayoutArterialFlowFactor.addWidget(self.spinBoxArterialFlowFactor)
-        modelHorizontalLayoutArterialFlowFactor.addWidget(self.ckbAFF)
-        modelHorizontalLayoutArterialFlowFactor.addWidget(self.lblAFFConfInt)
+        modelHorizontalLayoutParameter2.addWidget(self.labelParameter2)
+        modelHorizontalLayoutParameter2.addWidget(self.spinBoxParameter2)
+        modelHorizontalLayoutParameter2.addWidget(self.ckbParameter2)
+        modelHorizontalLayoutParameter2.addWidget(self.lblParam2ConfInt)
 
-        modelHorizontalLayout5.addWidget(self.labelParameter1)
-        modelHorizontalLayout5.addWidget(self.spinBoxParameter1)
-        modelHorizontalLayout5.addWidget(self.ckbParameter1)
-        modelHorizontalLayout5.addWidget(self.lblParam1ConfInt)
+        modelHorizontalLayoutParameter3.addWidget(self.labelParameter3)
+        modelHorizontalLayoutParameter3.addWidget(self.spinBoxParameter3)
+        modelHorizontalLayoutParameter3.addWidget(self.ckbParameter3)
+        modelHorizontalLayoutParameter3.addWidget(self.lblParam3ConfInt)
 
-        modelHorizontalLayout6.addWidget(self.labelParameter2)
-        modelHorizontalLayout6.addWidget(self.spinBoxParameter2)
-        modelHorizontalLayout6.addWidget(self.ckbParameter2)
-        modelHorizontalLayout6.addWidget(self.lblParam2ConfInt)
+        modelHorizontalLayoutParameter4.addWidget(self.labelParameter4)
+        modelHorizontalLayoutParameter4.addWidget(self.spinBoxParameter4)
+        modelHorizontalLayoutParameter4.addWidget(self.ckbParameter4)
+        modelHorizontalLayoutParameter4.addWidget(self.lblParam4ConfInt)
 
-        modelHorizontalLayout7.addWidget(self.labelParameter3)
-        modelHorizontalLayout7.addWidget(self.spinBoxParameter3)
-        modelHorizontalLayout7.addWidget(self.ckbParameter3)
-        modelHorizontalLayout7.addWidget(self.lblParam3ConfInt)
-
-        modelHorizontalLayoutPara4.addWidget(self.labelParameter4)
-        modelHorizontalLayoutPara4.addWidget(self.spinBoxParameter4)
-        modelHorizontalLayoutPara4.addWidget(self.ckbParameter4)
-        modelHorizontalLayoutPara4.addWidget(self.lblParam4ConfInt)
-       
+        modelHorizontalLayoutParameter5.addWidget(self.labelParameter5)
+        modelHorizontalLayoutParameter5.addWidget(self.spinBoxParameter5)
+        modelHorizontalLayoutParameter5.addWidget(self.ckbParameter5)
+        modelHorizontalLayoutParameter5.addWidget(self.lblParam5ConfInt)
         
         self.btnFitModel = QPushButton('Fit Model')
         self.btnFitModel.setToolTip('Use non-linear least squares to fit the selected model to the data')
         self.btnFitModel.hide()
-        modelHorizontalLayout8.addWidget(self.btnFitModel)
+        modelHorizontalLayoutFitModelBtn.addWidget(self.btnFitModel)
         self.btnFitModel.clicked.connect(self.RunCurveFit)
         
         self.btnSaveCSV = QPushButton('Save plot data to CSV file')
         self.btnSaveCSV.setToolTip('Save the data plotted on the graph to a CSV file')
         self.btnSaveCSV.hide()
-        modelHorizontalLayout9.addWidget(self.btnSaveCSV)
+        modelHorizontalLayoutSaveCSVBtn.addWidget(self.btnSaveCSV)
         self.btnSaveCSV.clicked.connect(self.SaveCSVFile)
 
     def SetUpBatchProcessingGroupBox(self, layout):
@@ -598,7 +600,6 @@ class ModelFittingApp(QWidget):
         self.pbar = QProgressBar(self)
         verticalLayout.addWidget(self.pbar)
         self.pbar.hide()
-        
 
     def DisplayModelFittingGroupBox(self):
         """Shows the model fitting group box if a ROI is selected. 
@@ -620,7 +621,8 @@ class ModelFittingApp(QWidget):
             logger.error('Error in function DisplayModelFittingGroupBox: ' + str(e))
 
     def SetUpPlotArea(self, layout):
-        """Adds widgets for the display of the graph onto the right-hand side vertical layout."""
+        """Adds widgets for the display of the graph onto the 
+        right-hand side vertical layout."""
         layout.setAlignment(QtCore.Qt.AlignTop)
         verticalSpacer = QSpacerItem(20, 35, QSizePolicy.Minimum, QSizePolicy.Minimum)
         layout.addItem(verticalSpacer)
@@ -634,7 +636,8 @@ class ModelFittingApp(QWidget):
 
         self.figure = plt.figure(figsize=(5, 9), dpi=100) 
         # this is the Canvas Widget that displays the `figure`
-        # it takes the `figure` instance as a parameter to its __init__
+        # it takes the `figure` instance as a parameter 
+        # to its __init__ function
         self.canvas = FigureCanvas(self.figure)
         # this is the Navigation widget
         # it takes the Canvas widget as a parent
@@ -678,6 +681,7 @@ class ModelFittingApp(QWidget):
         """Modifies the appearance of the GUI using CSS instructions"""
         try:
             self.setStyleSheet(StyleSheet.TRISTAN_GREY)
+            logger.info('Style Sheet applied.')
         except Exception as e:
             print('Error in function ApplyStyleSheet: ' + str(e))
             logger.error('Error in function ApplyStyleSheet: ' + str(e))
@@ -692,20 +696,22 @@ class ModelFittingApp(QWidget):
             shortModelName = str(self.cmbModels.currentText())
         
             if shortModelName != 'Select a model':
-                if self.ckbParameter1.isChecked():
-                    boolFixVe = True
+                imageName = _objXMLReader.getImageName(shortModelName)
+                if imageName:
+                    imagePath = IMAGE_FOLDER + imageName
+                    pixmapModelImage = QPixmap(imagePath)
+                    #Increase the size of the model image
+                    pMapWidth = pixmapModelImage.width() * 1.35
+                    pMapHeight = pixmapModelImage.height() * 1.35
+                    pixmapModelImage = pixmapModelImage.scaled(pMapWidth, pMapHeight, 
+                          QtCore.Qt.KeepAspectRatio, QtCore.Qt.SmoothTransformation)
+                    self.lblModelImage.setPixmap(pixmapModelImage)
+                
+                    longModelName = _objXMLReader.getLongModelName(shortModelName)
+                    self.lblModelName.setText(longModelName)
                 else:
-                    boolFixVe = False
-                modelImageName = TracerKineticModels.GetModelImageName(shortModelName, boolFixVe)
-                pixmapModelImage = QPixmap(modelImageName)
-                #Increase the size of the model image
-                pMapWidth = pixmapModelImage.width() * 1.35
-                pMapHeight = pixmapModelImage.height() * 1.35
-                pixmapModelImage = pixmapModelImage.scaled(pMapWidth, pMapHeight, 
-                      QtCore.Qt.KeepAspectRatio, QtCore.Qt.SmoothTransformation)
-                self.lblModelImage.setPixmap(pixmapModelImage)
-                longModelName = TracerKineticModels.GetLongModelName(shortModelName, boolFixVe)
-                self.lblModelName.setText(longModelName)
+                    self.lblModelImage.clear()
+                    self.lblModelName.setText('')
             else:
                 self.lblModelImage.clear()
                 self.lblModelName.setText('')
@@ -726,130 +732,62 @@ class ModelFittingApp(QWidget):
         _boolCurveFittingDone=False
         self.ClearOptimisedParamaterList('Function-OptimumParameterChanged')
 
-    def ProcessOptimumParametersAfterCurveFit(self):
-        """Displays the optimum parameter values resulting from curve fitting 
-        with their confidence limits on the right-hand side of the GUI. These
-        values are stored in the global list _optimisedParamaterList
+    def PopulateConfIntervalLabel(self, paramNumber, nextIndex):
+        """Called by the ProcessOptimumParametersAfterCurveFit function,
+        this function populates the label that displays the upper and lower
+        confidence limits for each calculated optimum parameter value.
+
+        Where necessary decimal fractions are converted to % and the
+        corresponding value in the global list _optimisedParamaterList
+        is updated, which is also the source of this data.
+        """
+        logger.info('Function PopulateConfIntervalLabel called.')
+        try:
+            objSpinBox = getattr(self, 'spinBoxParameter' + str(paramNumber))
+            objLabel = getattr(self, 'lblParam' + str(paramNumber) + 'ConfInt')
         
-        Where appropriate decimal fractions are converted to %"""
+            parameterValue = _optimisedParamaterList[nextIndex][0]
+            lowerLimit = _optimisedParamaterList[nextIndex][1]
+            upperLimit = _optimisedParamaterList[nextIndex][2]
+            if objSpinBox.suffix() == '%':
+                parameterValue = parameterValue * 100.0
+                lowerLimit = lowerLimit * 100.0
+                upperLimit = upperLimit * 100.0
+        
+            parameterValue = round(parameterValue, 3)
+            lowerLimit = round(lowerLimit, 3)
+            upperLimit = round(upperLimit, 3)
+            #For display in the PDF report, 
+            #overwrite decimal volume fraction values 
+            #in  _optimisedParamaterList with the % equivalent
+            _optimisedParamaterList[nextIndex][0] = parameterValue
+            _optimisedParamaterList[nextIndex][1] = lowerLimit
+            _optimisedParamaterList[nextIndex][2] = upperLimit
+           
+            confidenceStr = '[{}     {}]'.format(lowerLimit, upperLimit)
+            objLabel.setText(confidenceStr)
+        except Exception as e:
+            print('Error in function PopulateConfIntervalLabel: ' + str(e))
+            logger.error('Error in function PopulateConfIntervalLabel: ' + str(e))
+
+    def ProcessOptimumParametersAfterCurveFit(self):
+        """Displays the confidence limits for the optimum parameter values 
+           resulting from curve fitting on the right-hand side of the GUI."""
         try:
             logger.info('Function ProcessOptimumParametersAfterCurveFit called.')
             self.lblConfInt.show()
-            if self.spinBoxArterialFlowFactor.isHidden() == False:
-                parameterValue = _optimisedParamaterList[0][0]
-                lowerLimit = _optimisedParamaterList[0][1]
-                upperLimit = _optimisedParamaterList[0][2]
-                suffix = '%'
-                parameterValue = round(parameterValue * 100.0, 2)
-                lowerLimit = round(lowerLimit * 100.0, 2)
-                upperLimit = round(upperLimit * 100.0, 2)
-                #For display in the PDF report, overwrite decimal volume fraction values in  _optimisedParamaterList
-                #with the % equivalent
-                _optimisedParamaterList[0][0] = parameterValue
-                _optimisedParamaterList[0][1] = lowerLimit
-                _optimisedParamaterList[0][2] = upperLimit
-               
-                confidenceStr = '[{}     {}]'.format(lowerLimit, upperLimit)
-                self.lblAFFConfInt.setText(confidenceStr)
-                nextIndex=1
-            else:
-                nextIndex = 0
-            
             modelName = str(self.cmbModels.currentText())
-      
-            if modelName == 'HF1-2CFM' and self.ckbParameter1.isChecked():
-                parameterValue = self.spinBoxParameter1.value()
-                lowerLimit = "N/A"
-                upperLimit = "N/A"
-                suffix = '%'
-                tempList = [parameterValue, lowerLimit, upperLimit]
-                _optimisedParamaterList.insert(0, tempList)
-            else:
-                parameterValue = round(_optimisedParamaterList[nextIndex][0], 3)
-                lowerLimit = round(_optimisedParamaterList[nextIndex][1], 3)
-                upperLimit = round(_optimisedParamaterList[nextIndex][2], 3)
-                if self.spinBoxParameter1.suffix() == '%':
-                    #convert from decimal fraction to %
-                    suffix = '%'
-                    parameterValue = round(parameterValue * 100.0, 3)
-                    lowerLimit = round(lowerLimit * 100.0,3)
-                    upperLimit = round(upperLimit * 100.0,3)
-                    confidenceStr = '[{}     {}]'.format(lowerLimit, upperLimit)
-                    self.lblParam1ConfInt.setText(confidenceStr)
-                    nextIndex +=1
-                else:
-                    suffix = ''
-                #For display in the PDF report, overwrite decimal volume fraction values in  _optimisedParamaterList
-                #with the % equivalent
-                _optimisedParamaterList[nextIndex][0] = parameterValue
-                _optimisedParamaterList[nextIndex][1] = lowerLimit
-                _optimisedParamaterList[nextIndex][2] = upperLimit
-                confidenceStr = '[{}     {}]'.format(lowerLimit, upperLimit)
-                self.lblParam1ConfInt.setText(confidenceStr)
-                nextIndex +=1
-            
-            parameterValue = round(_optimisedParamaterList[nextIndex][0], 3)
-            lowerLimit = round(_optimisedParamaterList[nextIndex][1], 3)
-            upperLimit = round(_optimisedParamaterList[nextIndex][2], 3)
-
-            if self.spinBoxParameter2.suffix() == '%':
-                suffix = '%'
-                parameterValue = round(parameterValue * 100.0,3)
-                lowerLimit = round(lowerLimit * 100.0,3)
-                upperLimit = round(upperLimit * 100.0,3)
-                #For display in the PDF report, overwrite decimal volume fraction values in  _optimisedParamaterList
-                #with the % equivalent
-                _optimisedParamaterList[nextIndex][0] = parameterValue
-                _optimisedParamaterList[nextIndex][1] = lowerLimit
-                _optimisedParamaterList[nextIndex][2] = upperLimit
-            else:
-                suffix = ''
-            
-            confidenceStr = '[{}     {}]'.format(lowerLimit, upperLimit)
-            self.lblParam2ConfInt.setText(confidenceStr) 
-            
-            nextIndex += 1
-            if self.spinBoxParameter3.isHidden() == False:
-                parameterValue = round(_optimisedParamaterList[nextIndex][0], 3)
-                lowerLimit = round(_optimisedParamaterList[nextIndex][1], 3)
-                upperLimit = round(_optimisedParamaterList[nextIndex][2], 3)
-                nextIndex += 1
-                if self.spinBoxParameter3.suffix() == '%':
-                    suffix = '%'
-                    parameterValue = round(parameterValue * 100.0, 3)
-                    lowerLimit = round(lowerLimit * 100.0, 3)
-                    upperLimit = round(upperLimit * 100.0, 3)
-                    #For display in the PDF report, overwrite decimal volume fraction values in  _optimisedParamaterList
-                    #with the % equivalent
-                    _optimisedParamaterList[nextIndex][0] = parameterValue
-                    _optimisedParamaterList[nextIndex][1] = lowerLimit
-                    _optimisedParamaterList[nextIndex][2] = upperLimit
-                else:
-                    suffix = ''
-                
-                confidenceStr = '[{}     {}]'.format(lowerLimit, upperLimit)
-                self.lblParam3ConfInt.setText(confidenceStr)
-
-            if self.spinBoxParameter4.isHidden() == False:
-                parameterValue = round(_optimisedParamaterList[nextIndex][0], 3)
-                lowerLimit = round(_optimisedParamaterList[nextIndex][1], 3)
-                upperLimit = round(_optimisedParamaterList[nextIndex][2], 3)
-                nextIndex += 1
-                if self.spinBoxParameter4.suffix() == '%':
-                    suffix = '%'
-                    parameterValue = round(parameterValue * 100.0, 3)
-                    lowerLimit = round(lowerLimit * 100.0, 3)
-                    upperLimit = round(upperLimit * 100.0, 3)
-                    #For display in the PDF report, overwrite decimal volume fraction values in  _optimisedParamaterList
-                    #with the % equivalent
-                    _optimisedParamaterList[nextIndex][0] = parameterValue
-                    _optimisedParamaterList[nextIndex][1] = lowerLimit
-                    _optimisedParamaterList[nextIndex][2] = upperLimit
-                else:
-                    suffix = ''
-                
-                confidenceStr = '[{}     {}]'.format(lowerLimit, upperLimit)
-                self.lblParam4ConfInt.setText(confidenceStr)
+            numParams = _objXMLReader.getNumberOfParameters(modelName)
+            if numParams >= 1:
+                self.PopulateConfIntervalLabel(1,0)
+            if numParams >= 2:
+                self.PopulateConfIntervalLabel(2,1)
+            if numParams >= 3:
+                self.PopulateConfIntervalLabel(3,2)
+            if numParams >= 4:
+                self.PopulateConfIntervalLabel(4,3)
+            if numParams >= 5:
+                self.PopulateConfIntervalLabel(5,4)
             
         except Exception as e:
             print('Error in function ProcessOptimumParametersAfterCurveFit: ' + str(e))
@@ -866,8 +804,7 @@ class ModelFittingApp(QWidget):
             self.lblParam2ConfInt.clear()
             self.lblParam3ConfInt.clear()
             self.lblParam4ConfInt.clear()
-            self.lblAFFConfInt.clear()
-            
+            self.lblParam5ConfInt.clear()
         except Exception as e:
             print('Error in function ClearOptimumParamaterConfLimitsOnGUI: ' + str(e))
             logger.error('Error in function ClearOptimumParamaterConfLimitsOnGUI: ' + str(e))
@@ -941,15 +878,7 @@ class ModelFittingApp(QWidget):
             print('Error in function ClearOptimisedParamaterList: ' + str(e)) 
             logger.error('Error in function ClearOptimisedParamaterList: ' + str(e))
 
-    def DisplayArterialFlowFactorSpinBox(self):
-        if str(self.cmbVIF.currentText()) == 'Please Select':
-            self.lblArterialFlowFactor.hide()
-            self.spinBoxArterialFlowFactor.hide()
-        else:
-            self.lblArterialFlowFactor.show()
-            self.spinBoxArterialFlowFactor.show()
-
-    def DisplayFitModelSaveCSVButtons(self):
+    def DisplayFitModelAndSaveCSVButtons(self):
         """Displays the Fit Model and Save CSV buttons if both a ROI & AIF 
         are selected.  Otherwise hides them."""
         try:
@@ -961,28 +890,45 @@ class ModelFittingApp(QWidget):
             AIF = str(self.cmbAIF.currentText())
             VIF = str(self.cmbVIF.currentText())
             modelName = str(self.cmbModels.currentText())
-            modelInletType = TracerKineticModels.GetModelInletType(modelName)
-            logger.info("Function DisplayFitModelSaveCSVButtons called. Model is " + modelName)
+            modelInletType = _objXMLReader.getModelInletType(modelName)
+            logger.info("Function DisplayFitModelAndSaveCSVButtons called. Model is " + modelName)
             if modelInletType == 'single':
                 if ROI != 'Please Select' and AIF != 'Please Select':
                     self.btnFitModel.show()
                     self.btnSaveCSV.show()
                     self.groupBoxBatchProcessing.show() 
-                    logger.info("Function DisplayFitModelSaveCSVButtons called when ROI = {} and AIF = {}".format(ROI, AIF))
+                    logger.info("Function DisplayFitModelAndSaveCSVButtons called when ROI = {} and AIF = {}".format(ROI, AIF))
             elif modelInletType == 'dual':
                 if ROI != 'Please Select' and AIF != 'Please Select' and VIF != 'Please Select' :
                     self.btnFitModel.show()
                     self.btnSaveCSV.show()
                     self.groupBoxBatchProcessing.show() 
-                    logger.info("Function DisplayFitModelSaveCSVButtons called when ROI = {}, AIF = {} & VIF ={}".format(ROI, AIF, VIF)) 
+                    logger.info("Function DisplayFitModelAndSaveCSVButtons called when ROI = {}, AIF = {} & VIF ={}".format(ROI, AIF, VIF)) 
         
         except Exception as e:
-            print('Error in function DisplayFitModelSaveCSVButtons: ' + str(e))
-            logger.error('Error in function DisplayFitModelSaveCSVButtons: ' + str(e))
+            print('Error in function DisplayFitModelAndSaveCSVButtons: ' + str(e))
+            logger.error('Error in function DisplayFitModelAndSaveCSVButtons: ' + str(e))
 
+    def GetSpinBoxValue(self, paramNumber, initialParametersArray):
+        """
+        Gets the value in a parameter spinbox. Converts a % to a decimal 
+        fraction if necessary. This value is then appended to an array.
+        """
+        logger.info('Function GetSpinBoxValue called.')
+        try:
+            objSpinBox = getattr(self, 'spinBoxParameter' + str(paramNumber))
+            parameter = objSpinBox.value()
+            if objSpinBox.suffix() == '%':
+                #This is a volume fraction so convert % to a decimal fraction
+                parameter = parameter/100.0
+            initialParametersArray.append(parameter)
+
+        except Exception as e:
+            print('Error in function GetSpinBoxValue: ' + str(e))
+            logger.error('Error in function GetSpinBoxValue: ' + str(e))
+    
     def BuildParameterArray(self) -> List[float]:
-        """Forms a 1D array of model input parameters.  Volume fractions are converted 
-            from percentages to decimal fractions.
+        """Forms a 1D array of model input parameters.  
             
             Returns
             -------
@@ -992,55 +938,45 @@ class ModelFittingApp(QWidget):
             logger.info('Function BuildParameterArray called.')
             initialParametersArray = []
 
-            #Only add the Arterial Flow Factor if a VIF has been selected
-            #and the Arterial Flow Factor spinbox is therefore visible.
-            if self.spinBoxArterialFlowFactor.isHidden() == False:
-                arterialFlowFactor = self.spinBoxArterialFlowFactor.value()/100
-                initialParametersArray.append(arterialFlowFactor)
+            modelName = str(self.cmbModels.currentText())
+            numParams = _objXMLReader.getNumberOfParameters(modelName)
 
-            parameter1 = self.spinBoxParameter1.value()
-            if self.spinBoxParameter1.suffix() == '%':
-                #This is a volume fraction so convert % to a decimal fraction
-                parameter1 = parameter1/100.0
-            initialParametersArray.append(parameter1)
-        
-            parameter2 = self.spinBoxParameter2.value()
-            if self.spinBoxParameter2.suffix() == '%':
-                 #This is a volume fraction so convert % to a decimal fraction
-                parameter2 = parameter2/100.0
-            initialParametersArray.append(parameter2)
-        
-            if self.spinBoxParameter3.isHidden() == False:
-                parameter3 = self.spinBoxParameter3.value()
-                if self.spinBoxParameter3.suffix() == '%':
-                     #This is a volume fraction so convert % to a decimal fraction
-                    parameter3 = parameter3/100.0
-                initialParametersArray.append(parameter3)
-
-            if self.spinBoxParameter4.isHidden() == False:
-                parameter4 = self.spinBoxParameter4.value()
-                if self.spinBoxParameter4.suffix() == '%':
-                     #This is a volume fraction so convert % to a decimal fraction
-                    parameter4 = parameter4/100.0
-                initialParametersArray.append(parameter4)
+            if numParams >= 1:
+                self.GetSpinBoxValue(1, initialParametersArray)
+            if numParams >= 2:
+                self.GetSpinBoxValue(2, initialParametersArray)
+            if numParams >= 3:
+                self.GetSpinBoxValue(3, initialParametersArray)
+            if numParams >= 4:
+                self.GetSpinBoxValue(4, initialParametersArray)
+            if numParams >= 5:
+                self.GetSpinBoxValue(5, initialParametersArray)
 
             return initialParametersArray
         except Exception as e:
             print('Error in function BuildParameterArray ' + str(e))
             logger.error('Error in function BuildParameterArray '  + str(e))
 
-    def BlockSpinBoxSignals(self, boolBlockSignal: bool):
-        """Blocks signals from spinboxes that fire events.  
-           Thus allowing spinbox values to be set programmatically 
-           without causing a method connected to one of their events to be executed."""
-        logger.info('Function BlockSpinBoxSignals called.')
-        self.spinBoxArterialFlowFactor.blockSignals(boolBlockSignal)
-        self.spinBoxParameter1.blockSignals(boolBlockSignal)
-        self.spinBoxParameter2.blockSignals(boolBlockSignal)
-        self.spinBoxParameter3.blockSignals(boolBlockSignal)
-        self.spinBoxParameter4.blockSignals(boolBlockSignal)
 
-    def setParameterSpinBoxValues(self, parameterList):
+    def SetParameterSpinBoxValue(self, paramNumber, index, parameterList):
+        """
+        Sets the value of an individual parameter spinbox.  If necessary
+        converts a decimal fraction to a %.
+        """
+        logger.info('Function SetParameterSpinBoxValue called.')
+        try:
+            objSpinBox = getattr(self, 'spinBoxParameter' + str(paramNumber))
+            objSpinBox.blockSignals(True)
+            if objSpinBox.suffix() == '%':
+                objSpinBox.setValue(parameterList[index]* 100) 
+            else:
+                objSpinBox.setValue(parameterList[index])
+            objSpinBox.blockSignals(False)
+        except Exception as e:
+            print('Error in function SetParameterSpinBoxValue ' + str(e))
+            logger.error('Error in function SetParameterSpinBoxValue '  + str(e))
+
+    def SetParameterSpinBoxValues(self, parameterList):
         """Sets the value displayed in the model parameter spinboxes 
            to the calculated optimum model parameter values.
         
@@ -1049,51 +985,25 @@ class ModelFittingApp(QWidget):
             parameterList - Array of optimum model input parameter values.
         """
         try:
-            logger.info('Function setParameterSpinBoxValues called with parameterList = {}'.format(parameterList))
-            #Block signals from spinboxes, so that setting values
-            #returned from curve fitting does not trigger an event. 
-
-            self.BlockSpinBoxSignals(True)
-
+            logger.info('Function SetParameterSpinBoxValues called with parameterList = {}'.format(parameterList))
+           
             modelName = str(self.cmbModels.currentText())
+            numParams = _objXMLReader.getNumberOfParameters(modelName)
+
+            if numParams >= 1:
+                self.SetParameterSpinBoxValue(1, 0, parameterList)
+            if numParams >= 2:
+                self.SetParameterSpinBoxValue(2, 1, parameterList)
+            if numParams >= 3:
+                self.SetParameterSpinBoxValue(3, 2, parameterList)
+            if numParams >= 4:
+                self.SetParameterSpinBoxValue(4, 3, parameterList)
+            if numParams >= 5:
+                self.SetParameterSpinBoxValue(5, 4, parameterList)
             
-            if self.spinBoxArterialFlowFactor.isHidden() == False:
-                self.spinBoxArterialFlowFactor.setValue(parameterList[0]* 100) #Convert decimal fraction to %
-                nextIndex = 1
-            else:
-                nextIndex = 0
-                
-            if modelName == 'HF1-2CFM':
-                if not self.ckbParameter1.isChecked():
-                    if self.spinBoxParameter1.suffix() == '%':
-                        self.spinBoxParameter1.setValue(parameterList[nextIndex]* 100) #Convert Volume fraction to %
-                    else:
-                        self.spinBoxParameter1.setValue(parameterList[nextIndex])
-                    nextIndex += 1
-
-            if self.spinBoxParameter2.suffix() == '%':
-                self.spinBoxParameter2.setValue(parameterList[nextIndex]* 100) #Convert Volume fraction to %
-            else:
-                self.spinBoxParameter2.setValue(parameterList[nextIndex])
-            nextIndex += 1
-
-            if self.spinBoxParameter3.isHidden() == False:
-                if self.spinBoxParameter3.suffix() == '%':
-                    self.spinBoxParameter3.setValue(parameterList[nextIndex]* 100) #Convert Volume fraction to %
-                else:
-                    self.spinBoxParameter3.setValue(parameterList[nextIndex])
-                nextIndex += 1
-
-            if self.spinBoxParameter4.isHidden() == False:
-                if self.spinBoxParameter4.suffix() == '%':
-                    self.spinBoxParameter4.setValue(parameterList[nextIndex]* 100) #Convert Volume fraction to %
-                else:
-                    self.spinBoxParameter4.setValue(parameterList[nextIndex])
-       
-            self.BlockSpinBoxSignals(False)
         except Exception as e:
-            print('Error in function setParameterSpinBoxValues ' + str(e))
-            logger.error('Error in function setParameterSpinBoxValues '  + str(e))
+            print('Error in function SetParameterSpinBoxValues ' + str(e))
+            logger.error('Error in function SetParameterSpinBoxValues '  + str(e))
 
     def Calculate95ConfidenceLimits(self, numDataPoints: int, numParams: int, 
                                     optimumParams, paramCovarianceMatrix):
@@ -1167,33 +1077,24 @@ class ModelFittingApp(QWidget):
                 arrayVIFConcs = np.array(_concentrationData[VIF], dtype='float')
             else:
                 #Create empty dummy array to act as place holder in  
-                #TracerKineticModels.CurveFit function call 
+                #ModelFunctionsHelper.CurveFit function call 
                 arrayVIFConcs = []
             
-            if self.cboxConstaint.isChecked():
-                addConstraint = True
-            else:
-                addConstraint = False
-
             #Get the name of the model to be fitted to the ROI curve
             modelName = str(self.cmbModels.currentText())
-            #Call curve fitting routine
-            if self.ckbParameter1.isChecked():
-                boolFixVe = True
-            else:
-                boolFixVe = False
-            logger.info('TracerKineticModels.CurveFit called with model {}, parameters {}, Constraint = {} and boolFixVe = {}'.format(modelName, initialParametersArray, addConstraint, boolFixVe))
-            optimumParams, paramCovarianceMatrix = TracerKineticModels.CurveFit(
-                modelName, arrayTimes, 
+            functionName = _objXMLReader.getFunctionName(modelName)
+            inletType = _objXMLReader.getModelInletType(modelName)
+            optimumParams, paramCovarianceMatrix = ModelFunctionsHelper.CurveFit(
+                functionName, arrayTimes, 
                 arrayAIFConcs, arrayVIFConcs, arrayROIConcs,
-                initialParametersArray, addConstraint, boolFixVe)
+                initialParametersArray, inletType)
             
             _boolCurveFittingDone = True 
-            logger.info('TracerKineticModels.CurveFit returned optimum parameters {} with confidence levels {}'.format(optimumParams, paramCovarianceMatrix))
+            logger.info('ModelFunctionsHelper.CurveFit returned optimum parameters {} with confidence levels {}'.format(optimumParams, paramCovarianceMatrix))
             
             #Display results of curve fitting  
             #(optimum model parameter values) on GUI.
-            self.setParameterSpinBoxValues(optimumParams)
+            self.SetParameterSpinBoxValues(optimumParams)
 
             #Plot the best curve on the graph
             self.PlotConcentrations('RunCurveFit')
@@ -1213,88 +1114,86 @@ class ModelFittingApp(QWidget):
             print('Error in function RunCurveFit with model ' + modelName + ': ' + str(e))
             logger.error('Error in function RunCurveFit with model ' + modelName + ': ' + str(e))
     
+    def GetValuesForEachParameter(self, paramNumber, index,
+                    confidenceLimitsArray, parameterDictionary):
+        """Called by the function, BuildParameterDictionary, for each
+        parameter spinbox, this function builds a list containing the
+        spinbox value and the upper and lower confidence limits (if
+        curve fitting has just been done). This list is then added
+        to the dictionary, parameterDictionary as the value with the
+        full parameter name as the key.  
+        
+         Inputs
+         ------
+         paramNumber - Ordinal number of the parameter on the GUI, which number
+                    from 1 (top) to 5 (bottom).
+         index - Used to reference the upper & lower confidence limits for each
+            parameter in confidenceLimitsArray.
+         confidenceLimitsArray - An array of upper and lower confidence limits
+                    for the optimum value of each model parameter obtained
+                    after curve fitting.  
+        """
+        try:
+            logger.info('Function GetValuesForEachParameter called.')
+            parameterList = []
+            objLabel = getattr(self, 'labelParameter' + str(paramNumber))
+            objSpinBox = getattr(self, 'spinBoxParameter' + str(paramNumber))
+            if confidenceLimitsArray != None:
+                #curve fitting has just been done
+                parameterList.append(confidenceLimitsArray[index][0]) #Parameter Value
+                parameterList.append(confidenceLimitsArray[index][1]) #Lower Limit
+                parameterList.append(confidenceLimitsArray[index][2]) #Upper Limit
+            else:
+                #Curve fitting has not just been done
+                parameterList.append(round(objSpinBox.value(), 2))
+                parameterList.append('N/A')
+                parameterList.append('N/A')
+            
+            parameterDictionary[objLabel.text()] = parameterList
+
+        except Exception as e:
+            print('Error in function GetValuesForEachParameter with model: ' + str(e))
+            logger.error('Error in function GetValuesForEachParameter with model: ' + str(e))
+
     def BuildParameterDictionary(self, confidenceLimitsArray = None):
         """Builds a dictionary of values and their confidence limits 
-        (if curve fitting is performed) for each model input parameter (dictionary key)
-        This dictionary is used in the creation of a parameter values table in the
-        creation of the PDF report.  It orders the input parameters in the same 
-       vertical order as the parameters on the GUI, top to bottom."""
+        (if curve fitting is performed) for each model input parameter 
+        (dictionary key). This dictionary is used in the creation of a 
+        parameter values table in the creation of the PDF report.  
+        It orders the input parameters in the same 
+       vertical order as the parameters on the GUI, top to bottom.
+       
+       Inputs
+       ------
+       confidenceLimitsArray - An array of upper and lower confidence limits
+                    for the optimum value of each model parameter obtained
+                    after curve fitting.  If curve fitting has not just
+                    been performed then the default value of None is passed
+                    into this function. 
+       """
         try:
             logger.info('BuildParameterDictionary called with confidence limits array = {}'
                         .format(confidenceLimitsArray))
             parameterDictionary = {}
+            modelName = str(self.cmbModels.currentText())
+            numParams = _objXMLReader.getNumberOfParameters(modelName)
+
+            if numParams >= 1:
+                self.GetValuesForEachParameter(1, 0,
+                    confidenceLimitsArray, parameterDictionary)
+            if numParams >= 2:
+                self.GetValuesForEachParameter(2, 1,
+                    confidenceLimitsArray, parameterDictionary)
+            if numParams >= 3:
+                self.GetValuesForEachParameter(3, 2,
+                    confidenceLimitsArray, parameterDictionary)
+            if numParams >= 4:
+                self.GetValuesForEachParameter(4, 3,
+                    confidenceLimitsArray, parameterDictionary)
+            if numParams >= 5:
+                self.GetValuesForEachParameter(5, 4,
+                    confidenceLimitsArray, parameterDictionary)
            
-            index = 0
-            if self.spinBoxArterialFlowFactor.isHidden() == False:
-                parameterList1 = []
-                if confidenceLimitsArray != None:
-                    parameterList1.append(confidenceLimitsArray[index][0]) #Parameter Value
-                    parameterList1.append(confidenceLimitsArray[index][1]) #Lower Limit
-                    parameterList1.append(confidenceLimitsArray[index][2]) #Upper Limit
-                else:
-                    parameterList1.append(round(self.spinBoxArterialFlowFactor.value(), 2))
-                    parameterList1.append('N/A')
-                    parameterList1.append('N/A')
-                
-                parameterDictionary[self.lblArterialFlowFactor.text()] = parameterList1
-                index +=1
-
-            if self.spinBoxParameter1.isHidden() == False:
-                parameterList2=[]
-                if confidenceLimitsArray != None:
-                    parameterList2.append(confidenceLimitsArray[index][0]) #Parameter Value
-                    parameterList2.append(confidenceLimitsArray[index][1]) #Lower Limit
-                    parameterList2.append(confidenceLimitsArray[index][2]) #Upper Limit
-                else:
-                    parameterList2.append(round(self.spinBoxParameter1.value(), 2))
-                    parameterList2.append('N/A')
-                    parameterList2.append('N/A')
-                
-                parameterDictionary[self.labelParameter1.text()] = parameterList2
-                index +=1
-
-            if self.spinBoxParameter2.isHidden() == False:
-                parameterList3 =[]
-                if confidenceLimitsArray != None:
-                    parameterList3.append(confidenceLimitsArray[index][0]) #Parameter Value
-                    parameterList3.append(confidenceLimitsArray[index][1]) #Lower Limit
-                    parameterList3.append(confidenceLimitsArray[index][2]) #Upper Limit
-                else:
-                    parameterList3.append(round(self.spinBoxParameter2.value(), 2))
-                    parameterList3.append('N/A')
-                    parameterList3.append('N/A')
-                
-                parameterDictionary[self.labelParameter2.text()] = parameterList3
-                index +=1
-
-            if self.spinBoxParameter3.isHidden() == False:
-                parameterList4 = []
-                if confidenceLimitsArray != None:
-                    parameterList4.append(confidenceLimitsArray[index][0]) #Parameter Value
-                    parameterList4.append(confidenceLimitsArray[index][1]) #Lower Limit
-                    parameterList4.append(confidenceLimitsArray[index][2]) #Upper Limit
-                else:
-                    parameterList4.append(round(self.spinBoxParameter3.value(), 3))
-                    parameterList4.append('N/A')
-                    parameterList4.append('N/A')
-                
-                parameterDictionary[self.labelParameter3.text()] = parameterList4
-                index +=1
-
-            if self.spinBoxParameter4.isHidden() == False:
-                parameterList5=[]
-                if confidenceLimitsArray != None:
-                    parameterList5.append(confidenceLimitsArray[index][0]) #Parameter Value
-                    parameterList5.append(confidenceLimitsArray[index][1]) #Lower Limit
-                    parameterList5.append(confidenceLimitsArray[index][2]) #Upper Limit
-                else:
-                    parameterList5.append(round(self.spinBoxParameter4.value(), 4))
-                    parameterList5.append('N/A')
-                    parameterList5.append('N/A')
-                
-                parameterDictionary[self.labelParameter4.text()] = parameterList5
-                #print('parameterDictionary = {}'.format(parameterDictionary))
-
             return parameterDictionary
     
         except Exception as e:
@@ -1316,7 +1215,9 @@ class ModelFittingApp(QWidget):
             
             if not reportFileName:
                 #Ask the user to specify the path & name of PDF report. A default report name is suggested, see the Constant declarations at the top of this file
-                reportFileName, _ = QFileDialog.getSaveFileName(self, caption="Enter PDF file name", directory=DEFAULT_REPORT_FILE_PATH_NAME, filter="*.pdf")
+                reportFileName, _ = QFileDialog.getSaveFileName(self, caption="Enter PDF file name", 
+                                                                directory=DEFAULT_REPORT_FILE_PATH_NAME, 
+                                                                filter="*.pdf")
 
             if reportFileName:
                 #If the user has entered the name of a new file, then we will have to add the .pdf extension
@@ -1327,14 +1228,11 @@ class ModelFittingApp(QWidget):
                     reportFileName = reportFileName + '.pdf'
                 if os.path.exists(reportFileName):
                     #delete existing copy of PDF called reportFileName
-                    os.remove(reportFileName)   
-                shortModelName = str(self.cmbModels.currentText())
-                if self.ckbParameter1.isChecked():
-                    boolFixVe = True
-                else:
-                    boolFixVe = False
-                longModelName = TracerKineticModels.GetLongModelName(shortModelName, boolFixVe)
-                
+                    os.remove(reportFileName) 
+                    
+                shortModelName = self.cmbModels.currentText()
+                longModelName = _objXMLReader.getLongModelName(shortModelName)
+
                 #Save a png of the concentration/time plot for display 
                 #in the PDF report.
                 self.figure.savefig(fname=IMAGE_NAME, dpi=150)  #dpi=150 so as to get a clear image in the PDF report
@@ -1358,7 +1256,76 @@ class ModelFittingApp(QWidget):
         except Exception as e:
             print('Error in function CreatePDFReport: ' + str(e))
             logger.error('Error in function CreatePDFReport: ' + str(e))
-       
+
+    def PopulateModelListCombo(self):
+        """
+        Builds a list of model short names from data in the XML configuration
+        file and adds this list to the cmbModels combo box for display on the GUI.
+        """
+        try:
+            logger.info('Function PopulateModelListCombo called.')
+            #Clear the list of models, ready to accept 
+            #a new list of models from the XML configuration
+            #file just loaded
+            self.cmbModels.clear()
+
+            tempList = _objXMLReader.getListModelShortNames()
+            self.cmbModels.blockSignals(True)
+            self.cmbModels.addItems(tempList)
+            self.cmbModels.blockSignals(False)
+
+        except Exception as e:
+            print('Error in function PopulateModelListCombo: ' + str(e))
+            logger.error('Error in function PopulateModelListCombo: ' + str(e))
+
+
+    def LoadConfigFile(self):
+        """Loads the contents of an XML file containing model(s) 
+        configuration data.  If the XML file parses successfully,
+        display the 'Load Data FIle' button and build the list 
+        of model short names."""
+         
+        global _objXMLReader
+        
+        self.HideAllControlsOnGUI()
+        
+        try:
+            #get the configuration file in XML format
+            #filter parameter set so that the user can only open an XML file
+            defaultPath = "config\\"
+            fullFilePath, _ = QFileDialog.getOpenFileName(parent=self, 
+                caption="Select configuration file", 
+                directory=defaultPath,
+                filter="*.xml")
+
+            if os.path.exists(fullFilePath):
+                _objXMLReader.parseConfigFile(fullFilePath)
+                
+                if _objXMLReader.hasXMLFileParsedOK:
+                    logger.info('Config file {} loaded'.format(fullFilePath))
+                    
+                    folderName, configFileName = os.path.split(fullFilePath)
+                    self.statusbar.showMessage('Configuration file ' + configFileName + ' loaded')
+                    self.btnLoadDataFile.show()
+                    self.PopulateModelListCombo()
+                else:
+                    self.btnLoadDataFile.hide()
+                    self.HideAllControlsOnGUI()
+                    QMessageBox().warning(self, "XML configuration file", "Error reading XML file ", QMessageBox.Ok)
+            
+        except IOError as ioe:
+            print ('IOError in function LoadConfigFile:' + str(ioe))
+            logger.error ('IOError in function LoadConfigFile: cannot open file' 
+                   + str(ioe))
+        except RuntimeError as re:
+            print('Runtime error in function LoadConfigFile: ' + str(re))
+            logger.error('Runtime error in function LoadConfigFile: ' 
+                         + str(re))
+        except Exception as e:
+            print('Error in function LoadConfigFile: ' + str(e))
+            logger.error('Error in function LoadConfigFile: ' + str(e))
+            
+
     def LoadDataFile(self):
         """Loads the contents of a CSV file containing time and concentration data
         into a dictionary of lists. The key is the name of the organ or 'time' and 
@@ -1380,7 +1347,11 @@ class ModelFittingApp(QWidget):
         try:
             #get the data file in csv format
             #filter parameter set so that the user can only open a csv file
-            fullFilePath, _ = QFileDialog.getOpenFileName(parent=self, caption="Select csv file", filter="*.csv")
+            dataFileFolder = _objXMLReader.getDataFileFolder()
+            fullFilePath, _ = QFileDialog.getOpenFileName(parent=self, 
+                                                     caption="Select csv file", 
+                                                     directory=dataFileFolder,
+                                                     filter="*.csv")
             if os.path.exists(fullFilePath):
                 with open(fullFilePath, newline='') as csvfile:
                     line = csvfile.readline()
@@ -1399,10 +1370,10 @@ class ModelFittingApp(QWidget):
                             QMessageBox().warning(self, "CSV data file", "The first column must contain time data.", QMessageBox.Ok)
                             raise RuntimeError('The first column in the CSV file must contain time data.')    
 
-                    logger.info('CSV data file {} loaded'.format(_dataFileName))
+                    logger.info('CSV data file {} loaded'.format(fullFilePath))
                     
                     #Extract data filename from the full data file path
-                    #_dataFileName = os.path.basename(_dataFileName)
+
                     folderName = os.path.basename(os.path.dirname(fullFilePath))
                     self.directory, _dataFileName = os.path.split(fullFilePath)
                     self.statusbar.showMessage('File ' + _dataFileName + ' loaded')
@@ -1464,6 +1435,7 @@ class ModelFittingApp(QWidget):
         self.lblROI.hide()
         self.cmbROI.hide()
         self.groupBoxModel.hide()
+        self.btnSaveReport.hide()
         self.btnFitModel.hide()
         self.btnSaveCSV.hide()
         self.groupBoxBatchProcessing.hide()
@@ -1532,160 +1504,199 @@ class ModelFittingApp(QWidget):
     
 
     def UncheckFixParameterCheckBoxes(self):
+        """Uncheckes all the fix parameter checkboxes."""
         logger.info('Function UncheckFixParameterCheckBoxes called')
-        self.ckbAFF.blockSignals(True)
         self.ckbParameter1.blockSignals(True)
         self.ckbParameter2.blockSignals(True)
+        self.ckbParameter2.blockSignals(True)
         self.ckbParameter3.blockSignals(True)
-        self.ckbParameter4.blockSignals(True)
+        self.ckbParameter5.blockSignals(True)
 
-        self.ckbAFF.setChecked(False)
         self.ckbParameter1.setChecked(False)
         self.ckbParameter2.setChecked(False)
+        self.ckbParameter2.setChecked(False)
         self.ckbParameter3.setChecked(False)
-        self.ckbParameter4.setChecked(False)
+        self.ckbParameter5.setChecked(False)
         
-        self.ckbAFF.blockSignals(False)
         self.ckbParameter1.blockSignals(False)
         self.ckbParameter2.blockSignals(False)
+        self.ckbParameter2.blockSignals(False)
         self.ckbParameter3.blockSignals(False)
-        self.ckbParameter4.blockSignals(False)
+        self.ckbParameter5.blockSignals(False)
+
+    def populateParameterLabelAndSpinBox(self, modelName, paramNumber):
+        """
+        When a model is selected, this function is called.  
+        Each model may have upto 5 parameters.  Parameter labels,
+        parameter spinboxes and fix parameter checkboxes already exist
+        on the form but are hidden. The naming convention of these
+        widgets follows a fixed pattern. For the parameter label, this
+        is 'labelParameter' followed by a suffix 1, 2, 3, 4 or 5.
+        For the parameter spinbox, this is 'spinBoxParameter' 
+        followed by a suffix 1, 2, 3, 4 or 5.  For the checkbox
+        that indicates if a parameter should be constrainted during
+        curve fitting this is 'ckbParameter' followed by a 
+        suffix 1, 2, 3, 4 or 5.
+
+        This functions creates and configures the parameter label,
+        spinbox and checkbox for a given parameter according to the
+        data in the xml configuration file.
+
+        Input Parameters
+        ----------------
+        modelName  - Short name of the selected model.
+        paramNumber - Number, 1-5, of the parameter.
+        """
+        try:
+            isPercentage, paramName =_objXMLReader.getParameterLabel(modelName, paramNumber)
+            precision = _objXMLReader.getParameterPrecision(modelName, paramNumber)
+            lower, upper = _objXMLReader.getParameterConstraints(modelName, paramNumber)
+            step = _objXMLReader.getParameterStep(modelName, paramNumber)
+            default = _objXMLReader.getParameterDefault(modelName, paramNumber)
+        
+            objLabel = getattr(self, 'labelParameter' + str(paramNumber))
+            objLabel.setText(paramName)
+            objLabel.show()
+            
+            objSpinBox = getattr(self, 'spinBoxParameter' + str(paramNumber))
+            objSpinBox.blockSignals(True)
+            objSpinBox.setDecimals(precision)
+            objSpinBox.setRange(lower, upper)
+            objSpinBox.setSingleStep(step)
+            objSpinBox.setValue(default)
+            if isPercentage:
+                objSpinBox.setSuffix('%')
+            else:
+                objSpinBox.setSuffix('')
+            objSpinBox.blockSignals(False)
+            objSpinBox.show()
+
+            objCheckBox = getattr(self, 'ckbParameter' + str(paramNumber))
+            objCheckBox.setChecked(False)
+            objCheckBox.show()
+
+        except Exception as e:
+            print('Error in function populateParameterLabelAndSpinBox: ' + str(e) )
+            logger.error('Error in function populateParameterLabelAndSpinBox: ' + str(e) )
+
+    def SetParameterSpinBoxToDefault(self, modelName, paramNumber):
+        """Resets the value of a parameter spinbox to the default
+        stored in the XML configuration file. 
+        
+        Input Parameters
+        ----------------
+        modelName  - Short name of the selected model.
+        paramNumber - Number, 1-5, of the parameter.
+        """
+        try:
+            logger.info(
+                'SetParameterSpinBoxToDefault called with paramNumber=' 
+                + str(paramNumber))
+            default = _objXMLReader.getParameterDefault(modelName, paramNumber)
+        
+            objSpinBox = getattr(self, 'spinBoxParameter' + str(paramNumber))
+            objSpinBox.blockSignals(True)
+            objSpinBox.setValue(default)
+            objSpinBox.blockSignals(False)
+            
+        except Exception as e:
+            print('Error in function populateParameterLabelAndSpinBox: ' + str(e) )
+            logger.error('Error in function populateParameterLabelAndSpinBox: ' + str(e) )
 
     def InitialiseParameterSpinBoxes(self):
-        """Reset model parameter spinboxes with typical initial values for each model"""
+        """Initialises all the parameter spinbox vales for the selected model
+        by coordinating the calling of the function 
+        SetParameterSpinBoxToDefault for each parameter spinbox. """
         try:
-            #Remove suffixes from the first spinboxes 
-            self.spinBoxParameter1.setSuffix('')
-           
-            #Block signals from spinboxes, so that setting initial values
-            #does not trigger an event.
-            self.BlockSpinBoxSignals(True)
-            self.spinBoxArterialFlowFactor.setValue(DEFAULT_VALUE_Fa)
-            
             modelName = str(self.cmbModels.currentText())
-            logger.info('Function InitialiseParameterSpinBoxes called when model = ' + modelName)
-            if modelName == '2-2CFM':
-                self.spinBoxParameter1.setDecimals(2)
-                self.spinBoxParameter1.setRange(0.01, 99.99)
-                self.spinBoxParameter1.setSingleStep(0.1)
-                self.spinBoxParameter1.setValue(DEFAULT_VALUE_Ve_2_2CFM)
-                self.spinBoxParameter1.setSuffix('%')
+            logger.info(
+                'Function InitialiseParameterSpinBoxes called when model = ' 
+                + modelName)
 
-                self.spinBoxParameter2.setDecimals(2)
-                self.spinBoxParameter2.setRange(0, 100.0)
-                self.spinBoxParameter2.setSingleStep(0.1)
-                self.spinBoxParameter2.setValue(DEFAULT_VALUE_Fp_2_2CFM)
+            numParams = _objXMLReader.getNumberOfParameters(modelName)
+            if numParams >= 1:
+                self.SetParameterSpinBoxToDefault(modelName, 1)
+            if numParams >= 2:
+                self.SetParameterSpinBoxToDefault(modelName, 2)
+            if numParams >= 3:
+                self.SetParameterSpinBoxToDefault(modelName, 3)
+            if numParams >= 4:
+                self.SetParameterSpinBoxToDefault(modelName, 4)
+            if numParams >= 5:
+                self.SetParameterSpinBoxToDefault(modelName, 5)
 
-                self.spinBoxParameter3.setDecimals(3)
-                self.spinBoxParameter3.setRange(0.0, 100.0)
-                self.spinBoxParameter3.setSingleStep(0.1)
-                self.spinBoxParameter3.setValue(DEFAULT_VALUE_Khe_2_2CFM)
-                
-                self.spinBoxParameter4.setDecimals(4)
-                self.spinBoxParameter4.setRange(0.0001, 100.0)
-                self.spinBoxParameter4.setSingleStep(0.1)
-                self.spinBoxParameter4.setValue(DEFAULT_VALUE_Kbh_2_2CFM)
-                
-            elif modelName == 'HF2-2CFM':
-                self.spinBoxParameter1.setDecimals(2)
-                self.spinBoxParameter1.setRange(0.01, 99.99)
-                self.spinBoxParameter1.setSingleStep(0.1)
-                self.spinBoxParameter1.setValue(DEFAULT_VALUE_Ve)
-                self.spinBoxParameter1.setSuffix('%')
-
-                self.spinBoxParameter2.setDecimals(3)
-                self.spinBoxParameter2.setRange(0.0, 100.0)
-                self.spinBoxParameter2.setSingleStep(0.1)
-                self.spinBoxParameter2.setValue(DEFAULT_VALUE_Khe)
-                
-                self.spinBoxParameter3.setDecimals(4)
-                self.spinBoxParameter3.setRange(0.0001, 100.0)
-                self.spinBoxParameter3.setSingleStep(0.1)
-                self.spinBoxParameter3.setValue(DEFAULT_VALUE_Kbh)
-
-            elif modelName == 'HF1-2CFM':
-                self.spinBoxParameter1.setDecimals(2)
-                self.spinBoxParameter1.setRange(0.01, 99.99)
-                self.spinBoxParameter1.setSingleStep(0.1)
-                self.spinBoxParameter1.setValue(DEFAULT_VALUE_Ve)
-                self.spinBoxParameter1.setSuffix('%')
-
-                self.spinBoxParameter2.setDecimals(3)
-                self.spinBoxParameter2.setRange(0.0, 100.0)
-                self.spinBoxParameter2.setSingleStep(0.1)
-                self.spinBoxParameter2.setValue(DEFAULT_VALUE_Khe)
-                
-                self.spinBoxParameter3.setDecimals(4)
-                self.spinBoxParameter3.setRange(0.0001, 100.0)
-                self.spinBoxParameter3.setSingleStep(0.1)
-                self.spinBoxParameter3.setValue(DEFAULT_VALUE_Kbh)
-
-            self.BlockSpinBoxSignals(False)
         except Exception as e:
             print('Error in function InitialiseParameterSpinBoxes: ' + str(e) )
             logger.error('Error in function InitialiseParameterSpinBoxes: ' + str(e) )
 
+    def SetUpParameterLabelsAndSpinBoxes(self):
+        """Coordinates the calling of function
+       populateParameterLabelAndSpinBox to set up and show the 
+       parameter spinboxes for each model"""
+        try:
+            modelName = str(self.cmbModels.currentText())
+            numParams = _objXMLReader.getNumberOfParameters(modelName)
+            if numParams >= 1:
+                self.populateParameterLabelAndSpinBox(modelName, 1)
+            if numParams >= 2:
+                self.populateParameterLabelAndSpinBox(modelName, 2)
+            if numParams >= 3:
+                self.populateParameterLabelAndSpinBox(modelName, 3)
+            if numParams >= 4:
+                self.populateParameterLabelAndSpinBox(modelName, 4)
+            if numParams >= 5:
+                self.populateParameterLabelAndSpinBox(modelName, 5)
+
+        except Exception as e:
+            print('Error in function SetUpParameterLabelsAndSpinBoxes: ' + str(e) )
+            logger.error('Error in function SetUpParameterLabelsAndSpinBoxes: ' + str(e) )
+
+    def ClearAndHideParameterLabelsSpinBoxesAndCheckBoxes(self):
+        self.spinBoxParameter1.hide()
+        self.spinBoxParameter2.hide()
+        self.spinBoxParameter3.hide()
+        self.spinBoxParameter4.hide()
+        self.spinBoxParameter5.hide()
+        self.spinBoxParameter1.clear()
+        self.spinBoxParameter2.clear()
+        self.spinBoxParameter3.clear()
+        self.spinBoxParameter4.clear()
+        self.spinBoxParameter5.clear()
+        self.labelParameter1.clear()
+        self.labelParameter2.clear()
+        self.labelParameter3.clear()
+        self.labelParameter4.clear()
+        self.labelParameter5.clear()
+        self.ckbParameter1.hide()
+        self.ckbParameter2.hide()
+        self.ckbParameter3.hide()
+        self.ckbParameter4.hide()
+        self.ckbParameter5.hide()
+        self.ckbParameter1.setChecked(False)
+        self.ckbParameter2.setChecked(False)
+        self.ckbParameter3.setChecked(False)
+        self.ckbParameter4.setChecked(False)
+        self.ckbParameter5.setChecked(False)
+
+
     def ConfigureGUIForEachModel(self):
-        """When a model is selected, this method configures the appearance of the GUI
-        accordingly.  For example, spinboxes for the input of model parameter values are
+        """When a model is selected, this method configures the appearance 
+        of the GUI accordingly.  
+        For example, spinboxes for the input of model parameter values are
         given an appropriate label."""
         try:
             modelName = str(self.cmbModels.currentText())
-            logger.info('Function ConfigureGUIForEachModel called when model = ' + modelName)
-            
+            logger.info('Function ConfigureGUIForEachModel called when model = ' + modelName)   
             #self.cboxDelay.show()
             #self.cboxConstaint.show()
-            self.cboxConstaint.setChecked(False)
+            #self.cboxConstaint.setChecked(False)
             self.btnReset.show()
             self.btnSaveReport.show()
-            
-            self.InitialiseParameterSpinBoxes() #Typical initial values for each model
-            #Show widgets common to all models
-            self.lblAIF.show()
-            self.cmbAIF.show()
-            self.lblVIF.show()
-            self.cmbVIF.show()
-            self.spinBoxParameter1.show()
-            self.spinBoxParameter2.show()
-            self.spinBoxParameter3.show()
-
             self.pbar.reset()
-            self.ckbParameter1.hide()
+            self.ClearAndHideParameterLabelsSpinBoxesAndCheckBoxes()
             
-            #Configure parameter spinbox labels for each model
-            if modelName == '2-2CFM':
-                self.labelParameter1.setText(LABEL_PARAMETER_Ve)
-                self.labelParameter1.show()
-                self.labelParameter2.setText(LABEL_PARAMETER_Fp)
-                self.labelParameter2.show()
-                self.labelParameter3.setText(LABEL_PARAMETER_Khe)
-                self.labelParameter3.show()
-                self.labelParameter4.setText(LABEL_PARAMETER_Kbh)
-                self.labelParameter4.show()
-                self.spinBoxParameter4.show()
-            elif modelName == 'HF2-2CFM':
-                self.labelParameter1.setText(LABEL_PARAMETER_Ve)
-                self.labelParameter1.show()
-                self.labelParameter2.setText(LABEL_PARAMETER_Khe)
-                self.labelParameter2.show()
-                self.labelParameter3.setText(LABEL_PARAMETER_Kbh)
-                self.labelParameter3.show()
-                self.labelParameter4.hide()
-                self.spinBoxParameter4.hide()
-            elif modelName == 'HF1-2CFM':
-                self.labelParameter1.setText(LABEL_PARAMETER_Ve)
-                self.labelParameter1.show()
-                self.ckbParameter1.show()
-                self.labelParameter2.setText(LABEL_PARAMETER_Khe)
-                self.labelParameter2.show()
-                self.labelParameter3.setText(LABEL_PARAMETER_Kbh)
-                self.labelParameter3.show()
-                self.labelParameter4.hide()
-                self.spinBoxParameter4.hide()
-                self.lblVIF.hide()
-                self.cmbVIF.hide()
-                self.cmbVIF.setCurrentIndex(0)
-            else:  #No model is selected
+            ##Configure parameter spinboxes and their labels for each model
+            if modelName == 'Select a model':
                 self.lblAIF.hide()
                 self.cmbAIF.hide()
                 self.lblVIF.hide()
@@ -1693,23 +1704,27 @@ class ModelFittingApp(QWidget):
                 self.cboxDelay.hide()
                 self.cboxConstaint.hide()
                 self.btnReset.hide()
-                self.spinBoxParameter1.hide()
-                self.spinBoxParameter2.hide()
-                self.spinBoxParameter3.hide()
-                self.spinBoxParameter4.hide()
-                self.spinBoxArterialFlowFactor.hide()
-                self.labelParameter1.clear()
-                self.labelParameter2.clear()
-                self.labelParameter3.clear()
-                self.labelParameter4.clear()
-                self.lblArterialFlowFactor.hide()
-                
                 self.cmbAIF.setCurrentIndex(0)
                 self.cmbVIF.setCurrentIndex(0)
                 self.btnFitModel.hide()
                 self.btnSaveReport.hide()
                 self.btnSaveCSV.hide()
                 self.groupBoxBatchProcessing.hide()
+                self.lblConfInt.hide()
+            else:
+                self.SetUpParameterLabelsAndSpinBoxes()
+                self.lblConfInt.show()
+                self.lblAIF.show() #Common to all models
+                self.cmbAIF.show() #Common to all models
+                inletType = _objXMLReader.getModelInletType(modelName)
+                if inletType == 'single':
+                    self.lblVIF.hide()
+                    self.cmbVIF.hide()
+                    self.cmbVIF.setCurrentIndex(0)
+                elif inletType == 'dual':
+                    self.lblVIF.show()
+                    self.cmbVIF.show()
+
         except Exception as e:
             print('Error in function ConfigureGUIForEachModel: ' + str(e) )
             logger.error('Error in function ConfigureGUIForEachModel: ' + str(e) )
@@ -1761,7 +1776,8 @@ class ModelFittingApp(QWidget):
     
     def PlotConcentrations(self, nameCallingFunction: str):
         """Plots the concentration against time curves for the ROI, AIF, VIF.  
-        Also, the concentration/time curve predicted by the selected model.
+        Also, plots the concentration/time curve predicted by the 
+        selected model.
         
         Input Parameter
         ----------------
@@ -1799,7 +1815,9 @@ class ModelFittingApp(QWidget):
             AIF = str(self.cmbAIF.currentText())
             VIF = str(self.cmbVIF.currentText())
 
-            logger.info('Function plot called from ' + nameCallingFunction + ' when ROI={}, AIF={} and VIF={}'.format(ROI, AIF, VIF))
+            logger.info('Function plot called from ' 
+                        + nameCallingFunction + 
+                        ' when ROI={}, AIF={} and VIF={}'.format(ROI, AIF, VIF))
 
             if AIF != 'Please Select':
                 #Plot AIF curve
@@ -1814,32 +1832,29 @@ class ModelFittingApp(QWidget):
                 boolVIFSelected = True
                     
             #Plot concentration curve from the model
-            if self.ckbParameter1.isChecked():
-                boolFixVe = True
-            else:
-                boolFixVe = False
-            if TracerKineticModels.GetModelInletType(modelName) == 'dual':
+            parameterArray = self.BuildParameterArray()
+            if  _objXMLReader.getModelInletType(modelName) == 'dual':
                 if boolAIFSelected and boolVIFSelected:
-                    parameterArray = self.BuildParameterArray()
-                    logger.info('TracerKineticModels.ModelSelector called when model ={}, parameter array = {} and boolFixVe={}'. format(modelName, parameterArray, boolFixVe))        
-                    _listModel = TracerKineticModels.ModelSelector(modelName, arrayTimes, 
-                       arrayAIFConcs, parameterArray, boolFixVe, arrayVIFConcs)
+                    modelFunctionName = _objXMLReader.getFunctionName(modelName)
+                    logger.info('ModelFunctionsHelper.ModelSelector called when model={}, funtion ={} & parameter array = {}'. format(modelName, modelFunctionName, parameterArray))        
+                    _listModel = ModelFunctionsHelper.ModelSelector(modelFunctionName, 
+                         'dual', arrayTimes, arrayAIFConcs, parameterArray, 
+                       arrayVIFConcs)
                     arrayModel =  np.array(_listModel, dtype='float')
                     ax.plot(arrayTimes, arrayModel, 'g--', label= modelName + ' model')
-            elif TracerKineticModels.GetModelInletType(modelName) == 'single':
+            elif _objXMLReader.getModelInletType(modelName) == 'single':
                 if boolAIFSelected:
-                    parameterArray = self.BuildParameterArray()
-                    logger.info('TracerKineticModels.ModelSelector called when model ={} and parameter array = {} and boolFixVe={}'. format(modelName, parameterArray, boolFixVe))        
-                    _listModel = TracerKineticModels.ModelSelector(modelName, arrayTimes, 
-                       arrayAIFConcs, parameterArray, boolFixVe)
+                    modelFunctionName = _objXMLReader.getFunctionName(modelName)
+                    logger.info('ModelFunctionsHelper.ModelSelector called when model ={}, funtion ={} & parameter array = {}'. format(modelName, modelFunctionName, parameterArray))        
+                    _listModel = ModelFunctionsHelper.ModelSelector(modelFunctionName, 
+                        'single', arrayTimes, arrayAIFConcs, parameterArray)
                     arrayModel =  np.array(_listModel, dtype='float')
                     ax.plot(arrayTimes, arrayModel, 'g--', label= modelName + ' model')
-
 
             if ROI != 'Please Select':  
                 ax.set_xlabel('Time (mins)', fontsize=xyAxisLabelSize)
                 ax.set_ylabel('Concentration (mM)', fontsize=xyAxisLabelSize)
-                ax.set_title('Tissue Concentrations', fontsize=titleSize, pad=25)
+                ax.set_title('Time Curves', fontsize=titleSize, pad=25)
                 ax.grid()
                 chartBox = ax.get_position()
                 ax.set_position([chartBox.x0*1.1, chartBox.y0, chartBox.width*0.9, chartBox.height])
@@ -1860,8 +1875,10 @@ class ModelFittingApp(QWidget):
         sys.exit(0)  
 
     def toggleEnabled(self, boolEnabled=False):
+        """Used to disable all the controls on the form during batch processing
+       and to enable them again when batch processing is complete."""
         self.btnExit.setEnabled(boolEnabled)
-        self.btnLoadDisplayData.setEnabled(boolEnabled)
+        self.btnLoadDataFile.setEnabled(boolEnabled)
         self.cmbROI.setEnabled(boolEnabled)
         self.cmbAIF.setEnabled(boolEnabled)
         self.cmbVIF.setEnabled(boolEnabled)
@@ -1871,20 +1888,34 @@ class ModelFittingApp(QWidget):
         self.btnReset.setEnabled(boolEnabled)
         self.btnFitModel.setEnabled(boolEnabled)
         self.btnSaveCSV.setEnabled(boolEnabled)
-        self.spinBoxArterialFlowFactor.setEnabled(boolEnabled)
-        self.spinBoxParameter1.setEnabled(boolEnabled) 
+        self.spinBoxParameter1.setEnabled(boolEnabled)
         self.spinBoxParameter2.setEnabled(boolEnabled) 
         self.spinBoxParameter3.setEnabled(boolEnabled) 
-        self.spinBoxParameter4.setEnabled(boolEnabled)
+        self.spinBoxParameter4.setEnabled(boolEnabled) 
+        self.spinBoxParameter5.setEnabled(boolEnabled)
         self.btnBatchProc.setEnabled(boolEnabled)
-        self.ckbAFF.setEnabled(boolEnabled)
         self.ckbParameter1.setEnabled(boolEnabled)
         self.ckbParameter2.setEnabled(boolEnabled)
+        self.ckbParameter2.setEnabled(boolEnabled)
         self.ckbParameter3.setEnabled(boolEnabled)
-        self.ckbParameter4.setEnabled(boolEnabled)
+        self.ckbParameter5.setEnabled(boolEnabled)
         
 
     def BatchProcessAllCSVDataFiles(self):
+        """When a CSV data file is selected, the path to its folder is saved.
+       This function processes all the CSV data files in that folder by 
+       performing curve fitting using the selected model. 
+       
+       The results for each data file are written to an Excel spreadsheet.  
+       If a CSV file cannot be read then its name is also recorded in the 
+       Excel spreadsheet together with the reason why it could not be read.
+       
+       As each data file is processed, a PDF report with a plot of the 
+       time/concentration curves is generated and stored in a sub-folder 
+       in the folder where the data files are held.  Likewise, a CSV file
+       holding the time and concentration data (including the model curve)
+       in the is created in another sub-folder in the folder where the 
+       data files are held."""
         try:
             global _dataFileName
             logger.info('Function BatchProcessAllCSVDataFiles called.')
@@ -1937,6 +1968,7 @@ class ModelFittingApp(QWidget):
 
             modelName = str(self.cmbModels.currentText())
 
+            #Create the Excel spreadsheet to record the results
             objSpreadSheet, boolExcelFileCreatedOK = self.BatchProcessingCreateBatchSummaryExcelSpreadSheet(self.directory)
             
             if boolExcelFileCreatedOK:
@@ -1946,7 +1978,7 @@ class ModelFittingApp(QWidget):
                     else:
                         #Reset parameters to values selected by the user before
                         #the start of batch processing
-                        self.setParameterSpinBoxValues(initialParameterArray)
+                        self.SetParameterSpinBoxValues(initialParameterArray)
 
                     #Set global filename to name of file in current iteration 
                     #as this variable used to write datafile name in the PDF report
@@ -1979,7 +2011,8 @@ class ModelFittingApp(QWidget):
             self.toggleEnabled(True)      
 
     def BatchProcessingCreateBatchSummaryExcelSpreadSheet(self, pathToFolder):
-        """Creates an Excel spreadsheet to hold a summary of model fitting a batch of datafiles""" 
+        """Creates an Excel spreadsheet to hold a summary of model 
+        fitting a batch of data files""" 
         try:
             boolExcelFileCreatedOK = True
             logger.info('Function BatchProcessingCreateBatchSummaryExcelSpreadSheet called.')
@@ -2026,6 +2059,8 @@ class ModelFittingApp(QWidget):
             return None, boolExcelFileCreatedOK
 
     def BatchProcessWriteOptimumParamsToSummary(self, objExcelFile, fileName, modelName, paramDict):
+        """During batch processing of data files, writes the optimum
+        parameter values resulting from curve fitting to an Excel spreadsheet"""
         try:
             for paramName, paramList in paramDict.items(): 
                 paramName.replace('\n', '')
@@ -2150,6 +2185,11 @@ class ModelFittingApp(QWidget):
             return boolFileFormatOK, failureReason 
 
     def BatchProcessingCheckAllInputDataPresent(self, headers):
+        """This function checks that the current data file contains
+        data for the ROI, AIF and, if appropriate, the VIF.
+        
+        If data is missing, it returns false and a string indicating 
+        what data is missing."""
         boolDataOK = True
         join = ""
         failureReason = ""
@@ -2161,7 +2201,8 @@ class ModelFittingApp(QWidget):
             if ROI not in (lowerCaseHeaders):
                 boolDataOK = False
                 failureReason = ROI + " data missing"
-
+            
+            #Check AIF data is in the current data file
             AIF = str(self.cmbAIF.currentText().strip().lower())
             if AIF not in (lowerCaseHeaders):
                 boolDataOK = False
@@ -2170,6 +2211,7 @@ class ModelFittingApp(QWidget):
                 failureReason = failureReason + join + AIF + " data missing"
 
             if self.cmbVIF.isVisible():
+                #Check VIF data is in the current data file
                 VIF = str(self.cmbVIF.currentText().strip().lower())
                 if VIF not in (lowerCaseHeaders):
                     boolDataOK = False
@@ -2188,31 +2230,38 @@ class ModelFittingApp(QWidget):
             self.toggleEnabled(True)
 
     def BatchProcessingHaveParamsChanged(self) -> bool:
-        """Returns True if the user has changed parameter spinbox values from the defaults"""
+        """Returns True if the user has changed parameter 
+        spinbox values from the defaults"""
         try:
             boolParameterChanged = False
             modelName = str(self.cmbModels.currentText())
             logger.info('Function BatchProcessingHaveParamsChanged called when model = ' + modelName)
 
-            if modelName == '2-2CFM':
-                if (self.spinBoxArterialFlowFactor.value() != DEFAULT_VALUE_Fa or
-                    self.spinBoxParameter1.value() != DEFAULT_VALUE_Ve_2_2CFM or
-                    self.spinBoxParameter2.value() != DEFAULT_VALUE_Fp_2_2CFM or
-                    self.spinBoxParameter3.value() != DEFAULT_VALUE_Khe_2_2CFM or
-                    self.spinBoxParameter4.value() !=DEFAULT_VALUE_Kbh_2_2CFM):
+            if self.spinBoxParameter1.isVisible() == True:
+                if (self.spinBoxParameter1.value() != 
+                   _objXMLReader.getParameterDefault(modelName, 1)):
                     boolParameterChanged = True
-            elif modelName == 'HF2-2CFM':
-                if (self.spinBoxArterialFlowFactor.value() != DEFAULT_VALUE_Fa or
-                    self.spinBoxParameter1.value() != DEFAULT_VALUE_Ve or
-                    self.spinBoxParameter2.value() != DEFAULT_VALUE_Khe or
-                    self.spinBoxParameter3.value() != DEFAULT_VALUE_Kbh):
+           
+            if self.spinBoxParameter2.isVisible() == True:
+                if (self.spinBoxParameter2.value() != 
+                   _objXMLReader.getParameterDefault(modelName, 2)):
                     boolParameterChanged = True
-            elif modelName == 'HF1-2CFM':
-                if (self.spinBoxParameter1.value() != DEFAULT_VALUE_Ve or
-                    self.spinBoxParameter2.value() != DEFAULT_VALUE_Khe or
-                    self.spinBoxParameter3.value() != DEFAULT_VALUE_Kbh):
+                    
+            if self.spinBoxParameter3.isVisible() == True:
+                if (self.spinBoxParameter3.value() != 
+                   _objXMLReader.getParameterDefault(modelName,3)):
+                    boolParameterChanged = True  
+                    
+            if self.spinBoxParameter4.isVisible() == True:
+                if (self.spinBoxParameter4.value() != 
+                   _objXMLReader.getParameterDefault(modelName, 4)):
                     boolParameterChanged = True
 
+            if self.spinBoxParameter5.isVisible() == True:
+                if (self.spinBoxParameter5.value() != 
+                   _objXMLReader.getParameterDefault(modelName, 5)):
+                    boolParameterChanged = True
+            
             return boolParameterChanged    
         except Exception as e:
             print('Error in function BatchProcessingHaveParamsChanged: ' + str(e) )
