@@ -1,10 +1,10 @@
-"""This module creates and saves a report of a model fitting session in a PDF file. 
+"""This module contains functions for the creation and saving 
+of a report of a model fitting session in a PDF file. 
 In addition to a table of model parameter data, this report contains an image
 of the concentration/time plot at the time the CreateAndSavePDFReport method
 was called.
 
 This is done using the functionality in the FPDF library.
-
 """
 import datetime
 from fpdf import FPDF

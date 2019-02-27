@@ -1,4 +1,32 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
+<!--Description of the XML Configuration file structure. 
+<models></models> is the root node.
+The root node contains a collection of 1 or more <model></model>
+tags that encapsulate the data that describes each model.
+
+Each opening <model id="2-2CFM"> tag has an id attribute that is
+set to the short name of the model.
+
+The <name></name> tags enclose the <short></short> and 
+<long></long> names of the model.
+
+The <function></function> tags enclose the name of the function
+in ModelFunctions.py that contains the algorithm for the model.
+
+The <image></image> tags enclose the name of the image file in the 
+images folder that represents schematically the model.
+
+The <inlet_type></inlet_type> tags enclose the inlet type 
+(single or dual) of the model.
+
+The <parameters></parameters> tags enclose a collection of 
+1 or more <parameter></parameter> tags that enclose the
+data that describe each model input parameter.
+
+The <name></name> tags enclose the <short></short> and 
+<long></long> names of the parameter.
+
+-->
 <models>
   <data_file_path>C:\TRISTAN Data\PreClinical</data_file_path>
   <model id="2-2CFM">
@@ -6,10 +34,6 @@
       <short>2-2CFM</short>
       <long>2 Inlet - Two Compartment Filtration Model</long>
     </name>
-    <return_value>
-      <name>Concentrations</name>
-      <units>mM</units>
-    </return_value>
     <function>DualInputTwoCompartmentFiltrationModel</function>
     <image>DualInletTwoCompartmentGadoxetateModel.png</image>
     <inlet_type>dual</inlet_type>

@@ -1,3 +1,11 @@
+"""
+This class module provides the functionality for the creation
+of an Excel spreadsheet to store the results from the batch
+processing of time-concentration data files. 
+
+This is done using the openpyxl Python package.
+"""
+
 from openpyxl import Workbook
 import logging
 
@@ -5,6 +13,13 @@ logger = logging.getLogger(__name__)
 
 class ExcelWriter:
     def __init__(self, fullFilePath): 
+        """Creates an instance of the ExcelWriter class that
+       contains an empty Excel Workbook.
+       
+       Input Parameter
+       ----------------
+       fullFilePath - location where the Excel spreadsheet will be stored.
+       """
         try:
             self.fullFilePath = fullFilePath
             #print ("Excel fullFilePath = " + fullFilePath)
@@ -17,6 +32,8 @@ class ExcelWriter:
             logger.error('ExcelWriter.__init__: ' + str(e)) 
 
     def isWorksheet(self, title) -> bool:
+        """Returns True if the worksheet called title already 
+        exists in the Excel workbook."""
         boolWSExists = False
         for sheet in self.wb:
             if sheet.title == title:
@@ -26,10 +43,20 @@ class ExcelWriter:
         return boolWSExists
 
     def RecordSkippedFiles(self, fileName, failureReason):
+        """Records details of CSV data files that have to be skipped
+       during batch processing because they do not conform
+       to required format in a worksheet called 'Skipped files'.
+       
+       Input Parameters
+       ----------------
+       fileName - Name of the skipped file.
+       failureReason - String containing the reason why the
+      file was skipped."""
         try:
             if not self.isWorksheet("Skipped files"):
                 #Skipped files tab does not exist.
-                #Create it and add first skipped file info.
+                #Create it and add first skipped file info
+                #to the first row on the worksheet.
                 self.ws = self.wb.active
                 self.ws.title = "Skipped files"
                 self.ws['A1'] = "File"
@@ -53,6 +80,21 @@ class ExcelWriter:
 
     def RecordParameterValues(self, fileName, modelName, paramName, 
                               paramValue, paramLower, paramUpper):
+        """During batch processing, records each optimum parameter 
+        value (and associated information) resulting from curve 
+        fitting in a row on a worksheet dedicated to that parameter. 
+        Creates that worksheet when the parameter value from the
+        first data file being processed is available. 
+        
+        Input Parameters
+        -----------------
+        fileName - Name of the data file currently being processed.
+        modelName - Name of the model used for curve fitting.
+        paramName - Name of the parameter.
+        paramValue - Value of the parameter resulting from curve fitting.
+        paramLower, paramUpper - Lower and upper 95% confidence interval
+                of the paramValue. 
+        """
         try:
             paramName = paramName.partition(',')
             paramName = paramName[0] 
@@ -61,7 +103,8 @@ class ExcelWriter:
                 
             if not self.isWorksheet(paramName):
                 #This parameter tab does not exist.
-                #Create it and add first parameter value data.
+                #Create it and add first parameter value data
+                #to the first row of the worksheet.
                 thisWS = self.wb.create_sheet(paramName)
                 #thisWS.title = paramName
                 thisWS['A1'] = "File"
@@ -78,6 +121,8 @@ class ExcelWriter:
                 thisWS['E2'] = str(paramLower)
                 thisWS['F2'] = str(paramUpper)
             else:
+                #Worksheet already exists, 
+                #so retrieve it
                 thisWS = self.wb[paramName]
                 #get next empty row
                 row_count = thisWS.max_row
@@ -98,6 +143,7 @@ class ExcelWriter:
                          + paramName + str(e)) 
 
     def SaveSpreadSheet(self): 
+        """ Saves the workbook as an Excel spreadsheet at fullFilePath"""
         try:
             self.wb.save(self.fullFilePath)
             logger.info('In module ' + __name__ 

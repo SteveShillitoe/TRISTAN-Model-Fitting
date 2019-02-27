@@ -1,3 +1,14 @@
+"""
+This class module contains functionality for loading and 
+parsing an XML configuration file that describes the model
+to be used for curve fitting time/concentration data.
+
+It also contains functions for retrieving data from 
+parsed XML tree held in memory.
+
+It uses the functionality provided by the xml.etree.ElementTree
+package.
+"""
 import xml.etree.ElementTree as ET  
 import logging
 
@@ -8,7 +19,7 @@ FIRST_ITEM_MODEL_LIST = 'Select a model'
 class XMLReader:
     def __init__(self): 
         try:
-            self.XMLFileParsedOK = True
+            self.hasXMLFileParsedOK = True
             self.fullFilePath = ""
             self.tree = None
             self.root = None
@@ -20,8 +31,10 @@ class XMLReader:
             logger.error('Error in XMLReader.__init__: ' + str(e)) 
             
     def parseConfigFile(self, fullFilePath): 
+        """Loads and parses the XML configuration file at fullFilePath.
+       After successful parsing, the XML tree is stored in memory."""
         try:
-            self.XMLFileParsedOK = True
+            self.hasXMLFileParsedOK = True
             self.fullFilePath = fullFilePath
             self.tree = ET.parse(fullFilePath)
             self.root = self.tree.getroot()
@@ -35,21 +48,24 @@ class XMLReader:
         except ET.ParseError as et:
             print('XMLReader.parseConfigFile error: ' + str(et)) 
             logger.error('XMLReader.parseConfigFile error: ' + str(et))
-            self.XMLFileParsedOK = False
+            self.hasXMLFileParsedOK = False
             
         except Exception as e:
             print('Error in XMLReader.parseConfigFile: ' + str(e)) 
             logger.error('Error in XMLReader.parseConfigFile: ' + str(e)) 
-            self.XMLFileParsedOK = False
+            self.hasXMLFileParsedOK = False
 
-    def XMLFileParsedOK(self) ->bool:
+    def hasXMLFileParsedOK(self) ->bool:
         return self.hasXMLFileParsedOK
 
     def getListModelShortNames(self):
+        """Returns a list of model short names for display
+        in a combo dropdown list on the application GUI """
         try:
             shortModelNames = self.root.findall('./model/name/short')
             tempList = [name.text 
                         for name in shortModelNames]
+            #Insert string 'Select a model' as the start of the list
             tempList.insert(0, FIRST_ITEM_MODEL_LIST)
             
             return tempList
@@ -62,6 +78,8 @@ class XMLReader:
             logger.error('Error in XMLReader.getListModelShortNames: ' + str(e)) 
     
     def getFunctionName(self, shortModelName):
+        """Returns the name of the function that corresponds to the model
+       with a short name in the string variable shortModelName"""
         try:
             logger.info('XMLReader.getFunctionName called with short model name= ' + shortModelName)
             if len(shortModelName) > 0:
@@ -83,6 +101,8 @@ class XMLReader:
             return None
 
     def getImageName(self, shortModelName):
+        """Returns the name of the image that represents the model
+       with a short name in the string variable shortModelName"""
         try:
             logger.info('XMLReader.getImageName called with short model name= ' + shortModelName)
             if len(shortModelName) > 0:
@@ -104,6 +124,8 @@ class XMLReader:
             return None
 
     def getLongModelName(self, shortModelName):
+        """Returns the long name of the model
+       with a short name in the string variable shortModelName"""
         try:
             logger.info('XMLReader.getLongModelName called with short model name= ' + shortModelName)
             if len(shortModelName) > 0:
@@ -128,6 +150,8 @@ class XMLReader:
 
 
     def getModelInletType(self, shortModelName):
+        """Returns the inlet type (single or dual) of the model
+       with a short name in the string variable shortModelName"""
         try:
             logger.info('XMLReader.getModelInletType called with short model name= ' + shortModelName)
             if len(shortModelName) > 0 and shortModelName != FIRST_ITEM_MODEL_LIST:
@@ -150,6 +174,8 @@ class XMLReader:
 
 
     def getNumberOfParameters(self, shortModelName) ->int:
+        """Returns the number of input parameters to the model whose
+       short name is stored in the string variable shortModelName."""
         try:
             logger.info('XMLReader.getNumberOfParameters called with short model name= ' + shortModelName)
             if len(shortModelName) > 0:
@@ -173,6 +199,14 @@ class XMLReader:
 
 
     def getParameterLabel(self, shortModelName, positionNumber):
+        """Returns the full name and units of the parameter to be
+        displayed in the parameter label on the application GUI.
+
+        Input Parameters
+        ----------------
+        shortModelName - Identifies the model.
+        positionNumber - The ordinal position of the parameter in the 
+                        model's parameter collection. Numbers from one."""
         try:
             logger.info('XMLReader.getParameterLabel called with short model name= {} and position={} '.format(shortModelName,positionNumber) )
             boolIsPercentage = False
@@ -206,6 +240,11 @@ class XMLReader:
 
 
     def getParameterDefault(self, shortModelName, positionNumber)->float:
+        """
+        Returns the default value for parameter in ordinal position,
+        positionNumber, of the parameter collection of the model whose
+        short name is shortModelName.
+        """
         try:
             logger.info('XMLReader.getParameterDefault called with short model name= {} and position={} '.format(shortModelName,positionNumber) )
             
@@ -228,6 +267,13 @@ class XMLReader:
 
 
     def getParameterStep(self, shortModelName, positionNumber)->float:
+        """
+        Returns the spinbox step value for parameter in ordinal position,
+        positionNumber, of the parameter collection of the model whose
+        short name is shortModelName. Parameter values are displayed in a
+        spinbox on the application GUI. When the spinbox arrows are clicked,
+        the parameter value is changed by the value of step.
+        """
         try:
             logger.info('XMLReader.getParameterStep called with short model name= {} and position={} '.format(shortModelName,positionNumber) )
             
@@ -249,6 +295,12 @@ class XMLReader:
             return 0.0
 
     def getParameterPrecision(self, shortModelName, positionNumber)->int:
+        """
+        Returns the number of decimal places to be displayed in the spinbox 
+        for parameter in ordinal position, positionNumber, of the parameter 
+        collection of the model whose short name is shortModelName. 
+        Parameter values are displayed in a spinbox on the application GUI.
+        """
         try:
             logger.info('XMLReader.getParameterPrecision called with short model name= {} and position={} '.format(shortModelName,positionNumber) )
             
@@ -270,6 +322,13 @@ class XMLReader:
             return 0.0
 
     def getParameterConstraints(self, shortModelName, positionNumber)->float:
+        """
+        Returns the upper and lower limits of the range of values 
+        in the spinbox for the parameter in ordinal position,
+        positionNumber, of the parameter collection of the model whose
+        short name is shortModelName. Parameter values are displayed in a
+        spinbox on the application GUI.
+        """
         try:
             logger.info('XMLReader.getParameterConstraints called with short model name= {} and position={} '.format(shortModelName,positionNumber) )
             
@@ -295,8 +354,9 @@ class XMLReader:
             return 0.0, 0.0
     
     def getDataFileFolder(self)->str:
+        """ Returns the path to the folder where the data files are stored"""
         try:
-            logger.info('XMLReader.getDataFileFolder')
+            logger.info('XMLReader.getDataFileFolder called')
            
             xPath='./data_file_path'
             dataFileFolder = self.root.find(xPath)

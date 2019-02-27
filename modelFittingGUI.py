@@ -1301,7 +1301,7 @@ class ModelFittingApp(QWidget):
             if os.path.exists(fullFilePath):
                 _objXMLReader.parseConfigFile(fullFilePath)
                 
-                if _objXMLReader.XMLFileParsedOK:
+                if _objXMLReader.hasXMLFileParsedOK:
                     logger.info('Config file {} loaded'.format(fullFilePath))
                     
                     folderName, configFileName = os.path.split(fullFilePath)
