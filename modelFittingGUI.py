@@ -732,8 +732,8 @@ class ModelFittingApp(QWidget):
         _boolCurveFittingDone=False
         self.ClearOptimisedParamaterList('Function-OptimumParameterChanged')
 
-    def PopulateConfIntervalLabel(self, paramNumber, nextIndex):
-        """Called by the ProcessOptimumParametersAfterCurveFit function,
+    def CurveFitSetConfIntLabel(self, paramNumber, nextIndex):
+        """Called by the CurveFitProcessOptimumParameters function,
         this function populates the label that displays the upper and lower
         confidence limits for each calculated optimum parameter value.
 
@@ -741,7 +741,7 @@ class ModelFittingApp(QWidget):
         corresponding value in the global list _optimisedParamaterList
         is updated, which is also the source of this data.
         """
-        logger.info('Function PopulateConfIntervalLabel called.')
+        logger.info('Function CurveFitSetConfIntLabel called.')
         try:
             objSpinBox = getattr(self, 'spinBoxParameter' + str(paramNumber))
             objLabel = getattr(self, 'lblParam' + str(paramNumber) + 'ConfInt')
@@ -767,31 +767,32 @@ class ModelFittingApp(QWidget):
             confidenceStr = '[{}     {}]'.format(lowerLimit, upperLimit)
             objLabel.setText(confidenceStr)
         except Exception as e:
-            print('Error in function PopulateConfIntervalLabel: ' + str(e))
-            logger.error('Error in function PopulateConfIntervalLabel: ' + str(e))
+            print('Error in function CurveFitSetConfIntLabel: ' + str(e))
+            logger.error('Error in function CurveFitSetConfIntLabel: ' + str(e))
 
-    def ProcessOptimumParametersAfterCurveFit(self):
+    def CurveFitProcessOptimumParameters(self):
         """Displays the confidence limits for the optimum parameter values 
            resulting from curve fitting on the right-hand side of the GUI."""
         try:
-            logger.info('Function ProcessOptimumParametersAfterCurveFit called.')
+            logger.info('Function CurveFitProcessOptimumParameters called.')
+            self.ClearOptimumParamaterConfLimitsOnGUI()
             self.lblConfInt.show()
             modelName = str(self.cmbModels.currentText())
             numParams = _objXMLReader.getNumberOfParameters(modelName)
             if numParams >= 1:
-                self.PopulateConfIntervalLabel(1,0)
+                self.CurveFitSetConfIntLabel(1,0)
             if numParams >= 2:
-                self.PopulateConfIntervalLabel(2,1)
+                self.CurveFitSetConfIntLabel(2,1)
             if numParams >= 3:
-                self.PopulateConfIntervalLabel(3,2)
+                self.CurveFitSetConfIntLabel(3,2)
             if numParams >= 4:
-                self.PopulateConfIntervalLabel(4,3)
+                self.CurveFitSetConfIntLabel(4,3)
             if numParams >= 5:
-                self.PopulateConfIntervalLabel(5,4)
+                self.CurveFitSetConfIntLabel(5,4)
             
         except Exception as e:
-            print('Error in function ProcessOptimumParametersAfterCurveFit: ' + str(e))
-            logger.error('Error in function ProcessOptimumParametersAfterCurveFit: ' + str(e))
+            print('Error in function CurveFitProcessOptimumParameters: ' + str(e))
+            logger.error('Error in function CurveFitProcessOptimumParameters: ' + str(e))
 
     def ClearOptimumParamaterConfLimitsOnGUI(self):
         """Clears the contents of the labels on the left handside of the GUI 
@@ -1005,7 +1006,7 @@ class ModelFittingApp(QWidget):
             print('Error in function SetParameterSpinBoxValues ' + str(e))
             logger.error('Error in function SetParameterSpinBoxValues '  + str(e))
 
-    def Calculate95ConfidenceLimits(self, numDataPoints: int, numParams: int, 
+    def CurveFitCalculate95ConfidenceLimits(self, numDataPoints: int, numParams: int, 
                                     optimumParams, paramCovarianceMatrix):
         """Calculates the 95% confidence limits of optimum parameter values 
         resulting from curve fitting. Results are stored in 
@@ -1023,13 +1024,22 @@ class ModelFittingApp(QWidget):
                         calculated during curve fitting.
         """
         try:
-            logger.info('Function Calculate95ConfidenceLimits called: numDataPoints ={}, numParams={}, optimumParams={}, paramCovarianceMatrix={}'
+            logger.info('Function CurveFitCalculate95ConfidenceLimits called: numDataPoints ={}, numParams={}, optimumParams={}, paramCovarianceMatrix={}'
                         .format(numDataPoints, numParams, optimumParams, paramCovarianceMatrix))
             alpha = 0.05 #95% confidence interval = 100*(1-alpha)
-            degsOfFreedom = max(0, numDataPoints - numParams) #Number of degrees of freedom
+            
+            for paramNumber in range(1, len(optimumParams)+ 1):
+                #Make parameter checkbox
+                objCheckBox = getattr(self, 'ckbParameter' + str(paramNumber))
+                if objCheckBox.isChecked():
+                    numParams -=1
+                    del optimumParams[paramNumber - 1]
+                
+                    print('numParams= {}, optimum params = {}'.format(numParams,optimumParams))
+            numDegsOfFreedom = max(0, numDataPoints - numParams) 
         
             #student-t value for the degrees of freedom and the confidence level
-            tval = t.ppf(1.0-alpha/2., degsOfFreedom)
+            tval = t.ppf(1.0-alpha/2., numDegsOfFreedom)
         
             #Remove results of previous curve fitting
             _optimisedParamaterList.clear()
@@ -1043,11 +1053,12 @@ class ModelFittingApp(QWidget):
                 _optimisedParamaterList[counter].append(round(numParams,3))
                 _optimisedParamaterList[counter].append(round((numParams - sigma*tval), 3))
                 _optimisedParamaterList[counter].append(round((numParams + sigma*tval), 3))
-                
-            logger.info('In Calculate95ConfidenceLimits, _optimisedParamaterList = {}'.format(_optimisedParamaterList))
+            
+            print('The optimised parameter list ={}'.format(_optimisedParamaterList))
+            logger.info('In CurveFitCalculate95ConfidenceLimits, _optimisedParamaterList = {}'.format(_optimisedParamaterList))
         except Exception as e:
-            print('Error in function Calculate95ConfidenceLimits ' + str(e))
-            logger.error('Error in function Calculate95ConfidenceLimits '  + str(e))  
+            print('Error in function CurveFitCalculate95ConfidenceLimits ' + str(e))
+            logger.error('Error in function CurveFitCalculate95ConfidenceLimits '  + str(e))  
     
     def CurveFitGetParameterData(self, modelName, paramNumber):
         """
@@ -1162,7 +1173,7 @@ class ModelFittingApp(QWidget):
             modelName = str(self.cmbModels.currentText())
             functionName = _objXMLReader.getFunctionName(modelName)
             inletType = _objXMLReader.getModelInletType(modelName)
-            optimumParamsDict = ModelFunctionsHelper.CurveFit(
+            optimumParamsDict, paramCovarianceMatrix = ModelFunctionsHelper.CurveFit(
                 functionName, paramList, arrayTimes, 
                 arrayAIFConcs, arrayVIFConcs, arrayROIConcs,
                 inletType)
@@ -1179,13 +1190,16 @@ class ModelFittingApp(QWidget):
             #Plot the best curve on the graph
             self.PlotConcentrations('CurveFit')
 
-            ##Determine 95% confidence limits.
-            #numDataPoints = arrayROIConcs.size
-            #numParams = len(initialParametersArray)
-            #self.Calculate95ConfidenceLimits(numDataPoints, numParams, 
-            #                        optimumParams, paramCovarianceMatrix)
+            #Determine 95% confidence limits.
+            numDataPoints = arrayROIConcs.size
+            numParams = len(optimumParamsList)
+            print('optimumParamsDict={}, optimumParamsList={} and numParams={}'
+                  .format(optimumParamsDict, optimumParamsList, numParams))
             
-            #self.ProcessOptimumParametersAfterCurveFit()
+            if paramCovarianceMatrix.size:
+                self.CurveFitCalculate95ConfidenceLimits(numDataPoints, numParams, 
+                                    optimumParamsList, paramCovarianceMatrix)
+                self.CurveFitProcessOptimumParameters()
             
         except ValueError as ve:
             print ('Value Error: CurveFit with model ' + modelName + ': '+ str(ve))

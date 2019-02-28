@@ -60,7 +60,7 @@ def DualInputTwoCompartmentFiltrationModel(xData2DArray, Fa: float, Ve: float, F
         ce = (1/(2*Ve))*( (1+beta/alpha)*Tc1*tools.expconv(Tc1,times,combinedConcentration,'DualInputTwoCompartmentFiltrationModel - 1') + \
                         (1-beta/alpha)*Tc2*tools.expconv(Tc2,times,combinedConcentration,'DualInputTwoCompartmentFiltrationModel - 2')) 
    
-        modelConcs = Ve*ce + Khe*Th*tools.expconv(Th,times,ce,'DualInputTwoCompartmentFiltrationModel')
+        modelConcs = Ve*ce + Khe*Th*tools.expconv(Th,times,ce,'DualInputTwoCompartmentFiltrationModel-3')
     
         return(modelConcs)
     except Exception as e:

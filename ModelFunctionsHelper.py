@@ -1,17 +1,18 @@
 """This module contains functions that coordinate the calling of functions
-in the class module Models.py that calculate the variation of concentration
+in the module ModelFunctions.py that calculate the variation of concentration
 with time according to tracer kinetic models.  
 
 The function ModelSelector coordinates the execution of the 
 appropriate function according to the model selected on the GUI.
 
-The function, CurveFit calls the curve_fit function imported from scipy.optimize 
-to fit any of the models in this module to actual concentration/time data 
-using non-linear least squares.  
+The function, CurveFit calls the Model function imported from 
+the lmfit Python package to fit any of the models in ModelFunctions.py
+to actual concentration/time data.  
 """
 
 #from scipy.optimize import curve_fit
 from lmfit import Parameters, Model
+import lmfit
 import numpy as np
 import logging
 import ModelFunctions as modelFunctions
@@ -128,9 +129,14 @@ def CurveFit(functionName: str, paramList, times, AIFConcs,
         result = objModel.fit(concROI, params=params, xData2DArray=timeInputConcs2DArray)
         
         #print('best fit={}'.format(result.best_fit))
-        print('best values={}'.format(result.best_values))
-       
-        return result.best_values
+        #print('best values={}'.format(result.best_values
+        print('Covar')
+        print(result.covar)
+       # print('CI REPORT')
+        #print(result.conf_interval())
+        #print(result.ci_report())
+        #print(lmfit.conf_interval(result, result))
+        return result.best_values, result.covar
             
     except ValueError as ve:
         print ('ModelFunctionsHelper.CurveFit Value Error: ' + str(ve))
