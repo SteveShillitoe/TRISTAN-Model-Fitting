@@ -256,6 +256,11 @@ class ModelFittingApp(QWidget):
         #Store path to time/concentration data files for use in batch processing.
         self.directory = ""  
         self.ApplyStyleSheet()
+        self.parameter1Fixed = False
+        self.parameter2Fixed = False
+        self.parameter3Fixed = False
+        self.parameter4Fixed = False
+        self.parameter5Fixed = False
        
         #Setup the layouts, the containers for widgets
         verticalLayoutLeft, verticalLayoutRight = self.SetUpLayouts() 
@@ -480,30 +485,35 @@ class ModelFittingApp(QWidget):
         self.labelParameter1.hide()
         self.ckbParameter1 = QCheckBox("Fix")
         self.ckbParameter1.hide()
+        self.ckbParameter1.clicked.connect(lambda: self.ToggleParameterFixedFlag(1))
         self.lblParam1ConfInt = QLabel("")
         self.lblParam1ConfInt.setAlignment(QtCore.Qt.AlignCenter)
         
         self.labelParameter2 = QLabel("")
         self.ckbParameter2 = QCheckBox("Fix")
         self.ckbParameter2.hide()
+        self.ckbParameter2.clicked.connect(lambda: self.ToggleParameterFixedFlag(2))
         self.lblParam2ConfInt = QLabel("")
         self.lblParam2ConfInt.setAlignment(QtCore.Qt.AlignCenter)
         
         self.labelParameter3 = QLabel("")
         self.ckbParameter3 = QCheckBox("Fix")
         self.ckbParameter3.hide()
+        self.ckbParameter3.clicked.connect(lambda: self.ToggleParameterFixedFlag(3))
         self.lblParam3ConfInt = QLabel("")
         self.lblParam3ConfInt.setAlignment(QtCore.Qt.AlignCenter)
         
         self.labelParameter4 = QLabel("")
         self.ckbParameter4 = QCheckBox("Fix")
         self.ckbParameter4.hide()
+        self.ckbParameter4.clicked.connect(lambda: self.ToggleParameterFixedFlag(4))
         self.lblParam4ConfInt = QLabel("")
         self.lblParam4ConfInt.setAlignment(QtCore.Qt.AlignCenter)
 
         self.labelParameter5 = QLabel("")
         self.ckbParameter5 = QCheckBox("Fix")
         self.ckbParameter5.hide()
+        self.ckbParameter5.clicked.connect(lambda: self.ToggleParameterFixedFlag(5))
         self.lblParam5ConfInt = QLabel("")
         self.lblParam5ConfInt.setAlignment(QtCore.Qt.AlignCenter)
 
@@ -1136,7 +1146,28 @@ class ModelFittingApp(QWidget):
         except Exception as e:
             print('Error in function CurveFitCollateParameterData ' + str(e))
             logger.error('Error in function CurveFitCollateParameterData '  + str(e))
+    
+    def NoParametersFixed(self):
+        flag = True
+        if (self.parameter1Fixed or
+            self.parameter2Fixed or
+            self.parameter3Fixed or
+            self.parameter4Fixed or
+            self.parameter5Fixed):
+            flag = False
 
+        return flag
+
+    def ToggleParameterFixedFlag(self, paramNumber):
+        try:
+            logger.info('Function ToggleParameterFixedFlag called for parameter checkbox{}.'.format(paramNumber))
+            objCheckBox = getattr(self, 'ckbParameter' + str(paramNumber))
+            objFixedFlag = getattr(self, 'parameter' + str(paramNumber) + 'Fixed')
+            objFixedFlag = objCheckBox.isChecked()
+            
+        except Exception as e:
+            print('Error in function ToggleParameterFixedFlag ' + str(e))
+            logger.error('Error in function ToggleParameterFixedFlag '  + str(e))
 
     def CurveFit(self):
         """Performs curve fitting to fit AIF (and VIF) data to the ROI curve.
@@ -1775,6 +1806,11 @@ class ModelFittingApp(QWidget):
         self.ckbParameter3.setChecked(False)
         self.ckbParameter4.setChecked(False)
         self.ckbParameter5.setChecked(False)
+        self.parameter1Fixed = False
+        self.parameter2Fixed = False
+        self.parameter3Fixed = False
+        self.parameter4Fixed = False
+        self.parameter5Fixed = False
 
 
     def ConfigureGUIForEachModel(self):
