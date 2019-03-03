@@ -256,11 +256,6 @@ class ModelFittingApp(QWidget):
         #Store path to time/concentration data files for use in batch processing.
         self.directory = ""  
         self.ApplyStyleSheet()
-        self.parameter1Fixed = False
-        self.parameter2Fixed = False
-        self.parameter3Fixed = False
-        self.parameter4Fixed = False
-        self.parameter5Fixed = False
        
         #Setup the layouts, the containers for widgets
         verticalLayoutLeft, verticalLayoutRight = self.SetUpLayouts() 
@@ -485,35 +480,30 @@ class ModelFittingApp(QWidget):
         self.labelParameter1.hide()
         self.ckbParameter1 = QCheckBox("Fix")
         self.ckbParameter1.hide()
-        self.ckbParameter1.clicked.connect(lambda: self.ToggleParameterFixedFlag(1))
         self.lblParam1ConfInt = QLabel("")
         self.lblParam1ConfInt.setAlignment(QtCore.Qt.AlignCenter)
         
         self.labelParameter2 = QLabel("")
         self.ckbParameter2 = QCheckBox("Fix")
         self.ckbParameter2.hide()
-        self.ckbParameter2.clicked.connect(lambda: self.ToggleParameterFixedFlag(2))
         self.lblParam2ConfInt = QLabel("")
         self.lblParam2ConfInt.setAlignment(QtCore.Qt.AlignCenter)
         
         self.labelParameter3 = QLabel("")
         self.ckbParameter3 = QCheckBox("Fix")
         self.ckbParameter3.hide()
-        self.ckbParameter3.clicked.connect(lambda: self.ToggleParameterFixedFlag(3))
         self.lblParam3ConfInt = QLabel("")
         self.lblParam3ConfInt.setAlignment(QtCore.Qt.AlignCenter)
         
         self.labelParameter4 = QLabel("")
         self.ckbParameter4 = QCheckBox("Fix")
         self.ckbParameter4.hide()
-        self.ckbParameter4.clicked.connect(lambda: self.ToggleParameterFixedFlag(4))
         self.lblParam4ConfInt = QLabel("")
         self.lblParam4ConfInt.setAlignment(QtCore.Qt.AlignCenter)
 
         self.labelParameter5 = QLabel("")
         self.ckbParameter5 = QCheckBox("Fix")
         self.ckbParameter5.hide()
-        self.ckbParameter5.clicked.connect(lambda: self.ToggleParameterFixedFlag(5))
         self.lblParam5ConfInt = QLabel("")
         self.lblParam5ConfInt.setAlignment(QtCore.Qt.AlignCenter)
 
@@ -754,6 +744,7 @@ class ModelFittingApp(QWidget):
         logger.info('Function CurveFitSetConfIntLabel called.')
         try:
             objSpinBox = getattr(self, 'spinBoxParameter' + str(paramNumber))
+            objCheckBox = getattr(self, 'ckbParameter' + str(paramNumber))
             objLabel = getattr(self, 'lblParam' + str(paramNumber) + 'ConfInt')
         
             parameterValue = _optimisedParamaterList[nextIndex][0]
@@ -761,12 +752,14 @@ class ModelFittingApp(QWidget):
             upperLimit = _optimisedParamaterList[nextIndex][2]
             if objSpinBox.suffix() == '%':
                 parameterValue = parameterValue * 100.0
-                lowerLimit = lowerLimit * 100.0
-                upperLimit = upperLimit * 100.0
+                if not objCheckBox.isChecked():
+                    lowerLimit = lowerLimit * 100.0
+                    upperLimit = upperLimit * 100.0
         
             parameterValue = round(parameterValue, 3)
-            lowerLimit = round(lowerLimit, 3)
-            upperLimit = round(upperLimit, 3)
+            if not objCheckBox.isChecked():
+                lowerLimit = round(lowerLimit, 3)
+                upperLimit = round(upperLimit, 3)
             #For display in the PDF report, 
             #overwrite decimal volume fraction values 
             #in  _optimisedParamaterList with the % equivalent
@@ -774,8 +767,9 @@ class ModelFittingApp(QWidget):
             _optimisedParamaterList[nextIndex][1] = lowerLimit
             _optimisedParamaterList[nextIndex][2] = upperLimit
            
-            confidenceStr = '[{}     {}]'.format(lowerLimit, upperLimit)
-            objLabel.setText(confidenceStr)
+            if not objCheckBox.isChecked():
+                confidenceStr = '[{}     {}]'.format(lowerLimit, upperLimit)
+                objLabel.setText(confidenceStr)
         except Exception as e:
             print('Error in function CurveFitSetConfIntLabel: ' + str(e))
             logger.error('Error in function CurveFitSetConfIntLabel: ' + str(e))
@@ -785,7 +779,6 @@ class ModelFittingApp(QWidget):
            resulting from curve fitting on the right-hand side of the GUI."""
         try:
             logger.info('Function CurveFitProcessOptimumParameters called.')
-            self.ClearOptimumParamaterConfLimitsOnGUI()
             self.lblConfInt.show()
             modelName = str(self.cmbModels.currentText())
             numParams = _objXMLReader.getNumberOfParameters(modelName)
@@ -1037,7 +1030,11 @@ class ModelFittingApp(QWidget):
             logger.info('Function CurveFitCalculate95ConfidenceLimits called: numDataPoints ={}, numParams={}, optimumParams={}, paramCovarianceMatrix={}'
                         .format(numDataPoints, numParams, optimumParams, paramCovarianceMatrix))
             alpha = 0.05 #95% confidence interval = 100*(1-alpha)
-            
+            originalOptimumParams = optimumParams
+            originalNumParams = numParams
+
+            #Check for fixed parameters.
+            #Removed fixed parameters from the optimum parameter list
             for paramNumber in range(1, len(optimumParams)+ 1):
                 #Make parameter checkbox
                 objCheckBox = getattr(self, 'ckbParameter' + str(paramNumber))
@@ -1045,7 +1042,7 @@ class ModelFittingApp(QWidget):
                     numParams -=1
                     del optimumParams[paramNumber - 1]
                 
-                    print('numParams= {}, optimum params = {}'.format(numParams,optimumParams))
+            #print('numParams= {}, optimum params = {}'.format(numParams,optimumParams))
             numDegsOfFreedom = max(0, numDataPoints - numParams) 
         
             #student-t value for the degrees of freedom and the confidence level
@@ -1054,17 +1051,30 @@ class ModelFittingApp(QWidget):
             #Remove results of previous curve fitting
             _optimisedParamaterList.clear()
             #_optimisedParamaterList is a list of lists. 
-            #Add an empty list for each parameter to hold its value and confidence limits
+            #Add an empty list for each parameter to hold its value 
+            #and confidence limits
             for i in range(numParams):
                 _optimisedParamaterList.append([])
            
             for counter, numParams, var in zip(range(numDataPoints), optimumParams, np.diag(paramCovarianceMatrix)):
+                #Calculate 95% confidence interval for parameter 
+                #allowed to vary and add these to a list
                 sigma = var**0.5
-                _optimisedParamaterList[counter].append(round(numParams,3))
-                _optimisedParamaterList[counter].append(round((numParams - sigma*tval), 3))
-                _optimisedParamaterList[counter].append(round((numParams + sigma*tval), 3))
+                _optimisedParamaterList[counter].append(numParams)
+                _optimisedParamaterList[counter].append(numParams - sigma*tval)
+                _optimisedParamaterList[counter].append(numParams + sigma*tval)
             
-            print('The optimised parameter list ={}'.format(_optimisedParamaterList))
+            #Now insert fixed parameters into _optimisedParameterList
+            #if there are any.
+            for paramNum in range(1, originalNumParams + 1):
+                objCheckBox = getattr(self, 'ckbParameter' + str(paramNum))
+                if objCheckBox.isVisible() and objCheckBox.isChecked():
+                    #Add the fixed optimum parameter value to a list
+                    fixedParamValue = originalOptimumParams[paramNum - 1]
+                    tempList = [fixedParamValue,'','']
+                    _optimisedParamaterList.insert(paramNum - 1, tempList)
+            
+            #print('The optimised parameter LIST ={}'.format(_optimisedParamaterList))
             logger.info('In CurveFitCalculate95ConfidenceLimits, _optimisedParamaterList = {}'.format(_optimisedParamaterList))
         except Exception as e:
             print('Error in function CurveFitCalculate95ConfidenceLimits ' + str(e))
@@ -1146,28 +1156,6 @@ class ModelFittingApp(QWidget):
         except Exception as e:
             print('Error in function CurveFitCollateParameterData ' + str(e))
             logger.error('Error in function CurveFitCollateParameterData '  + str(e))
-    
-    def NoParametersFixed(self):
-        flag = True
-        if (self.parameter1Fixed or
-            self.parameter2Fixed or
-            self.parameter3Fixed or
-            self.parameter4Fixed or
-            self.parameter5Fixed):
-            flag = False
-
-        return flag
-
-    def ToggleParameterFixedFlag(self, paramNumber):
-        try:
-            logger.info('Function ToggleParameterFixedFlag called for parameter checkbox{}.'.format(paramNumber))
-            objCheckBox = getattr(self, 'ckbParameter' + str(paramNumber))
-            objFixedFlag = getattr(self, 'parameter' + str(paramNumber) + 'Fixed')
-            objFixedFlag = objCheckBox.isChecked()
-            
-        except Exception as e:
-            print('Error in function ToggleParameterFixedFlag ' + str(e))
-            logger.error('Error in function ToggleParameterFixedFlag '  + str(e))
 
     def CurveFit(self):
         """Performs curve fitting to fit AIF (and VIF) data to the ROI curve.
@@ -1216,6 +1204,7 @@ class ModelFittingApp(QWidget):
             #Display results of curve fitting  
             #(optimum model parameter values) on GUI.
             optimumParamsList = list(optimumParamsDict.values())
+            self.ClearOptimumParamaterConfLimitsOnGUI()
             self.SetParameterSpinBoxValues(optimumParamsList)
 
             #Plot the best curve on the graph
@@ -1224,8 +1213,8 @@ class ModelFittingApp(QWidget):
             #Determine 95% confidence limits.
             numDataPoints = arrayROIConcs.size
             numParams = len(optimumParamsList)
-            print('optimumParamsDict={}, optimumParamsList={} and numParams={}'
-                  .format(optimumParamsDict, optimumParamsList, numParams))
+            #print('optimumParamsDict={}, optimumParamsList={} and numParams={}'
+            #      .format(optimumParamsDict, optimumParamsList, numParams))
             
             if paramCovarianceMatrix.size:
                 self.CurveFitCalculate95ConfidenceLimits(numDataPoints, numParams, 
@@ -1806,11 +1795,6 @@ class ModelFittingApp(QWidget):
         self.ckbParameter3.setChecked(False)
         self.ckbParameter4.setChecked(False)
         self.ckbParameter5.setChecked(False)
-        self.parameter1Fixed = False
-        self.parameter2Fixed = False
-        self.parameter3Fixed = False
-        self.parameter4Fixed = False
-        self.parameter5Fixed = False
 
 
     def ConfigureGUIForEachModel(self):
