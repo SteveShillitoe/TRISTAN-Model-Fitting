@@ -741,7 +741,7 @@ class ModelFittingApp(QWidget):
         corresponding value in the global list _optimisedParamaterList
         is updated, which is also the source of this data.
         """
-        logger.info('Function CurveFitSetConfIntLabel called.')
+        logger.info('Function CurveFitSetConfIntLabel called with paramNumber={} nextIndex={}'.format(paramNumber, nextIndex))
         try:
             objSpinBox = getattr(self, 'spinBoxParameter' + str(paramNumber))
             objCheckBox = getattr(self, 'ckbParameter' + str(paramNumber))
@@ -771,8 +771,8 @@ class ModelFittingApp(QWidget):
                 confidenceStr = '[{}     {}]'.format(lowerLimit, upperLimit)
                 objLabel.setText(confidenceStr)
         except Exception as e:
-            print('Error in function CurveFitSetConfIntLabel: ' + str(e))
-            logger.error('Error in function CurveFitSetConfIntLabel: ' + str(e))
+            print('Error in function CurveFitSetConfIntLabel with paramNumber={} nextIndex={}'.format(paramNumber, nextIndex) + str(e))
+            logger.error('Error in function CurveFitSetConfIntLabel with paramNumber={} nextIndex={}'.format(paramNumber, nextIndex) + str(e))
 
     def CurveFitProcessOptimumParameters(self):
         """Displays the confidence limits for the optimum parameter values 
@@ -1030,7 +1030,7 @@ class ModelFittingApp(QWidget):
             logger.info('Function CurveFitCalculate95ConfidenceLimits called: numDataPoints ={}, numParams={}, optimumParams={}, paramCovarianceMatrix={}'
                         .format(numDataPoints, numParams, optimumParams, paramCovarianceMatrix))
             alpha = 0.05 #95% confidence interval = 100*(1-alpha)
-            originalOptimumParams = optimumParams
+            originalOptimumParams = optimumParams.copy()
             originalNumParams = numParams
 
             #Check for fixed parameters.
@@ -1066,18 +1066,24 @@ class ModelFittingApp(QWidget):
             
             #Now insert fixed parameters into _optimisedParameterList
             #if there are any.
-            for paramNum in range(1, originalNumParams + 1):
-                objCheckBox = getattr(self, 'ckbParameter' + str(paramNum))
+            for index in range(originalNumParams):
+                objCheckBox = getattr(self, 'ckbParameter' + str(index + 1))
                 if objCheckBox.isVisible() and objCheckBox.isChecked():
                     #Add the fixed optimum parameter value to a list
-                    fixedParamValue = originalOptimumParams[paramNum - 1]
-                    tempList = [fixedParamValue,'','']
-                    _optimisedParamaterList.insert(paramNum - 1, tempList)
+                    fixedParamValue = originalOptimumParams[index]
+                    lower = ''
+                    upper = ''
+                    tempList = [fixedParamValue, lower, upper]
+                    #Now add this list to the list of lists 
+                    print('_optimisedParamaterList {} before insert at {}'. format(_optimisedParamaterList, index ))
+                    print('when len(_optimisedParamaterList)={}'.format(len(_optimisedParamaterList)))
+                    _optimisedParamaterList.insert(index, tempList)
             
             #print('The optimised parameter LIST ={}'.format(_optimisedParamaterList))
             logger.info('In CurveFitCalculate95ConfidenceLimits, _optimisedParamaterList = {}'.format(_optimisedParamaterList))
         except Exception as e:
             print('Error in function CurveFitCalculate95ConfidenceLimits ' + str(e))
+       
             logger.error('Error in function CurveFitCalculate95ConfidenceLimits '  + str(e))  
     
     def CurveFitGetParameterData(self, modelName, paramNumber):

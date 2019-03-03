@@ -121,21 +121,13 @@ def CurveFit(functionName: str, paramList, times, AIFConcs,
         params.add_many(*paramList)
         #Uncomment the statement below to check parameters 
         #loaded ok into the Parameter object
-       #print(params.pretty_print())
+        print(params.pretty_print())
 
         objModel = Model(modelFunction)
         #print(objModel.param_names, objModel.independent_vars)
 
-        result = objModel.fit(concROI, params=params, xData2DArray=timeInputConcs2DArray)
-        
-        #print('best fit={}'.format(result.best_fit))
-        #print('best values={}'.format(result.best_values
-        print('Covar')
-        print(result.covar)
-       # print('CI REPORT')
-        #print(result.conf_interval())
-        #print(result.ci_report())
-        #print(lmfit.conf_interval(result, result))
+        result = objModel.fit(data=concROI, params=params, xData2DArray=timeInputConcs2DArray)
+       
         return result.best_values, result.covar
             
     except ValueError as ve:
