@@ -121,7 +121,7 @@ def CurveFit(functionName: str, paramList, times, AIFConcs,
         params.add_many(*paramList)
         #Uncomment the statement below to check parameters 
         #loaded ok into the Parameter object
-        print(params.pretty_print())
+        #print(params.pretty_print())
 
         objModel = Model(modelFunction)
         #print(objModel.param_names, objModel.independent_vars)

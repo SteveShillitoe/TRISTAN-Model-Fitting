@@ -1075,11 +1075,8 @@ class ModelFittingApp(QWidget):
                     upper = ''
                     tempList = [fixedParamValue, lower, upper]
                     #Now add this list to the list of lists 
-                    print('_optimisedParamaterList {} before insert at {}'. format(_optimisedParamaterList, index ))
-                    print('when len(_optimisedParamaterList)={}'.format(len(_optimisedParamaterList)))
                     _optimisedParamaterList.insert(index, tempList)
             
-            #print('The optimised parameter LIST ={}'.format(_optimisedParamaterList))
             logger.info('In CurveFitCalculate95ConfidenceLimits, _optimisedParamaterList = {}'.format(_optimisedParamaterList))
         except Exception as e:
             print('Error in function CurveFitCalculate95ConfidenceLimits ' + str(e))
@@ -1219,9 +1216,6 @@ class ModelFittingApp(QWidget):
             #Determine 95% confidence limits.
             numDataPoints = arrayROIConcs.size
             numParams = len(optimumParamsList)
-            #print('optimumParamsDict={}, optimumParamsList={} and numParams={}'
-            #      .format(optimumParamsDict, optimumParamsList, numParams))
-            
             if paramCovarianceMatrix.size:
                 self.CurveFitCalculate95ConfidenceLimits(numDataPoints, numParams, 
                                     optimumParamsList, paramCovarianceMatrix)
