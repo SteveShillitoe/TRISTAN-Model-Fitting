@@ -918,7 +918,8 @@ class ModelFittingApp(QWidget):
         Gets the value in a parameter spinbox. Converts a % to a decimal 
         fraction if necessary. This value is then appended to an array.
         """
-        logger.info('Function GetSpinBoxValue called.')
+        logger.info('Function GetSpinBoxValue called when paramNumber={} and initialParametersArray={}.'
+                    .format(paramNumber,initialParametersArray))
         try:
             objSpinBox = getattr(self, 'spinBoxParameter' + str(paramNumber))
             parameter = objSpinBox.value()
@@ -1060,9 +1061,13 @@ class ModelFittingApp(QWidget):
                 #Calculate 95% confidence interval for parameter 
                 #allowed to vary and add these to a list
                 sigma = var**0.5
+                lower = numParams - sigma*tval
+                upper = numParams + sigma*tval
                 _optimisedParamaterList[counter].append(numParams)
-                _optimisedParamaterList[counter].append(numParams - sigma*tval)
-                _optimisedParamaterList[counter].append(numParams + sigma*tval)
+                _optimisedParamaterList[counter].append(lower)
+                _optimisedParamaterList[counter].append(upper)
+                logger.info('Just added value {}, lower {}, upper {} to _optimisedParamaterList at position{}'
+                            .format(numParams, lower, upper, counter))
             
             #Now insert fixed parameters into _optimisedParameterList
             #if there are any.
@@ -1075,9 +1080,11 @@ class ModelFittingApp(QWidget):
                     upper = ''
                     tempList = [fixedParamValue, lower, upper]
                     #Now add this list to the list of lists 
-                    _optimisedParamaterList.insert(index, tempList)
+                    _optimisedParamaterList.insert(index - 1, tempList)
+                    logger.info('Just added fixed value {} to _optimisedParamaterList at position{}'
+                            .format(fixedParamValue, index - 1))
             
-            logger.info('In CurveFitCalculate95ConfidenceLimits, _optimisedParamaterList = {}'.format(_optimisedParamaterList))
+            logger.info('Leaving CurveFitCalculate95ConfidenceLimits, _optimisedParamaterList = {}'.format(_optimisedParamaterList))
         except Exception as e:
             print('Error in function CurveFitCalculate95ConfidenceLimits ' + str(e))
        
@@ -1248,7 +1255,8 @@ class ModelFittingApp(QWidget):
                     after curve fitting.  
         """
         try:
-            logger.info('Function GetValuesForEachParameter called.')
+            logger.info('Function GetValuesForEachParameter called when paramNumber={}, index={}.'
+                        .format(paramNumber, index))
             parameterList = []
             objLabel = getattr(self, 'labelParameter' + str(paramNumber))
             objSpinBox = getattr(self, 'spinBoxParameter' + str(paramNumber))
