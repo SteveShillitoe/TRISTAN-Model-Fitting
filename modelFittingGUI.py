@@ -1041,9 +1041,8 @@ class ModelFittingApp(QWidget):
                 objCheckBox = getattr(self, 'ckbParameter' + str(paramNumber))
                 if objCheckBox.isChecked():
                     numParams -=1
-                    del optimumParams[paramNumber - 1]
-                
-            #print('numParams= {}, optimum params = {}'.format(numParams,optimumParams))
+                    del optimumParams[paramNumber - (originalNumParams - numParams)]
+                    
             numDegsOfFreedom = max(0, numDataPoints - numParams) 
         
             #student-t value for the degrees of freedom and the confidence level
@@ -1058,7 +1057,7 @@ class ModelFittingApp(QWidget):
                 _optimisedParamaterList.append([])
            
             for counter, numParams, var in zip(range(numDataPoints), optimumParams, np.diag(paramCovarianceMatrix)):
-                #Calculate 95% confidence interval for parameter 
+                #Calculate 95% confidence interval for each parameter 
                 #allowed to vary and add these to a list
                 sigma = var**0.5
                 lower = numParams - sigma*tval
@@ -1080,9 +1079,9 @@ class ModelFittingApp(QWidget):
                     upper = ''
                     tempList = [fixedParamValue, lower, upper]
                     #Now add this list to the list of lists 
-                    _optimisedParamaterList.insert(index - 1, tempList)
-                    logger.info('Just added fixed value {} to _optimisedParamaterList at position{}'
-                            .format(fixedParamValue, index - 1))
+                    _optimisedParamaterList.insert(index, tempList)
+                    logger.info('Just added temp list {} to _optimisedParamaterList at position{}'
+                            .format(tempList, index))
             
             logger.info('Leaving CurveFitCalculate95ConfidenceLimits, _optimisedParamaterList = {}'.format(_optimisedParamaterList))
         except Exception as e:
