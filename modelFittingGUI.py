@@ -1092,6 +1092,9 @@ class ModelFittingApp(QWidget):
                             .format(tempList, index))
             
             logger.info('Leaving CurveFitCalculate95ConfidenceLimits, self.optimisedParamaterList = {}'.format(self.optimisedParamaterList))
+        except RuntimeError as rte:
+            print('Runtime Error in function CurveFitCalculate95ConfidenceLimits ' + str(rte))
+            logger.error('Runtime Error in function CurveFitCalculate95ConfidenceLimits '  + str(rte))  
         except Exception as e:
             print('Error in function CurveFitCalculate95ConfidenceLimits ' + str(e))
        
