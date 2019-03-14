@@ -178,21 +178,7 @@ from PDFWriter import PDF
 from ExcelWriter import ExcelWriter
 
 from XMLReader import XMLReader
-
-#Initialise global dictionary to hold concentration data
-_concentrationData={}
-#Initialise global list to hold concentrations calculated using the selected model
-_listModel = []
-#Initialise global string variable to hold the name of the data file.
-#Needs to be global for printing in the PDF report
-_dataFileName = ''
-#Initialise global list that holds results of curve fitting
-_optimisedParamaterList = []
-#Global boolean that indicates if the curve fitting routine has been just run or not.
-#Used by the PDF report writer to determine if displaying confidence limits is appropriate
-_boolCurveFittingDone = False
-#Create global XML reader object to process XML configuration file
-_objXMLReader = XMLReader()  
+ 
 ########################################
 ##              CONSTANTS             ##
 ########################################
@@ -253,8 +239,31 @@ class ModelFittingApp(QWidget):
         width, height = self.GetScreenResolution()
         self.setGeometry(width*0.05, height*0.05, width*0.9, height*0.9)
         self.setWindowFlags(QtCore.Qt.WindowMinMaxButtonsHint |  QtCore.Qt.WindowCloseButtonHint)
-        #Store path to time/concentration data files for use in batch processing.
-        self.directory = ""  
+        
+        #Store path to time/concentration data files for use 
+        #in batch processing.
+        self.dataFileDirectory = ""
+        
+        #Name of current loaded data file
+        self.dataFileName = ''
+        
+        #Boolean variable indicating that the last 
+        #change to the model parameters was caused
+        #by curve fitting.
+        self.isCurveFittingDone = False
+
+        #Dictionary to store concentration data from the data input file
+        self.concentrationData={} 
+        
+        #List to store concentrations calculated by the models
+        self.listModel = [] 
+        
+        #Stores optimum parameters from Curve fitting
+        self.optimisedParamaterList = [] 
+        
+        #XML reader object to process XML configuration file
+        self.objXMLReader = XMLReader() 
+        
         self.ApplyStyleSheet()
        
         #Setup the layouts, the containers for widgets
@@ -531,7 +540,7 @@ class ModelFittingApp(QWidget):
         self.spinBoxParameter3.valueChanged.connect(lambda: self.PlotConcentrations('spinBoxParameter3')) 
         self.spinBoxParameter4.valueChanged.connect(lambda: self.PlotConcentrations('spinBoxParameter4'))
         self.spinBoxParameter5.valueChanged.connect(lambda: self.PlotConcentrations('spinBoxParameter5'))
-        #Set a global boolean variable, _boolCurveFittingDone to false to 
+        #Set boolean variable, self.isCurveFittingDone to false to 
         #indicate that the value of a model parameter
         #has been changed manually rather than by curve fitting
         self.spinBoxParameter1.valueChanged.connect(self.OptimumParameterChanged) 
@@ -570,7 +579,7 @@ class ModelFittingApp(QWidget):
         self.btnFitModel.setToolTip('Use non-linear least squares to fit the selected model to the data')
         self.btnFitModel.hide()
         modelHorizontalLayoutFitModelBtn.addWidget(self.btnFitModel)
-        self.btnFitModel.clicked.connect(self.RunCurveFit)
+        self.btnFitModel.clicked.connect(self.CurveFit)
         
         self.btnSaveCSV = QPushButton('Save plot data to CSV file')
         self.btnSaveCSV.setToolTip('Save the data plotted on the graph to a CSV file')
@@ -696,7 +705,7 @@ class ModelFittingApp(QWidget):
             shortModelName = str(self.cmbModels.currentText())
         
             if shortModelName != 'Select a model':
-                imageName = _objXMLReader.getImageName(shortModelName)
+                imageName = self.objXMLReader.getImageName(shortModelName)
                 if imageName:
                     imagePath = IMAGE_FOLDER + imageName
                     pixmapModelImage = QPixmap(imagePath)
@@ -707,7 +716,7 @@ class ModelFittingApp(QWidget):
                           QtCore.Qt.KeepAspectRatio, QtCore.Qt.SmoothTransformation)
                     self.lblModelImage.setPixmap(pixmapModelImage)
                 
-                    longModelName = _objXMLReader.getLongModelName(shortModelName)
+                    longModelName = self.objXMLReader.getLongModelName(shortModelName)
                     self.lblModelName.setText(longModelName)
                 else:
                     self.lblModelImage.clear()
@@ -721,77 +730,80 @@ class ModelFittingApp(QWidget):
             logger.error('Error in function DisplayModelImage: ' + str(e))  
 
     def OptimumParameterChanged(self):
-        """Sets global boolean _boolCurveFittingDone to false if the 
+        """Sets boolean self.isCurveFittingDone to false if the 
         plot of the model curve is changed by manually changing the values of 
         model input parameters rather than by running curve fitting.
         
         Also, clears the labels that display the optimum value of each 
         parameter and its confidence inteval."""
 
-        global _boolCurveFittingDone
-        _boolCurveFittingDone=False
+        self.isCurveFittingDone=False
         self.ClearOptimisedParamaterList('Function-OptimumParameterChanged')
 
-    def PopulateConfIntervalLabel(self, paramNumber, nextIndex):
-        """Called by the ProcessOptimumParametersAfterCurveFit function,
+    def CurveFitSetConfIntLabel(self, paramNumber, nextIndex):
+        """Called by the CurveFitProcessOptimumParameters function,
         this function populates the label that displays the upper and lower
         confidence limits for each calculated optimum parameter value.
 
         Where necessary decimal fractions are converted to % and the
-        corresponding value in the global list _optimisedParamaterList
+        corresponding value in the global list self.optimisedParamaterList
         is updated, which is also the source of this data.
         """
-        logger.info('Function PopulateConfIntervalLabel called.')
+        logger.info('Function CurveFitSetConfIntLabel called with paramNumber={} nextIndex={}'.format(paramNumber, nextIndex))
         try:
             objSpinBox = getattr(self, 'spinBoxParameter' + str(paramNumber))
+            objCheckBox = getattr(self, 'ckbParameter' + str(paramNumber))
             objLabel = getattr(self, 'lblParam' + str(paramNumber) + 'ConfInt')
         
-            parameterValue = _optimisedParamaterList[nextIndex][0]
-            lowerLimit = _optimisedParamaterList[nextIndex][1]
-            upperLimit = _optimisedParamaterList[nextIndex][2]
+            parameterValue = self.optimisedParamaterList[nextIndex][0]
+            lowerLimit = self.optimisedParamaterList[nextIndex][1]
+            upperLimit = self.optimisedParamaterList[nextIndex][2]
             if objSpinBox.suffix() == '%':
                 parameterValue = parameterValue * 100.0
-                lowerLimit = lowerLimit * 100.0
-                upperLimit = upperLimit * 100.0
+                if not objCheckBox.isChecked():
+                    lowerLimit = lowerLimit * 100.0
+                    upperLimit = upperLimit * 100.0
         
             parameterValue = round(parameterValue, 3)
-            lowerLimit = round(lowerLimit, 3)
-            upperLimit = round(upperLimit, 3)
+            if not objCheckBox.isChecked():
+                lowerLimit = round(lowerLimit, 3)
+                upperLimit = round(upperLimit, 3)
             #For display in the PDF report, 
             #overwrite decimal volume fraction values 
-            #in  _optimisedParamaterList with the % equivalent
-            _optimisedParamaterList[nextIndex][0] = parameterValue
-            _optimisedParamaterList[nextIndex][1] = lowerLimit
-            _optimisedParamaterList[nextIndex][2] = upperLimit
+            #in  self.optimisedParamaterList with the % equivalent
+            self.optimisedParamaterList[nextIndex][0] = parameterValue
+            self.optimisedParamaterList[nextIndex][1] = lowerLimit
+            self.optimisedParamaterList[nextIndex][2] = upperLimit
            
-            confidenceStr = '[{}     {}]'.format(lowerLimit, upperLimit)
-            objLabel.setText(confidenceStr)
+            if not objCheckBox.isChecked():
+                confidenceStr = '[{}     {}]'.format(lowerLimit, upperLimit)
+                objLabel.setText(confidenceStr)
         except Exception as e:
-            print('Error in function PopulateConfIntervalLabel: ' + str(e))
-            logger.error('Error in function PopulateConfIntervalLabel: ' + str(e))
+            print('Error in function CurveFitSetConfIntLabel with paramNumber={} nextIndex={}'.format(paramNumber, nextIndex) + str(e))
+            logger.error('Error in function CurveFitSetConfIntLabel with paramNumber={} nextIndex={}'.format(paramNumber, nextIndex) + str(e))
 
-    def ProcessOptimumParametersAfterCurveFit(self):
+    def CurveFitProcessOptimumParameters(self):
         """Displays the confidence limits for the optimum parameter values 
            resulting from curve fitting on the right-hand side of the GUI."""
         try:
-            logger.info('Function ProcessOptimumParametersAfterCurveFit called.')
+            logger.info('Function CurveFitProcessOptimumParameters called.')
             self.lblConfInt.show()
             modelName = str(self.cmbModels.currentText())
-            numParams = _objXMLReader.getNumberOfParameters(modelName)
+            numParams = self.objXMLReader.getNumberOfParameters(modelName)
             if numParams >= 1:
-                self.PopulateConfIntervalLabel(1,0)
+                self.CurveFitSetConfIntLabel(1,0)
             if numParams >= 2:
-                self.PopulateConfIntervalLabel(2,1)
+                self.CurveFitSetConfIntLabel(2,1)
             if numParams >= 3:
-                self.PopulateConfIntervalLabel(3,2)
+                self.CurveFitSetConfIntLabel(3,2)
             if numParams >= 4:
-                self.PopulateConfIntervalLabel(4,3)
+                self.CurveFitSetConfIntLabel(4,3)
             if numParams >= 5:
-                self.PopulateConfIntervalLabel(5,4)
+                self.CurveFitSetConfIntLabel(5,4)
             
         except Exception as e:
-            print('Error in function ProcessOptimumParametersAfterCurveFit: ' + str(e))
-            logger.error('Error in function ProcessOptimumParametersAfterCurveFit: ' + str(e))
+            print('Error in function CurveFitProcessOptimumParameters: ' + str(e))
+            logger.error('Error in function CurveFitProcessOptimumParameters: ' + str(e))
 
     def ClearOptimumParamaterConfLimitsOnGUI(self):
         """Clears the contents of the labels on the left handside of the GUI 
@@ -828,7 +840,7 @@ class ModelFittingApp(QWidget):
             
                 ROI = str(self.cmbROI.currentText())
                 AIF = str(self.cmbAIF.currentText())
-                if self.cmbVIF.isVisible() == True:
+                if self.cmbVIF.isVisible():
                     VIF = str(self.cmbVIF.currentText())
                     boolIncludeVIF = True
                 else:
@@ -844,14 +856,14 @@ class ModelFittingApp(QWidget):
                         #write header row
                         writeCSV.writerow(['Time (min)', ROI, AIF, VIF, modelName + ' model'])
                         #Write rows of data
-                        for i, time in enumerate(_concentrationData['time']):
-                            writeCSV.writerow([time, _concentrationData[ROI][i], _concentrationData[AIF][i], _concentrationData[VIF][i], _listModel[i]])
+                        for i, time in enumerate(self.concentrationData['time']):
+                            writeCSV.writerow([time, self.concentrationData[ROI][i], self.concentrationData[AIF][i], self.concentrationData[VIF][i], self.listModel[i]])
                     else:
                         #write header row
                         writeCSV.writerow(['Time (min)', ROI, AIF, modelName + ' model'])
                         #Write rows of data
-                        for i, time in enumerate(_concentrationData['time']):
-                            writeCSV.writerow([time, _concentrationData[ROI][i], _concentrationData[AIF][i], _listModel[i]])
+                        for i, time in enumerate(self.concentrationData['time']):
+                            writeCSV.writerow([time, self.concentrationData[ROI][i], self.concentrationData[AIF][i], self.listModel[i]])
                     csvfile.close()
 
         except csv.Error:
@@ -869,10 +881,10 @@ class ModelFittingApp(QWidget):
 
     def ClearOptimisedParamaterList(self, callingControl: str):
         """Clears results of curve fitting from the GUI and from the global list
-        _optimisedParamaterList """
+        self.optimisedParamaterList """
         try:
             logger.info('ClearOptimisedParamaterList called from ' + callingControl)
-            _optimisedParamaterList.clear()
+            self.optimisedParamaterList.clear()
             self.ClearOptimumParamaterConfLimitsOnGUI()
         except Exception as e:
             print('Error in function ClearOptimisedParamaterList: ' + str(e)) 
@@ -890,7 +902,7 @@ class ModelFittingApp(QWidget):
             AIF = str(self.cmbAIF.currentText())
             VIF = str(self.cmbVIF.currentText())
             modelName = str(self.cmbModels.currentText())
-            modelInletType = _objXMLReader.getModelInletType(modelName)
+            modelInletType = self.objXMLReader.getModelInletType(modelName)
             logger.info("Function DisplayFitModelAndSaveCSVButtons called. Model is " + modelName)
             if modelInletType == 'single':
                 if ROI != 'Please Select' and AIF != 'Please Select':
@@ -914,7 +926,8 @@ class ModelFittingApp(QWidget):
         Gets the value in a parameter spinbox. Converts a % to a decimal 
         fraction if necessary. This value is then appended to an array.
         """
-        logger.info('Function GetSpinBoxValue called.')
+        logger.info('Function GetSpinBoxValue called when paramNumber={} and initialParametersArray={}.'
+                    .format(paramNumber,initialParametersArray))
         try:
             objSpinBox = getattr(self, 'spinBoxParameter' + str(paramNumber))
             parameter = objSpinBox.value()
@@ -939,7 +952,7 @@ class ModelFittingApp(QWidget):
             initialParametersArray = []
 
             modelName = str(self.cmbModels.currentText())
-            numParams = _objXMLReader.getNumberOfParameters(modelName)
+            numParams = self.objXMLReader.getNumberOfParameters(modelName)
 
             if numParams >= 1:
                 self.GetSpinBoxValue(1, initialParametersArray)
@@ -988,7 +1001,7 @@ class ModelFittingApp(QWidget):
             logger.info('Function SetParameterSpinBoxValues called with parameterList = {}'.format(parameterList))
            
             modelName = str(self.cmbModels.currentText())
-            numParams = _objXMLReader.getNumberOfParameters(modelName)
+            numParams = self.objXMLReader.getNumberOfParameters(modelName)
 
             if numParams >= 1:
                 self.SetParameterSpinBoxValue(1, 0, parameterList)
@@ -1005,11 +1018,11 @@ class ModelFittingApp(QWidget):
             print('Error in function SetParameterSpinBoxValues ' + str(e))
             logger.error('Error in function SetParameterSpinBoxValues '  + str(e))
 
-    def Calculate95ConfidenceLimits(self, numDataPoints: int, numParams: int, 
+    def CurveFitCalculate95ConfidenceLimits(self, numDataPoints: int, numParams: int, 
                                     optimumParams, paramCovarianceMatrix):
         """Calculates the 95% confidence limits of optimum parameter values 
         resulting from curve fitting. Results are stored in 
-        global _optimisedParamaterList that is used in the creation of the PDF report
+        global self.optimisedParamaterList that is used in the creation of the PDF report
         and to display results on the GUI.
         
         Input Parameters
@@ -1023,45 +1036,159 @@ class ModelFittingApp(QWidget):
                         calculated during curve fitting.
         """
         try:
-            logger.info('Function Calculate95ConfidenceLimits called: numDataPoints ={}, numParams={}, optimumParams={}, paramCovarianceMatrix={}'
+            logger.info('Function CurveFitCalculate95ConfidenceLimits called: numDataPoints ={}, numParams={}, optimumParams={}, paramCovarianceMatrix={}'
                         .format(numDataPoints, numParams, optimumParams, paramCovarianceMatrix))
             alpha = 0.05 #95% confidence interval = 100*(1-alpha)
-            degsOfFreedom = max(0, numDataPoints - numParams) #Number of degrees of freedom
+            originalOptimumParams = optimumParams.copy()
+            originalNumParams = numParams
+
+            #Check for fixed parameters.
+            #Removed fixed parameters from the optimum parameter list
+            for paramNumber in range(1, len(optimumParams)+ 1):
+                #Make parameter checkbox
+                objCheckBox = getattr(self, 'ckbParameter' + str(paramNumber))
+                if objCheckBox.isChecked():
+                    numParams -=1
+                    del optimumParams[paramNumber - (originalNumParams - numParams)]
+                    
+            numDegsOfFreedom = max(0, numDataPoints - numParams) 
         
             #student-t value for the degrees of freedom and the confidence level
-            tval = t.ppf(1.0-alpha/2., degsOfFreedom)
+            tval = t.ppf(1.0-alpha/2., numDegsOfFreedom)
         
             #Remove results of previous curve fitting
-            _optimisedParamaterList.clear()
-            #_optimisedParamaterList is a list of lists. 
-            #Add an empty list for each parameter to hold its value and confidence limits
+            self.optimisedParamaterList.clear()
+            #self.optimisedParamaterList is a list of lists. 
+            #Add an empty list for each parameter to hold its value 
+            #and confidence limits
             for i in range(numParams):
-                _optimisedParamaterList.append([])
+                self.optimisedParamaterList.append([])
            
             for counter, numParams, var in zip(range(numDataPoints), optimumParams, np.diag(paramCovarianceMatrix)):
+                #Calculate 95% confidence interval for each parameter 
+                #allowed to vary and add these to a list
                 sigma = var**0.5
-                _optimisedParamaterList[counter].append(round(numParams,3))
-                _optimisedParamaterList[counter].append(round((numParams - sigma*tval), 3))
-                _optimisedParamaterList[counter].append(round((numParams + sigma*tval), 3))
-                
-            logger.info('In Calculate95ConfidenceLimits, _optimisedParamaterList = {}'.format(_optimisedParamaterList))
+                lower = numParams - sigma*tval
+                upper = numParams + sigma*tval
+                self.optimisedParamaterList[counter].append(numParams)
+                self.optimisedParamaterList[counter].append(lower)
+                self.optimisedParamaterList[counter].append(upper)
+                logger.info('Just added value {}, lower {}, upper {} to self.optimisedParamaterList at position{}'
+                            .format(numParams, lower, upper, counter))
+            
+            #Now insert fixed parameters into _optimisedParameterList
+            #if there are any.
+            for index in range(originalNumParams):
+                objCheckBox = getattr(self, 'ckbParameter' + str(index + 1))
+                if objCheckBox.isVisible() and objCheckBox.isChecked():
+                    #Add the fixed optimum parameter value to a list
+                    fixedParamValue = originalOptimumParams[index]
+                    lower = ''
+                    upper = ''
+                    tempList = [fixedParamValue, lower, upper]
+                    #Now add this list to the list of lists 
+                    self.optimisedParamaterList.insert(index, tempList)
+                    logger.info('Just added temp list {} to self.optimisedParamaterList at position{}'
+                            .format(tempList, index))
+            
+            logger.info('Leaving CurveFitCalculate95ConfidenceLimits, self.optimisedParamaterList = {}'.format(self.optimisedParamaterList))
+        except RuntimeError as rte:
+            print('Runtime Error in function CurveFitCalculate95ConfidenceLimits ' + str(rte))
+            logger.error('Runtime Error in function CurveFitCalculate95ConfidenceLimits '  + str(rte))  
         except Exception as e:
-            print('Error in function Calculate95ConfidenceLimits ' + str(e))
-            logger.error('Error in function Calculate95ConfidenceLimits '  + str(e))  
+            print('Error in function CurveFitCalculate95ConfidenceLimits ' + str(e))
+       
+            logger.error('Error in function CurveFitCalculate95ConfidenceLimits '  + str(e))  
+    
+    def CurveFitGetParameterData(self, modelName, paramNumber):
+        """
+        Returns a tuple containing all data associated with a parameter
+        that is required by lmfit curve fitting; namely,
+        (parameter name, parameter value, fix parameter value (True/False),
+        minimum value, maximum value, expression, step size)
 
-    def RunCurveFit(self):
+        expression & step size are set to None.
+
+        Input Parameters
+        ----------------
+        modelName  - Short name of the selected model.
+        paramNumber - Number, 1-5, of the parameter.
+        """
+
+        logger.info('Function CurveFitGetParameterData called with modelName={} and paramNumber={}.'
+                        .format(modelName, paramNumber))
+        try:
+            paramShortName =self.objXMLReader.getParameterShortName(modelName, paramNumber)
+            isPercentage, _ =self.objXMLReader.getParameterLabel(modelName, paramNumber)
+            lower, upper = self.objXMLReader.getParameterConstraints(modelName, paramNumber)
+        
+            objSpinBox = getattr(self, 'spinBoxParameter' + str(paramNumber))
+            value = objSpinBox.value()
+            if isPercentage:
+                value = value/100
+                lower = lower/100
+                upper = upper/100
+            
+            vary = True
+            objCheckBox = getattr(self, 'ckbParameter' + str(paramNumber))
+            if objCheckBox.isChecked():
+                vary = False
+    
+            tempTuple =(paramShortName, value, vary, lower, upper, None, None)
+            
+            return tempTuple
+
+        except Exception as e:
+            print('Error in function CurveFitGetParameterData: ' + str(e) )
+            logger.error('Error in function CurveFitGetParameterData: ' + str(e) )
+
+    def CurveFitCollateParameterData(self)-> List[float]:
+        """Forms a 1D array of model input parameters.  
+            
+            Returns
+            -------
+                A list of model input parameter values.
+            """
+        try:
+            logger.info('Function CurveFitCollateParameterData called.')
+            parameterDataList = []
+
+            modelName = str(self.cmbModels.currentText())
+            numParams = self.objXMLReader.getNumberOfParameters(modelName)
+
+            if numParams >= 1:
+                parameterDataList.append(
+                    self.CurveFitGetParameterData(modelName, 1))
+            if numParams >= 2:
+                parameterDataList.append(
+                    self.CurveFitGetParameterData(modelName, 2))
+            if numParams >= 3:
+                parameterDataList.append(
+                    self.CurveFitGetParameterData(modelName, 3))
+            if numParams >= 4:
+                parameterDataList.append(
+                    self.CurveFitGetParameterData(modelName, 4))
+            if numParams >= 5:
+                parameterDataList.append(
+                    self.CurveFitGetParameterData(modelName, 5))
+
+            return parameterDataList
+        except Exception as e:
+            print('Error in function CurveFitCollateParameterData ' + str(e))
+            logger.error('Error in function CurveFitCollateParameterData '  + str(e))
+
+    def CurveFit(self):
         """Performs curve fitting to fit AIF (and VIF) data to the ROI curve.
         Then displays the optimum model input parameters on the GUI and calls 
         the plot function to display the line of best fit on the graph on the GUI
         when these parameter values are input to the selected model.
         Also, takes results from curve fitting (optimal parameter values) and 
         determines their 95% confidence limits which are stored in the global list
-        _optimisedParamaterList.
+        self.optimisedParamaterList.
         """
-        global _boolCurveFittingDone
         try:
-            initialParametersArray = self.BuildParameterArray()
-
+            paramList = self.CurveFitCollateParameterData()
+            
             #Get name of region of interest, arterial and venal input functions
             ROI = str(self.cmbROI.currentText())
             AIF = str(self.cmbAIF.currentText())
@@ -1069,12 +1196,12 @@ class ModelFittingApp(QWidget):
 
             #Get arrays of data corresponding to the above 3 regions 
             #and the time over which the measurements were made.
-            arrayTimes = np.array(_concentrationData['time'], dtype='float')
-            arrayROIConcs = np.array(_concentrationData[ROI], dtype='float')
-            arrayAIFConcs = np.array(_concentrationData[AIF], dtype='float')
+            arrayTimes = np.array(self.concentrationData['time'], dtype='float')
+            arrayROIConcs = np.array(self.concentrationData[ROI], dtype='float')
+            arrayAIFConcs = np.array(self.concentrationData[AIF], dtype='float')
 
             if VIF != 'Please Select':
-                arrayVIFConcs = np.array(_concentrationData[VIF], dtype='float')
+                arrayVIFConcs = np.array(self.concentrationData[VIF], dtype='float')
             else:
                 #Create empty dummy array to act as place holder in  
                 #ModelFunctionsHelper.CurveFit function call 
@@ -1082,37 +1209,40 @@ class ModelFittingApp(QWidget):
             
             #Get the name of the model to be fitted to the ROI curve
             modelName = str(self.cmbModels.currentText())
-            functionName = _objXMLReader.getFunctionName(modelName)
-            inletType = _objXMLReader.getModelInletType(modelName)
-            optimumParams, paramCovarianceMatrix = ModelFunctionsHelper.CurveFit(
-                functionName, arrayTimes, 
+            functionName = self.objXMLReader.getFunctionName(modelName)
+            inletType = self.objXMLReader.getModelInletType(modelName)
+            optimumParamsDict, paramCovarianceMatrix = ModelFunctionsHelper.CurveFit(
+                functionName, paramList, arrayTimes, 
                 arrayAIFConcs, arrayVIFConcs, arrayROIConcs,
-                initialParametersArray, inletType)
+                inletType)
             
-            _boolCurveFittingDone = True 
-            logger.info('ModelFunctionsHelper.CurveFit returned optimum parameters {} with confidence levels {}'.format(optimumParams, paramCovarianceMatrix))
+            self.isCurveFittingDone = True 
+            logger.info('ModelFunctionsHelper.CurveFit returned optimum parameters {}'
+                        .format(optimumParamsDict))
             
             #Display results of curve fitting  
             #(optimum model parameter values) on GUI.
-            self.SetParameterSpinBoxValues(optimumParams)
+            optimumParamsList = list(optimumParamsDict.values())
+            self.ClearOptimumParamaterConfLimitsOnGUI()
+            self.SetParameterSpinBoxValues(optimumParamsList)
 
             #Plot the best curve on the graph
-            self.PlotConcentrations('RunCurveFit')
+            self.PlotConcentrations('CurveFit')
 
             #Determine 95% confidence limits.
             numDataPoints = arrayROIConcs.size
-            numParams = len(initialParametersArray)
-            self.Calculate95ConfidenceLimits(numDataPoints, numParams, 
-                                    optimumParams, paramCovarianceMatrix)
-            
-            self.ProcessOptimumParametersAfterCurveFit()
+            numParams = len(optimumParamsList)
+            if paramCovarianceMatrix.size:
+                self.CurveFitCalculate95ConfidenceLimits(numDataPoints, numParams, 
+                                    optimumParamsList, paramCovarianceMatrix)
+                self.CurveFitProcessOptimumParameters()
             
         except ValueError as ve:
-            print ('Value Error: RunCurveFit with model ' + modelName + ': '+ str(ve))
-            logger.error('Value Error: RunCurveFit with model ' + modelName + ': '+ str(ve))
+            print ('Value Error: CurveFit with model ' + modelName + ': '+ str(ve))
+            logger.error('Value Error: CurveFit with model ' + modelName + ': '+ str(ve))
         except Exception as e:
-            print('Error in function RunCurveFit with model ' + modelName + ': ' + str(e))
-            logger.error('Error in function RunCurveFit with model ' + modelName + ': ' + str(e))
+            print('Error in function CurveFit with model ' + modelName + ': ' + str(e))
+            logger.error('Error in function CurveFit with model ' + modelName + ': ' + str(e))
     
     def GetValuesForEachParameter(self, paramNumber, index,
                     confidenceLimitsArray, parameterDictionary):
@@ -1134,7 +1264,8 @@ class ModelFittingApp(QWidget):
                     after curve fitting.  
         """
         try:
-            logger.info('Function GetValuesForEachParameter called.')
+            logger.info('Function GetValuesForEachParameter called when paramNumber={}, index={}.'
+                        .format(paramNumber, index))
             parameterList = []
             objLabel = getattr(self, 'labelParameter' + str(paramNumber))
             objSpinBox = getattr(self, 'spinBoxParameter' + str(paramNumber))
@@ -1176,7 +1307,7 @@ class ModelFittingApp(QWidget):
                         .format(confidenceLimitsArray))
             parameterDictionary = {}
             modelName = str(self.cmbModels.currentText())
-            numParams = _objXMLReader.getNumberOfParameters(modelName)
+            numParams = self.objXMLReader.getNumberOfParameters(modelName)
 
             if numParams >= 1:
                 self.GetValuesForEachParameter(1, 0,
@@ -1231,20 +1362,20 @@ class ModelFittingApp(QWidget):
                     os.remove(reportFileName) 
                     
                 shortModelName = self.cmbModels.currentText()
-                longModelName = _objXMLReader.getLongModelName(shortModelName)
+                longModelName = self.objXMLReader.getLongModelName(shortModelName)
 
                 #Save a png of the concentration/time plot for display 
                 #in the PDF report.
                 self.figure.savefig(fname=IMAGE_NAME, dpi=150)  #dpi=150 so as to get a clear image in the PDF report
                 
-                if _boolCurveFittingDone:
-                    parameterDict = self.BuildParameterDictionary(_optimisedParamaterList)
+                if self.isCurveFittingDone:
+                    parameterDict = self.BuildParameterDictionary(self.optimisedParamaterList)
                 else:
                     parameterDict = self.BuildParameterDictionary()
                              
                 QApplication.setOverrideCursor(QCursor(QtCore.Qt.WaitCursor))
 
-                pdf.CreateAndSavePDFReport(reportFileName, _dataFileName, 
+                pdf.CreateAndSavePDFReport(reportFileName, self.dataFileName, 
                        longModelName, IMAGE_NAME, parameterDict)
                 
                 QApplication.restoreOverrideCursor()
@@ -1269,7 +1400,7 @@ class ModelFittingApp(QWidget):
             #file just loaded
             self.cmbModels.clear()
 
-            tempList = _objXMLReader.getListModelShortNames()
+            tempList = self.objXMLReader.getListModelShortNames()
             self.cmbModels.blockSignals(True)
             self.cmbModels.addItems(tempList)
             self.cmbModels.blockSignals(False)
@@ -1285,7 +1416,7 @@ class ModelFittingApp(QWidget):
         display the 'Load Data FIle' button and build the list 
         of model short names."""
          
-        global _objXMLReader
+        #global self.objXMLReader
         
         self.HideAllControlsOnGUI()
         
@@ -1299,9 +1430,9 @@ class ModelFittingApp(QWidget):
                 filter="*.xml")
 
             if os.path.exists(fullFilePath):
-                _objXMLReader.parseConfigFile(fullFilePath)
+                self.objXMLReader.parseConfigFile(fullFilePath)
                 
-                if _objXMLReader.hasXMLFileParsedOK:
+                if self.objXMLReader.hasXMLFileParsedOK:
                     logger.info('Config file {} loaded'.format(fullFilePath))
                     
                     folderName, configFileName = os.path.split(fullFilePath)
@@ -1336,18 +1467,16 @@ class ModelFittingApp(QWidget):
             -The CSV file must contain at least 3 columns of data separated by commas.
             -The first column in the CSV file must contain time data.
             -The header of the time column must contain the word 'time'."""
-        global _concentrationData
-        global _dataFileName
-
-        #clear the global dictionary of previous data
-        _concentrationData.clear()
+        
+        #clear the dictionary of previous data
+        self.concentrationData.clear()
         
         self.HideAllControlsOnGUI()
         
         try:
             #get the data file in csv format
             #filter parameter set so that the user can only open a csv file
-            dataFileFolder = _objXMLReader.getDataFileFolder()
+            dataFileFolder = self.objXMLReader.getDataFileFolder()
             fullFilePath, _ = QFileDialog.getOpenFileName(parent=self, 
                                                      caption="Select csv file", 
                                                      directory=dataFileFolder,
@@ -1375,42 +1504,42 @@ class ModelFittingApp(QWidget):
                     #Extract data filename from the full data file path
 
                     folderName = os.path.basename(os.path.dirname(fullFilePath))
-                    self.directory, _dataFileName = os.path.split(fullFilePath)
-                    self.statusbar.showMessage('File ' + _dataFileName + ' loaded')
+                    self.dataFileDirectory, self.dataFileName = os.path.split(fullFilePath)
+                    self.statusbar.showMessage('File ' + self.dataFileName + ' loaded')
                     self.lblBatchProcessing.setText("Batch process all CSV data files in folder: " + folderName)
                     
-                    #Column headers form the keys in the dictionary called _concentrationData
+                    #Column headers form the keys in the dictionary called self.concentrationData
                     for header in headers:
                         if 'time' in header:
                             header ='time'
-                        _concentrationData[header.title().lower()]=[]
+                        self.concentrationData[header.title().lower()]=[]
                     #Also add a 'model' key to hold a list of concentrations generated by a model
-                    _concentrationData['model'] = []
+                    self.concentrationData['model'] = []
 
                     #Each key in the dictionary is paired with a list of 
                     #corresponding concentrations 
                     #(except the Time key that is paired with a list of times)
                     for row in readCSV:
                         colNum=0
-                        for key in _concentrationData:
+                        for key in self.concentrationData:
                             #Iterate over columns in the selected row
                             if key != 'model':
                                 if colNum == 0: 
                                     #time column
-                                    _concentrationData['time'].append(float(row[colNum])/60.0)
+                                    self.concentrationData['time'].append(float(row[colNum])/60.0)
                                 else:
-                                    _concentrationData[key].append(float(row[colNum]))
+                                    self.concentrationData[key].append(float(row[colNum]))
                                 colNum+=1           
                 csvfile.close()
 
                 self.ConfigureGUIAfterLoadingData()
                 
         except csv.Error:
-            print('CSV Reader error in function LoadDataFile: file {}, line {}: error={}'.format(_dataFileName, readCSV.line_num, csv.Error))
-            logger.error('CSV Reader error in function LoadDataFile: file {}, line {}: error ={}'.format(_dataFileName, readCSV.line_num, csv.Error))
+            print('CSV Reader error in function LoadDataFile: file {}, line {}: error={}'.format(self.dataFileName, readCSV.line_num, csv.Error))
+            logger.error('CSV Reader error in function LoadDataFile: file {}, line {}: error ={}'.format(self.dataFileName, readCSV.line_num, csv.Error))
         except IOError:
-            print ('IOError in function LoadDataFile: cannot open file' + _dataFileName + ' or read its data')
-            logger.error ('IOError in function LoadDataFile: cannot open file' + _dataFileName + ' or read its data')
+            print ('IOError in function LoadDataFile: cannot open file' + self.dataFileName + ' or read its data')
+            logger.error ('IOError in function LoadDataFile: cannot open file' + self.dataFileName + ' or read its data')
         except RuntimeError as re:
             print('Runtime error in function LoadDataFile: ' + str(re))
             logger.error('Runtime error in function LoadDataFile: ' + str(re))
@@ -1491,7 +1620,7 @@ class ModelFittingApp(QWidget):
             logger.info('Function GetListOrgans called')
             organList =[]
             organList.append('Please Select') #First item at the top of the drop-down list
-            for key in _concentrationData:
+            for key in self.concentrationData:
                 if key.lower() != 'time' and key.lower() != 'model':  
                     organList.append(str(key))       
             return organList
@@ -1547,12 +1676,15 @@ class ModelFittingApp(QWidget):
         modelName  - Short name of the selected model.
         paramNumber - Number, 1-5, of the parameter.
         """
+        
         try:
-            isPercentage, paramName =_objXMLReader.getParameterLabel(modelName, paramNumber)
-            precision = _objXMLReader.getParameterPrecision(modelName, paramNumber)
-            lower, upper = _objXMLReader.getParameterConstraints(modelName, paramNumber)
-            step = _objXMLReader.getParameterStep(modelName, paramNumber)
-            default = _objXMLReader.getParameterDefault(modelName, paramNumber)
+            logger.info('Function populateParameterLabelAndSpinBox called with modelName={}, paramNumber={}'
+                        .format(modelName, paramNumber))
+            isPercentage, paramName =self.objXMLReader.getParameterLabel(modelName, paramNumber)
+            precision = self.objXMLReader.getParameterPrecision(modelName, paramNumber)
+            lower, upper = self.objXMLReader.getParameterConstraints(modelName, paramNumber)
+            step = self.objXMLReader.getParameterStep(modelName, paramNumber)
+            default = self.objXMLReader.getParameterDefault(modelName, paramNumber)
         
             objLabel = getattr(self, 'labelParameter' + str(paramNumber))
             objLabel.setText(paramName)
@@ -1592,7 +1724,7 @@ class ModelFittingApp(QWidget):
             logger.info(
                 'SetParameterSpinBoxToDefault called with paramNumber=' 
                 + str(paramNumber))
-            default = _objXMLReader.getParameterDefault(modelName, paramNumber)
+            default = self.objXMLReader.getParameterDefault(modelName, paramNumber)
         
             objSpinBox = getattr(self, 'spinBoxParameter' + str(paramNumber))
             objSpinBox.blockSignals(True)
@@ -1613,7 +1745,7 @@ class ModelFittingApp(QWidget):
                 'Function InitialiseParameterSpinBoxes called when model = ' 
                 + modelName)
 
-            numParams = _objXMLReader.getNumberOfParameters(modelName)
+            numParams = self.objXMLReader.getNumberOfParameters(modelName)
             if numParams >= 1:
                 self.SetParameterSpinBoxToDefault(modelName, 1)
             if numParams >= 2:
@@ -1633,9 +1765,10 @@ class ModelFittingApp(QWidget):
         """Coordinates the calling of function
        populateParameterLabelAndSpinBox to set up and show the 
        parameter spinboxes for each model"""
+        logger.info('Function SetUpParameterLabelsAndSpinBoxes called. ')
         try:
             modelName = str(self.cmbModels.currentText())
-            numParams = _objXMLReader.getNumberOfParameters(modelName)
+            numParams = self.objXMLReader.getNumberOfParameters(modelName)
             if numParams >= 1:
                 self.populateParameterLabelAndSpinBox(modelName, 1)
             if numParams >= 2:
@@ -1716,7 +1849,7 @@ class ModelFittingApp(QWidget):
                 self.lblConfInt.show()
                 self.lblAIF.show() #Common to all models
                 self.cmbAIF.show() #Common to all models
-                inletType = _objXMLReader.getModelInletType(modelName)
+                inletType = self.objXMLReader.getModelInletType(modelName)
                 if inletType == 'single':
                     self.lblVIF.hide()
                     self.cmbVIF.hide()
@@ -1786,7 +1919,6 @@ class ModelFittingApp(QWidget):
         handling.
         """
         try:
-            global _listModel
             boolAIFSelected = False
             boolVIFSelected = False
 
@@ -1805,11 +1937,11 @@ class ModelFittingApp(QWidget):
             #Get the name of the model 
             modelName = str(self.cmbModels.currentText())
             
-            arrayTimes = np.array(_concentrationData['time'], dtype='float')
+            arrayTimes = np.array(self.concentrationData['time'], dtype='float')
 
             ROI = str(self.cmbROI.currentText())
             if ROI != 'Please Select':
-                arrayROIConcs = np.array(_concentrationData[ROI], dtype='float')
+                arrayROIConcs = np.array(self.concentrationData[ROI], dtype='float')
                 ax.plot(arrayTimes, arrayROIConcs, 'b.-', label= ROI)
 
             AIF = str(self.cmbAIF.currentText())
@@ -1821,34 +1953,34 @@ class ModelFittingApp(QWidget):
 
             if AIF != 'Please Select':
                 #Plot AIF curve
-                arrayAIFConcs = np.array(_concentrationData[AIF], dtype='float')
+                arrayAIFConcs = np.array(self.concentrationData[AIF], dtype='float')
                 ax.plot(arrayTimes, arrayAIFConcs, 'r.-', label= AIF)
                 boolAIFSelected = True
 
             if VIF != 'Please Select':
                 #Plot VIF curve
-                arrayVIFConcs = np.array(_concentrationData[VIF], dtype='float')
+                arrayVIFConcs = np.array(self.concentrationData[VIF], dtype='float')
                 ax.plot(arrayTimes, arrayVIFConcs, 'k.-', label= VIF)
                 boolVIFSelected = True
                     
             #Plot concentration curve from the model
             parameterArray = self.BuildParameterArray()
-            if  _objXMLReader.getModelInletType(modelName) == 'dual':
+            if  self.objXMLReader.getModelInletType(modelName) == 'dual':
                 if boolAIFSelected and boolVIFSelected:
-                    modelFunctionName = _objXMLReader.getFunctionName(modelName)
-                    logger.info('ModelFunctionsHelper.ModelSelector called when model={}, funtion ={} & parameter array = {}'. format(modelName, modelFunctionName, parameterArray))        
-                    _listModel = ModelFunctionsHelper.ModelSelector(modelFunctionName, 
+                    modelFunctionName = self.objXMLReader.getFunctionName(modelName)
+                    logger.info('ModelFunctionsHelper.ModelSelector called when model={}, function ={} & parameter array = {}'. format(modelName, modelFunctionName, parameterArray))        
+                    self.listModel = ModelFunctionsHelper.ModelSelector(modelFunctionName, 
                          'dual', arrayTimes, arrayAIFConcs, parameterArray, 
                        arrayVIFConcs)
-                    arrayModel =  np.array(_listModel, dtype='float')
+                    arrayModel =  np.array(self.listModel, dtype='float')
                     ax.plot(arrayTimes, arrayModel, 'g--', label= modelName + ' model')
-            elif _objXMLReader.getModelInletType(modelName) == 'single':
+            elif self.objXMLReader.getModelInletType(modelName) == 'single':
                 if boolAIFSelected:
-                    modelFunctionName = _objXMLReader.getFunctionName(modelName)
-                    logger.info('ModelFunctionsHelper.ModelSelector called when model ={}, funtion ={} & parameter array = {}'. format(modelName, modelFunctionName, parameterArray))        
-                    _listModel = ModelFunctionsHelper.ModelSelector(modelFunctionName, 
+                    modelFunctionName = self.objXMLReader.getFunctionName(modelName)
+                    logger.info('ModelFunctionsHelper.ModelSelector called when model ={}, function ={} & parameter array = {}'. format(modelName, modelFunctionName, parameterArray))        
+                    self.listModel = ModelFunctionsHelper.ModelSelector(modelFunctionName, 
                         'single', arrayTimes, arrayAIFConcs, parameterArray)
-                    arrayModel =  np.array(_listModel, dtype='float')
+                    arrayModel =  np.array(self.listModel, dtype='float')
                     ax.plot(arrayTimes, arrayModel, 'g--', label= modelName + ' model')
 
             if ROI != 'Please Select':  
@@ -1917,23 +2049,23 @@ class ModelFittingApp(QWidget):
        in the is created in another sub-folder in the folder where the 
        data files are held."""
         try:
-            global _dataFileName
+            
             logger.info('Function BatchProcessAllCSVDataFiles called.')
             
             #Create a list of csv files in the selected directory
             csvDataFiles = [file 
-                            for file in os.listdir(self.directory) 
+                            for file in os.listdir(self.dataFileDirectory) 
                             if file.lower().endswith('.csv')]
 
             numCSVFiles = len(csvDataFiles)
 
             self.lblBatchProcessing.clear()
             self.lblBatchProcessing.setText('{}: {} csv files.'
-                                       .format(self.directory, str(numCSVFiles)))
+                                       .format(self.dataFileDirectory, str(numCSVFiles)))
 
             #Make nested folders to hold plot CSV files and PDF reports
-            csvPlotDataFolder = self.directory + '/CSVPlotDataFiles'
-            pdfReportFolder = self.directory + '/PDFReports'
+            csvPlotDataFolder = self.dataFileDirectory + '/CSVPlotDataFiles'
+            pdfReportFolder = self.dataFileDirectory + '/PDFReports'
             if not os.path.exists(csvPlotDataFolder):
                 os.makedirs(csvPlotDataFolder)
                 logger.info('BatchProcessAllCSVDataFiles: {} created.'.format(csvPlotDataFolder))
@@ -1969,7 +2101,7 @@ class ModelFittingApp(QWidget):
             modelName = str(self.cmbModels.currentText())
 
             #Create the Excel spreadsheet to record the results
-            objSpreadSheet, boolExcelFileCreatedOK = self.BatchProcessingCreateBatchSummaryExcelSpreadSheet(self.directory)
+            objSpreadSheet, boolExcelFileCreatedOK = self.BatchProcessingCreateBatchSummaryExcelSpreadSheet(self.dataFileDirectory)
             
             if boolExcelFileCreatedOK:
                 for file in csvDataFiles:
@@ -1980,24 +2112,26 @@ class ModelFittingApp(QWidget):
                         #the start of batch processing
                         self.SetParameterSpinBoxValues(initialParameterArray)
 
-                    #Set global filename to name of file in current iteration 
-                    #as this variable used to write datafile name in the PDF report
-                    _dataFileName = str(file) 
-                    self.statusbar.showMessage('File ' + _dataFileName + ' loaded.')
+                    #Set class instance property dataFileName 
+                    #to name of file in current iteration 
+                    #as this variable used to write datafile 
+                    #name in the PDF report
+                    self.dataFileName = str(file) 
+                    self.statusbar.showMessage('File ' + self.dataFileName + ' loaded.')
                     count +=1
-                    self.lblBatchProcessing.setText("Processing {}".format(_dataFileName))
+                    self.lblBatchProcessing.setText("Processing {}".format(self.dataFileName))
                     #Load current file
-                    fileLoadedOK, failureReason = self.BatchProcessingLoadDataFile(self.directory + '/' + _dataFileName)
+                    fileLoadedOK, failureReason = self.BatchProcessingLoadDataFile(self.dataFileDirectory + '/' + self.dataFileName)
                     if not fileLoadedOK:
-                        objSpreadSheet.RecordSkippedFiles(_dataFileName, failureReason)
+                        objSpreadSheet.RecordSkippedFiles(self.dataFileName, failureReason)
                         continue  #Skip this iteration if problems loading file
                 
                     self.PlotConcentrations('BatchProcessAllCSVDataFiles') #Plot data                
-                    self.RunCurveFit() #Fit curve to model 
+                    self.CurveFit() #Fit curve to model 
                     self.SaveCSVFile(csvPlotDataFolder + '/plot' + file) #Save plot data to CSV file               
                     parameterDict = self.CreatePDFReport(pdfReportFolder + '/' + os.path.splitext(file)[0]) #Save PDF Report                
                     self.BatchProcessWriteOptimumParamsToSummary(objSpreadSheet, 
-                               _dataFileName,  modelName, parameterDict)
+                               self.dataFileName,  modelName, parameterDict)
                     self.pbar.setValue(count)
                     QApplication.processEvents()
 
@@ -2093,11 +2227,9 @@ class ModelFittingApp(QWidget):
                             time/concentration data
             
         """
-        global _concentrationData
-        global _dataFileName
-
-        #clear the global dictionary of previous data
-        _concentrationData.clear()
+      
+        #clear the dictionary of previous data
+        self.concentrationData.clear()
 
         boolFileFormatOK = True
         boolDataOK = True
@@ -2138,39 +2270,39 @@ class ModelFittingApp(QWidget):
                             boolFileFormatOK = False
 
                     if boolFileFormatOK:
-                        #Column headers form the keys in the dictionary called _concentrationData
+                        #Column headers form the keys in the dictionary called self.concentrationData
                         for header in headers:
                             if 'time' in header:
                                 header ='time'
-                            _concentrationData[header.title().lower()]=[]
+                            self.concentrationData[header.title().lower()]=[]
                         #Also add a 'model' key to hold a list of concentrations generated by a model
-                        _concentrationData['model'] = []
+                        self.concentrationData['model'] = []
 
                         #Each key in the dictionary is paired with a list of 
                         #corresponding concentrations 
                         #(except the Time key that is paired with a list of times)
                         for row in readCSV:
                             colNum=0
-                            for key in _concentrationData:
+                            for key in self.concentrationData:
                                 #Iterate over columns in the selected row
                                 if key != 'model':
                                     if colNum == 0: 
                                         #time column
-                                        _concentrationData['time'].append(float(row[colNum])/60.0)
+                                        self.concentrationData['time'].append(float(row[colNum])/60.0)
                                     else:
-                                        _concentrationData[key].append(float(row[colNum]))
+                                        self.concentrationData[key].append(float(row[colNum]))
                                     colNum+=1           
                         logger.info('Batch Processing: CSV data file {} loaded OK'.format(fullFilePath))
             return boolFileFormatOK, failureReason
         
         except csv.Error:
             boolFileFormatOK = False
-            print('CSV Reader error in function BatchProcessingLoadDataFile: file {}, line {}: error={}'.format(_dataFileName, readCSV.line_num, csv.Error))
-            logger.error('CSV Reader error in function BatchProcessingLoadDataFile: file {}, line {}: error ={}'.format(_dataFileName, readCSV.line_num, csv.Error))
+            print('CSV Reader error in function BatchProcessingLoadDataFile: file {}, line {}: error={}'.format(self.dataFileName, readCSV.line_num, csv.Error))
+            logger.error('CSV Reader error in function BatchProcessingLoadDataFile: file {}, line {}: error ={}'.format(self.dataFileName, readCSV.line_num, csv.Error))
         except IOError:
             boolFileFormatOK = False
-            print ('IOError in function BatchProcessingLoadDataFile: cannot open file' + _dataFileName + ' or read its data')
-            logger.error ('IOError in function BatchProcessingLoadDataFile: cannot open file' + _dataFileName + ' or read its data')
+            print ('IOError in function BatchProcessingLoadDataFile: cannot open file' + self.dataFileName + ' or read its data')
+            logger.error ('IOError in function BatchProcessingLoadDataFile: cannot open file' + self.dataFileName + ' or read its data')
         except RuntimeError as re:
             boolFileFormatOK = False
             print('Runtime error in function BatchProcessingLoadDataFile: ' + str(re))
@@ -2237,29 +2369,29 @@ class ModelFittingApp(QWidget):
             modelName = str(self.cmbModels.currentText())
             logger.info('Function BatchProcessingHaveParamsChanged called when model = ' + modelName)
 
-            if self.spinBoxParameter1.isVisible() == True:
+            if self.spinBoxParameter1.isVisible():
                 if (self.spinBoxParameter1.value() != 
-                   _objXMLReader.getParameterDefault(modelName, 1)):
+                   self.objXMLReader.getParameterDefault(modelName, 1)):
                     boolParameterChanged = True
            
-            if self.spinBoxParameter2.isVisible() == True:
+            if self.spinBoxParameter2.isVisible():
                 if (self.spinBoxParameter2.value() != 
-                   _objXMLReader.getParameterDefault(modelName, 2)):
+                   self.objXMLReader.getParameterDefault(modelName, 2)):
                     boolParameterChanged = True
                     
-            if self.spinBoxParameter3.isVisible() == True:
+            if self.spinBoxParameter3.isVisible() :
                 if (self.spinBoxParameter3.value() != 
-                   _objXMLReader.getParameterDefault(modelName,3)):
+                   self.objXMLReader.getParameterDefault(modelName,3)):
                     boolParameterChanged = True  
                     
-            if self.spinBoxParameter4.isVisible() == True:
+            if self.spinBoxParameter4.isVisible():
                 if (self.spinBoxParameter4.value() != 
-                   _objXMLReader.getParameterDefault(modelName, 4)):
+                   self.objXMLReader.getParameterDefault(modelName, 4)):
                     boolParameterChanged = True
 
-            if self.spinBoxParameter5.isVisible() == True:
+            if self.spinBoxParameter5.isVisible():
                 if (self.spinBoxParameter5.value() != 
-                   _objXMLReader.getParameterDefault(modelName, 5)):
+                   self.objXMLReader.getParameterDefault(modelName, 5)):
                     boolParameterChanged = True
             
             return boolParameterChanged    

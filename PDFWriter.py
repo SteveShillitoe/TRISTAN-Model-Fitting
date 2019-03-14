@@ -109,7 +109,12 @@ class PDF(FPDF):
                 #Create a row in the table
                 self.cell(col_width*3,textHeight*2, paramName.replace('\n', ''), border=1)
                 self.cell(col_width,textHeight*2, str(paramList[0]), border=1)
-                confidenceStr = '[{}     {}]'.format(paramList[1], paramList[2])
+                
+                if paramList[1] == '' and paramList[2] == '':
+                    confidenceStr = '(fixed)'
+                else:
+                    confidenceStr = '[{}     {}]'.format(paramList[1], paramList[2])
+                
                 self.cell(col_width*2,textHeight*2, confidenceStr, border=1)
                 self.ln(textHeight*2)    
 

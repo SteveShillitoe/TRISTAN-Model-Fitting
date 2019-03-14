@@ -238,6 +238,33 @@ class XMLReader:
                   + str(e)) 
             return None, ''
 
+    def getParameterShortName(self, shortModelName, positionNumber):
+        """Returns the short name of a parameter.
+
+        Input Parameters
+        ----------------
+        shortModelName - Identifies the model.
+        positionNumber - The ordinal position of the parameter in the 
+                        model's parameter collection. Numbers from one."""
+        try:
+            logger.info('XMLReader.getParameterShortName called with short model name= {} and position={} '.format(shortModelName,positionNumber) )
+            
+            if len(shortModelName) > 0:
+                xPath='./model[@id=' + chr(34) + shortModelName + chr(34) + \
+                    ']/parameters/parameter[' + str(positionNumber) + ']/name/short'
+                shortName = self.root.find(xPath)
+
+            if shortName.text:
+                return shortName.text
+            else:
+                return ''
+             
+        except Exception as e:
+            print('Error in XMLReader.getParameterShortName when shortModelName ={} and xPath={}: '.format(shortModelName, xPath) 
+                  + str(e)) 
+            logger.error('Error in XMLReader.getParameterShortName when shortModelName ={} and xPath={}: '.format(shortModelName, xPath) 
+                  + str(e)) 
+            return ''
 
     def getParameterDefault(self, shortModelName, positionNumber)->float:
         """
