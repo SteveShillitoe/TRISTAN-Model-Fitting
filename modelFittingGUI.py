@@ -840,7 +840,7 @@ class ModelFittingApp(QWidget):
             
                 ROI = str(self.cmbROI.currentText())
                 AIF = str(self.cmbAIF.currentText())
-                if self.cmbVIF.isVisible() == True:
+                if self.cmbVIF.isVisible():
                     VIF = str(self.cmbVIF.currentText())
                     boolIncludeVIF = True
                 else:
@@ -1968,7 +1968,7 @@ class ModelFittingApp(QWidget):
             if  self.objXMLReader.getModelInletType(modelName) == 'dual':
                 if boolAIFSelected and boolVIFSelected:
                     modelFunctionName = self.objXMLReader.getFunctionName(modelName)
-                    logger.info('ModelFunctionsHelper.ModelSelector called when model={}, funtion ={} & parameter array = {}'. format(modelName, modelFunctionName, parameterArray))        
+                    logger.info('ModelFunctionsHelper.ModelSelector called when model={}, function ={} & parameter array = {}'. format(modelName, modelFunctionName, parameterArray))        
                     self.listModel = ModelFunctionsHelper.ModelSelector(modelFunctionName, 
                          'dual', arrayTimes, arrayAIFConcs, parameterArray, 
                        arrayVIFConcs)
@@ -1977,7 +1977,7 @@ class ModelFittingApp(QWidget):
             elif self.objXMLReader.getModelInletType(modelName) == 'single':
                 if boolAIFSelected:
                     modelFunctionName = self.objXMLReader.getFunctionName(modelName)
-                    logger.info('ModelFunctionsHelper.ModelSelector called when model ={}, funtion ={} & parameter array = {}'. format(modelName, modelFunctionName, parameterArray))        
+                    logger.info('ModelFunctionsHelper.ModelSelector called when model ={}, function ={} & parameter array = {}'. format(modelName, modelFunctionName, parameterArray))        
                     self.listModel = ModelFunctionsHelper.ModelSelector(modelFunctionName, 
                         'single', arrayTimes, arrayAIFConcs, parameterArray)
                     arrayModel =  np.array(self.listModel, dtype='float')
@@ -2369,27 +2369,27 @@ class ModelFittingApp(QWidget):
             modelName = str(self.cmbModels.currentText())
             logger.info('Function BatchProcessingHaveParamsChanged called when model = ' + modelName)
 
-            if self.spinBoxParameter1.isVisible() == True:
+            if self.spinBoxParameter1.isVisible():
                 if (self.spinBoxParameter1.value() != 
                    self.objXMLReader.getParameterDefault(modelName, 1)):
                     boolParameterChanged = True
            
-            if self.spinBoxParameter2.isVisible() == True:
+            if self.spinBoxParameter2.isVisible():
                 if (self.spinBoxParameter2.value() != 
                    self.objXMLReader.getParameterDefault(modelName, 2)):
                     boolParameterChanged = True
                     
-            if self.spinBoxParameter3.isVisible() == True:
+            if self.spinBoxParameter3.isVisible() :
                 if (self.spinBoxParameter3.value() != 
                    self.objXMLReader.getParameterDefault(modelName,3)):
                     boolParameterChanged = True  
                     
-            if self.spinBoxParameter4.isVisible() == True:
+            if self.spinBoxParameter4.isVisible():
                 if (self.spinBoxParameter4.value() != 
                    self.objXMLReader.getParameterDefault(modelName, 4)):
                     boolParameterChanged = True
 
-            if self.spinBoxParameter5.isVisible() == True:
+            if self.spinBoxParameter5.isVisible():
                 if (self.spinBoxParameter5.value() != 
                    self.objXMLReader.getParameterDefault(modelName, 5)):
                     boolParameterChanged = True

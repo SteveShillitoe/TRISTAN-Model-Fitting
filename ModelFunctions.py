@@ -2,31 +2,14 @@
 of concentration with time according to a tracer kinetic model.
 """
 import Tools as tools
+import ExceptionHandling as exceptionHandler
 import numpy as np
 import logging
-import sys
-import inspect
-from PyQt5.QtWidgets import QMessageBox
-
-#Create logger
 logger = logging.getLogger(__name__)
 
-#Note: The input paramaters for the volume fractions and rate constants in
+# Note: The input paramaters for the volume fractions and rate constants in
 # the following model function definitions are listed in the same order as they are 
 # displayed in the GUI from top (first) to bottom (last) 
-
-def ModelFunctionInfoLogger(frame, funcName):
-    try: 
-        args, _, _, values = inspect.getargvalues(frame)
-        argStr = ""
-        for i in args:
-            if i != "xData2DArray":
-                argStr += " %s = %s" % (i, values[i])
-        logger.info('In function ' + __name__ + '.' + funcName +
-            'input parameters: ' + argStr)
-    except Exception as e:
-        print('Error - ' + __name__ + '.ModelFunctionInfoLogger ' + str(e))
-        logger.error('Error -'  + __name__ + '.ModelFunctionInfoLogger ' + str(e))
 
 def DualInputTwoCompartmentFiltrationModel(xData2DArray, Fa: float, Ve: float, Fp: float, Kbh: float, Khe: float):
     """This function contains the algorithm for calculating how concentration varies with time
@@ -46,30 +29,29 @@ def DualInputTwoCompartmentFiltrationModel(xData2DArray, Fa: float, Ve: float, F
                 time points in array 'time'.
             """ 
     try:
-        ##################################################
-        #Logging and exception handling code. Please leave.
-        ##################################################
-        funcName = sys._getframe().f_code.co_name
-        frame = inspect.currentframe()
-        ModelFunctionInfoLogger(frame, funcName)
+        # Logging and exception handling function. 
+        exceptionHandler.modelFunctionInfoLogger()
 
-        #######################################################
-        #Start of model logic.
-        #######################################################
-        #In order to use lmfit curve_fit, time and concentration must be
-        #combined into one function input parameter, a 2D array, 
-        #then separated into individual 1 D arrays 
+        # Used by logging in tools.expconv mathematical operation
+        # function
+        funcName = 'DualInputTwoCompartmentFiltrationModel'
+
+        # Start of model logic.
+        # In order to use lmfit curve_fit, time and concentration must be
+        # combined into one function input parameter, a 2D array, 
+        # then separated into individual 1 D arrays 
         times = xData2DArray[:,0]
         AIFconcentrations = xData2DArray[:,1]
         VIFconcentrations = xData2DArray[:,2]
     
-        #Calculate Venous Flow Factor, fVFF
+        # Calculate Venous Flow Factor, fVFF
         fVFF = 1 - Fa
 
-        #Determine an overall concentration
-        combinedConcentration = Fp*(Fa*AIFconcentrations + fVFF*VIFconcentrations)
+        # Determine an overall concentration
+        combinedConcentration = Fp*(Fa*AIFconcentrations 
+                                    + fVFF*VIFconcentrations)
       
-        #Calculate Intracellular transit time, Th
+        # Calculate Intracellular transit time, Th
         Th = (1-Ve)/Kbh
         Te = Ve/(Fp + Khe)
         
@@ -88,18 +70,11 @@ def DualInputTwoCompartmentFiltrationModel(xData2DArray, Fa: float, Ve: float, F
     
         return(modelConcs)
 
-    ###############################################################
-    #Exception handling and logging code. Please leave.
-    ###############################################################
+    # Exception handling and logging code.
     except ZeroDivisionError as zde:
-        QMessageBox().warning(None, "Division by zero", 
-            "Division by zero when input parameters: " + argStr, 
-            QMessageBox.Ok)
-        logger.error('Zero Division Error when input parameters:' + argStr + ' in '
-                   + __name__ + '.' + funcName + '. Error = ' + str(zde))
+        exceptionHandler.handleDivByZeroException(zde)
     except Exception as e:
-        print('Error - ' + __name__ + '.' + funcName + ' ' + str(e))
-        logger.error('Error -'  + __name__ + '.' + funcName + ' ' + str(e))
+        exceptionHandler.handleGeneralException(e)
  
 
 def HighFlowDualInletTwoCompartmentGadoxetateModel(xData2DArray, Fa: float, Ve: float, Khe: float, Kbh: float):
@@ -119,24 +94,22 @@ def HighFlowDualInletTwoCompartmentGadoxetateModel(xData2DArray, Fa: float, Ve: 
                 time points in array 'time'.
             """ 
     try:
-        funcName = sys._getframe().f_code.co_name
-        logger.info('In function ModelFunctions.HighFlowDualInletTwoCompartmentGadoxetateModel ' +
-            'with Fa={}, Ve={}, Khe={} & Kbh={}'.format(Fa, Ve, Khe, Kbh))
-        #print('In function ModelFunctions.HighFlowDualInletTwoCompartmentGadoxetateModel ' +
-        #  'with Fa={}, Ve={}, Khe={} & Kbh={}'.format(Fa, Ve,  Khe, Kbh))
-        #In order to use scipy.optimize.curve_fit, time and concentration must be
-        #combined into one function input parameter, a 2D array, then separated into individual
-        #1 D arrays 
+        # Logging and exception handling function. 
+        exceptionHandler.modelFunctionInfoLogger()
+
+        # In order to use scipy.optimize.curve_fit, time and concentration must be
+        # combined into one function input parameter, a 2D array, then separated into individual
+        # 1 D arrays 
         times = xData2DArray[:,0]
         AIFconcentrations = xData2DArray[:,1]
         VIFconcentrations = xData2DArray[:,2]
 
-        #Calculate Venous Flow Factor, fVFF
+        # Calculate Venous Flow Factor, fVFF
         fVFF = 1 - Fa
 
         Th = (1-Ve)/Kbh
     
-        #Determine an overall concentration
+        # Determine an overall concentration
         combinedConcentration = Fa*AIFconcentrations + fVFF*VIFconcentrations 
     
         modelConcs = []
@@ -144,10 +117,12 @@ def HighFlowDualInletTwoCompartmentGadoxetateModel(xData2DArray, Fa: float, Ve: 
         Khe*Th*tools.expconv(Th,times,combinedConcentration,'HighFlowDualInletTwoCompartmentGadoxetateModel'))
         
         return(modelConcs)
+
+    # Exception handling and logging code. 
+    except ZeroDivisionError as zde:
+        exceptionHandler.handleDivByZeroException(zde)
     except Exception as e:
-            print('Error - ModelFunctions.HighFlowDualInletTwoCompartmentGadoxetateModel: ' + str(e))
-            logger.error('ModelFunctions.HighFlowDualInletTwoCompartmentGadoxetateModel:' + str(e) )
- 
+        exceptionHandler.handleGeneralException(e)
 
 def HighFlowSingleInletTwoCompartmentGadoxetateModel(xData2DArray, Ve: float, Khe: float, Kbh: float):
     """This function contains the algorithm for calculating how concentration varies with time
@@ -166,14 +141,12 @@ def HighFlowSingleInletTwoCompartmentGadoxetateModel(xData2DArray, Ve: float, Kh
                 time points in array 'time'.
             """ 
     try:
-        funcName = sys._getframe().f_code.co_name
-        logger.info('In function ModelFunctions.HighFlowSingleInletTwoCompartmentGadoxetateModel ' +
-            'with Ve={}, Khe={} & Kbh={}'.format( Ve, Khe, Kbh))
-        #print('In function ModelFunctions.HighFlowSingleInletTwoCompartmentGadoxetateModel ' +
-        #  'with Ve={}, Khe={} & Kbh={}'.format( Ve,  Khe, Kbh))
-        #In order to use scipy.optimize.curve_fit, time and concentration must be
-        #combined into one function input parameter, a 2D array, then separated into individual
-        #1 D arrays 
+        # Logging and exception handling function. 
+        exceptionHandler.modelFunctionInfoLogger()
+
+        # In order to use lmfit curve fitting, time and concentration must be
+        # combined into one function input parameter, a 2D array, then separated into individual
+        # 1 D arrays 
         times = xData2DArray[:,0]
         AIFconcentrations = xData2DArray[:,1]
 
@@ -183,6 +156,9 @@ def HighFlowSingleInletTwoCompartmentGadoxetateModel(xData2DArray, Ve: float, Kh
         modelConcs = (Ve*AIFconcentrations + Khe*Th*tools.expconv(Th,times,AIFconcentrations,'HighFlowSingleInletTwoCompartmentGadoxetateModel'))
     
         return(modelConcs)
+
+    # Exception handling and logging code. 
+    except ZeroDivisionError as zde:
+        exceptionHandler.handleDivByZeroException(zde)
     except Exception as e:
-            print('Error - ModelFunctions.HighFlowSingleInletTwoCompartmentGadoxetateModel: ' + str(e))
-            logger.error('ModelFunctions.HighFlowSingleInletTwoCompartmentGadoxetateModel:' + str(e) )
+        exceptionHandler.handleGeneralException(e)
