@@ -1,43 +1,67 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
+
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" DefaultTargets="Build">
-  <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{2d543d8f-e065-47eb-b069-c66b7e4a2f74}</ProjectGuid>
+  
+<PropertyGroup>
+    
+<Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    
+<SchemaVersion>2.0</SchemaVersion>
+    
+<ProjectGuid>{2d543d8f-e065-47eb-b069-c66b7e4a2f74}</ProjectGuid>
     <ProjectHome />
-    <StartupFile>modelFittingGUI.py</StartupFile>
+    
+<StartupFile>modelFittingGUI.py</StartupFile>
     <SearchPath />
     <WorkingDirectory>.</WorkingDirectory>
-    <OutputPath>.</OutputPath>
+    
+<OutputPath>.</OutputPath>
     <ProjectTypeGuids>{888888a0-9f3d-457c-b088-3a5042f75d52}</ProjectTypeGuids>
-    <LaunchProvider>Standard Python launcher</LaunchProvider>
+    
+<LaunchProvider>Standard Python launcher</LaunchProvider>
     <InterpreterId />
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)' == 'Debug'" />
+  
+<PropertyGroup Condition="'$(Configuration)' == 'Debug'" />
   <PropertyGroup Condition="'$(Configuration)' == 'Release'" />
-  <PropertyGroup>
+  
+<PropertyGroup>
     <VisualStudioVersion Condition=" '$(VisualStudioVersion)' == '' ">10.0</VisualStudioVersion>
   </PropertyGroup>
-  <ItemGroup>
+  
+<ItemGroup>
     <Compile Include="modelFittingGUI.py" />
     <Compile Include="PDFWriter.py" />
-    <Compile Include="styleSheet.py" />
+    
+<Compile Include="styleSheet.py" />
     <Compile Include="Tools.py" />
-    <Compile Include="TracerKineticModels.py" />
-    <Compile Include="__pycache__\PDFWriter.py" />
-  </ItemGroup>
+    
+<Compile Include="TracerKineticModels.py" />
+    
+<Compile Include="__pycache__\PDFWriter.py" />
+  
+</ItemGroup>
   <ItemGroup>
-    <Content Include="images\DualInletTwoCompartmentGadoxetateModel.png" />
-    <Content Include="images\HighFlowDualInletTwoCompartmentGadoxetateModel.png" />
-    <Content Include="images\HighFlowSingleInletTwoCompartmentGadoxetateModel.png" />
-    <Content Include="images\HighFlowSingleInletTwoCompartmentGadoxetateModel_fixedve.png" />
-    <Content Include="images\logo-tristan.png" />
+    
+<Content Include="images\DualInletTwoCompartmentGadoxetateModel.png" />
+    
+<Content Include="images\HighFlowDualInletTwoCompartmentGadoxetateModel.png" />
+    
+<Content Include="images\HighFlowSingleInletTwoCompartmentGadoxetateModel.png" />
+    
+<Content Include="images\HighFlowSingleInletTwoCompartmentGadoxetateModel_fixedve.png" />
+    
+<Content Include="images\logo-tristan.png" />
     <Content Include="images\TRISTAN LOGO.jpg" />
-    <Content Include="images\uni-leeds-logo.jpg" />
+    
+<Content Include="images\uni-leeds-logo.jpg" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="images" />
-    <Folder Include="__pycache__" />
+    
+<Folder Include="__pycache__" />
   </ItemGroup>
-  <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
+  
+<Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
+
 </Project>

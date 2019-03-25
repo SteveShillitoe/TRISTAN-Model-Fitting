@@ -23,3 +23,7 @@
 /_pycache_
 /report2.pdf
 /__pycache__/ExceptionHandling.cpython-37.pyc
+/__pycache__/ExcelWriter.cpython-37.pyc
+/__pycache__/ModelFunctions.cpython-37.pyc
+/__pycache__/ModelFunctionsHelper.cpython-37.pyc
+/__pycache__/XMLReader.cpython-37.pyc
