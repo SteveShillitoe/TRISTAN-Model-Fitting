@@ -60,7 +60,7 @@ def spgr2d_func_inv(r1, FA, TR, R10, c):
     return(Srel)    
     
 ############################### Gadoxetate models #######################################
-def DualInletTwoCompartmentGadoxetateand3DSPGRModel(X, ve, Fp, fa, khe, kbh):
+def DualInletTwoCompartmentGadoxetateAnd3DSPGRModel(X, ve, Fp, fa, khe, kbh):
     t = X[:,0]
     Sa = X[:,1]
     Sv = X[:,2]
@@ -110,7 +110,7 @@ def DualInletTwoCompartmentGadoxetateand3DSPGRModel(X, ve, Fp, fa, khe, kbh):
     
     return(St_rel) #Returns tissue signal relative to the baseline St/St_baseline
     
-def HighFlowDualInletTwoCompartmentGadoxetateand3DSPGRModel(X, ve, fa, khe, kbh):
+def HighFlowDualInletTwoCompartmentGadoxetateAnd3DSPGRModel(X, ve, fa, khe, kbh):
     t = X[:,0]
     Sa = X[:,1]
     Sv = X[:,2]
@@ -149,7 +149,7 @@ def HighFlowDualInletTwoCompartmentGadoxetateand3DSPGRModel(X, ve, fa, khe, kbh)
     
     return(St_rel) #Returns tissue signal relative to the baseline St/St_baseline
 
-def HighFlowSingleInletTwoCompartmentGadoxetateand3DSPGRModel(X, ve, khe, kbh):
+def HighFlowSingleInletTwoCompartmentGadoxetateAnd3DSPGRModel(X, ve, khe, kbh):
     t = X[:,0]
     Sa = X[:,1]
     
@@ -182,7 +182,7 @@ def HighFlowSingleInletTwoCompartmentGadoxetateand3DSPGRModel(X, ve, khe, kbh):
     
     return(St_rel) #Returns tissue signal relative to the baseline St/St_baseline
     
-def DualInletTwoCompartmentGadoxetateand2DSPGRModel(X, ve, Fp, fa, khe, kbh):
+def DualInletTwoCompartmentGadoxetateAnd2DSPGRModel(X, ve, Fp, fa, khe, kbh):
     t = X[:,0]
     Sa = X[:,1]
     Sv = X[:,2]
@@ -232,7 +232,7 @@ def DualInletTwoCompartmentGadoxetateand2DSPGRModel(X, ve, Fp, fa, khe, kbh):
     
     return(St_rel) #Returns tissue signal relative to the baseline St/St_baseline
     
-def HighFlowDualInletTwoCompartmentGadoxetateand2DSPGRModel(X, ve, fa, khe, kbh):
+def HighFlowDualInletTwoCompartmentGadoxetateAnd2DSPGRModel(X, ve, fa, khe, kbh):
     t = X[:,0]
     Sa = X[:,1]
     Sv = X[:,2]
@@ -271,7 +271,7 @@ def HighFlowDualInletTwoCompartmentGadoxetateand2DSPGRModel(X, ve, fa, khe, kbh)
     
     return(St_rel) #Returns tissue signal relative to the baseline St/St_baseline
 
-def HighFlowSingleInletTwoCompartmentGadoxetateand2DSPGRModel(X, ve, khe, kbh):
+def HighFlowSingleInletTwoCompartmentGadoxetateAnd2DSPGRModel(X, ve, khe, kbh):
     t = X[:,0]
     Sa = X[:,1]
     
