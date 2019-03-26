@@ -92,12 +92,12 @@ def spgr2d_func_inv(r1, FA, TR, R10, c):
 ####################################################################
 ####  MR Signal Models 
 ####################################################################
-def DualInletTwoCompartmentGadoxetateAnd2DSPGRModel(X, Fa, Ve, Fp, khe, kbh):
+def DualInletTwoCompartmentGadoxetateAnd2DSPGRModel(X, Fa, Ve, Fp, kbh, khe):
     try:
         exceptionHandler.modelFunctionInfoLogger()
         t = X[:,0]
-        Sa = X[:,1]
-        Sv = X[:,2]
+        signalAIF = X[:,1]
+        signalVIF = X[:,2]
         fv = 1 - Fa
     
         # SPGR model parameters
@@ -111,17 +111,17 @@ def DualInletTwoCompartmentGadoxetateAnd2DSPGRModel(X, Fa, Ve, Fp, khe, kbh):
         R10t = 1/0.800 # Hz
     
         # Precontrast signal
-        Sa_baseline = np.mean(Sa[0:int(t0/t[1])-1])
-        Sv_baseline = np.mean(Sv[0:int(t0/t[1])-1])
+        Sa_baseline = np.mean(signalAIF[0:int(t0/t[1])-1])
+        Sv_baseline = np.mean(signalVIF[0:int(t0/t[1])-1])
     
         # Convert to concentrations
-        R1a = [Parallel(n_jobs=4)(delayed(fsolve)(spgr2d_func, x0=0, args = (FA, TR, R10a, Sa_baseline, Sa[p])) for p in np.arange(0,len(t)))]
-        R1v = [Parallel(n_jobs=4)(delayed(fsolve)(spgr2d_func, x0=0, args = (FA, TR, R10v, Sv_baseline, Sv[p])) for p in np.arange(0,len(t)))]
+        R1a = [Parallel(n_jobs=4)(delayed(fsolve)(spgr2d_func, x0=0, args = (FA, TR, R10a, Sa_baseline, signalAIF[p])) for p in np.arange(0,len(t)))]
+        R1v = [Parallel(n_jobs=4)(delayed(fsolve)(spgr2d_func, x0=0, args = (FA, TR, R10v, Sv_baseline, signalVIF[p])) for p in np.arange(0,len(t)))]
     
-        ca = (R1a - R10a)/r1
-        cv = (R1v - R10v)/r1
+        concAIF = (R1a - R10a)/r1
+        concVIF = (R1v - R10v)/r1
     
-        c_if = Fp*(Fa*ca + fv*cv)
+        c_if = Fp*(Fa*concAIF + fv*concVIF)
       
         Th = (1-Ve)/kbh
         Te = Ve/(Fp + khe)
@@ -130,7 +130,7 @@ def DualInletTwoCompartmentGadoxetateAnd2DSPGRModel(X, Fa, Ve, Fp, khe, kbh):
         beta = (1/Th - 1/Te)/2
         gamma = (1/Th + 1/Te)/2
     
-        # conc = (Ve + khe(1+kbh/(vh(1/Tb-1/Th)))exp(-t/Th)-kbhkhe/(vh(1/Tb-1/Th))exp(-t/Tb))*exp(-gamma.t)(cosh(alpha.t)+beta/gamma sinh(alpha.t))*Fp/Ve (Fa ca(t)+fv cv(t))
+        # conc = (Ve + khe(1+kbh/(vh(1/Tb-1/Th)))exp(-t/Th)-kbhkhe/(vh(1/Tb-1/Th))exp(-t/Tb))*exp(-gamma.t)(cosh(alpha.t)+beta/gamma sinh(alpha.t))*Fp/Ve (Fa concAIF(t)+fv concVIF(t))
         # Let ce(t) = exp(-gamma.t)(cosh(alpha.t)+beta/gamma sinh(alpha.t))*c_if(t) then
         # conc = (Ve + khe(1+kbh/(vh(1/Tb-1/Th)))exp(-t/Th)-kbhkhe/(vh(1/Tb-1/Th))exp(-t/Tb))*ce(t)
         Tc1 = 1/(gamma-alpha)
@@ -149,12 +149,12 @@ def DualInletTwoCompartmentGadoxetateAnd2DSPGRModel(X, Fa, Ve, Fp, khe, kbh):
         exceptionHandler.handleGeneralException(e)
 
 
-def DualInletTwoCompartmentGadoxetateAnd3DSPGRModel(X, Fa, Ve, Fp, khe, kbh):
+def DualInletTwoCompartmentGadoxetateAnd3DSPGRModel(X, Fa, Ve, Fp, kbh, khe):
     try:
         exceptionHandler.modelFunctionInfoLogger()
         t = X[:,0]
-        Sa = X[:,1]
-        Sv = X[:,2]
+        signalAIF = X[:,1]
+        signalVIF = X[:,2]
         fv = 1 - Fa
     
         # SPGR model parameters
@@ -168,17 +168,17 @@ def DualInletTwoCompartmentGadoxetateAnd3DSPGRModel(X, Fa, Ve, Fp, khe, kbh):
         R10t = 1/0.800 # Hz
     
         # Precontrast signal
-        Sa_baseline = np.mean(Sa[0:int(t0/t[1])-1])
-        Sv_baseline = np.mean(Sv[0:int(t0/t[1])-1])
+        Sa_baseline = np.mean(signalAIF[0:int(t0/t[1])-1])
+        Sv_baseline = np.mean(signalVIF[0:int(t0/t[1])-1])
     
         # Convert to concentrations
-        R1a = [Parallel(n_jobs=4)(delayed(fsolve)(spgr3d_func, x0=0, args = (FA, TR, R10a, Sa_baseline, Sa[p])) for p in np.arange(0,len(t)))]
-        R1v = [Parallel(n_jobs=4)(delayed(fsolve)(spgr3d_func, x0=0, args = (FA, TR, R10v, Sv_baseline, Sv[p])) for p in np.arange(0,len(t)))]
+        R1a = [Parallel(n_jobs=4)(delayed(fsolve)(spgr3d_func, x0=0, args = (FA, TR, R10a, Sa_baseline, signalAIF[p])) for p in np.arange(0,len(t)))]
+        R1v = [Parallel(n_jobs=4)(delayed(fsolve)(spgr3d_func, x0=0, args = (FA, TR, R10v, Sv_baseline, signalVIF[p])) for p in np.arange(0,len(t)))]
     
-        ca = (R1a - R10a)/r1
-        cv = (R1v - R10v)/r1
+        concAIF = (R1a - R10a)/r1
+        concVIF = (R1v - R10v)/r1
     
-        c_if = Fp*(Fa*ca + fv*cv)
+        c_if = Fp*(Fa*concAIF + fv*concVIF)
       
         Th = (1-Ve)/kbh
         Te = Ve/(Fp + khe)
@@ -187,7 +187,7 @@ def DualInletTwoCompartmentGadoxetateAnd3DSPGRModel(X, Fa, Ve, Fp, khe, kbh):
         beta = (1/Th - 1/Te)/2
         gamma = (1/Th + 1/Te)/2
     
-        # conc = (Ve + khe(1+kbh/(vh(1/Tb-1/Th)))exp(-t/Th)-kbhkhe/(vh(1/Tb-1/Th))exp(-t/Tb))*exp(-gamma.t)(cosh(alpha.t)+beta/gamma sinh(alpha.t))*Fp/Ve (Fa ca(t)+fv cv(t))
+        # conc = (Ve + khe(1+kbh/(vh(1/Tb-1/Th)))exp(-t/Th)-kbhkhe/(vh(1/Tb-1/Th))exp(-t/Tb))*exp(-gamma.t)(cosh(alpha.t)+beta/gamma sinh(alpha.t))*Fp/Ve (Fa concAIF(t)+fv concVIF(t))
         # Let ce(t) = exp(-gamma.t)(cosh(alpha.t)+beta/gamma sinh(alpha.t))*c_if(t) then
         # conc = (Ve + khe(1+kbh/(vh(1/Tb-1/Th)))exp(-t/Th)-kbhkhe/(vh(1/Tb-1/Th))exp(-t/Tb))*ce(t)
         Tc1 = 1/(gamma-alpha)
@@ -206,12 +206,12 @@ def DualInletTwoCompartmentGadoxetateAnd3DSPGRModel(X, Fa, Ve, Fp, khe, kbh):
         exceptionHandler.handleGeneralException(e)
 
 
-def HighFlowDualInletTwoCompartmentGadoxetateAnd3DSPGRModel(X, Fa, Ve, khe, kbh):
+def HighFlowDualInletTwoCompartmentGadoxetateAnd3DSPGRModel(X, Fa, Ve, kbh, khe):
     try:
         exceptionHandler.modelFunctionInfoLogger()
         t = X[:,0]
-        Sa = X[:,1]
-        Sv = X[:,2]
+        signalAIF = X[:,1]
+        signalVIF = X[:,2]
         fv = 1 - Fa
     
         # SPGR model parameters
@@ -225,57 +225,17 @@ def HighFlowDualInletTwoCompartmentGadoxetateAnd3DSPGRModel(X, Fa, Ve, khe, kbh)
         R10t = 1/0.800 # Hz
     
         # Precontrast signal
-        Sa_baseline = np.mean(Sa[0:int(t0/t[1])-1])
-        Sv_baseline = np.mean(Sv[0:int(t0/t[1])-1])
+        Sa_baseline = np.mean(signalAIF[0:int(t0/t[1])-1])
+        Sv_baseline = np.mean(signalVIF[0:int(t0/t[1])-1])
     
         # Convert to concentrations
-        R1a = [Parallel(n_jobs=4)(delayed(fsolve)(spgr3d_func, x0=0, args = (FA, TR, R10a, Sa_baseline, Sa[p])) for p in np.arange(0,len(t)))]
-        R1v = [Parallel(n_jobs=4)(delayed(fsolve)(spgr3d_func, x0=0, args = (FA, TR, R10v, Sv_baseline, Sv[p])) for p in np.arange(0,len(t)))]
+        R1a = [Parallel(n_jobs=4)(delayed(fsolve)(spgr3d_func, x0=0, args = (FA, TR, R10a, Sa_baseline, signalAIF[p])) for p in np.arange(0,len(t)))]
+        R1v = [Parallel(n_jobs=4)(delayed(fsolve)(spgr3d_func, x0=0, args = (FA, TR, R10v, Sv_baseline, signalVIF[p])) for p in np.arange(0,len(t)))]
     
-        ca = (R1a - R10a)/r1
-        cv = (R1v - R10v)/r1
+        concAIF = (R1a - R10a)/r1
+        concVIF = (R1v - R10v)/r1
     
-        c_if = Fa*ca + fv*cv
-      
-        Th = (1-Ve)/kbh
-    
-        ce = c_if
-        ct = Ve*ce + khe*Th*tools.expconv(Th,t,ce)
-    
-        # Convert to signal
-        St_rel = spgr3d_func_inv(r1, FA, TR, R10t, ct)
-    
-        return(St_rel) #Returns tissue signal relative to the baseline St/St_baseline
-    except ZeroDivisionError as zde:
-        exceptionHandler.handleDivByZeroException(zde)
-    except Exception as e:
-        exceptionHandler.handleGeneralException(e)
-
-
-def HighFlowSingleInletTwoCompartmentGadoxetateAnd3DSPGRModel(X, Ve, khe, kbh):
-    try:
-        exceptionHandler.modelFunctionInfoLogger()
-        t = X[:,0]
-        Sa = X[:,1]
-    
-        # SPGR model parameters
-        TR = 3.78/1000 # Repetition time of dynamic SPGR sequence in seconds
-        dt = 16 #temporal resolution in sec
-        t0 = 5*dt # Duration of baseline scans
-        FA = 15 #degrees
-        r1 = 5.9 # Hz/mM
-        R10a = 1/1.500 # Hz
-        R10t = 1/0.800 # Hz
-    
-        # Precontrast signal
-        Sa_baseline = np.mean(Sa[0:int(t0/t[1])-1])
-    
-        # Convert to concentrations
-        R1a = [Parallel(n_jobs=4)(delayed(fsolve)(spgr3d_func, x0=0, args = (FA, TR, R10a, Sa_baseline, Sa[p])) for p in np.arange(0,len(t)))]
-    
-        ca = (R1a - R10a)/r1
-    
-        c_if = ca
+        c_if = Fa*concAIF + fv*concVIF
       
         Th = (1-Ve)/kbh
     
@@ -295,8 +255,8 @@ def HighFlowDualInletTwoCompartmentGadoxetateAnd2DSPGRModel(X, Fa, Ve, khe, kbh)
     try:
         exceptionHandler.modelFunctionInfoLogger()
         t = X[:,0]
-        Sa = X[:,1]
-        Sv = X[:,2]
+        signalAIF = X[:,1]
+        signalVIF = X[:,2]
         fv = 1 - Fa
     
         # SPGR model parameters
@@ -310,17 +270,17 @@ def HighFlowDualInletTwoCompartmentGadoxetateAnd2DSPGRModel(X, Fa, Ve, khe, kbh)
         R10t = 1/0.800 # Hz
     
         # Precontrast signal
-        Sa_baseline = np.mean(Sa[0:int(t0/t[1])-1])
-        Sv_baseline = np.mean(Sv[0:int(t0/t[1])-1])
+        Sa_baseline = np.mean(signalAIF[0:int(t0/t[1])-1])
+        Sv_baseline = np.mean(signalVIF[0:int(t0/t[1])-1])
     
         # Convert to concentrations
-        R1a = [Parallel(n_jobs=4)(delayed(fsolve)(spgr2d_func, x0=0, args = (FA, TR, R10a, Sa_baseline, Sa[p])) for p in np.arange(0,len(t)))]
-        R1v = [Parallel(n_jobs=4)(delayed(fsolve)(spgr2d_func, x0=0, args = (FA, TR, R10v, Sv_baseline, Sv[p])) for p in np.arange(0,len(t)))]
+        R1a = [Parallel(n_jobs=4)(delayed(fsolve)(spgr2d_func, x0=0, args = (FA, TR, R10a, Sa_baseline, signalAIF[p])) for p in np.arange(0,len(t)))]
+        R1v = [Parallel(n_jobs=4)(delayed(fsolve)(spgr2d_func, x0=0, args = (FA, TR, R10v, Sv_baseline, signalVIF[p])) for p in np.arange(0,len(t)))]
     
-        ca = (R1a - R10a)/r1
-        cv = (R1v - R10v)/r1
+        concAIF = (R1a - R10a)/r1
+        concVIF = (R1v - R10v)/r1
     
-        c_if = Fa*ca + fv*cv
+        c_if = Fa*concAIF + fv*concVIF
       
         Th = (1-Ve)/kbh
     
@@ -337,11 +297,11 @@ def HighFlowDualInletTwoCompartmentGadoxetateAnd2DSPGRModel(X, Fa, Ve, khe, kbh)
         exceptionHandler.handleGeneralException(e)
 
 
-def HighFlowSingleInletTwoCompartmentGadoxetateAnd2DSPGRModel(X, Ve, khe, kbh):
+def HighFlowSingleInletTwoCompartmentGadoxetateAnd2DSPGRModel(X, Ve, kbh, khe):
     try:
         exceptionHandler.modelFunctionInfoLogger()
         t = X[:,0]
-        Sa = X[:,1]
+        signalAIF = X[:,1]
     
         # SPGR model parameters
         TR = 3.78/1000 # Repetition time of dynamic SPGR sequence in seconds
@@ -353,14 +313,14 @@ def HighFlowSingleInletTwoCompartmentGadoxetateAnd2DSPGRModel(X, Ve, khe, kbh):
         R10t = 1/0.800 # Hz
     
         # Precontrast signal
-        Sa_baseline = np.mean(Sa[0:int(t0/t[1])-1])
+        Sa_baseline = np.mean(signalAIF[0:int(t0/t[1])-1])
     
         # Convert to concentrations
-        R1a = [Parallel(n_jobs=4)(delayed(fsolve)(spgr2d_func, x0=0, args = (FA, TR, R10a, Sa_baseline, Sa[p])) for p in np.arange(0,len(t)))]
+        R1a = [Parallel(n_jobs=4)(delayed(fsolve)(spgr2d_func, x0=0, args = (FA, TR, R10a, Sa_baseline, signalAIF[p])) for p in np.arange(0,len(t)))]
     
-        ca = (R1a - R10a)/r1
+        concAIF = (R1a - R10a)/r1
     
-        c_if = ca
+        c_if = concAIF
       
         Th = (1-Ve)/kbh
     
@@ -369,6 +329,46 @@ def HighFlowSingleInletTwoCompartmentGadoxetateAnd2DSPGRModel(X, Ve, khe, kbh):
     
         # Convert to signal
         St_rel = spgr2d_func_inv(r1, FA, TR, R10t, ct)
+    
+        return(St_rel) #Returns tissue signal relative to the baseline St/St_baseline
+    except ZeroDivisionError as zde:
+        exceptionHandler.handleDivByZeroException(zde)
+    except Exception as e:
+        exceptionHandler.handleGeneralException(e)
+
+
+def HighFlowSingleInletTwoCompartmentGadoxetateAnd3DSPGRModel(X, Ve, kbh, khe):
+    try:
+        exceptionHandler.modelFunctionInfoLogger()
+        t = X[:,0]
+        signalAIF = X[:,1]
+    
+        # SPGR model parameters
+        TR = 3.78/1000 # Repetition time of dynamic SPGR sequence in seconds
+        dt = 16 #temporal resolution in sec
+        t0 = 5*dt # Duration of baseline scans
+        FA = 15 #degrees
+        r1 = 5.9 # Hz/mM
+        R10a = 1/1.500 # Hz
+        R10t = 1/0.800 # Hz
+    
+        # Precontrast signal
+        Sa_baseline = np.mean(signalAIF[0:int(t0/t[1])-1])
+    
+        # Convert to concentrations
+        R1a = [Parallel(n_jobs=4)(delayed(fsolve)(spgr3d_func, x0=0, args = (FA, TR, R10a, Sa_baseline, signalAIF[p])) for p in np.arange(0,len(t)))]
+    
+        concAIF = (R1a - R10a)/r1
+    
+        c_if = concAIF
+      
+        Th = (1-Ve)/kbh
+    
+        ce = c_if
+        ct = Ve*ce + khe*Th*tools.expconv(Th,t,ce)
+    
+        # Convert to signal
+        St_rel = spgr3d_func_inv(r1, FA, TR, R10t, ct)
     
         return(St_rel) #Returns tissue signal relative to the baseline St/St_baseline
     except ZeroDivisionError as zde:
@@ -445,7 +445,7 @@ def DualInputTwoCompartmentFiltrationModel(xData2DArray, Fa: float, Ve: float, F
         exceptionHandler.handleGeneralException(e)
  
 
-def HighFlowDualInletTwoCompartmentGadoxetateModel(xData2DArray, Fa: float, Ve: float, Khe: float, Kbh: float):
+def HighFlowDualInletTwoCompartmentGadoxetateModel(xData2DArray, Fa: float, Ve: float, Kbh: float, Khe: float):
     """This function contains the algorithm for calculating how concentration varies with time
             using the High Flow Dual Inlet Two Compartment Gadoxetate Model model.
         
@@ -492,7 +492,7 @@ def HighFlowDualInletTwoCompartmentGadoxetateModel(xData2DArray, Fa: float, Ve: 
     except Exception as e:
         exceptionHandler.handleGeneralException(e)
 
-def HighFlowSingleInletTwoCompartmentGadoxetateModel(xData2DArray, Ve: float, Khe: float, Kbh: float):
+def HighFlowSingleInletTwoCompartmentGadoxetateModel(xData2DArray, Ve: float, Kbh: float, Khe: float):
     """This function contains the algorithm for calculating how concentration varies with time
             using the High Flow Single Inlet Two Compartment Gadoxetate Model model.
         

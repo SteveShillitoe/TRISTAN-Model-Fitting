@@ -28,10 +28,10 @@ The <name></name> tags enclose the <short></short> and
 
 -->
 <models>
-  <data_file_path>C:\TRISTAN Data\PreClinical</data_file_path>
+  <data_file_path>C:\TRISTAN Data\MR Signal Data</data_file_path>
   <model id="2-2CFM+2DSPGR">
     <name>
-      <short>2-2CFM + 2DSPGR</short>
+      <short>2-2CFM+2DSPGR</short>
       <long>2 Inlet - Two Compartment Gadoxetate and 2DSPGR Model</long>
     </name>
     <function>DualInletTwoCompartmentGadoxetateAnd2DSPGRModel</function>
@@ -112,7 +112,7 @@ The <name></name> tags enclose the <short></short> and
   </model>
   <model id="2-2CFM+3DSPGR">
     <name>
-      <short>2-2CFM + 3DSPGR</short>
+      <short>2-2CFM+3DSPGR</short>
       <long>2 Inlet - Two Compartment Gadoxetate and 3DSPGR Model</long>
     </name>
     <function>DualInletTwoCompartmentGadoxetateAnd3DSPGRModel</function>
@@ -193,7 +193,7 @@ The <name></name> tags enclose the <short></short> and
   </model>
   <model id="HF2-2CFM+2DSPGR">
     <name>
-      <short>HF2-2CFM + 2DSPGR</short>
+      <short>HF2-2CFM+2DSPGR</short>
       <long>High Flow 2 Inlet - Two Compartment Filtration and 2DSPGR Model</long>
     </name>
     <function>HighFlowDualInletTwoCompartmentGadoxetateAnd2DSPGRModel</function>
@@ -258,12 +258,132 @@ The <name></name> tags enclose the <short></short> and
       </parameter>
     </parameters>
   </model>
-  <model id="HF1-2CFM">
+  <model id="HF2-2CFM+3DSPGR">
     <name>
-      <short>HF1-2CFM</short>
-      <long>High Flow 1 Inlet - Two Compartment Filtration Model</long>
+      <short>HF2-2CFM+3DSPGR</short>
+      <long>High Flow 2 Inlet - Two Compartment Filtration and 3DSPGR Model</long>
     </name>
-    <function>HighFlowSingleInletTwoCompartmentGadoxetateModel</function>
+    <function>HighFlowDualInletTwoCompartmentGadoxetateAnd3DSPGRModel</function>
+    <image>HighFlowDualInletTwoCompartmentGadoxetateModel.png</image>
+    <inlet_type>dual</inlet_type>
+    <parameters>
+      <parameter>
+        <name>
+          <short>Fa</short>
+          <long>Arterial Flow Fraction</long>
+        </name>
+        <units>%</units>
+        <default>17.0</default>
+        <step>1.0</step>
+        <precision>2</precision>
+        <constraints>
+          <lower>0.1</lower>
+          <upper>100.00</upper>
+        </constraints>
+      </parameter>
+      <parameter>
+        <name>
+          <short>Ve</short>
+          <long>Extracellular Volume Fraction</long>
+        </name>
+        <units>%</units>
+        <default>23.0</default>
+        <step>1.0</step>
+        <precision>2</precision>
+        <constraints>
+          <lower>0.1</lower>
+          <upper>100.00</upper>
+        </constraints>
+      </parameter>
+      <parameter>
+        <name>
+          <short>Kbh</short>
+          <long>Biliary Efflux Rate</long>
+        </name>
+        <units>mL/min/mL</units>
+        <default>0.0918</default>
+        <step>0.01</step>
+        <precision>4</precision>
+        <constraints>
+          <lower>0.01</lower>
+          <upper>100.0</upper>
+        </constraints>
+      </parameter>
+      <parameter>
+        <name>
+          <short>Khe</short>
+          <long>Hepatocyte Uptake Rate</long>
+        </name>
+        <units>mL/min/mL</units>
+        <default>2.358</default>
+        <step>0.01</step>
+        <precision>3</precision>
+        <constraints>
+          <lower>0.01</lower>
+          <upper>100.0</upper>
+        </constraints>
+      </parameter>
+    </parameters>
+  </model>
+  <model id="HF1-2CFM+2DSPGR">
+    <name>
+      <short>HF1-2CFM+2DSPGR</short>
+      <long>High Flow 1 Inlet - Two Compartment Filtration and 2DSPGR Model</long>
+    </name>
+    <function>HighFlowSingleInletTwoCompartmentGadoxetateAnd2DSPGRModel</function>
+    <image>HighFlowSingleInletTwoCompartmentGadoxetateModel.png</image>
+    <inlet_type>single</inlet_type>
+    <parameters>
+      <parameter>
+        <name>
+          <short>Ve</short>
+          <long>Extracellular Volume Fraction</long>
+        </name>
+        <units>%</units>
+        <default>23.0</default>
+        <step>1.0</step>
+        <precision>2</precision>
+        <constraints>
+          <lower>0.01</lower>
+          <upper>99.99</upper>
+        </constraints>
+      </parameter>
+      <parameter>
+        <name>
+          <short>Kbh</short>
+          <long>Biliary Efflux Rate</long>
+        </name>
+        <units>mL/min/mL</units>
+        <default>0.0918</default>
+        <step>0.01</step>
+        <precision>4</precision>
+        <constraints>
+          <lower>0.01</lower>
+          <upper>100.0</upper>
+        </constraints>
+      </parameter>
+      <parameter>
+        <name>
+          <short>Khe</short>
+          <long>Hepatocyte Uptake Rate</long>
+        </name>
+        <units>mL/min/mL</units>
+        <default>2.358</default>
+        <step>0.1</step>
+        <precision>3</precision>
+        <constraints>
+          <lower>0.0001</lower>
+          <upper>100.0</upper>
+        </constraints>
+      </parameter>
+    </parameters>
+  </model>
+  <model id="HF1-2CFM+3DSPGR">
+    <name>
+      <short>HF1-2CFM+3DSPGR</short>
+      <long>High Flow 1 Inlet - Two Compartment Filtration and 3DSPGR Model</long>
+    </name>
+    <function>HighFlowSingleInletTwoCompartmentGadoxetateAnd3DSPGRModel</function>
     <image>HighFlowSingleInletTwoCompartmentGadoxetateModel.png</image>
     <inlet_type>single</inlet_type>
     <parameters>
