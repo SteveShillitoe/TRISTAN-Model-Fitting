@@ -50,12 +50,13 @@ def expconv(T, t, a, modelName):
         
         f[n-1] = f[n-2]
         return (f)
+
     except RuntimeError as re:
         print('Tools.expconv called for model {} with runtime error: {} '.format(modelName, str(re)))
         logger.error('Tools.expconv called for model {} with runtime error: {} '.format(modelName, str(re)))
     except Exception as e:
-        print('Tools.expconv called for model {} with error: {} '.format(modelName, str(re)))
-        logger.error('Tools.expconv called for model {} with error: {} '.format(modelName, str(re)))
+        print('Tools.expconv called for model {} with error: {} '.format(modelName, str(e)))
+        logger.error('Tools.expconv called for model {} with error: {} '.format(modelName, str(e)))
 
 #####################################
 # Performs deconvolution of C and ca_time where 

@@ -23,13 +23,13 @@ def spgr3d_func(x, FA, TR, R10, S0, S):
     except Exception as e:
         exceptionHandler.handleGeneralException(e)
 
-def spgr3d_func_inv(r1, FA, TR, R10, c):
+def spgr3d_func_inv(r1, FA, TR, R10, conc):
     try:
         exceptionHandler.modelFunctionInfoLogger()
         s = np.sin(FA*np.pi/180)
         c = np.cos(FA*np.pi/180)
         E0 = np.exp(-TR*R10)
-        E1 = np.exp(-TR*r1*c)
+        E1 = np.exp(-TR*r1*conc)
         Srel = s*(1-E0*E1)/(1-c*E0*E1)
         return(Srel)
     # Exception handling and logging code.
@@ -65,13 +65,13 @@ def spgr2d_func(x, FA, TR, R10, S0, S):
         exceptionHandler.handleGeneralException(e)
 
 
-def spgr2d_func_inv(r1, FA, TR, R10, c):
+def spgr2d_func_inv(r1, FA, TR, R10, conc):
     try:
         exceptionHandler.modelFunctionInfoLogger()
         s = np.sin(FA*np.pi/180)
         c = np.cos(FA*np.pi/180)
         E0 = np.exp(-TR*R10)
-        E1 = np.exp(-TR*r1*c/2)
+        E1 = np.exp(-TR*r1*conc/2)
     
         k0 = np.sqrt(E1*E0)
         k1 = 1-k0
@@ -92,12 +92,13 @@ def spgr2d_func_inv(r1, FA, TR, R10, c):
 ####################################################################
 ####  MR Signal Models 
 ####################################################################
-def DualInletTwoCompartmentGadoxetateAnd2DSPGRModel(X, Fa, Ve, Fp, kbh, khe):
+def DualInletTwoCompartmentGadoxetateAnd2DSPGRModel(xData2DArray, Fa, Ve, Fp, kbh, khe):
     try:
         exceptionHandler.modelFunctionInfoLogger()
-        t = X[:,0]
-        signalAIF = X[:,1]
-        signalVIF = X[:,2]
+        funcName = 'DualInletTwoCompartmentGadoxetateAnd2DSPGRModel'
+        t = xData2DArray[:,0]
+        signalAIF = xData2DArray[:,1]
+        signalVIF = xData2DArray[:,2]
         fv = 1 - Fa
     
         # SPGR model parameters
@@ -118,7 +119,10 @@ def DualInletTwoCompartmentGadoxetateAnd2DSPGRModel(X, Fa, Ve, Fp, kbh, khe):
         R1a = [Parallel(n_jobs=4)(delayed(fsolve)(spgr2d_func, x0=0, args = (FA, TR, R10a, Sa_baseline, signalAIF[p])) for p in np.arange(0,len(t)))]
         R1v = [Parallel(n_jobs=4)(delayed(fsolve)(spgr2d_func, x0=0, args = (FA, TR, R10v, Sv_baseline, signalVIF[p])) for p in np.arange(0,len(t)))]
     
-        concAIF = (R1a - R10a)/r1
+        R1a = np.squeeze(R1a)
+        R1v = np.squeeze(R1v)
+
+        concAIF = (R1a - R10a)/r1 
         concVIF = (R1v - R10v)/r1
     
         c_if = Fp*(Fa*concAIF + fv*concVIF)
@@ -136,8 +140,8 @@ def DualInletTwoCompartmentGadoxetateAnd2DSPGRModel(X, Fa, Ve, Fp, kbh, khe):
         Tc1 = 1/(gamma-alpha)
         Tc2 = 1/(gamma+alpha)
     
-        ce = (1/(2*Ve))*( (1+beta/alpha)*Tc1*tools.expconv(Tc1,t,c_if) + (1-beta/alpha)*Tc2*tools.expconv(Tc2,t,c_if) )
-        ct = Ve*ce + khe*Th*tools.expconv(Th,t,ce)
+        ce = (1/(2*Ve))*( (1+beta/alpha)*Tc1*tools.expconv(Tc1, t, c_if, funcName) + (1-beta/alpha)*Tc2*tools.expconv(Tc2, t, c_if, funcName) )
+        ct = Ve*ce + khe*Th*tools.expconv(Th, t, ce, funcName)
     
         # Convert to signal
         St_rel = spgr2d_func_inv(r1, FA, TR, R10t, ct)
@@ -149,12 +153,13 @@ def DualInletTwoCompartmentGadoxetateAnd2DSPGRModel(X, Fa, Ve, Fp, kbh, khe):
         exceptionHandler.handleGeneralException(e)
 
 
-def DualInletTwoCompartmentGadoxetateAnd3DSPGRModel(X, Fa, Ve, Fp, kbh, khe):
+def DualInletTwoCompartmentGadoxetateAnd3DSPGRModel(xData2DArray, Fa, Ve, Fp, kbh, khe):
     try:
         exceptionHandler.modelFunctionInfoLogger()
-        t = X[:,0]
-        signalAIF = X[:,1]
-        signalVIF = X[:,2]
+        funcName = 'DualInletTwoCompartmentGadoxetateAnd3DSPGRModel'
+        t = xData2DArray[:,0]
+        signalAIF = xData2DArray[:,1]
+        signalVIF = xData2DArray[:,2]
         fv = 1 - Fa
     
         # SPGR model parameters
@@ -174,7 +179,10 @@ def DualInletTwoCompartmentGadoxetateAnd3DSPGRModel(X, Fa, Ve, Fp, kbh, khe):
         # Convert to concentrations
         R1a = [Parallel(n_jobs=4)(delayed(fsolve)(spgr3d_func, x0=0, args = (FA, TR, R10a, Sa_baseline, signalAIF[p])) for p in np.arange(0,len(t)))]
         R1v = [Parallel(n_jobs=4)(delayed(fsolve)(spgr3d_func, x0=0, args = (FA, TR, R10v, Sv_baseline, signalVIF[p])) for p in np.arange(0,len(t)))]
-    
+        
+        R1a = np.squeeze(R1a)
+        R1v = np.squeeze(R1v)
+
         concAIF = (R1a - R10a)/r1
         concVIF = (R1v - R10v)/r1
     
@@ -193,8 +201,8 @@ def DualInletTwoCompartmentGadoxetateAnd3DSPGRModel(X, Fa, Ve, Fp, kbh, khe):
         Tc1 = 1/(gamma-alpha)
         Tc2 = 1/(gamma+alpha)
     
-        ce = (1/(2*Ve))*( (1+beta/alpha)*Tc1*tools.expconv(Tc1,t,c_if) + (1-beta/alpha)*Tc2*tools.expconv(Tc2,t,c_if) )
-        ct = Ve*ce + khe*Th*tools.expconv(Th,t,ce)
+        ce = (1/(2*Ve))*( (1+beta/alpha)*Tc1*tools.expconv(Tc1, t, c_if, funcName) + (1-beta/alpha)*Tc2*tools.expconv(Tc2, t, c_if, funcName) )
+        ct = Ve*ce + khe*Th*tools.expconv(Th, t, ce, funcName)
     
         # Convert to signal
         St_rel = spgr3d_func_inv(r1, FA, TR, R10t, ct)
@@ -206,12 +214,13 @@ def DualInletTwoCompartmentGadoxetateAnd3DSPGRModel(X, Fa, Ve, Fp, kbh, khe):
         exceptionHandler.handleGeneralException(e)
 
 
-def HighFlowDualInletTwoCompartmentGadoxetateAnd3DSPGRModel(X, Fa, Ve, kbh, khe):
+def HighFlowDualInletTwoCompartmentGadoxetateAnd3DSPGRModel(xData2DArray, Fa, Ve, kbh, khe):
     try:
         exceptionHandler.modelFunctionInfoLogger()
-        t = X[:,0]
-        signalAIF = X[:,1]
-        signalVIF = X[:,2]
+        funcName = 'HighFlowDualInletTwoCompartmentGadoxetateAnd3DSPGRModel'
+        t = xData2DArray[:,0]
+        signalAIF = xData2DArray[:,1]
+        signalVIF = xData2DArray[:,2]
         fv = 1 - Fa
     
         # SPGR model parameters
@@ -232,6 +241,9 @@ def HighFlowDualInletTwoCompartmentGadoxetateAnd3DSPGRModel(X, Fa, Ve, kbh, khe)
         R1a = [Parallel(n_jobs=4)(delayed(fsolve)(spgr3d_func, x0=0, args = (FA, TR, R10a, Sa_baseline, signalAIF[p])) for p in np.arange(0,len(t)))]
         R1v = [Parallel(n_jobs=4)(delayed(fsolve)(spgr3d_func, x0=0, args = (FA, TR, R10v, Sv_baseline, signalVIF[p])) for p in np.arange(0,len(t)))]
     
+        R1a = np.squeeze(R1a)
+        R1v = np.squeeze(R1v)
+
         concAIF = (R1a - R10a)/r1
         concVIF = (R1v - R10v)/r1
     
@@ -240,7 +252,7 @@ def HighFlowDualInletTwoCompartmentGadoxetateAnd3DSPGRModel(X, Fa, Ve, kbh, khe)
         Th = (1-Ve)/kbh
     
         ce = c_if
-        ct = Ve*ce + khe*Th*tools.expconv(Th,t,ce)
+        ct = Ve*ce + khe*Th*tools.expconv(Th, t, ce, funcName)
     
         # Convert to signal
         St_rel = spgr3d_func_inv(r1, FA, TR, R10t, ct)
@@ -251,12 +263,13 @@ def HighFlowDualInletTwoCompartmentGadoxetateAnd3DSPGRModel(X, Fa, Ve, kbh, khe)
     except Exception as e:
         exceptionHandler.handleGeneralException(e)
 
-def HighFlowDualInletTwoCompartmentGadoxetateAnd2DSPGRModel(X, Fa, Ve, khe, kbh):
+def HighFlowDualInletTwoCompartmentGadoxetateAnd2DSPGRModel(xData2DArray, Fa, Ve, khe, kbh):
     try:
         exceptionHandler.modelFunctionInfoLogger()
-        t = X[:,0]
-        signalAIF = X[:,1]
-        signalVIF = X[:,2]
+        funcName = 'HighFlowDualInletTwoCompartmentGadoxetateAnd2DSPGRModel'
+        t = xData2DArray[:,0]
+        signalAIF = xData2DArray[:,1]
+        signalVIF = xData2DArray[:,2]
         fv = 1 - Fa
     
         # SPGR model parameters
@@ -277,6 +290,9 @@ def HighFlowDualInletTwoCompartmentGadoxetateAnd2DSPGRModel(X, Fa, Ve, khe, kbh)
         R1a = [Parallel(n_jobs=4)(delayed(fsolve)(spgr2d_func, x0=0, args = (FA, TR, R10a, Sa_baseline, signalAIF[p])) for p in np.arange(0,len(t)))]
         R1v = [Parallel(n_jobs=4)(delayed(fsolve)(spgr2d_func, x0=0, args = (FA, TR, R10v, Sv_baseline, signalVIF[p])) for p in np.arange(0,len(t)))]
     
+        R1a = np.squeeze(R1a)
+        R1v = np.squeeze(R1v)
+
         concAIF = (R1a - R10a)/r1
         concVIF = (R1v - R10v)/r1
     
@@ -285,7 +301,7 @@ def HighFlowDualInletTwoCompartmentGadoxetateAnd2DSPGRModel(X, Fa, Ve, khe, kbh)
         Th = (1-Ve)/kbh
     
         ce = c_if
-        ct = Ve*ce + khe*Th*tools.expconv(Th,t,ce)
+        ct = Ve*ce + khe*Th*tools.expconv(Th, t, ce, funcName)
     
         # Convert to signal
         St_rel = spgr2d_func_inv(r1, FA, TR, R10t, ct)
@@ -297,11 +313,12 @@ def HighFlowDualInletTwoCompartmentGadoxetateAnd2DSPGRModel(X, Fa, Ve, khe, kbh)
         exceptionHandler.handleGeneralException(e)
 
 
-def HighFlowSingleInletTwoCompartmentGadoxetateAnd2DSPGRModel(X, Ve, kbh, khe):
+def HighFlowSingleInletTwoCompartmentGadoxetateAnd2DSPGRModel(xData2DArray, Ve, kbh, khe):
     try:
         exceptionHandler.modelFunctionInfoLogger()
-        t = X[:,0]
-        signalAIF = X[:,1]
+        funcName = 'HighFlowSingleInletTwoCompartmentGadoxetateAnd2DSPGRMode'
+        t = xData2DArray[:,0]
+        signalAIF = xData2DArray[:,1]
     
         # SPGR model parameters
         TR = 3.78/1000 # Repetition time of dynamic SPGR sequence in seconds
@@ -317,7 +334,8 @@ def HighFlowSingleInletTwoCompartmentGadoxetateAnd2DSPGRModel(X, Ve, kbh, khe):
     
         # Convert to concentrations
         R1a = [Parallel(n_jobs=4)(delayed(fsolve)(spgr2d_func, x0=0, args = (FA, TR, R10a, Sa_baseline, signalAIF[p])) for p in np.arange(0,len(t)))]
-    
+        R1a = np.squeeze(R1a)
+        
         concAIF = (R1a - R10a)/r1
     
         c_if = concAIF
@@ -325,7 +343,7 @@ def HighFlowSingleInletTwoCompartmentGadoxetateAnd2DSPGRModel(X, Ve, kbh, khe):
         Th = (1-Ve)/kbh
     
         ce = c_if
-        ct = Ve*ce + khe*Th*tools.expconv(Th,t,ce)
+        ct = Ve*ce + khe*Th*tools.expconv(Th, t, ce, funcName)
     
         # Convert to signal
         St_rel = spgr2d_func_inv(r1, FA, TR, R10t, ct)
@@ -337,11 +355,12 @@ def HighFlowSingleInletTwoCompartmentGadoxetateAnd2DSPGRModel(X, Ve, kbh, khe):
         exceptionHandler.handleGeneralException(e)
 
 
-def HighFlowSingleInletTwoCompartmentGadoxetateAnd3DSPGRModel(X, Ve, kbh, khe):
+def HighFlowSingleInletTwoCompartmentGadoxetateAnd3DSPGRModel(xData2DArray, Ve, kbh, khe):
     try:
         exceptionHandler.modelFunctionInfoLogger()
-        t = X[:,0]
-        signalAIF = X[:,1]
+        funcName = 'HighFlowSingleInletTwoCompartmentGadoxetateAnd3DSPGRMode'
+        t = xData2DArray[:,0]
+        signalAIF = xData2DArray[:,1]
     
         # SPGR model parameters
         TR = 3.78/1000 # Repetition time of dynamic SPGR sequence in seconds
@@ -357,7 +376,8 @@ def HighFlowSingleInletTwoCompartmentGadoxetateAnd3DSPGRModel(X, Ve, kbh, khe):
     
         # Convert to concentrations
         R1a = [Parallel(n_jobs=4)(delayed(fsolve)(spgr3d_func, x0=0, args = (FA, TR, R10a, Sa_baseline, signalAIF[p])) for p in np.arange(0,len(t)))]
-    
+        R1a = np.squeeze(R1a)
+        
         concAIF = (R1a - R10a)/r1
     
         c_if = concAIF
@@ -365,7 +385,7 @@ def HighFlowSingleInletTwoCompartmentGadoxetateAnd3DSPGRModel(X, Ve, kbh, khe):
         Th = (1-Ve)/kbh
     
         ce = c_if
-        ct = Ve*ce + khe*Th*tools.expconv(Th,t,ce)
+        ct = Ve*ce + khe*Th*tools.expconv(Th, t, ce, funcName)
     
         # Convert to signal
         St_rel = spgr3d_func_inv(r1, FA, TR, R10t, ct)
@@ -431,10 +451,10 @@ def DualInputTwoCompartmentFiltrationModel(xData2DArray, Fa: float, Ve: float, F
         Tc2 = 1/(gamma+alpha)
     
         modelConcs = []
-        ce = (1/(2*Ve))*( (1+beta/alpha)*Tc1*tools.expconv(Tc1,times,combinedConcentration, funcName + '- 1') + \
-                        (1-beta/alpha)*Tc2*tools.expconv(Tc2,times,combinedConcentration, funcName + '- 2')) 
+        ce = (1/(2*Ve))*( (1+beta/alpha)*Tc1*tools.expconv(Tc1, times, combinedConcentration, funcName + '- 1') + \
+                        (1-beta/alpha)*Tc2*tools.expconv(Tc2, times, combinedConcentration, funcName + '- 2')) 
    
-        modelConcs = Ve*ce + Khe*Th*tools.expconv(Th,times,ce, funcName + '- 3')
+        modelConcs = Ve*ce + Khe*Th*tools.expconv(Th, times, ce, funcName + '- 3')
     
         return(modelConcs)
 
@@ -482,7 +502,7 @@ def HighFlowDualInletTwoCompartmentGadoxetateModel(xData2DArray, Fa: float, Ve: 
     
         modelConcs = []
         modelConcs = (Ve*combinedConcentration + \
-        Khe*Th*tools.expconv(Th,times,combinedConcentration,'HighFlowDualInletTwoCompartmentGadoxetateModel'))
+        Khe*Th*tools.expconv(Th, times, combinedConcentration, 'HighFlowDualInletTwoCompartmentGadoxetateModel'))
         
         return(modelConcs)
 
@@ -521,7 +541,7 @@ def HighFlowSingleInletTwoCompartmentGadoxetateModel(xData2DArray, Ve: float, Kb
         Th = (1-Ve)/Kbh
     
         modelConcs = []
-        modelConcs = (Ve*AIFconcentrations + Khe*Th*tools.expconv(Th,times,AIFconcentrations,'HighFlowSingleInletTwoCompartmentGadoxetateModel'))
+        modelConcs = (Ve*AIFconcentrations + Khe*Th*tools.expconv(Th, times, AIFconcentrations, 'HighFlowSingleInletTwoCompartmentGadoxetateModel'))
     
         return(modelConcs)
 
