@@ -17,7 +17,7 @@ def spgr3d_func(x, FA, TR, R10, S0, S):
         c = np.cos(FA*np.pi/180)
         out = S - S0*(1-E1)*(1-c*E0)/((1-E0)*(1-c*E1))
         return(out)
-    # Exception handling and logging code.
+    
     except ZeroDivisionError as zde:
         exceptionHandler.handleDivByZeroException(zde)
     except Exception as e:
@@ -32,7 +32,7 @@ def spgr3d_func_inv(r1, FA, TR, R10, conc):
         E1 = np.exp(-TR*r1*conc)
         Srel = s*(1-E0*E1)/(1-c*E0*E1)
         return(Srel)
-    # Exception handling and logging code.
+   
     except ZeroDivisionError as zde:
         exceptionHandler.handleDivByZeroException(zde)
     except Exception as e:
@@ -58,7 +58,7 @@ def spgr2d_func(x, FA, TR, R10, S0, S):
         k3 = 1-(c**3)*E1*E1
         out = S - S_0*k1*(1 + (c**2)*k0*k2*(1+E1*c)/k3)
         return(out)
-    # Exception handling and logging code.
+    
     except ZeroDivisionError as zde:
         exceptionHandler.handleDivByZeroException(zde)
     except Exception as e:
@@ -79,7 +79,7 @@ def spgr2d_func_inv(r1, FA, TR, R10, conc):
         k3 = 1-(c**3)*E1*E1*E0*E0   
         Srel = s*k1*(1 + (c**2)*k0*k2*(1+E1*E0*c)/k3)
         return(Srel) 
-    # Exception handling and logging code.
+    
     except ZeroDivisionError as zde:
         exceptionHandler.handleDivByZeroException(zde)
     except Exception as e:
@@ -92,7 +92,7 @@ def spgr2d_func_inv(r1, FA, TR, R10, conc):
 ####################################################################
 ####  MR Signal Models 
 ####################################################################
-def DualInletTwoCompartmentGadoxetateAnd2DSPGRModel(xData2DArray, Fa, Ve, Fp, kbh, khe):
+def DualInletTwoCompartmentGadoxetateAnd2DSPGRModel(xData2DArray, Fa, Ve, Fp, Kbh, Khe):
     try:
         exceptionHandler.modelFunctionInfoLogger()
         funcName = 'DualInletTwoCompartmentGadoxetateAnd2DSPGRModel'
@@ -127,25 +127,25 @@ def DualInletTwoCompartmentGadoxetateAnd2DSPGRModel(xData2DArray, Fa, Ve, Fp, kb
     
         c_if = Fp*(Fa*concAIF + fv*concVIF)
       
-        Th = (1-Ve)/kbh
-        Te = Ve/(Fp + khe)
+        Th = (1-Ve)/Kbh
+        Te = Ve/(Fp + Khe)
     
         alpha = np.sqrt( ((1/Te + 1/Th)/2)**2 - 1/(Te*Th) )
         beta = (1/Th - 1/Te)/2
         gamma = (1/Th + 1/Te)/2
     
-        # conc = (Ve + khe(1+kbh/(vh(1/Tb-1/Th)))exp(-t/Th)-kbhkhe/(vh(1/Tb-1/Th))exp(-t/Tb))*exp(-gamma.t)(cosh(alpha.t)+beta/gamma sinh(alpha.t))*Fp/Ve (Fa concAIF(t)+fv concVIF(t))
+        # conc = (Ve + Khe(1+Kbh/(vh(1/Tb-1/Th)))exp(-t/Th)-kbhkhe/(vh(1/Tb-1/Th))exp(-t/Tb))*exp(-gamma.t)(cosh(alpha.t)+beta/gamma sinh(alpha.t))*Fp/Ve (Fa concAIF(t)+fv concVIF(t))
         # Let ce(t) = exp(-gamma.t)(cosh(alpha.t)+beta/gamma sinh(alpha.t))*c_if(t) then
-        # conc = (Ve + khe(1+kbh/(vh(1/Tb-1/Th)))exp(-t/Th)-kbhkhe/(vh(1/Tb-1/Th))exp(-t/Tb))*ce(t)
+        # conc = (Ve + Khe(1+Kbh/(vh(1/Tb-1/Th)))exp(-t/Th)-kbhkhe/(vh(1/Tb-1/Th))exp(-t/Tb))*ce(t)
         Tc1 = 1/(gamma-alpha)
         Tc2 = 1/(gamma+alpha)
     
         ce = (1/(2*Ve))*( (1+beta/alpha)*Tc1*tools.expconv(Tc1, t, c_if, funcName) + (1-beta/alpha)*Tc2*tools.expconv(Tc2, t, c_if, funcName) )
-        ct = Ve*ce + khe*Th*tools.expconv(Th, t, ce, funcName)
+        ct = Ve*ce + Khe*Th*tools.expconv(Th, t, ce, funcName)
     
         # Convert to signal
         St_rel = spgr2d_func_inv(r1, FA, TR, R10t, ct)
-    
+        
         return(St_rel) #Returns tissue signal relative to the baseline St/St_baseline
     except ZeroDivisionError as zde:
         exceptionHandler.handleDivByZeroException(zde)
@@ -153,7 +153,7 @@ def DualInletTwoCompartmentGadoxetateAnd2DSPGRModel(xData2DArray, Fa, Ve, Fp, kb
         exceptionHandler.handleGeneralException(e)
 
 
-def DualInletTwoCompartmentGadoxetateAnd3DSPGRModel(xData2DArray, Fa, Ve, Fp, kbh, khe):
+def DualInletTwoCompartmentGadoxetateAnd3DSPGRModel(xData2DArray, Fa, Ve, Fp, Kbh, Khe):
     try:
         exceptionHandler.modelFunctionInfoLogger()
         funcName = 'DualInletTwoCompartmentGadoxetateAnd3DSPGRModel'
@@ -188,25 +188,25 @@ def DualInletTwoCompartmentGadoxetateAnd3DSPGRModel(xData2DArray, Fa, Ve, Fp, kb
     
         c_if = Fp*(Fa*concAIF + fv*concVIF)
       
-        Th = (1-Ve)/kbh
-        Te = Ve/(Fp + khe)
+        Th = (1-Ve)/Kbh
+        Te = Ve/(Fp + Khe)
     
         alpha = np.sqrt( ((1/Te + 1/Th)/2)**2 - 1/(Te*Th) )
         beta = (1/Th - 1/Te)/2
         gamma = (1/Th + 1/Te)/2
     
-        # conc = (Ve + khe(1+kbh/(vh(1/Tb-1/Th)))exp(-t/Th)-kbhkhe/(vh(1/Tb-1/Th))exp(-t/Tb))*exp(-gamma.t)(cosh(alpha.t)+beta/gamma sinh(alpha.t))*Fp/Ve (Fa concAIF(t)+fv concVIF(t))
+        # conc = (Ve + Khe(1+Kbh/(vh(1/Tb-1/Th)))exp(-t/Th)-kbhkhe/(vh(1/Tb-1/Th))exp(-t/Tb))*exp(-gamma.t)(cosh(alpha.t)+beta/gamma sinh(alpha.t))*Fp/Ve (Fa concAIF(t)+fv concVIF(t))
         # Let ce(t) = exp(-gamma.t)(cosh(alpha.t)+beta/gamma sinh(alpha.t))*c_if(t) then
-        # conc = (Ve + khe(1+kbh/(vh(1/Tb-1/Th)))exp(-t/Th)-kbhkhe/(vh(1/Tb-1/Th))exp(-t/Tb))*ce(t)
+        # conc = (Ve + Khe(1+Kbh/(vh(1/Tb-1/Th)))exp(-t/Th)-kbhkhe/(vh(1/Tb-1/Th))exp(-t/Tb))*ce(t)
         Tc1 = 1/(gamma-alpha)
         Tc2 = 1/(gamma+alpha)
     
         ce = (1/(2*Ve))*( (1+beta/alpha)*Tc1*tools.expconv(Tc1, t, c_if, funcName) + (1-beta/alpha)*Tc2*tools.expconv(Tc2, t, c_if, funcName) )
-        ct = Ve*ce + khe*Th*tools.expconv(Th, t, ce, funcName)
+        ct = Ve*ce + Khe*Th*tools.expconv(Th, t, ce, funcName)
     
         # Convert to signal
         St_rel = spgr3d_func_inv(r1, FA, TR, R10t, ct)
-    
+        print("Signal from model {} = {}".format(funcName, St_rel))
         return(St_rel) #Returns tissue signal relative to the baseline St/St_baseline
     except ZeroDivisionError as zde:
         exceptionHandler.handleDivByZeroException(zde)
@@ -214,7 +214,7 @@ def DualInletTwoCompartmentGadoxetateAnd3DSPGRModel(xData2DArray, Fa, Ve, Fp, kb
         exceptionHandler.handleGeneralException(e)
 
 
-def HighFlowDualInletTwoCompartmentGadoxetateAnd3DSPGRModel(xData2DArray, Fa, Ve, kbh, khe):
+def HighFlowDualInletTwoCompartmentGadoxetateAnd3DSPGRModel(xData2DArray, Fa, Ve, Kbh, Khe):
     try:
         exceptionHandler.modelFunctionInfoLogger()
         funcName = 'HighFlowDualInletTwoCompartmentGadoxetateAnd3DSPGRModel'
@@ -249,10 +249,10 @@ def HighFlowDualInletTwoCompartmentGadoxetateAnd3DSPGRModel(xData2DArray, Fa, Ve
     
         c_if = Fa*concAIF + fv*concVIF
       
-        Th = (1-Ve)/kbh
+        Th = (1-Ve)/Kbh
     
         ce = c_if
-        ct = Ve*ce + khe*Th*tools.expconv(Th, t, ce, funcName)
+        ct = Ve*ce + Khe*Th*tools.expconv(Th, t, ce, funcName)
     
         # Convert to signal
         St_rel = spgr3d_func_inv(r1, FA, TR, R10t, ct)
@@ -263,7 +263,7 @@ def HighFlowDualInletTwoCompartmentGadoxetateAnd3DSPGRModel(xData2DArray, Fa, Ve
     except Exception as e:
         exceptionHandler.handleGeneralException(e)
 
-def HighFlowDualInletTwoCompartmentGadoxetateAnd2DSPGRModel(xData2DArray, Fa, Ve, khe, kbh):
+def HighFlowDualInletTwoCompartmentGadoxetateAnd2DSPGRModel(xData2DArray, Fa, Ve, Khe, Kbh):
     try:
         exceptionHandler.modelFunctionInfoLogger()
         funcName = 'HighFlowDualInletTwoCompartmentGadoxetateAnd2DSPGRModel'
@@ -298,10 +298,10 @@ def HighFlowDualInletTwoCompartmentGadoxetateAnd2DSPGRModel(xData2DArray, Fa, Ve
     
         c_if = Fa*concAIF + fv*concVIF
       
-        Th = (1-Ve)/kbh
+        Th = (1-Ve)/Kbh
     
         ce = c_if
-        ct = Ve*ce + khe*Th*tools.expconv(Th, t, ce, funcName)
+        ct = Ve*ce + Khe*Th*tools.expconv(Th, t, ce, funcName)
     
         # Convert to signal
         St_rel = spgr2d_func_inv(r1, FA, TR, R10t, ct)
@@ -313,7 +313,7 @@ def HighFlowDualInletTwoCompartmentGadoxetateAnd2DSPGRModel(xData2DArray, Fa, Ve
         exceptionHandler.handleGeneralException(e)
 
 
-def HighFlowSingleInletTwoCompartmentGadoxetateAnd2DSPGRModel(xData2DArray, Ve, kbh, khe):
+def HighFlowSingleInletTwoCompartmentGadoxetateAnd2DSPGRModel(xData2DArray, Ve, Kbh, Khe):
     try:
         exceptionHandler.modelFunctionInfoLogger()
         funcName = 'HighFlowSingleInletTwoCompartmentGadoxetateAnd2DSPGRMode'
@@ -343,7 +343,7 @@ def HighFlowSingleInletTwoCompartmentGadoxetateAnd2DSPGRModel(xData2DArray, Ve, 
         Th = (1-Ve)/kbh
     
         ce = c_if
-        ct = Ve*ce + khe*Th*tools.expconv(Th, t, ce, funcName)
+        ct = Ve*ce + Khe*Th*tools.expconv(Th, t, ce, funcName)
     
         # Convert to signal
         St_rel = spgr2d_func_inv(r1, FA, TR, R10t, ct)
@@ -355,7 +355,7 @@ def HighFlowSingleInletTwoCompartmentGadoxetateAnd2DSPGRModel(xData2DArray, Ve, 
         exceptionHandler.handleGeneralException(e)
 
 
-def HighFlowSingleInletTwoCompartmentGadoxetateAnd3DSPGRModel(xData2DArray, Ve, kbh, khe):
+def HighFlowSingleInletTwoCompartmentGadoxetateAnd3DSPGRModel(xData2DArray, Ve, Kbh, Khe):
     try:
         exceptionHandler.modelFunctionInfoLogger()
         funcName = 'HighFlowSingleInletTwoCompartmentGadoxetateAnd3DSPGRMode'
@@ -382,10 +382,10 @@ def HighFlowSingleInletTwoCompartmentGadoxetateAnd3DSPGRModel(xData2DArray, Ve, 
     
         c_if = concAIF
       
-        Th = (1-Ve)/kbh
+        Th = (1-Ve)/Kbh
     
         ce = c_if
-        ct = Ve*ce + khe*Th*tools.expconv(Th, t, ce, funcName)
+        ct = Ve*ce + Khe*Th*tools.expconv(Th, t, ce, funcName)
     
         # Convert to signal
         St_rel = spgr3d_func_inv(r1, FA, TR, R10t, ct)

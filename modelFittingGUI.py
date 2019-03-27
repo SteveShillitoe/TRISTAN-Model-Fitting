@@ -422,7 +422,7 @@ class ModelFittingApp(QWidget):
         self.cmbModels.currentIndexChanged.connect(self.DisplayModelImage)
         self.cmbModels.currentIndexChanged.connect(self.ConfigureGUIForEachModel)
         self.cmbModels.currentIndexChanged.connect(lambda: self.ClearOptimisedParamaterList('cmbModels')) 
-        self.cmbModels.currentIndexChanged.connect(self.DisplayFitModelAndSaveCSVButtons)
+        self.cmbModels.currentIndexChanged.connect(self.display_FitModel_SaveCSV_SaveReport_Buttons)
         self.cmbModels.activated.connect(lambda:  self.PlotConcentrations('cmbModels'))
 
         #Create dropdown lists for selection of AIF & VIF
@@ -437,12 +437,12 @@ class ModelFittingApp(QWidget):
         self.cmbROI.activated.connect(lambda:  self.PlotConcentrations('cmbROI'))
         #When a ROI is selected, then make the Model groupbox and the widgets
         #contains visible.
-        self.cmbROI.currentIndexChanged.connect(self.DisplayModelFittingGroupBox)
+        self.cmbROI.activated.connect(self.DisplayModelFittingGroupBox)
         #When an AIF is selected plot its concentration data on the graph.
         self.cmbAIF.activated.connect(lambda: self.PlotConcentrations('cmbAIF'))
         #When an AIF is selected display the Fit Model and Save plot CVS buttons.
-        self.cmbAIF.currentIndexChanged.connect(self.DisplayFitModelAndSaveCSVButtons)
-        self.cmbVIF.currentIndexChanged.connect(self.DisplayFitModelAndSaveCSVButtons)
+        self.cmbAIF.currentIndexChanged.connect(self.display_FitModel_SaveCSV_SaveReport_Buttons)
+        self.cmbVIF.currentIndexChanged.connect(self.display_FitModel_SaveCSV_SaveReport_Buttons)
         #When a VIF is selected plot its concentration data on the graph.
         self.cmbVIF.activated.connect(lambda: self.PlotConcentrations('cmbVIF'))
         self.lblAIF.hide()
@@ -890,36 +890,39 @@ class ModelFittingApp(QWidget):
             print('Error in function ClearOptimisedParamaterList: ' + str(e)) 
             logger.error('Error in function ClearOptimisedParamaterList: ' + str(e))
 
-    def DisplayFitModelAndSaveCSVButtons(self):
-        """Displays the Fit Model and Save CSV buttons if both a ROI & AIF 
+    def display_FitModel_SaveCSV_SaveReport_Buttons(self):
+        """Displays the Fit Model, Save CSV and Save PFD Report buttons if both a ROI & AIF 
         are selected.  Otherwise hides them."""
         try:
             #Hide buttons then display them if appropriate
             self.btnFitModel.hide()
             self.btnSaveCSV.hide()
+            self.btnSaveReport.hide()
             self.groupBoxBatchProcessing.hide()
             ROI = str(self.cmbROI.currentText())
             AIF = str(self.cmbAIF.currentText())
             VIF = str(self.cmbVIF.currentText())
             modelName = str(self.cmbModels.currentText())
             modelInletType = self.objXMLReader.getModelInletType(modelName)
-            logger.info("Function DisplayFitModelAndSaveCSVButtons called. Model is " + modelName)
+            logger.info("Function display_FitModel_SaveCSV_SaveReport_Buttons called. Model is " + modelName)
             if modelInletType == 'single':
                 if ROI != 'Please Select' and AIF != 'Please Select':
                     self.btnFitModel.show()
                     self.btnSaveCSV.show()
+                    self.btnSaveReport.show()
                     self.groupBoxBatchProcessing.show() 
-                    logger.info("Function DisplayFitModelAndSaveCSVButtons called when ROI = {} and AIF = {}".format(ROI, AIF))
+                    logger.info("Function display_FitModel_SaveCSV_SaveReport_Buttons called when ROI = {} and AIF = {}".format(ROI, AIF))
             elif modelInletType == 'dual':
                 if ROI != 'Please Select' and AIF != 'Please Select' and VIF != 'Please Select' :
                     self.btnFitModel.show()
                     self.btnSaveCSV.show()
+                    self.btnSaveReport.show()
                     self.groupBoxBatchProcessing.show() 
-                    logger.info("Function DisplayFitModelAndSaveCSVButtons called when ROI = {}, AIF = {} & VIF ={}".format(ROI, AIF, VIF)) 
+                    logger.info("Function display_FitModel_SaveCSV_SaveReport_Buttons called when ROI = {}, AIF = {} & VIF ={}".format(ROI, AIF, VIF)) 
         
         except Exception as e:
-            print('Error in function DisplayFitModelAndSaveCSVButtons: ' + str(e))
-            logger.error('Error in function DisplayFitModelAndSaveCSVButtons: ' + str(e))
+            print('Error in function display_FitModel_SaveCSV_SaveReport_Buttons: ' + str(e))
+            logger.error('Error in function display_FitModel_SaveCSV_SaveReport_Buttons: ' + str(e))
 
     def GetSpinBoxValue(self, paramNumber, initialParametersArray):
         """
@@ -1415,12 +1418,16 @@ class ModelFittingApp(QWidget):
         configuration data.  If the XML file parses successfully,
         display the 'Load Data FIle' button and build the list 
         of model short names."""
-         
-        #global self.objXMLReader
-        
-        self.HideAllControlsOnGUI()
         
         try:
+            self.cmbROI.clear()
+            #Clear the existing plot
+            self.figure.clear()
+            self.figure.set_visible(False)
+            self.canvas.draw()
+        
+            self.HideAllControlsOnGUI()
+
             #get the configuration file in XML format
             #filter parameter set so that the user can only open an XML file
             defaultPath = "config\\"
@@ -1921,7 +1928,7 @@ class ModelFittingApp(QWidget):
         try:
             boolAIFSelected = False
             boolVIFSelected = False
-
+            t0 = 80
             self.figure.clear()
             self.figure.set_visible(True)
             
@@ -1942,7 +1949,8 @@ class ModelFittingApp(QWidget):
             ROI = str(self.cmbROI.currentText())
             if ROI != 'Please Select':
                 arrayROIConcs = np.array(self.concentrationData[ROI], dtype='float')
-                ax.plot(arrayTimes, arrayROIConcs, 'b.-', label= ROI)
+                ROI_baseline = np.mean(arrayROIConcs[0:int(t0/arrayTimes[1])-1])
+                ax.plot(arrayTimes, arrayROIConcs/ROI_baseline, 'b.-', label= ROI)
 
             AIF = str(self.cmbAIF.currentText())
             VIF = str(self.cmbVIF.currentText())
@@ -1953,14 +1961,21 @@ class ModelFittingApp(QWidget):
 
             if AIF != 'Please Select':
                 #Plot AIF curve
+                
+                
                 arrayAIFConcs = np.array(self.concentrationData[AIF], dtype='float')
-                ax.plot(arrayTimes, arrayAIFConcs, 'r.-', label= AIF)
+                Sa_baseline = np.mean(arrayAIFConcs[0:int(t0/arrayTimes[1])-1])
+                
+                ax.plot(arrayTimes, arrayAIFConcs/Sa_baseline, 'r.-', label= AIF)
                 boolAIFSelected = True
 
             if VIF != 'Please Select':
                 #Plot VIF curve
+                t0=80
                 arrayVIFConcs = np.array(self.concentrationData[VIF], dtype='float')
-                ax.plot(arrayTimes, arrayVIFConcs, 'k.-', label= VIF)
+                Sv_baseline = np.mean(arrayVIFConcs[0:int(t0/arrayTimes[1])-1])
+                
+                ax.plot(arrayTimes, arrayVIFConcs/Sv_baseline, 'k.-', label= VIF)
                 boolVIFSelected = True
                     
             #Plot concentration curve from the model
