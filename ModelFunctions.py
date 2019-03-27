@@ -550,3 +550,18 @@ def HighFlowSingleInletTwoCompartmentGadoxetateModel(xData2DArray, Ve: float, Kb
         exceptionHandler.handleDivByZeroException(zde)
     except Exception as e:
         exceptionHandler.handleGeneralException(e)
+
+##############################################################
+### Model Function Template
+##############################################################
+def modelFunctionName(xData2DArray, param1, param2, param3, param4, param5):
+    try:
+        exceptionHandler.modelFunctionInfoLogger()
+        #model logic goes here
+    
+        #return(Concentration Array) 
+
+    except ZeroDivisionError as zde:
+        exceptionHandler.handleDivByZeroException(zde)
+    except Exception as e:
+        exceptionHandler.handleGeneralException(e)
