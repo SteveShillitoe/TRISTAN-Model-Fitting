@@ -29,6 +29,48 @@ The <name></name> tags enclose the <short></short> and
 -->
 <models>
   <data_file_path>C:\TRISTAN Data\MR Signal Data</data_file_path>
+  <constants>
+    <constant>
+      <!--Repetition time of dynamic SPGR sequence in seconds -->
+      <name>TR</name>
+      <value>0.00378</value>
+    </constant>
+    <constant>
+      <!-- Temporal resolution in sec -->
+      <name>dt</name>
+      <value>16</value>
+    </constant>
+    <constant>
+      <!-- Duration of baseline scans -->
+      <name>t0</name>
+      <value>80</value>
+    </constant>
+    <constant>
+      <!-- Degrees-->
+      <name>FA</name>
+      <value>15</value>
+    </constant>
+    <constant>
+      <!-- Hz/mM-->
+      <name>r1</name>
+      <value>5.9</value>
+    </constant>
+    <constant>
+      <!-- Hz-->
+      <name>R10a</name>
+      <value>1/1.500</value>
+    </constant>
+    <constant>
+      <!-- Hz-->
+      <name>R10v</name>
+      <value>1/1.500</value>
+    </constant>
+    <constant>
+      <!-- Hz-->
+      <name>R10t</name>
+      <value>1/0.800</value>
+    </constant>
+  </constants>
   <model id="2-2CFM+2DSPGR">
     <name>
       <short>2-2CFM+2DSPGR</short>

@@ -1961,7 +1961,6 @@ class ModelFittingApp(QWidget):
             if AIF != 'Please Select':
                 #Plot AIF curve
                 
-                
                 arrayAIFConcs = np.array(self.concentrationData[AIF], dtype='float')
                 Sa_baseline = np.mean(arrayAIFConcs[0:int(t0/arrayTimes[1])-1])
                 
