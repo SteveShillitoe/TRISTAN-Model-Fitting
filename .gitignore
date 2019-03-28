@@ -27,3 +27,6 @@
 /__pycache__/ModelFunctions.cpython-37.pyc
 /__pycache__/ModelFunctionsHelper.cpython-37.pyc
 /__pycache__/XMLReader.cpython-37.pyc
+/__pycache__/PDFWriter.cpython-37.pyc
+/__pycache__/StyleSheet.cpython-37.pyc
+/__pycache__/Tools.cpython-37.pyc

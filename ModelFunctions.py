@@ -559,7 +559,7 @@ def modelFunctionName(xData2DArray, param1, param2, param3, param4, param5):
         exceptionHandler.modelFunctionInfoLogger()
         #model logic goes here
     
-        #return(Concentration Array) 
+        #return(Array of concentrations/signals) 
 
     except ZeroDivisionError as zde:
         exceptionHandler.handleDivByZeroException(zde)

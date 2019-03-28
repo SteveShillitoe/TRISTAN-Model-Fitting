@@ -1420,7 +1420,6 @@ class ModelFittingApp(QWidget):
         of model short names."""
         
         try:
-            self.cmbROI.clear()
             #Clear the existing plot
             self.figure.clear()
             self.figure.set_visible(False)
