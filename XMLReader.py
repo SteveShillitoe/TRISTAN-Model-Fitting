@@ -400,17 +400,19 @@ class XMLReader:
                   + str(e)) 
             return ''
         
-def getDictionaryOfConstants(self):
+    def getDictionaryOfConstants(self):
         """ Returns the path to the folder where the data files are stored"""
         try:
             logger.info('XMLReader.getDictionaryOfConstants called')
            
             xPath='./constants/constant'
-            constantsCollection = self.root.findall(xPath)
+            collConstants = self.root.findall(xPath)
 
-            constantsDict ={}
-            for constant in constantsCollection:
-                constantsDict[constant['name'].text].append(constant['value'].text)
+            constantsDict = {}
+            for constant in collConstants:
+                 name = constant.find('name').text
+                 value = constant.find('value').text
+                 constantsDict[name] = float(value) 
 
             return constantsDict
 

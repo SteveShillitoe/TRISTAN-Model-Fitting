@@ -58,17 +58,17 @@ The <name></name> tags enclose the <short></short> and
     <constant>
       <!-- Hz-->
       <name>R10a</name>
-      <value>1/1.500</value>
+      <value>0.6667</value>
     </constant>
     <constant>
       <!-- Hz-->
       <name>R10v</name>
-      <value>1/1.500</value>
+      <value>0.6667</value>
     </constant>
     <constant>
       <!-- Hz-->
       <name>R10t</name>
-      <value>1/0.800</value>
+      <value>1.25</value>
     </constant>
   </constants>
   <model id="2-2CFM+2DSPGR">

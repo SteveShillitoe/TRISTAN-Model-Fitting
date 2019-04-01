@@ -101,7 +101,7 @@ def DualInletTwoCompartmentGadoxetateAnd2DSPGRModel(xData2DArray, Fa, Ve, Fp, Kb
         signalVIF = xData2DArray[:,2]
         fv = 1 - Fa
     
-        # SPGR model parameters
+        # Get SPGR model parameters
         TR = 3.78/1000 # Repetition time of dynamic SPGR sequence in seconds
         dt = 16 #temporal resolution in sec
         t0 = 5*dt # Duration of baseline scans
@@ -153,7 +153,9 @@ def DualInletTwoCompartmentGadoxetateAnd2DSPGRModel(xData2DArray, Fa, Ve, Fp, Kb
         exceptionHandler.handleGeneralException(e)
 
 
-def DualInletTwoCompartmentGadoxetateAnd3DSPGRModel(xData2DArray, Fa, Ve, Fp, Kbh, Khe):
+def DualInletTwoCompartmentGadoxetateAnd3DSPGRModel(
+    xData2DArray, Fa, Ve, Fp, Kbh, Khe, **kwargs):
+        #TR, dt, t0, FA, r1, R10a, R10v, R10t):
     try:
         exceptionHandler.modelFunctionInfoLogger()
         funcName = 'DualInletTwoCompartmentGadoxetateAnd3DSPGRModel'
@@ -162,15 +164,12 @@ def DualInletTwoCompartmentGadoxetateAnd3DSPGRModel(xData2DArray, Fa, Ve, Fp, Kb
         signalVIF = xData2DArray[:,2]
         fv = 1 - Fa
     
-        # SPGR model parameters
-        TR = 3.78/1000 # Repetition time of dynamic SPGR sequence in seconds
-        dt = 16 #temporal resolution in sec
-        t0 = 5*dt # Duration of baseline scans
-        FA = 15 #degrees
-        r1 = 5.9 # Hz/mM
-        R10a = 1/1.500 # Hz
-        R10v = 1/1.500 # Hz
-        R10t = 1/0.800 # Hz
+        # Unpack SPGR model constants from dictionary of
+        # constants and their values
+        TR, dt, t0, FA, r1, R10a, R10v, R10t = \
+        kwargs['TR'], kwargs['dt'], kwargs['t0'],\
+        kwargs['FA'], kwargs['r1'], \
+        kwargs['R10a'], kwargs['R10v'], kwargs['R10t'] 
     
         # Precontrast signal
         Sa_baseline = np.mean(signalAIF[0:int(t0/t[1])-1])

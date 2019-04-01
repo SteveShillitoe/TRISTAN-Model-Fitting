@@ -1191,6 +1191,7 @@ class ModelFittingApp(QWidget):
         """
         try:
             paramList = self.CurveFitCollateParameterData()
+            constantsDict = self.objXMLReader.getDictionaryOfConstants()
             
             #Get name of region of interest, arterial and venal input functions
             ROI = str(self.cmbROI.currentText())
@@ -1214,10 +1215,11 @@ class ModelFittingApp(QWidget):
             modelName = str(self.cmbModels.currentText())
             functionName = self.objXMLReader.getFunctionName(modelName)
             inletType = self.objXMLReader.getModelInletType(modelName)
-            optimumParamsDict, paramCovarianceMatrix = ModelFunctionsHelper.CurveFit(
+            optimumParamsDict, paramCovarianceMatrix = \
+                ModelFunctionsHelper.CurveFit(
                 functionName, paramList, arrayTimes, 
                 arrayAIFConcs, arrayVIFConcs, arrayROIConcs,
-                inletType)
+                inletType, constantsDict)
             
             self.isCurveFittingDone = True 
             logger.info('ModelFunctionsHelper.CurveFit returned optimum parameters {}'
@@ -1978,21 +1980,24 @@ class ModelFittingApp(QWidget):
                     
             #Plot concentration curve from the model
             parameterArray = self.BuildParameterArray()
-            if  self.objXMLReader.getModelInletType(modelName) == 'dual':
+            constantsDict = self.objXMLReader.getDictionaryOfConstants()
+            inletType = self.objXMLReader.getModelInletType(modelName)
+
+            if inletType == 'dual':
                 if boolAIFSelected and boolVIFSelected:
                     modelFunctionName = self.objXMLReader.getFunctionName(modelName)
                     logger.info('ModelFunctionsHelper.ModelSelector called when model={}, function ={} & parameter array = {}'. format(modelName, modelFunctionName, parameterArray))        
                     self.listModel = ModelFunctionsHelper.ModelSelector(modelFunctionName, 
-                         'dual', arrayTimes, arrayAIFConcs, parameterArray, 
+                         'dual', arrayTimes, arrayAIFConcs, parameterArray, constantsDict,
                        arrayVIFConcs)
                     arrayModel =  np.array(self.listModel, dtype='float')
                     ax.plot(arrayTimes, arrayModel, 'g--', label= modelName + ' model')
-            elif self.objXMLReader.getModelInletType(modelName) == 'single':
+            elif inletType == 'single':
                 if boolAIFSelected:
                     modelFunctionName = self.objXMLReader.getFunctionName(modelName)
                     logger.info('ModelFunctionsHelper.ModelSelector called when model ={}, function ={} & parameter array = {}'. format(modelName, modelFunctionName, parameterArray))        
                     self.listModel = ModelFunctionsHelper.ModelSelector(modelFunctionName, 
-                        'single', arrayTimes, arrayAIFConcs, parameterArray)
+                        'single', arrayTimes, arrayAIFConcs, parameterArray, constantsDict)
                     arrayModel =  np.array(self.listModel, dtype='float')
                     ax.plot(arrayTimes, arrayModel, 'g--', label= modelName + ' model')
 
