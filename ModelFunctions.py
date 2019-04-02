@@ -567,7 +567,7 @@ def modelFunctionName(xData2DArray, param1, param2,
         # of constants and their values
         constantsDict = eval(constantsString) 
         const1, const2 = \
-        constantsDict['const1'], constantsDict['const1']
+        constantsDict['const1'], constantsDict['const2']
 
         #model logic goes here
     
