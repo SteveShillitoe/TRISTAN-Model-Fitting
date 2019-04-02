@@ -154,8 +154,7 @@ def DualInletTwoCompartmentGadoxetateAnd2DSPGRModel(xData2DArray, Fa, Ve, Fp, Kb
 
 
 def DualInletTwoCompartmentGadoxetateAnd3DSPGRModel(
-    xData2DArray, Fa, Ve, Fp, Kbh, Khe, **kwargs):
-        #TR, dt, t0, FA, r1, R10a, R10v, R10t):
+    xData2DArray, Fa, Ve, Fp, Kbh, Khe, constantsString):
     try:
         exceptionHandler.modelFunctionInfoLogger()
         funcName = 'DualInletTwoCompartmentGadoxetateAnd3DSPGRModel'
@@ -164,12 +163,16 @@ def DualInletTwoCompartmentGadoxetateAnd3DSPGRModel(
         signalVIF = xData2DArray[:,2]
         fv = 1 - Fa
     
-        # Unpack SPGR model constants from dictionary of
-        # constants and their values
+        # Unpack SPGR model constants from 
+        # a string representation of a dictionary
+        # of constants and their values
+        constantsDict = eval(constantsString) 
         TR, dt, t0, FA, r1, R10a, R10v, R10t = \
-        kwargs['TR'], kwargs['dt'], kwargs['t0'],\
-        kwargs['FA'], kwargs['r1'], \
-        kwargs['R10a'], kwargs['R10v'], kwargs['R10t'] 
+        constantsDict['TR'], constantsDict['dt'], \
+        constantsDict['t0'],\
+        constantsDict['FA'], constantsDict['r1'], \
+        constantsDict['R10a'], constantsDict['R10v'], \
+        constantsDict['R10t'] 
     
         # Precontrast signal
         Sa_baseline = np.mean(signalAIF[0:int(t0/t[1])-1])
@@ -553,9 +556,19 @@ def HighFlowSingleInletTwoCompartmentGadoxetateModel(xData2DArray, Ve: float, Kb
 ##############################################################
 ### Model Function Template
 ##############################################################
-def modelFunctionName(xData2DArray, param1, param2, param3, param4, param5):
+def modelFunctionName(xData2DArray, param1, param2, 
+                      param3, param4, 
+                      param5, constantsString):
     try:
         exceptionHandler.modelFunctionInfoLogger()
+
+        # Unpack SPGR model constants from 
+        # a string representation of a dictionary
+        # of constants and their values
+        constantsDict = eval(constantsString) 
+        const1, const2 = \
+        constantsDict['const1'], constantsDict['const1']
+
         #model logic goes here
     
         #return(Array of concentrations/signals) 

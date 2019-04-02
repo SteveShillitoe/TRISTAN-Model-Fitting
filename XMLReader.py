@@ -400,10 +400,11 @@ class XMLReader:
                   + str(e)) 
             return ''
         
-    def getDictionaryOfConstants(self):
-        """ Returns the path to the folder where the data files are stored"""
+    def getStringOfConstants(self):
+        """ Returns a string representation of a dictionary of
+            model constant name:value pairs."""
         try:
-            logger.info('XMLReader.getDictionaryOfConstants called')
+            logger.info('XMLReader.getStringOfConstants called')
            
             xPath='./constants/constant'
             collConstants = self.root.findall(xPath)
@@ -414,11 +415,13 @@ class XMLReader:
                  value = constant.find('value').text
                  constantsDict[name] = float(value) 
 
-            return constantsDict
+            #Return a string representation of the
+            #dictionary
+            return str(constantsDict)
 
         except Exception as e:
-            print('Error in XMLReader.getDictionaryOfConstants:' 
+            print('Error in XMLReader.getStringOfConstants:' 
                   + str(e)) 
-            logger.error('Error in XMLReader.getDictionaryOfConstants:' 
+            logger.error('Error in XMLReader.getStringOfConstants:' 
                   + str(e)) 
             return ''

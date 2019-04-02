@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 
 def ModelSelector(functionName: str, inletType:str, times, 
                   AIFConcentration, 
-                  parameterArray, constantsDict,
+                  parameterArray, constantsString,
                   VIFConcentration=[]):
     """Function called in the GUI of the model fitting application to 
     run the function corresponding to each model and return a list of
@@ -58,17 +58,17 @@ def ModelSelector(functionName: str, inletType:str, times,
             timeInputConcs2DArray = np.column_stack((times, AIFConcentration))
         elif inletType == 'dual':
             timeInputConcs2DArray = np.column_stack((times, AIFConcentration, VIFConcentration))
-       
+
         modelFunction=getattr(modelFunctions, functionName)
         
-        return modelFunction(timeInputConcs2DArray, *parameterArray, **constantsDict)
+        return modelFunction(timeInputConcs2DArray, *parameterArray, constantsString)
 
     except Exception as e:
         logger.error('Error in ModelFunctionsHelper.ModelSelector: ' + str(e))
         print('ModelFunctionsHelper.ModelSelector: ' + str(e))  
 
 def CurveFit(functionName: str, paramList, times, AIFConcs, 
-             VIFConcs, concROI, inletType, constantsDict):
+             VIFConcs, concROI, inletType, constantsString):
     """This function calls the curve_fit function imported from scipy.optimize 
     to fit the time/conconcentration data calculated by a model in this module 
     to actual Region of Interest (ROI) concentration/time data using   
@@ -124,11 +124,13 @@ def CurveFit(functionName: str, paramList, times, AIFConcs,
         #print(params.pretty_print())
 
         objModel = Model(modelFunction, \
-            independent_vars=['xData2DArray', 'TR', 'dt', \
-           't0', 'FA', 'r1', 'R10a', 'R10v', 'R10t'])
+            independent_vars=['xData2DArray', 'constantsString'])
         print(objModel.param_names, objModel.independent_vars)
 
-        result = objModel.fit(data=concROI, params=params, xData2DArray=timeInputConcs2DArray, **constantsDict)
+        result = objModel.fit(data=concROI, 
+                              params=params, 
+                              xData2DArray=timeInputConcs2DArray, 
+                              constantsString=constantsString)
        
         return result.best_values, result.covar
             

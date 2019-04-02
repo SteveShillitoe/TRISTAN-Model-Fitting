@@ -29,6 +29,7 @@ The <name></name> tags enclose the <short></short> and
 -->
 <models>
   <data_file_path>C:\TRISTAN Data\MR Signal Data</data_file_path>
+  <!--Constants used by all the models represented in this XML file.-->
   <constants>
     <constant>
       <!--Repetition time of dynamic SPGR sequence in seconds -->
