@@ -2003,7 +2003,8 @@ class ModelFittingApp(QWidget):
 
             if ROI != 'Please Select':  
                 ax.set_xlabel('Time (mins)', fontsize=xyAxisLabelSize)
-                ax.set_ylabel('Concentration (mM)', fontsize=xyAxisLabelSize)
+                yAxisLabel = self.objXMLReader.getYAxisLabel(modelName)
+                ax.set_ylabel(yAxisLabel, fontsize=xyAxisLabelSize)
                 ax.set_title('Time Curves', fontsize=titleSize, pad=25)
                 ax.grid()
                 chartBox = ax.get_position()

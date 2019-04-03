@@ -161,6 +161,9 @@ The <name></name> tags enclose the <short></short> and
     <function>DualInletTwoCompartmentGadoxetateAnd3DSPGRModel</function>
     <image>DualInletTwoCompartmentGadoxetateModel.png</image>
     <inlet_type>dual</inlet_type>
+    <plot>
+      <y_axis_label>Signal Intensity</y_axis_label>
+    </plot>
     <parameters>
       <parameter>
         <name>

@@ -100,6 +100,34 @@ class XMLReader:
                   + str(e)) 
             return None
 
+    def getYAxisLabel(self, shortModelName):
+        """Returns the text of the Y Axis Label use
+       with the model with a short name 
+        in the string variable shortModelName when
+        its output is plotted against time."""
+        try:
+            logger.info('XMLReader.getYAxisLabel called with short model name= ' + shortModelName)
+            if len(shortModelName) > 0:
+                xPath='./model[@id=' + \
+                chr(34) +  shortModelName + chr(34) + \
+                ']/plot/y_axis_label'
+                yAxisLabel = self.root.find(xPath)
+                if yAxisLabel.text:
+                    logger.info('XMLReader.getYAxisLabel found function name ' 
+                                + yAxisLabel.text)
+                    return yAxisLabel.text
+                else:
+                    return None
+            else:
+                return None
+           
+        except Exception as e:
+            print('Error in XMLReader.getYAxisLabel when shortModelName ={}: '.format(shortModelName) 
+                  + str(e)) 
+            logger.error('Error in XMLReader.getYAxisLabel when shortModelName ={}: '.format(shortModelName) 
+                  + str(e)) 
+            return None
+
     def getImageName(self, shortModelName):
         """Returns the name of the image that represents the model
        with a short name in the string variable shortModelName"""
