@@ -246,7 +246,8 @@ class ModelFittingApp(QWidget):
         
         #Name of current loaded data file
         self.dataFileName = ''
-        
+        self.yAxisLabel = ''
+
         #Boolean variable indicating that the last 
         #change to the model parameters was caused
         #by curve fitting.
@@ -1447,6 +1448,7 @@ class ModelFittingApp(QWidget):
                     self.statusbar.showMessage('Configuration file ' + configFileName + ' loaded')
                     self.btnLoadDataFile.show()
                     self.PopulateModelListCombo()
+                    self.yAxisLabel = self.objXMLReader.getYAxisLabel()
                 else:
                     self.btnLoadDataFile.hide()
                     self.HideAllControlsOnGUI()
@@ -1462,8 +1464,8 @@ class ModelFittingApp(QWidget):
                          + str(re))
         except Exception as e:
             print('Error in function LoadConfigFile: ' + str(e))
-            logger.error('Error in function LoadConfigFile: ' + str(e))
-            
+            logger.error('Error in function LoadConfigFile: ' + str(e))           
+
 
     def LoadDataFile(self):
         """Loads the contents of a CSV file containing time and concentration data
@@ -2003,8 +2005,7 @@ class ModelFittingApp(QWidget):
 
             if ROI != 'Please Select':  
                 ax.set_xlabel('Time (mins)', fontsize=xyAxisLabelSize)
-                yAxisLabel = self.objXMLReader.getYAxisLabel(modelName)
-                ax.set_ylabel(yAxisLabel, fontsize=xyAxisLabelSize)
+                ax.set_ylabel(self.yAxisLabel, fontsize=xyAxisLabelSize)
                 ax.set_title('Time Curves', fontsize=titleSize, pad=25)
                 ax.grid()
                 chartBox = ax.get_position()

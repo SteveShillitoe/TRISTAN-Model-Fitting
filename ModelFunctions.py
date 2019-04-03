@@ -401,7 +401,10 @@ def HighFlowSingleInletTwoCompartmentGadoxetateAnd3DSPGRModel(xData2DArray, Ve, 
 ####################################################################
 ####  Concentration Models 
 ####################################################################
-def DualInputTwoCompartmentFiltrationModel(xData2DArray, Fa: float, Ve: float, Fp: float, Kbh: float, Khe: float):
+def DualInputTwoCompartmentFiltrationModel(xData2DArray, Fa: float, 
+                                           Ve: float, Fp: float, 
+                                           Kbh: float, Khe: float,
+                                           dummyVariable):
     """This function contains the algorithm for calculating how concentration varies with time
             using the Dual Input Two Compartment Filtration Model model.
         
@@ -467,7 +470,9 @@ def DualInputTwoCompartmentFiltrationModel(xData2DArray, Fa: float, Ve: float, F
         exceptionHandler.handleGeneralException(e)
  
 
-def HighFlowDualInletTwoCompartmentGadoxetateModel(xData2DArray, Fa: float, Ve: float, Kbh: float, Khe: float):
+def HighFlowDualInletTwoCompartmentGadoxetateModel(xData2DArray, Fa: float, 
+                                                   Ve: float, Kbh: float, 
+                                                   Khe: float, dummyVariable):
     """This function contains the algorithm for calculating how concentration varies with time
             using the High Flow Dual Inlet Two Compartment Gadoxetate Model model.
         
@@ -514,7 +519,9 @@ def HighFlowDualInletTwoCompartmentGadoxetateModel(xData2DArray, Fa: float, Ve: 
     except Exception as e:
         exceptionHandler.handleGeneralException(e)
 
-def HighFlowSingleInletTwoCompartmentGadoxetateModel(xData2DArray, Ve: float, Kbh: float, Khe: float):
+def HighFlowSingleInletTwoCompartmentGadoxetateModel(xData2DArray, Ve: float, 
+                                                     Kbh: float, Khe: float,
+                                                     dummyVariable):
     """This function contains the algorithm for calculating how concentration varies with time
             using the High Flow Single Inlet Two Compartment Gadoxetate Model model.
         

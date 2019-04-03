@@ -16,6 +16,20 @@ logger = logging.getLogger(__name__)
 
 FIRST_ITEM_MODEL_LIST = 'Select a model'
 
+# define Python user-defined exceptions
+class Error(Exception):
+   """Base class for other exceptions"""
+   pass
+
+class NoConstantsDefined(Error):
+   """Raised when no model constants are defined in 
+   the XML configuration file."""
+   pass
+
+class NoYAxisLabelDefined(Error):
+   """Raised when no Y Axis Label is defined for a model."""
+   pass
+
 class XMLReader:
     def __init__(self): 
         try:
@@ -100,33 +114,32 @@ class XMLReader:
                   + str(e)) 
             return None
 
-    def getYAxisLabel(self, shortModelName):
+    def getYAxisLabel(self):
         """Returns the text of the Y Axis Label use
        with the model with a short name 
         in the string variable shortModelName when
         its output is plotted against time."""
         try:
-            logger.info('XMLReader.getYAxisLabel called with short model name= ' + shortModelName)
-            if len(shortModelName) > 0:
-                xPath='./model[@id=' + \
-                chr(34) +  shortModelName + chr(34) + \
-                ']/plot/y_axis_label'
-                yAxisLabel = self.root.find(xPath)
-                if yAxisLabel.text:
-                    logger.info('XMLReader.getYAxisLabel found function name ' 
-                                + yAxisLabel.text)
-                    return yAxisLabel.text
-                else:
-                    return None
+            logger.info('XMLReader.getYAxisLabel called')
+            
+            xPath='./plot/y_axis_label'
+            yAxisLabel = self.root.find(xPath)
+            if yAxisLabel is None:
+                raise NoYAxisLabelDefined
             else:
-                return None
-           
+                logger.info('XMLReader.getYAxisLabel found Y Axis Label' 
+                            + yAxisLabel.text)
+                return yAxisLabel.text
+            
+        except NoYAxisLabelDefined:
+            warningString = 'Warning - XMLReader.getYAxisLabel - No Y axis label defined'
+            print(warningString)
+            logger.info(warningString)
+            return ''
         except Exception as e:
-            print('Error in XMLReader.getYAxisLabel when shortModelName ={}: '.format(shortModelName) 
-                  + str(e)) 
-            logger.error('Error in XMLReader.getYAxisLabel when shortModelName ={}: '.format(shortModelName) 
-                  + str(e)) 
-            return None
+            print('Error in XMLReader.getYAxisLabel: ' + str(e)) 
+            logger.error('Error in XMLReader.getYAxisLabel: ' + str(e)) 
+            return ''
 
     def getImageName(self, shortModelName):
         """Returns the name of the image that represents the model
@@ -437,16 +450,24 @@ class XMLReader:
             xPath='./constants/constant'
             collConstants = self.root.findall(xPath)
 
-            constantsDict = {}
-            for constant in collConstants:
-                 name = constant.find('name').text
-                 value = constant.find('value').text
-                 constantsDict[name] = float(value) 
+            if collConstants is None:
+                raise NoConstantsDefined
+            else:
+                constantsDict = {}
+                for constant in collConstants:
+                    name = constant.find('name').text
+                    value = constant.find('value').text
+                    constantsDict[name] = float(value) 
 
             #Return a string representation of the
             #dictionary
             return str(constantsDict)
-
+        
+        except NoConstantsDefined:
+            warningString = 'Warning - XMLReader.getStringOfConstants - No model constants defined.'
+            print(warningString)
+            logger.info(warningString)
+            return ''
         except Exception as e:
             print('Error in XMLReader.getStringOfConstants:' 
                   + str(e)) 

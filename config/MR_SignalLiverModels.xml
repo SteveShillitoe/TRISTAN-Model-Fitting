@@ -29,6 +29,10 @@ The <name></name> tags enclose the <short></short> and
 -->
 <models>
   <data_file_path>C:\TRISTAN Data\MR Signal Data</data_file_path>
+  <!--Plot configuration for all the models represented in this XML file-->
+  <plot>
+    <y_axis_label>Signal Intensity</y_axis_label>
+  </plot>
   <!--Constants used by all the models represented in this XML file.-->
   <constants>
     <constant>
@@ -161,9 +165,6 @@ The <name></name> tags enclose the <short></short> and
     <function>DualInletTwoCompartmentGadoxetateAnd3DSPGRModel</function>
     <image>DualInletTwoCompartmentGadoxetateModel.png</image>
     <inlet_type>dual</inlet_type>
-    <plot>
-      <y_axis_label>Signal Intensity</y_axis_label>
-    </plot>
     <parameters>
       <parameter>
         <name>
