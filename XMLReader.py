@@ -491,7 +491,7 @@ class XMLReader:
                 for constant in collConstants:
                     name = constant.find('name').text
                     value = constant.find('value').text
-                    constantsDict[name] = float(value) 
+                    constantsDict[name] = value
 
             #Return a string representation of the
             #dictionary

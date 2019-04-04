@@ -33,18 +33,6 @@ def HighFlowGadoxetate3DSPGR_Rat(xData2DArray, Ve, Kbh, Khe,
         constantsDict['FA'], constantsDict['r1'], \
         constantsDict['R10a'], constantsDict['R10t'] 
         
-        # SPGR model parameters
-        TR = 5.8/1000 # Repetition time of dynamic SPGR sequence in seconds
-        baseline = 5 # Number of baseline scans
-        FA = 20 #degrees
-        r1 = 5.5 # Hz/mM // at 4.7T
-        R10t = 1.3203 # // at 4.7T
-        R10a = 0.74575 # // at 4.7T
-        
-#        r1 = 5.1 # Hz/mM // at 7T
-#        R10t = 0.8451 # // at 7T
-#        R10a = 0.6362 # // at 7T
-        
         # Precontrast signal
         Sa_baseline = np.mean(Sa[0:baseline])
         
@@ -58,7 +46,6 @@ def HighFlowGadoxetate3DSPGR_Rat(xData2DArray, Ve, Kbh, Khe,
         ve_spleen = 0.43
         ce = ca/ve_spleen
         
-        # if Kbh == 0
         if Kbh != 0:
             Th = (1-Ve)/Kbh
             ct = Ve*ce + Khe*Th*tools.expconv(Th,t,ce)

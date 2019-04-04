@@ -1,8 +1,11 @@
 {
   "ExpandedNodes": [
     "",
-    "\\config"
+    "\\config",
+    "\\Models",
+    "\\Models\\TwoCompartmentModels",
+    "\\Models\\TwoCompartmentModels\\SingleInletModels"
   ],
-  "SelectedNode": "\\Tools.py",
+  "SelectedNode": "\\config\\MR_SignalRatLiverModels.xml",
   "PreviewInSolutionExplorer": false
 }

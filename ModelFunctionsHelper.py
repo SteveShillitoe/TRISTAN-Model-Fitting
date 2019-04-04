@@ -15,6 +15,7 @@ from lmfit import Parameters, Model
 import lmfit
 import numpy as np
 import logging
+import ModelFunctions as modelFunctions
 
 #Create logger
 logger = logging.getLogger(__name__)
@@ -59,8 +60,8 @@ def ModelSelector(functionName: str, functionModule:str,
         elif inletType == 'dual':
             timeInputConcs2DArray = np.column_stack((times, AIFConcentration, VIFConcentration))
 
-        modelFunctionModule = __import__(functionModule, fromlist=[functionName])
-        modelFunction=getattr(modelFunctionModule, functionName)
+        #modelFunctionModule = __import__(functionModule, fromlist=[functionName])
+        modelFunction=getattr(modelFunctions, functionName)
         
         return modelFunction(timeInputConcs2DArray, *parameterArray, constantsString)
 
@@ -126,7 +127,7 @@ def CurveFit(functionName: str, paramList, times, AIFConcs,
 
         objModel = Model(modelFunction, \
             independent_vars=['xData2DArray', 'constantsString'])
-        print(objModel.param_names, objModel.independent_vars)
+        #print(objModel.param_names, objModel.independent_vars)
 
         result = objModel.fit(data=concROI, 
                               params=params, 

@@ -31,18 +31,7 @@ def HighFlowGadoxetate2DSPGR_Rat(xData2DArray, Ve, Kbh, Khe,
         constantsDict['baseline'],\
         constantsDict['FA'], constantsDict['r1'], \
         constantsDict['R10a'], constantsDict['R10t'] 
-        
-        # SPGR model parameters
-        TR = 13/1000 # Repetition time of dynamic SPGR sequence in seconds
-        # TR = 18/1000 # in some cases
-        
-        baseline = 5 # Number of baseline scans
-        FA = 10 #degrees
-        
-        r1 = 5.1 # Hz/mM // at 7T
-        R10t = 0.8451 # // at 7T
-        R10a = 0.6362 # // at 7T
-        
+               
         # Precontrast signal
         Sa_baseline = np.mean(Sa[0:baseline])
         
