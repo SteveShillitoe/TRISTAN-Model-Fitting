@@ -15,12 +15,12 @@ from lmfit import Parameters, Model
 import lmfit
 import numpy as np
 import logging
-import ModelFunctions as modelFunctions
 
 #Create logger
 logger = logging.getLogger(__name__)
 
-def ModelSelector(functionName: str, inletType:str, times, 
+def ModelSelector(functionName: str, functionModule:str,
+                  inletType:str, times, 
                   AIFConcentration, 
                   parameterArray, constantsString,
                   VIFConcentration=[]):
@@ -59,7 +59,8 @@ def ModelSelector(functionName: str, inletType:str, times,
         elif inletType == 'dual':
             timeInputConcs2DArray = np.column_stack((times, AIFConcentration, VIFConcentration))
 
-        modelFunction=getattr(modelFunctions, functionName)
+        modelFunctionModule = __import__(functionModule, fromlist=[functionName])
+        modelFunction=getattr(modelFunctionModule, functionName)
         
         return modelFunction(timeInputConcs2DArray, *parameterArray, constantsString)
 

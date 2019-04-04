@@ -1984,22 +1984,31 @@ class ModelFittingApp(QWidget):
             parameterArray = self.BuildParameterArray()
             constantsString = self.objXMLReader.getStringOfConstants()
             inletType = self.objXMLReader.getModelInletType(modelName)
-
+            
+                    
             if inletType == 'dual':
                 if boolAIFSelected and boolVIFSelected:
                     modelFunctionName = self.objXMLReader.getFunctionName(modelName)
+                    modelFunctionModule = self.objXMLReader.getFunctionModule(modelName)
                     logger.info('ModelFunctionsHelper.ModelSelector called when model={}, function ={} & parameter array = {}'. format(modelName, modelFunctionName, parameterArray))        
-                    self.listModel = ModelFunctionsHelper.ModelSelector(modelFunctionName, 
-                         'dual', arrayTimes, arrayAIFConcs, parameterArray, constantsString,
+                    
+                    self.listModel = ModelFunctionsHelper.ModelSelector(
+                        modelFunctionName, modelFunctionModule,
+                        'dual', arrayTimes, arrayAIFConcs, 
+                        parameterArray, constantsString,
                        arrayVIFConcs)
                     arrayModel =  np.array(self.listModel, dtype='float')
                     ax.plot(arrayTimes, arrayModel, 'g--', label= modelName + ' model')
             elif inletType == 'single':
                 if boolAIFSelected:
                     modelFunctionName = self.objXMLReader.getFunctionName(modelName)
+                    modelFunctionModule = self.objXMLReader.getFunctionModule(modelName)
                     logger.info('ModelFunctionsHelper.ModelSelector called when model ={}, function ={} & parameter array = {}'. format(modelName, modelFunctionName, parameterArray))        
-                    self.listModel = ModelFunctionsHelper.ModelSelector(modelFunctionName, 
-                        'single', arrayTimes, arrayAIFConcs, parameterArray, constantsString)
+                    
+                    self.listModel = ModelFunctionsHelper.ModelSelector(
+                        modelFunctionName, modelFunctionModule, 
+                        'single', arrayTimes, arrayAIFConcs, 
+                        parameterArray, constantsString)
                     arrayModel =  np.array(self.listModel, dtype='float')
                     ax.plot(arrayTimes, arrayModel, 'g--', label= modelName + ' model')
 

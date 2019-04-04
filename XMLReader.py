@@ -10,6 +10,7 @@ It uses the functionality provided by the xml.etree.ElementTree
 package.
 """
 import xml.etree.ElementTree as ET  
+from pathlib import Path
 import logging
 
 logger = logging.getLogger(__name__)
@@ -28,6 +29,10 @@ class NoConstantsDefined(Error):
 
 class NoYAxisLabelDefined(Error):
    """Raised when no Y Axis Label is defined for a model."""
+   pass
+
+class NoModelFunctionModuleDefined(Error):
+   """Raised when no model function module is defined for a model."""
    pass
 
 class XMLReader:
@@ -107,6 +112,35 @@ class XMLReader:
             else:
                 return None
            
+        except Exception as e:
+            print('Error in XMLReader.getFunctionName when shortModelName ={}: '.format(shortModelName) 
+                  + str(e)) 
+            logger.error('Error in XMLReader.getFunctionName when shortModelName ={}: '.format(shortModelName) 
+                  + str(e)) 
+            return None
+
+    def getFunctionModule(self, shortModelName):
+        """Returns the path to the module that contains
+       the function that corresponds to the model
+       with a short name in the string variable shortModelName"""
+        try:
+            logger.info('XMLReader.getFunctionModule called with short model name= ' + shortModelName)
+            if len(shortModelName) > 0:
+                xPath='./model[@id=' + chr(34) + shortModelName + chr(34) + ']/function_path'
+                functionModule = self.root.find(xPath)
+                if functionModule is None:
+                    raise(NoModelFunctionModuleDefined)
+                    return None
+                else:
+                    logger.info('XMLReader.getFunctionModule found function name ' + functionModule.text)
+                    return functionModule.text
+            else:
+                return None
+
+        except NoModelFunctionModuleDefined:
+            errorString = 'XMLReader.getFunctionModule - No path to model function module defined'
+            print(errorString)
+            logger.error(errorString)
         except Exception as e:
             print('Error in XMLReader.getFunctionName when shortModelName ={}: '.format(shortModelName) 
                   + str(e)) 
