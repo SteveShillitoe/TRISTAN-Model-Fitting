@@ -1216,6 +1216,7 @@ class ModelFittingApp(QWidget):
             modelName = str(self.cmbModels.currentText())
             functionName = self.objXMLReader.getFunctionName(modelName)
             inletType = self.objXMLReader.getModelInletType(modelName)
+            QApplication.setOverrideCursor(QCursor(QtCore.Qt.WaitCursor))
             optimumParamsDict, paramCovarianceMatrix = \
                 ModelFunctionsHelper.CurveFit(
                 functionName, paramList, arrayTimes, 
@@ -1223,6 +1224,7 @@ class ModelFittingApp(QWidget):
                 inletType, constantsString)
             
             self.isCurveFittingDone = True 
+            QApplication.restoreOverrideCursor()
             logger.info('ModelFunctionsHelper.CurveFit returned optimum parameters {}'
                         .format(optimumParamsDict))
             
@@ -1954,6 +1956,7 @@ class ModelFittingApp(QWidget):
                 arrayROIConcs = np.array(self.concentrationData[ROI], dtype='float')
                 ROI_baseline = np.mean(arrayROIConcs[0:int(t0/arrayTimes[1])-1])
                 ax.plot(arrayTimes, arrayROIConcs/ROI_baseline, 'b.-', label= ROI)
+                #ax.plot(arrayTimes, arrayROIConcs, 'b.-', label= ROI)
 
             AIF = str(self.cmbAIF.currentText())
             VIF = str(self.cmbVIF.currentText())
@@ -1967,8 +1970,8 @@ class ModelFittingApp(QWidget):
                 
                 arrayAIFConcs = np.array(self.concentrationData[AIF], dtype='float')
                 Sa_baseline = np.mean(arrayAIFConcs[0:int(t0/arrayTimes[1])-1])
-                
                 ax.plot(arrayTimes, arrayAIFConcs/Sa_baseline, 'r.-', label= AIF)
+                #ax.plot(arrayTimes, arrayAIFConcs, 'r.-', label= AIF)
                 boolAIFSelected = True
 
             if VIF != 'Please Select':
@@ -1976,8 +1979,8 @@ class ModelFittingApp(QWidget):
                 t0=80
                 arrayVIFConcs = np.array(self.concentrationData[VIF], dtype='float')
                 Sv_baseline = np.mean(arrayVIFConcs[0:int(t0/arrayTimes[1])-1])
-                
                 ax.plot(arrayTimes, arrayVIFConcs/Sv_baseline, 'k.-', label= VIF)
+                #ax.plot(arrayTimes, arrayVIFConcs, 'k.-', label= VIF)
                 boolVIFSelected = True
                     
             #Plot concentration curve from the model
@@ -2133,6 +2136,7 @@ class ModelFittingApp(QWidget):
             objSpreadSheet, boolExcelFileCreatedOK = self.BatchProcessingCreateBatchSummaryExcelSpreadSheet(self.dataFileDirectory)
             
             if boolExcelFileCreatedOK:
+                QApplication.setOverrideCursor(QCursor(QtCore.Qt.WaitCursor))
                 for file in csvDataFiles:
                     if boolUseParameterDefaultValues:
                         self.InitialiseParameterSpinBoxes() #Reset default values
@@ -2165,6 +2169,7 @@ class ModelFittingApp(QWidget):
                     QApplication.processEvents()
 
                 self.lblBatchProcessing.setText("Processing complete.")
+                QApplication.restoreOverrideCursor()
                 self.toggleEnabled(True)
                 objSpreadSheet.SaveSpreadSheet()
 

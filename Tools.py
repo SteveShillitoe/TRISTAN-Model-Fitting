@@ -15,53 +15,89 @@ import logging
 #Create logger
 logger = logging.getLogger(__name__)
 
-####################### Signal models #########################################
+####################### Signal model helper functions ##################################
 def spgr2d_func(x, *spgr_params):
-    r1, FA, TR, R10, S_baseline, S = spgr_params
-    E0 = np.exp(-TR*R10/2)
-    E1 = np.exp(-TR*r1*x/2)
-    E = E0*E1
-    c = np.cos(FA*np.pi/180)
-    # Derive the actual S0 from the baseline signal
-    p0 = np.sqrt(E0)
-    p1 = 1-p0
-    p2 = 1+p0
-    p3 = 1-(c**3)*E0*E0
-    sf = p1*(1 + (c**2)*p0*p2*(1+E0*c)/p3)
-    S0 = S_baseline/sf
+    logger.info("spgr2d_func called")
+    try:
+        r1, FA, TR, R10, S_baseline, S = spgr_params
+        E0 = np.exp(-TR*R10/2)
+        E1 = np.exp(-TR*r1*x/2)
+        E = E0*E1
+        c = np.cos(FA*np.pi/180)
+        # Derive the actual S0 from the baseline signal
+        p0 = np.sqrt(E0)
+        p1 = 1-p0
+        p2 = 1+p0
+        p3 = 1-(c**3)*E0*E0
+        sf = p1*(1 + (c**2)*p0*p2*(1+E0*c)/p3)
+        S0 = S_baseline/sf
     
-    k0 = np.sqrt(E)
-    k1 = 1-k0
-    k2 = 1+k0
-    k3 = 1-(c**3)*E*E
-    out = S - S0*k1*(1 + (c**2)*k0*k2*(1+E*c)/k3)
-    return(out)
+        k0 = np.sqrt(E)
+        k1 = 1-k0
+        k2 = 1+k0
+        k3 = 1-(c**3)*E*E
+        out = S - S0*k1*(1 + (c**2)*k0*k2*(1+E*c)/k3)
+        return(out)
+
+    except RuntimeError as re:
+        print('Tools.spgr2d_func has runtime error: {} '.format(str(re)))
+        logger.error('Tools.spgr2d_func has runtime error: {} '.format(str(re)))
+    except Exception as e:
+        print('Tools.spgr2d_func has error: {} '.format(str(e)))
+        logger.error('Tools.spgr2d_func has error: {} '.format(str(e)))
+
 
 def spgr2d_func_inv(r1, FA, TR, R10, conc):
-    c = np.cos(FA*np.pi/180)
-    E0 = np.exp(-TR*R10/2)
-    E1 = np.exp(-TR*r1*conc/2)
-    E = E0*E1
-    p0 = np.sqrt(E)
-    p1 = 1-p0
-    p2 = 1+p0
-    p3 = 1-(c**3)*E*E
-    Srel = p1*(1 + (c**2)*p0*p2*(1+E*c)/p3)
-    return(Srel)
+    logger.info("spgr2d_func_inv called")
+    try:
+        c = np.cos(FA*np.pi/180)
+        E0 = np.exp(-TR*R10/2)
+        E1 = np.exp(-TR*r1*conc/2)
+        E = E0*E1
+        p0 = np.sqrt(E)
+        p1 = 1-p0
+        p2 = 1+p0
+        p3 = 1-(c**3)*E*E
+        Srel = p1*(1 + (c**2)*p0*p2*(1+E*c)/p3)
+        return(Srel)
+    except RuntimeError as re:
+        print('Tools.spgr2d_func_inv has runtime error: {} '.format(str(re)))
+        logger.error('Tools.spgr2d_func_inv has runtime error: {} '.format(str(re)))
+    except Exception as e:
+        print('Tools.spgr2d_func_inv has error: {} '.format(str(e)))
+        logger.error('Tools.spgr2d_func_inv has error: {} '.format(str(e)))
 
 def spgr3d_func(x, FA, TR, R10, S0, S):
-    E0 = np.exp(-TR*R10)
-    E1 = np.exp(-TR*x)
-    c = np.cos(FA*np.pi/180)
-    out = S - S0*(1-E1)*(1-c*E0)/((1-E0)*(1-c*E1))
-    return(out)
+    logger.info("spgr3d_func called")
+    try:
+        E0 = np.exp(-TR*R10)
+        E1 = np.exp(-TR*x)
+        c = np.cos(FA*np.pi/180)
+        out = S - S0*(1-E1)*(1-c*E0)/((1-E0)*(1-c*E1))
+        return(out)
+    except RuntimeError as re:
+        print('Tools.spgr3d_func has runtime error: {} '.format(str(re)))
+        logger.error('Tools.spgr3d_func has runtime error: {} '.format(str(re)))
+    except Exception as e:
+        print('Tools.spgr3d_func has error: {} '.format(str(e)))
+        logger.error('Tools.spgr3d_func has error: {} '.format(str(e)))
 
 def spgr3d_func_inv(r1, FA, TR, R10, conc):
-    c = np.cos(FA*np.pi/180)
-    E0 = np.exp(-TR*R10)
-    E1 = np.exp(-TR*r1*conc)*E0
-    Srel = (1-E1)*(1-c*E0)/((1-E0)*(1-c*E1))
-    return(Srel)
+    logger.info("spgr3d_func_inv called")
+    try:
+        c = np.cos(FA*np.pi/180)
+        E0 = np.exp(-TR*R10)
+        E1 = np.exp(-TR*r1*conc)*E0
+        Srel = (1-E1)*(1-c*E0)/((1-E0)*(1-c*E1))
+    
+        return(Srel)
+    except RuntimeError as re:
+        print('Tools.spgr3d_func_inv has runtime error: {} '.format(str(re)))
+        logger.error('Tools.spgr3d_func_inv has runtime error: {} '.format(str(re)))
+    except Exception as e:
+        print('Tools.spgr3d_func_inv has error: {} '.format(str(e)))
+        logger.error('Tools.spgr3d_func_inv has error: {} '.format(str(e)))
+
 #####################################
 # Shifts array to the right by n elements 
 # and inserts n zeros at the beginning of the array

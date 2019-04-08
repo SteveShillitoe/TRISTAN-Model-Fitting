@@ -1,6 +1,6 @@
 """
 This class module contains functionality for loading and 
-parsing an XML configuration file that describes the model
+parsing an XML configuration file that describes the model(s)
 to be used for curve fitting time/concentration data.
 
 It also contains functions for retrieving data from 
@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 FIRST_ITEM_MODEL_LIST = 'Select a model'
 
-# define Python user-defined exceptions
+# Python user-defined exceptions
 class Error(Exception):
    """Base class for other exceptions"""
    pass
@@ -31,8 +31,8 @@ class NoYAxisLabelDefined(Error):
    """Raised when no Y Axis Label is defined for a model."""
    pass
 
-class NoModelFunctionModuleDefined(Error):
-   """Raised when no model function module is defined for a model."""
+class NoModelsDefined(Error):
+   """Raised there are no models defined in the XML configuration file ."""
    pass
 
 class XMLReader:
@@ -40,8 +40,8 @@ class XMLReader:
         try:
             self.hasXMLFileParsedOK = True
             self.fullFilePath = ""
-            self.tree = None
-            self.root = None
+            self.tree = None #Points to XML tree in memory
+            self.root = None #Points to the root node of the above XML tree
            
             logger.info('In module ' + __name__ + ' Created XML Reader Object')
 
@@ -51,7 +51,8 @@ class XMLReader:
             
     def parseConfigFile(self, fullFilePath): 
         """Loads and parses the XML configuration file at fullFilePath.
-       After successful parsing, the XML tree is stored in memory."""
+       After successful parsing, the XML tree and its root node
+      is stored in memory."""
         try:
             self.hasXMLFileParsedOK = True
             self.fullFilePath = fullFilePath
@@ -74,9 +75,6 @@ class XMLReader:
             logger.error('Error in XMLReader.parseConfigFile: ' + str(e)) 
             self.hasXMLFileParsedOK = False
 
-    def hasXMLFileParsedOK(self) ->bool:
-        return self.hasXMLFileParsedOK
-
     def getListModelShortNames(self):
         """Returns a list of model short names for display
         in a combo dropdown list on the application GUI """
@@ -84,6 +82,7 @@ class XMLReader:
             shortModelNames = self.root.findall('./model/name/short')
             tempList = [name.text 
                         for name in shortModelNames]
+
             #Insert string 'Select a model' as the start of the list
             tempList.insert(0, FIRST_ITEM_MODEL_LIST)
             
@@ -119,34 +118,7 @@ class XMLReader:
                   + str(e)) 
             return None
 
-    def getFunctionModule(self, shortModelName):
-        """Returns the path to the module that contains
-       the function that corresponds to the model
-       with a short name in the string variable shortModelName"""
-        try:
-            logger.info('XMLReader.getFunctionModule called with short model name= ' + shortModelName)
-            if len(shortModelName) > 0:
-                xPath='./model[@id=' + chr(34) + shortModelName + chr(34) + ']/function_path'
-                functionModule = self.root.find(xPath)
-                if functionModule is None:
-                    raise(NoModelFunctionModuleDefined)
-                    return None
-                else:
-                    logger.info('XMLReader.getFunctionModule found function name ' + functionModule.text)
-                    return functionModule.text
-            else:
-                return None
-
-        except NoModelFunctionModuleDefined:
-            errorString = 'XMLReader.getFunctionModule - No path to model function module defined'
-            print(errorString)
-            logger.error(errorString)
-        except Exception as e:
-            print('Error in XMLReader.getFunctionName when shortModelName ={}: '.format(shortModelName) 
-                  + str(e)) 
-            logger.error('Error in XMLReader.getFunctionName when shortModelName ={}: '.format(shortModelName) 
-                  + str(e)) 
-            return None
+    
 
     def getYAxisLabel(self):
         """Returns the text of the Y Axis Label use

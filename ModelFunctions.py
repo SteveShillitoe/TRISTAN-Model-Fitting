@@ -9,86 +9,112 @@ from joblib import Parallel, delayed
 import logging
 logger = logging.getLogger(__name__)
 
-def spgr3d_func(x, FA, TR, R10, S0, S):
-    try:
-        exceptionHandler.modelFunctionInfoLogger()
-        E0 = np.exp(-TR*R10)
-        E1 = np.exp(-TR*x)
-        c = np.cos(FA*np.pi/180)
-        out = S - S0*(1-E1)*(1-c*E0)/((1-E0)*(1-c*E1))
-        return(out)
-    
-    except ZeroDivisionError as zde:
-        exceptionHandler.handleDivByZeroException(zde)
-    except Exception as e:
-        exceptionHandler.handleGeneralException(e)
-
-def spgr3d_func_inv(r1, FA, TR, R10, conc):
-    try:
-        exceptionHandler.modelFunctionInfoLogger()
-        s = np.sin(FA*np.pi/180)
-        c = np.cos(FA*np.pi/180)
-        E0 = np.exp(-TR*R10)
-        E1 = np.exp(-TR*r1*conc)
-        Srel = s*(1-E0*E1)/(1-c*E0*E1)
-        return(Srel)
-   
-    except ZeroDivisionError as zde:
-        exceptionHandler.handleDivByZeroException(zde)
-    except Exception as e:
-        exceptionHandler.handleGeneralException(e)
-    
-def spgr2d_func(x, FA, TR, R10, S0, S):
-    try:
-        exceptionHandler.modelFunctionInfoLogger()
-        E0 = np.exp(-TR*R10)
-        E1 = np.exp(-TR*x/2)
-        c = np.cos(FA*np.pi/180)
-        # Derive the actual S0 from the baseline signal
-        p0 = np.sqrt(E0)
-        p1 = 1-p0
-        p2 = 1+p0
-        p3 = 1-(c**3)*E0*E0
-        sf = p1*(1 + (c**2)*p0*p2*(1+E0*c)/p3)
-        S_0 = S0/sf
-    
-        k0 = np.sqrt(E1)
-        k1 = 1-k0
-        k2 = 1+k0
-        k3 = 1-(c**3)*E1*E1
-        out = S - S_0*k1*(1 + (c**2)*k0*k2*(1+E1*c)/k3)
-        return(out)
-    
-    except ZeroDivisionError as zde:
-        exceptionHandler.handleDivByZeroException(zde)
-    except Exception as e:
-        exceptionHandler.handleGeneralException(e)
-
-
-def spgr2d_func_inv(r1, FA, TR, R10, conc):
-    try:
-        exceptionHandler.modelFunctionInfoLogger()
-        s = np.sin(FA*np.pi/180)
-        c = np.cos(FA*np.pi/180)
-        E0 = np.exp(-TR*R10)
-        E1 = np.exp(-TR*r1*conc/2)
-    
-        k0 = np.sqrt(E1*E0)
-        k1 = 1-k0
-        k2 = 1+k0
-        k3 = 1-(c**3)*E1*E1*E0*E0   
-        Srel = s*k1*(1 + (c**2)*k0*k2*(1+E1*E0*c)/k3)
-        return(Srel) 
-    
-    except ZeroDivisionError as zde:
-        exceptionHandler.handleDivByZeroException(zde)
-    except Exception as e:
-        exceptionHandler.handleGeneralException(e)
-
 # Note: The input paramaters for the volume fractions and rate constants in
 # the following model function definitions are listed in the same order as they are 
 # displayed in the GUI from top (first) to bottom (last) 
 
+####################################################################
+####  MR Signal Rat Models 
+####################################################################
+def HighFlowGadoxetate2DSPGR_Rat(xData2DArray, Ve, Kbh, Khe,
+                                 constantsString):
+    try:
+        exceptionHandler.modelFunctionInfoLogger()
+        t = xData2DArray[:,0]
+        Sa = xData2DArray[:,1]
+
+        # Unpack SPGR model constants from 
+        # a string representation of a dictionary
+        # of constants and their values
+        constantsDict = eval(constantsString) 
+        TR, baseline, FA, r1, R10a, R10t = \
+        float(constantsDict['TR']), \
+        int(constantsDict['baseline']),\
+        float(constantsDict['FA']), float(constantsDict['r1']), \
+        float(constantsDict['R10a']), float(constantsDict['R10t']) 
+               
+        # Precontrast signal
+        Sa_baseline = np.mean(Sa[0:baseline])
+        
+        # Convert to concentrations
+        R1a = [Parallel(n_jobs=4)(delayed(fsolve)(tools.spgr2d_func, x0=0, args = (FA, TR, R10a, Sa_baseline, Sa[p])) for p in np.arange(0,len(t)))]
+        R1a = np.squeeze(R1a)
+        
+        ca = (R1a - R10a)/r1
+        
+        # Correct for spleen Ve
+        ve_spleen = 0.43
+        ce = ca/ve_spleen
+        
+        # if Kbh == 0
+        if Kbh != 0:
+            Th = (1-Ve)/Kbh
+            ct = Ve*ce + Khe*Th*tools.expconv(Th,t,ce, 'HighFlowGadoxetate2DSPGR_Rat')
+        else:
+            ct = Ve*ce + Khe*tools.integrate(ce,t)
+        
+        # Convert to signal
+        St_rel = tools.spgr2d_func_inv(r1, FA, TR, R10t, ct)
+        
+        return(St_rel) #Returns tissue signal relative to the baseline St/St_baseline
+ 
+    except ZeroDivisionError as zde:
+        exceptionHandler.handleDivByZeroException(zde)
+    except Exception as e:
+        exceptionHandler.handleGeneralException(e)
+
+
+def HighFlowGadoxetate3DSPGR_Rat(xData2DArray, Ve, Kbh, Khe, 
+                                 constantsString):
+    try:
+        exceptionHandler.modelFunctionInfoLogger()
+        t = xData2DArray[:,0]
+        Sa = xData2DArray[:,1]
+
+        # Unpack SPGR model constants from 
+        # a string representation of a dictionary
+        # of constants and their values
+        constantsDict = eval(constantsString) 
+        print('constantsString = ' + constantsString)
+        TR, baseline, FA, r1, R10a, R10t = \
+        float(constantsDict['TR']), \
+        int(constantsDict['baseline']),\
+        float(constantsDict['FA']), float(constantsDict['r1']), \
+        float(constantsDict['R10a']), float(constantsDict['R10t']) 
+        
+        # Precontrast signal
+        Sa_baseline = np.mean(Sa[0:baseline])
+        
+        # Convert to concentrations
+        R1a = [Parallel(n_jobs=4)(delayed(fsolve)(tools.spgr3d_func, x0=0, args = (FA, TR, R10a, Sa_baseline, Sa[p])) for p in np.arange(0,len(t)))]
+        R1a = np.squeeze(R1a)
+        
+        ca = (R1a - R10a)/r1
+        
+        # Correct for spleen Ve
+        ve_spleen = 0.43
+        ce = ca/ve_spleen
+        Th = (1-Ve)/Kbh
+        ct = Ve*ce + Khe*Th*tools.expconv(Th,t,ce,'HighFlowGadoxetate3DSPGR_Rat')
+        #if Kbh != 0:
+           # Th = (1-Ve)/Kbh
+           # ct = Ve*ce + Khe*Th*tools.expconv(Th,t,ce,'HighFlowGadoxetate3DSPGR_Rat')
+        #else:
+           # ct = Ve*ce + Khe*tools.integrate(ce,t)
+        
+        # Convert to signal
+        c = np.cos(FA*np.pi/180)
+        E0 = np.exp(-TR*R10t)
+        E1 = np.exp(-TR*r1*ct)*E0
+        St_rel = (1-E1)/(1-c*E1)#(1-E1)*(1-c*E0)/((1-E0)*(1-c*E1))
+        #St_rel = tools.spgr3d_func_inv(r1, FA, TR, R10t, ct)
+        
+        return(St_rel) #Returns tissue signal relative to the baseline St/St_baseline
+        
+    except ZeroDivisionError as zde:
+        exceptionHandler.handleDivByZeroException(zde)
+    except Exception as e:
+        exceptionHandler.handleGeneralException(e)
 ####################################################################
 ####  MR Signal Models 
 ####################################################################
@@ -144,7 +170,7 @@ def DualInletTwoCompartmentGadoxetateAnd2DSPGRModel(xData2DArray, Fa, Ve, Fp, Kb
         ct = Ve*ce + Khe*Th*tools.expconv(Th, t, ce, funcName)
     
         # Convert to signal
-        St_rel = spgr2d_func_inv(r1, FA, TR, R10t, ct)
+        St_rel = tools.spgr2d_func_inv(r1, FA, TR, R10t, ct)
         
         return(St_rel) #Returns tissue signal relative to the baseline St/St_baseline
     except ZeroDivisionError as zde:
@@ -207,7 +233,7 @@ def DualInletTwoCompartmentGadoxetateAnd3DSPGRModel(
         ct = Ve*ce + Khe*Th*tools.expconv(Th, t, ce, funcName)
     
         # Convert to signal
-        St_rel = spgr3d_func_inv(r1, FA, TR, R10t, ct)
+        St_rel = tools.spgr3d_func_inv(r1, FA, TR, R10t, ct)
         print("Signal from model {} = {}".format(funcName, St_rel))
         return(St_rel) #Returns tissue signal relative to the baseline St/St_baseline
     except ZeroDivisionError as zde:
@@ -257,7 +283,7 @@ def HighFlowDualInletTwoCompartmentGadoxetateAnd3DSPGRModel(xData2DArray, Fa, Ve
         ct = Ve*ce + Khe*Th*tools.expconv(Th, t, ce, funcName)
     
         # Convert to signal
-        St_rel = spgr3d_func_inv(r1, FA, TR, R10t, ct)
+        St_rel = tools.spgr3d_func_inv(r1, FA, TR, R10t, ct)
     
         return(St_rel) #Returns tissue signal relative to the baseline St/St_baseline
     except ZeroDivisionError as zde:
@@ -306,7 +332,7 @@ def HighFlowDualInletTwoCompartmentGadoxetateAnd2DSPGRModel(xData2DArray, Fa, Ve
         ct = Ve*ce + Khe*Th*tools.expconv(Th, t, ce, funcName)
     
         # Convert to signal
-        St_rel = spgr2d_func_inv(r1, FA, TR, R10t, ct)
+        St_rel = tools.spgr2d_func_inv(r1, FA, TR, R10t, ct)
     
         return(St_rel) #Returns tissue signal relative to the baseline St/St_baseline
     except ZeroDivisionError as zde:
@@ -348,7 +374,7 @@ def HighFlowSingleInletTwoCompartmentGadoxetateAnd2DSPGRModel(xData2DArray, Ve, 
         ct = Ve*ce + Khe*Th*tools.expconv(Th, t, ce, funcName)
     
         # Convert to signal
-        St_rel = spgr2d_func_inv(r1, FA, TR, R10t, ct)
+        St_rel = tools.spgr2d_func_inv(r1, FA, TR, R10t, ct)
     
         return(St_rel) #Returns tissue signal relative to the baseline St/St_baseline
     except ZeroDivisionError as zde:
@@ -390,7 +416,7 @@ def HighFlowSingleInletTwoCompartmentGadoxetateAnd3DSPGRModel(xData2DArray, Ve, 
         ct = Ve*ce + Khe*Th*tools.expconv(Th, t, ce, funcName)
     
         # Convert to signal
-        St_rel = spgr3d_func_inv(r1, FA, TR, R10t, ct)
+        St_rel = tools.spgr3d_func_inv(r1, FA, TR, R10t, ct)
     
         return(St_rel) #Returns tissue signal relative to the baseline St/St_baseline
     except ZeroDivisionError as zde:
@@ -585,96 +611,3 @@ def modelFunctionName(xData2DArray, param1, param2,
     except Exception as e:
         exceptionHandler.handleGeneralException(e)
 
-def HighFlowGadoxetate2DSPGR_Rat(xData2DArray, Ve, Kbh, Khe,
-                                 constantsString):
-    try:
-        exceptionHandler.modelFunctionInfoLogger()
-        t = xData2DArray[:,0]
-        Sa = xData2DArray[:,1]
-
-        # Unpack SPGR model constants from 
-        # a string representation of a dictionary
-        # of constants and their values
-        constantsDict = eval(constantsString) 
-        TR, baseline, FA, r1, R10a, R10t = \
-        float(constantsDict['TR']), \
-        int(constantsDict['baseline']),\
-        float(constantsDict['FA']), float(constantsDict['r1']), \
-        float(constantsDict['R10a']), float(constantsDict['R10t']) 
-               
-        # Precontrast signal
-        Sa_baseline = np.mean(Sa[0:baseline])
-        
-        # Convert to concentrations
-        R1a = [Parallel(n_jobs=4)(delayed(fsolve)(spgr2d_func, x0=0, args = (FA, TR, R10a, Sa_baseline, Sa[p])) for p in np.arange(0,len(t)))]
-        R1a = np.squeeze(R1a)
-        
-        ca = (R1a - R10a)/r1
-        
-        # Correct for spleen Ve
-        ve_spleen = 0.43
-        ce = ca/ve_spleen
-        
-        # if Kbh == 0
-        if Kbh != 0:
-            Th = (1-Ve)/Kbh
-            ct = Ve*ce + Khe*Th*tools.expconv(Th,t,ce, 'HighFlowGadoxetate2DSPGR_Rat')
-        else:
-            ct = Ve*ce + Khe*tools.integrate(ce,t)
-        
-        # Convert to signal
-        St_rel = tools.spgr2d_func_inv(r1, FA, TR, R10t, ct)
-        
-        return(St_rel) #Returns tissue signal relative to the baseline St/St_baseline
- 
-    except ZeroDivisionError as zde:
-        exceptionHandler.handleDivByZeroException(zde)
-    except Exception as e:
-        exceptionHandler.handleGeneralException(e)
-
-
-def HighFlowGadoxetate3DSPGR_Rat(xData2DArray, Ve, Kbh, Khe, 
-                                 constantsString):
-    try:
-        exceptionHandler.modelFunctionInfoLogger()
-        t = xData2DArray[:,0]
-        Sa = xData2DArray[:,1]
-
-        # Unpack SPGR model constants from 
-        # a string representation of a dictionary
-        # of constants and their values
-        constantsDict = eval(constantsString) 
-        TR, baseline, FA, r1, R10a, R10t = \
-        float(constantsDict['TR']), \
-        int(constantsDict['baseline']),\
-        float(constantsDict['FA']), float(constantsDict['r1']), \
-        float(constantsDict['R10a']), float(constantsDict['R10t']) 
-        
-        # Precontrast signal
-        Sa_baseline = np.mean(Sa[0:baseline])
-        
-        # Convert to concentrations
-        R1a = [Parallel(n_jobs=4)(delayed(fsolve)(spgr3d_func, x0=0, args = (FA, TR, R10a, Sa_baseline, Sa[p])) for p in np.arange(0,len(t)))]
-        R1a = np.squeeze(R1a)
-        
-        ca = (R1a - R10a)/r1
-        
-        # Correct for spleen Ve
-        ve_spleen = 0.43
-        ce = ca/ve_spleen
-        
-        if Kbh != 0:
-            Th = (1-Ve)/Kbh
-            ct = Ve*ce + Khe*Th*tools.expconv(Th,t,ce,'HighFlowGadoxetate3DSPGR_Rat')
-        else:
-            ct = Ve*ce + Khe*tools.integrate(ce,t)
-        
-        # Convert to signal
-        St_rel = tools.spgr3d_func_inv(r1, FA, TR, R10t, ct)
-        
-        return(St_rel) #Returns tissue signal relative to the baseline St/St_baseline
- 
-    except ZeroDivisionError as zde:
-        exceptionHandler.handleDivByZeroException(zde)
-    except Exception as e:
-        exceptionHandler.handleGeneralException(e)

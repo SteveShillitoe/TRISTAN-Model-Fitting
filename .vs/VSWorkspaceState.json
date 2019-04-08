@@ -6,6 +6,6 @@
     "\\Models\\TwoCompartmentModels",
     "\\Models\\TwoCompartmentModels\\SingleInletModels"
   ],
-  "SelectedNode": "\\config\\MR_SignalRatLiverModels.xml",
+  "SelectedNode": "\\Models",
   "PreviewInSolutionExplorer": false
 }
