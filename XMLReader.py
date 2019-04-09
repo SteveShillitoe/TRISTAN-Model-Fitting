@@ -32,7 +32,18 @@ class NoYAxisLabelDefined(Error):
    pass
 
 class NoModelsDefined(Error):
-   """Raised there are no models defined in the XML configuration file ."""
+   """Raised if there are no models defined in the 
+   XML configuration file ."""
+   pass
+
+class NoModelFunctionDefined(Error):
+   """Raised if there is no function for a model 
+   defined in the XNoModelFunctionDefinedML configuration file ."""
+   pass
+
+class NoModelImageDefined(Error):
+   """Raised if the name of an image describing a model is not
+   defined in the XML configuration file ."""
    pass
 
 class XMLReader:
@@ -80,14 +91,22 @@ class XMLReader:
         in a combo dropdown list on the application GUI """
         try:
             shortModelNames = self.root.findall('./model/name/short')
-            tempList = [name.text 
+            if shortModelNames is None:
+                tempList.append('No models defined in config file.')
+                raise NoModelsDefined
+            else:
+                tempList = [name.text 
                         for name in shortModelNames]
 
             #Insert string 'Select a model' as the start of the list
             tempList.insert(0, FIRST_ITEM_MODEL_LIST)
-            
             return tempList
 
+        except NoModelsDefined:
+            warningString = 'No models defined in the configuration file.'
+            print(warningString)
+            logger.error('XMLReader.getListModelShortNames - ' + warningString)
+            return tempList
         except ET.ParseError as et:
             print('XMLReader.getListModelShortNames XPath error: ' + str(et)) 
             logger.error('XMLReader.getListModelShortNames XPath error: ' + str(et))
@@ -96,29 +115,33 @@ class XMLReader:
             logger.error('Error in XMLReader.getListModelShortNames: ' + str(e)) 
     
     def getFunctionName(self, shortModelName):
-        """Returns the name of the function that corresponds to the model
+        """Returns the name of the function that 
+        contains the logic corresponding to the model
        with a short name in the string variable shortModelName"""
         try:
             logger.info('XMLReader.getFunctionName called with short model name= ' + shortModelName)
             if len(shortModelName) > 0:
                 xPath='./model[@id=' + chr(34) + shortModelName + chr(34) + ']/function'
                 functionName = self.root.find(xPath)
-                if functionName.text:
+                if functionName is None:
+                    raise NoModelFunctionDefined
+                else:
                     logger.info('XMLReader.getFunctionName found function name ' + functionName.text)
                     return functionName.text
-                else:
-                    return None
             else:
                 return None
-           
+
+        except NoModelFunctionDefined:
+            warningString = 'No function defined for model {}'.format(shortModelName)
+            print(warningString)
+            logger.info('XMLReader.getFunctionName - ' + warningString)
+            return None
         except Exception as e:
             print('Error in XMLReader.getFunctionName when shortModelName ={}: '.format(shortModelName) 
                   + str(e)) 
             logger.error('Error in XMLReader.getFunctionName when shortModelName ={}: '.format(shortModelName) 
                   + str(e)) 
             return None
-
-    
 
     def getYAxisLabel(self):
         """Returns the text of the Y Axis Label use
@@ -141,7 +164,7 @@ class XMLReader:
             warningString = 'Warning - XMLReader.getYAxisLabel - No Y axis label defined'
             print(warningString)
             logger.info(warningString)
-            return ''
+            return 'No Y Axis Label defined in the configuration file.'
         except Exception as e:
             print('Error in XMLReader.getYAxisLabel: ' + str(e)) 
             logger.error('Error in XMLReader.getYAxisLabel: ' + str(e)) 
@@ -155,14 +178,20 @@ class XMLReader:
             if len(shortModelName) > 0:
                 xPath='./model[@id=' + chr(34) + shortModelName + chr(34) + ']/image'
                 imageName = self.root.find(xPath)
-                if imageName.text:
+                if imageName is None:
+                    raise NoModelImageDefined
+                else:
                     logger.info('XMLReader.getImageName found image ' + imageName.text)
                     return imageName.text
-                else:
-                    return None
             else:
                 return None
-           
+
+        except NoModelImageDefined:
+            warningString = 'The name of an image describing model {}' \
+                .format(shorModelName) +' is not defined in the configuration file.'
+            print(warningString)
+            logger.info('XMLReader.getImageName - ' + waringString)
+            return None
         except Exception as e:
             print('Error in XMLReader.getImageName when shortModelName ={}: '.format(shortModelName) 
                   + str(e)) 

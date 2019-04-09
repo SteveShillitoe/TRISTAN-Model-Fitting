@@ -156,17 +156,6 @@ import matplotlib.pyplot as plt
 
 from scipy.stats.distributions import  t
 
-class NavigationToolbar(NavigationToolbar):
-    """
-    Removes unwanted default buttons in the Navigation Toolbar by creating
-    a subclass of the NavigationToolbar class from from 
-    matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
-    that only defines the desired buttons
-    """
-    toolitems = [t for t in NavigationToolbar.toolitems if
-                 t[0] in ('Home', 'Pan', 'Zoom', 'Save')]
-
-#Import module containing model definitions
 import ModelFunctionsHelper
 
 #Import CSS file
@@ -206,6 +195,27 @@ logging.basicConfig(filename=LOG_FILE_NAME,
                     level=logging.INFO, 
                     format=LOG_FORMAT)
 logger = logging.getLogger(__name__)
+
+class NavigationToolbar(NavigationToolbar):
+    """
+    Removes unwanted default buttons in the Navigation Toolbar by creating
+    a subclass of the NavigationToolbar class from from 
+    matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
+    that only defines the desired buttons
+    """
+    toolitems = [t for t in NavigationToolbar.toolitems if
+                 t[0] in ('Home', 'Pan', 'Zoom', 'Save')]
+
+
+# Python user-defined exceptions
+class Error(Exception):
+   """Base class for other exceptions"""
+   pass
+
+class NoModelFunctionDefined(Error):
+   """Raised when the name of the function corresponding 
+   to a model is not returned from the XML configuration file."""
+   pass
 
 class ModelFittingApp(QWidget):   
     """This class defines the TRISTAN Model Fitting software 
@@ -424,7 +434,7 @@ class ModelFittingApp(QWidget):
         self.cmbModels.currentIndexChanged.connect(self.ConfigureGUIForEachModel)
         self.cmbModels.currentIndexChanged.connect(lambda: self.ClearOptimisedParamaterList('cmbModels')) 
         self.cmbModels.currentIndexChanged.connect(self.display_FitModel_SaveCSV_SaveReport_Buttons)
-        self.cmbModels.activated.connect(lambda:  self.PlotConcentrations('cmbModels'))
+        self.cmbModels.activated.connect(lambda:  self.plotConcentrations('cmbModels'))
 
         #Create dropdown lists for selection of AIF & VIF
         self.lblAIF = QLabel('Arterial Input Function:')
@@ -435,17 +445,17 @@ class ModelFittingApp(QWidget):
        
         self.cmbVIF.setToolTip('Select Venous Input Function')
         #When a ROI is selected plot its concentration data on the graph.
-        self.cmbROI.activated.connect(lambda:  self.PlotConcentrations('cmbROI'))
+        self.cmbROI.activated.connect(lambda:  self.plotConcentrations('cmbROI'))
         #When a ROI is selected, then make the Model groupbox and the widgets
         #contains visible.
         self.cmbROI.activated.connect(self.DisplayModelFittingGroupBox)
         #When an AIF is selected plot its concentration data on the graph.
-        self.cmbAIF.activated.connect(lambda: self.PlotConcentrations('cmbAIF'))
+        self.cmbAIF.activated.connect(lambda: self.plotConcentrations('cmbAIF'))
         #When an AIF is selected display the Fit Model and Save plot CVS buttons.
         self.cmbAIF.currentIndexChanged.connect(self.display_FitModel_SaveCSV_SaveReport_Buttons)
         self.cmbVIF.currentIndexChanged.connect(self.display_FitModel_SaveCSV_SaveReport_Buttons)
         #When a VIF is selected plot its concentration data on the graph.
-        self.cmbVIF.activated.connect(lambda: self.PlotConcentrations('cmbVIF'))
+        self.cmbVIF.activated.connect(lambda: self.plotConcentrations('cmbVIF'))
         self.lblAIF.hide()
         self.cmbAIF.hide()
         self.lblVIF.hide()
@@ -474,7 +484,7 @@ class ModelFittingApp(QWidget):
         self.btnReset.clicked.connect(self.OptimumParameterChanged)
         #If parameters reset to their default values, 
         #replot the concentration and model data
-        self.btnReset.clicked.connect(lambda: self.PlotConcentrations('Reset Button'))
+        self.btnReset.clicked.connect(lambda: self.plotConcentrations('Reset Button'))
         modelHorizontalLayoutReset.addWidget(self.cboxDelay)
         modelHorizontalLayoutReset.addWidget(self.cboxConstaint)
         modelHorizontalLayoutReset.addWidget(self.btnReset)
@@ -536,11 +546,11 @@ class ModelFittingApp(QWidget):
         self.spinBoxParameter5.hide()
 
         #If a parameter value is changed, replot the concentration and model data
-        self.spinBoxParameter1.valueChanged.connect(lambda: self.PlotConcentrations('spinBoxParameter1')) 
-        self.spinBoxParameter2.valueChanged.connect(lambda: self.PlotConcentrations('spinBoxParameter2')) 
-        self.spinBoxParameter3.valueChanged.connect(lambda: self.PlotConcentrations('spinBoxParameter3')) 
-        self.spinBoxParameter4.valueChanged.connect(lambda: self.PlotConcentrations('spinBoxParameter4'))
-        self.spinBoxParameter5.valueChanged.connect(lambda: self.PlotConcentrations('spinBoxParameter5'))
+        self.spinBoxParameter1.valueChanged.connect(lambda: self.plotConcentrations('spinBoxParameter1')) 
+        self.spinBoxParameter2.valueChanged.connect(lambda: self.plotConcentrations('spinBoxParameter2')) 
+        self.spinBoxParameter3.valueChanged.connect(lambda: self.plotConcentrations('spinBoxParameter3')) 
+        self.spinBoxParameter4.valueChanged.connect(lambda: self.plotConcentrations('spinBoxParameter4'))
+        self.spinBoxParameter5.valueChanged.connect(lambda: self.plotConcentrations('spinBoxParameter5'))
         #Set boolean variable, self.isCurveFittingDone to false to 
         #indicate that the value of a model parameter
         #has been changed manually rather than by curve fitting
@@ -1215,6 +1225,9 @@ class ModelFittingApp(QWidget):
             #Get the name of the model to be fitted to the ROI curve
             modelName = str(self.cmbModels.currentText())
             functionName = self.objXMLReader.getFunctionName(modelName)
+            if functionName is None:
+                raise NoModelFunctionDefined
+
             inletType = self.objXMLReader.getModelInletType(modelName)
             QApplication.setOverrideCursor(QCursor(QtCore.Qt.WaitCursor))
             optimumParamsDict, paramCovarianceMatrix = \
@@ -1235,7 +1248,7 @@ class ModelFittingApp(QWidget):
             self.SetParameterSpinBoxValues(optimumParamsList)
 
             #Plot the best curve on the graph
-            self.PlotConcentrations('CurveFit')
+            self.plotConcentrations('CurveFit')
 
             #Determine 95% confidence limits.
             numDataPoints = arrayROIConcs.size
@@ -1244,7 +1257,13 @@ class ModelFittingApp(QWidget):
                 self.CurveFitCalculate95ConfidenceLimits(numDataPoints, numParams, 
                                     optimumParamsList, paramCovarianceMatrix)
                 self.CurveFitProcessOptimumParameters()
-            
+        
+        except NoModelFunctionDefined:
+            warningString = 'Cannot procede because no function ' + \
+                'is defined for this model in the configuration file.'
+            print(warningString)
+            logger.info('CurveFit - ' + warningString)
+            QMessageBox().critical( self,  "Curve Fitting", warningString, QMessageBox.Ok)
         except ValueError as ve:
             print ('Value Error: CurveFit with model ' + modelName + ': '+ str(ve))
             logger.error('Value Error: CurveFit with model ' + modelName + ': '+ str(ve))
@@ -1919,7 +1938,7 @@ class ModelFittingApp(QWidget):
             print('Error in function DetermineTextSize: ' + str(e) )
             logger.error('Error in function DetermineTextSize: ' + str(e) )
     
-    def PlotConcentrations(self, nameCallingFunction: str):
+    def plotConcentrations(self, nameCallingFunction: str):
         """Plots the concentration against time curves for the ROI, AIF, VIF.  
         Also, plots the concentration/time curve predicted by the 
         selected model.
@@ -1987,16 +2006,14 @@ class ModelFittingApp(QWidget):
             parameterArray = self.BuildParameterArray()
             constantsString = self.objXMLReader.getStringOfConstants()
             inletType = self.objXMLReader.getModelInletType(modelName)
-            
                     
             if inletType == 'dual':
                 if boolAIFSelected and boolVIFSelected:
                     modelFunctionName = self.objXMLReader.getFunctionName(modelName)
-                    modelFunctionModule = self.objXMLReader.getFunctionModule(modelName)
                     logger.info('ModelFunctionsHelper.ModelSelector called when model={}, function ={} & parameter array = {}'. format(modelName, modelFunctionName, parameterArray))        
                     
                     self.listModel = ModelFunctionsHelper.ModelSelector(
-                        modelFunctionName, modelFunctionModule,
+                        modelFunctionName, 
                         'dual', arrayTimes, arrayAIFConcs, 
                         parameterArray, constantsString,
                        arrayVIFConcs)
@@ -2005,11 +2022,10 @@ class ModelFittingApp(QWidget):
             elif inletType == 'single':
                 if boolAIFSelected:
                     modelFunctionName = self.objXMLReader.getFunctionName(modelName)
-                    modelFunctionModule = self.objXMLReader.getFunctionModule(modelName)
                     logger.info('ModelFunctionsHelper.ModelSelector called when model ={}, function ={} & parameter array = {}'. format(modelName, modelFunctionName, parameterArray))        
                     
                     self.listModel = ModelFunctionsHelper.ModelSelector(
-                        modelFunctionName, modelFunctionModule, 
+                        modelFunctionName, 
                         'single', arrayTimes, arrayAIFConcs, 
                         parameterArray, constantsString)
                     arrayModel =  np.array(self.listModel, dtype='float')
@@ -2028,10 +2044,15 @@ class ModelFittingApp(QWidget):
             else:
                 # draw a blank graph on the canvas
                 self.canvas.draw()
-            
+        except NoModelFunctionDefined:
+            warningString = 'Cannot procede because no function ' + \
+                'is defined for this model in the configuration file.'
+            print(warningString)
+            logger.info('plotConcentrations - ' + warningString)
+            QMessageBox().critical( self,  "Plot Concentrations", warningString, QMessageBox.Ok)
         except Exception as e:
-                print('Error in function PlotConcentrations when an event associated with ' + str(nameCallingFunction) + ' is fired : ROI=' + ROI + ' AIF = ' + AIF + ' : ' + str(e) )
-                logger.error('Error in function PlotConcentrations when an event associated with ' + str(nameCallingFunction) + ' is fired : ROI=' + ROI + ' AIF = ' + AIF + ' : ' + str(e) )
+                print('Error in function plotConcentrations when an event associated with ' + str(nameCallingFunction) + ' is fired : ROI=' + ROI + ' AIF = ' + AIF + ' : ' + str(e) )
+                logger.error('Error in function plotConcentrations when an event associated with ' + str(nameCallingFunction) + ' is fired : ROI=' + ROI + ' AIF = ' + AIF + ' : ' + str(e) )
     
     def ExitApp(self):
         """Closes the Model Fitting application."""
@@ -2159,7 +2180,7 @@ class ModelFittingApp(QWidget):
                         objSpreadSheet.RecordSkippedFiles(self.dataFileName, failureReason)
                         continue  #Skip this iteration if problems loading file
                 
-                    self.PlotConcentrations('BatchProcessAllCSVDataFiles') #Plot data                
+                    self.plotConcentrations('BatchProcessAllCSVDataFiles') #Plot data                
                     self.CurveFit() #Fit curve to model 
                     self.SaveCSVFile(csvPlotDataFolder + '/plot' + file) #Save plot data to CSV file               
                     parameterDict = self.CreatePDFReport(pdfReportFolder + '/' + os.path.splitext(file)[0]) #Save PDF Report                

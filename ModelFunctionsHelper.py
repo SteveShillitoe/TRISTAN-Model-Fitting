@@ -20,7 +20,7 @@ import ModelFunctions as modelFunctions
 #Create logger
 logger = logging.getLogger(__name__)
 
-def ModelSelector(functionName: str, functionModule:str,
+def ModelSelector(functionName: str, 
                   inletType:str, times, 
                   AIFConcentration, 
                   parameterArray, constantsString,

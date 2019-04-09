@@ -1,11 +1,8 @@
 {
   "ExpandedNodes": [
     "",
-    "\\config",
-    "\\Models",
-    "\\Models\\TwoCompartmentModels",
-    "\\Models\\TwoCompartmentModels\\SingleInletModels"
+    "\\config"
   ],
-  "SelectedNode": "\\Models",
+  "SelectedNode": "\\XMLReader.py",
   "PreviewInSolutionExplorer": false
 }
