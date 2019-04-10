@@ -33,17 +33,32 @@ class NoYAxisLabelDefined(Error):
 
 class NoModelsDefined(Error):
    """Raised if there are no models defined in the 
-   XML configuration file ."""
+   XML configuration file."""
    pass
 
 class NoModelFunctionDefined(Error):
    """Raised if there is no function for a model 
-   defined in the XNoModelFunctionDefinedML configuration file ."""
+   defined in the XNoModelFunctionDefinedML configuration file."""
    pass
 
 class NoModelImageDefined(Error):
    """Raised if the name of an image describing a model is not
-   defined in the XML configuration file ."""
+   defined in the XML configuration file."""
+   pass
+
+class NoModelInletTypeDefined(Error):
+   """Raised if the inlet type of a model is not
+   defined in the XML configuration file."""
+   pass
+
+class NoModelLongNameDefined(Error):
+   """Raised if the long name of a model is not
+   defined in the XML configuration file."""
+   pass
+
+class CannotFormFullParameterName(Error):
+   """Raised if the short and long names of a parameter 
+   are not defined in the XML configuration file."""
    pass
 
 class XMLReader:
@@ -208,22 +223,25 @@ class XMLReader:
                 xPath='./model[@id=' + chr(34) + shortModelName + chr(34) + \
                     ']/name/long'
                 modelName = self.root.find(xPath)
-                if modelName.text:
+                if modelName is None:
+                    raise NoModelLongNameDefined
+                else:
                     logger.info('XMLReader.getLongModelName found long model name ' + \
                         modelName.text)
                     return modelName.text
-                else:
-                    return None
             else:
                 return None
-           
+        except NoModelLongNameDefined:
+            warningString = 'No long name defined for this model in the configuration file'
+            print(warningString)
+            logger.info('XMLReader.getLongModel - '   + NamewarningString)
+            return 'No long name defined for this model'
         except Exception as e:
             print('Error in XMLReader.getLongModelName when shortModelName ={}: '.format(shortModelName) 
                   + str(e)) 
             logger.error('Error in XMLReader.getLongModelName when shortModelName ={}: '.format(shortModelName) 
                   + str(e)) 
             return None
-
 
     def getModelInletType(self, shortModelName):
         """Returns the inlet type (single or dual) of the model
@@ -234,20 +252,24 @@ class XMLReader:
                 xPath='./model[@id=' + chr(34) + shortModelName + chr(34) + ']/inlet_type'
                 modelInletType= self.root.find(xPath)
                 if modelInletType.text:
+                    raise NoModelInletTypeDefined
+                else:
                     logger.info('XMLReader.getModelInletType found model inlet type ' + modelInletType.text)
                     return modelInletType.text
-                else:
-                    return None
             else:
                 return None
-           
+
+        except NoModelInletTypeDefined:  
+            warningString = 'No model inlet type defined'
+            print(warningString)
+            logger.info('XMLReader.getModelInletType - ' + warningString)
+            return None
         except Exception as e:
             print('Error in XMLReader.getModelInletType when shortModelName ={}: '.format(shortModelName) 
                   + str(e)) 
             logger.error('Error in XMLReader.getModelInletType when shortModelName ={}: '.format(shortModelName) 
                   + str(e)) 
             return None
-
 
     def getNumberOfParameters(self, shortModelName) ->int:
         """Returns the number of input parameters to the model whose
@@ -285,28 +307,47 @@ class XMLReader:
                         model's parameter collection. Numbers from one."""
         try:
             logger.info('XMLReader.getParameterLabel called with short model name= {} and position={} '.format(shortModelName,positionNumber) )
-            boolIsPercentage = False
+            isPercentage = False
+            missingShortName = False
+            missingLongName = False
+
             if len(shortModelName) > 0:
                 xPath='./model[@id=' + chr(34) + shortModelName + chr(34) + \
                     ']/parameters/parameter[' + str(positionNumber) + ']/name/short'
                 shortName = self.root.find(xPath)
+                if shortName is None:
+                    missingShortName = True
+                    print('short name for parameter at position {} is missing.'.format(str(positionNumber)))
 
                 xPath='./model[@id=' + chr(34) + shortModelName + chr(34) + \
                     ']/parameters/parameter[' + str(positionNumber) + ']/name/long'
                 longName = self.root.find(xPath)
+                if longName is None:
+                    missingLongName = True
+                    print('Long name for parameter at position {} is missing.'.format(str(positionNumber)))
 
                 xPath='./model[@id=' + chr(34) + shortModelName + chr(34) + \
                     ']/parameters/parameter[' + str(positionNumber) + ']/units'
                 units = self.root.find(xPath)
-                if units.text == '%':
-                    boolIsPercentage = True
-
-                fullName = longName.text + ', \n' + \
+                if units is None:
+                    print('Units for parameter at position {} are missing.'.format(str(positionNumber)))
+                else:
+                    if units.text == '%':
+                        isPercentage = True
+                
+                if missingShortName and missingLongName:
+                    raise CannotFormFullParameterName
+                else:
+                    fullName = longName.text + ', \n' + \
                             shortName.text + \
                             '(' + units.text + ')'
 
-                return boolIsPercentage, fullName
-             
+                return isPercentage, fullName
+        except CannotFormFullParameterName:
+            warningString = 'Cannot form the full name for parameter at position {}'.format(str(positionNumber))
+            print (warningString)
+            logger.info('XMLReader.getParameterLabel - ' + warningString)
+            return False, 'Cannot form full parameter name'
         except Exception as e:
             print('Error in XMLReader.getParameterLabel when shortModelName ={} and xPath={}: '.format(shortModelName, xPath) 
                   + str(e)) 
@@ -368,7 +409,6 @@ class XMLReader:
                   + str(e)) 
             return 0.0
 
-
     def getParameterStep(self, shortModelName, positionNumber)->float:
         """
         Returns the spinbox step value for parameter in ordinal position,
@@ -423,6 +463,7 @@ class XMLReader:
             logger.error('Error in XMLReader.getParameterPrecision when shortModelName ={} and xPath={}: '.format(shortModelName, xPath) 
                   + str(e)) 
             return 0.0
+
 
     def getParameterConstraints(self, shortModelName, positionNumber)->float:
         """

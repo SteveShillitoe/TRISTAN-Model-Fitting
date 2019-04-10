@@ -217,6 +217,10 @@ class NoModelFunctionDefined(Error):
    to a model is not returned from the XML configuration file."""
    pass
 
+class NoModelInletTypeDefined(Error):
+   """Raised when the inlet type of the model is not returned from the XML configuration file."""
+   pass
+
 class ModelFittingApp(QWidget):   
     """This class defines the TRISTAN Model Fitting software 
        based on QWidget class that provides the GUI.
@@ -731,7 +735,7 @@ class ModelFittingApp(QWidget):
                     self.lblModelName.setText(longModelName)
                 else:
                     self.lblModelImage.clear()
-                    self.lblModelName.setText('')
+                    self.lblModelName.setText('No image available for this model')
             else:
                 self.lblModelImage.clear()
                 self.lblModelName.setText('')
@@ -1229,6 +1233,9 @@ class ModelFittingApp(QWidget):
                 raise NoModelFunctionDefined
 
             inletType = self.objXMLReader.getModelInletType(modelName)
+            if inletType is None:
+                raise NoModelInletTypeDefined
+
             QApplication.setOverrideCursor(QCursor(QtCore.Qt.WaitCursor))
             optimumParamsDict, paramCovarianceMatrix = \
                 ModelFunctionsHelper.CurveFit(
@@ -1258,6 +1265,12 @@ class ModelFittingApp(QWidget):
                                     optimumParamsList, paramCovarianceMatrix)
                 self.CurveFitProcessOptimumParameters()
         
+        except NoModelInletTypeDefined:
+            warningString = 'Cannot procede because no inlet type ' + \
+                'is defined for this model in the configuration file.'
+            print(warningString)
+            logger.info('CurveFit - ' + warningString)
+            QMessageBox().critical( self,  "Curve Fitting", warningString, QMessageBox.Ok)
         except NoModelFunctionDefined:
             warningString = 'Cannot procede because no function ' + \
                 'is defined for this model in the configuration file.'
