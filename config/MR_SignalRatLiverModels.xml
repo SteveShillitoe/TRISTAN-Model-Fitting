@@ -85,9 +85,13 @@ The <name></name> tags enclose the <short></short> and
         <default>23.0</default>
         <step>1.0</step>
         <precision>2</precision>
+        <display_value>
+          <min>0.01</min>
+          <max>99.99</max>
+        </display_value>
         <constraints>
-          <lower>0.01</lower>
-          <upper>99.99</upper>
+          <lower></lower>
+          <upper></upper>
         </constraints>
       </parameter>
       <parameter>
@@ -99,9 +103,13 @@ The <name></name> tags enclose the <short></short> and
         <default>0.0918</default>
         <step>0.01</step>
         <precision>4</precision>
+        <display_value>
+          <min>0.01</min>
+          <max>100.0</max>
+        </display_value>
         <constraints>
-          <lower>0.01</lower>
-          <upper>100.0</upper>
+          <lower></lower>
+          <upper></upper>
         </constraints>
       </parameter>
       <parameter>
@@ -113,9 +121,13 @@ The <name></name> tags enclose the <short></short> and
         <default>2.358</default>
         <step>0.1</step>
         <precision>3</precision>
+        <display_value>
+          <min>0.0001</min>
+          <max>100.0</max>
+        </display_value>
         <constraints>
-          <lower>0.0001</lower>
-          <upper>100.0</upper>
+          <lower></lower>
+          <upper></upper>
         </constraints>
       </parameter>
     </parameters>
@@ -139,9 +151,13 @@ The <name></name> tags enclose the <short></short> and
         <default>23.0</default>
         <step>1.0</step>
         <precision>2</precision>
+        <display_value>
+          <min>0.01</min>
+          <max>99.99</max>
+        </display_value>
         <constraints>
-          <lower>0.01</lower>
-          <upper>99.99</upper>
+          <lower></lower>
+          <upper></upper>
         </constraints>
       </parameter>
       <parameter>
@@ -153,9 +169,13 @@ The <name></name> tags enclose the <short></short> and
         <default>0.0918</default>
         <step>0.01</step>
         <precision>4</precision>
+        <display_value>
+          <min>0.01</min>
+          <max>100.0</max>
+        </display_value>
         <constraints>
-          <lower>0.01</lower>
-          <upper>100.0</upper>
+          <lower></lower>
+          <upper></upper>
         </constraints>
       </parameter>
       <parameter>
@@ -167,9 +187,13 @@ The <name></name> tags enclose the <short></short> and
         <default>2.358</default>
         <step>0.1</step>
         <precision>3</precision>
+        <display_value>
+          <min>0.0001</min>
+          <max>100.0</max>
+        </display_value>
         <constraints>
-          <lower>0.0001</lower>
-          <upper>100.0</upper>
+          <lower></lower>
+          <upper></upper>
         </constraints>
       </parameter>
     </parameters>

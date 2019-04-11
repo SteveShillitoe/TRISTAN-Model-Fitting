@@ -223,7 +223,7 @@ class XMLReader:
             if len(shortModelName) > 0 and shortModelName != FIRST_ITEM_MODEL_LIST:
                 xPath='./model[@id=' + chr(34) + shortModelName + chr(34) + ']/inlet_type'
                 modelInletType= self.root.find(xPath)
-                if modelInletType.text:
+                if modelInletType is None:
                     raise ValueNotDefinedInConfigFile
                 else:
                     logger.info('XMLReader.getModelInletType found model inlet type ' + modelInletType.text)
@@ -413,11 +413,12 @@ class XMLReader:
                     ']/parameters/parameter[' + str(positionNumber) + ']/step'
                 step = self.root.find(xPath)
 
-                if step.text:
-                    
-                    return float(step.text)
+                if step is None:
+                    raise ValueNotDefinedInConfigFile
                 else:
-                    return 0.0
+                    return float(step.text)
+            else:
+                return 0.0
 
         except ValueNotDefinedInConfigFile:
             warningString = 'No increment/decrement step value defined for the parameter '  + \
@@ -447,11 +448,19 @@ class XMLReader:
                     ']/parameters/parameter[' + str(positionNumber) + ']/precision'
                 precision = self.root.find(xPath)
 
-                if precision.text:
-                    return int(precision.text)
+                if precision is None:
+                    raise ValueNotDefinedInConfigFile
                 else:
-                    return 0.0
+                    return int(precision.text)
+            else:
+                return 0
 
+        except ValueNotDefinedInConfigFile:
+            warningString = 'Number of decimal places is not defined for the parameter '  + \
+                    'at position {} when the model short = {}'.format(positionNumber, shortModelName)
+            print(warningString)
+            logger.info('XMLReader.getParameterPrecision - ' + warningString)
+            return 0
         except Exception as e:
             print('Error in XMLReader.getParameterPrecision when shortModelName ={} and xPath={}: '.format(shortModelName, xPath) 
                   + str(e)) 
@@ -459,39 +468,143 @@ class XMLReader:
                   + str(e)) 
             return 0.0
 
-
-    def getParameterConstraints(self, shortModelName, positionNumber)->float:
+    def getMaxParameterDisplayValue(self, shortModelName, positionNumber)->float:
         """
-        Returns the upper and lower limits of the range of values 
+        Returns the maximum value allowed 
         in the spinbox for the parameter in ordinal position,
         positionNumber, of the parameter collection of the model whose
         short name is shortModelName. Parameter values are displayed in a
         spinbox on the application GUI.
         """
         try:
-            logger.info('XMLReader.getParameterConstraints called with short model name= {} and position={} '.format(shortModelName,positionNumber) )
+            logger.info('XMLReader.getMaxParameterDisplayValue called with short model name= {} and position={} '.format(shortModelName,positionNumber) )
+            
+            if len(shortModelName) > 0:
+                xPath='./model[@id=' + chr(34) + shortModelName + chr(34) + \
+                    ']/parameters/parameter[' + str(positionNumber) + ']/display_value/max'
+                max = self.root.find(xPath)
+
+                if max is None:
+                    raise ValueNotDefinedInConfigFile
+                else:
+                    return float(max.text)
+                
+        except ValueNotDefinedInConfigFile:
+            warningString = 'Maximum value allowed in the spinbox for the parameter '  + \
+                    'at position {} when the model short = {}'.format(positionNumber, shortModelName)
+            print(warningString)
+            logger.info('XMLReader.getMaxParameterDisplayValue - ' + warningString)
+            return None
+        except Exception as e:
+            print('Error in XMLReader.getMaxParameterDisplayValue when shortModelName ={} and xPath={}: '.format(shortModelName, xPath) 
+                  + str(e)) 
+            logger.error('Error in XMLReader.getMaxParameterDisplayValue when shortModelName ={} and xPath={}: '.format(shortModelName, xPath) 
+                  + str(e)) 
+            return None
+
+    def getMinParameterDisplayValue(self, shortModelName, positionNumber)->float:
+        """
+        Returns the maximum value allowed 
+        in the spinbox for the parameter in ordinal position,
+        positionNumber, of the parameter collection of the model whose
+        short name is shortModelName. Parameter values are displayed in a
+        spinbox on the application GUI.
+        """
+        try:
+            logger.info('XMLReader.getMinParameterDisplayValue called with short model name= {} and position={} '.format(shortModelName,positionNumber) )
+            
+            if len(shortModelName) > 0:
+                xPath='./model[@id=' + chr(34) + shortModelName + chr(34) + \
+                    ']/parameters/parameter[' + str(positionNumber) + ']/display_value/min'
+                min = self.root.find(xPath)
+
+                if min is None:
+                    raise ValueNotDefinedInConfigFile
+                else:
+                    return float(min.text)
+                
+        except ValueNotDefinedInConfigFile:
+            warningString = 'Minimum value allowed in the spinbox for the parameter '  + \
+                    'at position {} when the model short = {}'.format(positionNumber, shortModelName)
+            print(warningString)
+            logger.info('XMLReader.getMinParameterDisplayValue - ' + warningString)
+            return None
+        except Exception as e:
+            print('Error in XMLReader.getMinParameterDisplayValue when shortModelName ={} and xPath={}: '.format(shortModelName, xPath) 
+                  + str(e)) 
+            logger.error('Error in XMLReader.getMinParameterDisplayValue when shortModelName ={} and xPath={}: '.format(shortModelName, xPath) 
+                  + str(e)) 
+            return None
+    
+
+    def getUpperParameterConstraint(self, shortModelName, positionNumber)->float:
+        """
+        Returns the upper constraint value for curve fitting
+        for the parameter in ordinal position,
+        positionNumber, of the parameter collection of the model whose
+        short name is shortModelName. Parameter values are displayed in a
+        spinbox on the application GUI.
+        """
+        try:
+            logger.info('XMLReader.getUpperParameterConstraint called with short model name= {} and position={} '.format(shortModelName,positionNumber) )
+            
+            if len(shortModelName) > 0:
+                xPath='./model[@id=' + chr(34) + shortModelName + chr(34) + \
+                    ']/parameters/parameter[' + str(positionNumber) + ']/constraints/upper'
+                upper = self.root.find(xPath)
+
+                if upper is None or upper.text is None:
+                    raise ValueNotDefinedInConfigFile
+                else:
+                    return float(upper.text)
+                
+        except ValueNotDefinedInConfigFile:
+            warningString = 'Upper constraint for curve fitting for the parameter '  + \
+                    'at position {} when the model short = {}'.format(positionNumber, shortModelName)
+            print(warningString)
+            logger.info('XMLReader.getUpperParameterConstraint - ' + warningString)
+            return None
+        except Exception as e:
+            print('Error in XMLReader.getUpperParameterConstraint when shortModelName ={} and xPath={}: '.format(shortModelName, xPath) 
+                  + str(e)) 
+            logger.error('Error in XMLReader.getUpperParameterConstraint when shortModelName ={} and xPath={}: '.format(shortModelName, xPath) 
+                  + str(e)) 
+            return None
+
+    def getLowerParameterConstraint(self, shortModelName, positionNumber)->float:
+        """
+        Returns the lower constraint value for curve fitting
+        for the parameter in ordinal position,
+        positionNumber, of the parameter collection of the model whose
+        short name is shortModelName. Parameter values are displayed in a
+        spinbox on the application GUI.
+        """
+        try:
+            logger.info('XMLReader.getLowerParameterConstraint called with short model name= {} and position={} '.format(shortModelName,positionNumber) )
             
             if len(shortModelName) > 0:
                 xPath='./model[@id=' + chr(34) + shortModelName + chr(34) + \
                     ']/parameters/parameter[' + str(positionNumber) + ']/constraints/lower'
                 lower = self.root.find(xPath)
 
-                xPath='./model[@id=' + chr(34) + shortModelName + chr(34) + \
-                    ']/parameters/parameter[' + str(positionNumber) + ']/constraints/upper'
-                upper = self.root.find(xPath)
-
-                if lower.text and upper.text:
-                    return float(lower.text), float(upper.text)
+                if lower is None or lower.text is None:
+                    raise ValueNotDefinedInConfigFile
                 else:
-                    return 0.0, 0.0
-
+                    return float(lower.text)
+                
+        except ValueNotDefinedInConfigFile:
+            warningString = 'Lower constraint for curve fitting for the parameter '  + \
+                    'at position {} when the model short = {}'.format(positionNumber, shortModelName)
+            print(warningString)
+            logger.info('XMLReader.getLowerParameterConstraint - ' + warningString)
+            return None
         except Exception as e:
-            print('Error in XMLReader.getParameterConstraints when shortModelName ={} and xPath={}: '.format(shortModelName, xPath) 
+            print('Error in XMLReader.getLowerParameterConstraint when shortModelName ={} and xPath={}: '.format(shortModelName, xPath) 
                   + str(e)) 
-            logger.error('Error in XMLReader.getParameterConstraints when shortModelName ={} and xPath={}: '.format(shortModelName, xPath) 
+            logger.error('Error in XMLReader.getLowerParameterConstraint when shortModelName ={} and xPath={}: '.format(shortModelName, xPath) 
                   + str(e)) 
-            return 0.0, 0.0
-    
+            return None
+
     def getDataFileFolder(self)->str:
         """ Returns the path to the folder where the data files are stored"""
         try:

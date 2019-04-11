@@ -1138,21 +1138,20 @@ class ModelFittingApp(QWidget):
         try:
             paramShortName =self.objXMLReader.getParameterShortName(modelName, paramNumber)
             isPercentage, _ =self.objXMLReader.getParameterLabel(modelName, paramNumber)
-            lower, upper = self.objXMLReader.getParameterConstraints(modelName, paramNumber)
-        
+            upper = self.objXMLReader.getUpperParameterConstraint(modelName, paramNumber)
+            lower = self.objXMLReader.getLowerParameterConstraint(modelName, paramNumber)
             objSpinBox = getattr(self, 'spinBoxParameter' + str(paramNumber))
             value = objSpinBox.value()
+            
             if isPercentage:
                 value = value/100
-                lower = lower/100
-                upper = upper/100
             
-            vary = True
+            vary = True    
             objCheckBox = getattr(self, 'ckbParameter' + str(paramNumber))
             if objCheckBox.isChecked():
                 vary = False
-    
-            tempTuple =(paramShortName, value, vary, lower, upper, None, None)
+            
+            tempTuple = (paramShortName, value, vary, lower, upper, None, None)
             
             return tempTuple
 
@@ -1726,7 +1725,8 @@ class ModelFittingApp(QWidget):
                         .format(modelName, paramNumber))
             isPercentage, paramName =self.objXMLReader.getParameterLabel(modelName, paramNumber)
             precision = self.objXMLReader.getParameterPrecision(modelName, paramNumber)
-            lower, upper = self.objXMLReader.getParameterConstraints(modelName, paramNumber)
+            upper = self.objXMLReader.getMaxParameterDisplayValue(modelName, paramNumber)
+            lower = self.objXMLReader.getMinParameterDisplayValue(modelName, paramNumber)
             step = self.objXMLReader.getParameterStep(modelName, paramNumber)
             default = self.objXMLReader.getParameterDefault(modelName, paramNumber)
         
