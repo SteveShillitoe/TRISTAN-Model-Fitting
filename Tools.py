@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 ####################### Signal model helper functions ##################################
 def spgr2d_func(x, *spgr_params):
-    logger.info("spgr2d_func called")
+    logger.info(" Tools.spgr2d_func called")
     try:
         r1, FA, TR, R10, S_baseline, S = spgr_params
         E0 = np.exp(-TR*R10/2)
@@ -48,7 +48,7 @@ def spgr2d_func(x, *spgr_params):
 
 
 def spgr2d_func_inv(r1, FA, TR, R10, conc):
-    logger.info("spgr2d_func_inv called")
+    logger.info("Tools.spgr2d_func_inv called")
     try:
         c = np.cos(FA*np.pi/180)
         E0 = np.exp(-TR*R10/2)
@@ -68,7 +68,7 @@ def spgr2d_func_inv(r1, FA, TR, R10, conc):
         logger.error('Tools.spgr2d_func_inv has error: {} '.format(str(e)))
 
 def spgr3d_func(x, FA, TR, R10, S0, S):
-    logger.info("spgr3d_func called")
+    logger.info("Tools.spgr3d_func called")
     try:
         E0 = np.exp(-TR*R10)
         E1 = np.exp(-TR*x)
@@ -83,7 +83,7 @@ def spgr3d_func(x, FA, TR, R10, S0, S):
         logger.error('Tools.spgr3d_func has error: {} '.format(str(e)))
 
 def spgr3d_func_inv(r1, FA, TR, R10, conc):
-    logger.info("spgr3d_func_inv called")
+    logger.info("Tools.spgr3d_func_inv called")
     try:
         c = np.cos(FA*np.pi/180)
         E0 = np.exp(-TR*R10)

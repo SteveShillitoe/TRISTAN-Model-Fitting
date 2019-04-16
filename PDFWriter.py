@@ -1,8 +1,8 @@
 """This module contains functions for the creation and saving 
 of a report of a model fitting session in a PDF file. 
-In addition to a table of model parameter data, this report contains an image
-of the concentration/time plot at the time the CreateAndSavePDFReport method
-was called.
+In addition to a table of model parameter data, this report 
+contains an image of the concentration/time plot 
+at the time the CreateAndSavePDFReport method was called.
 
 This is done using the functionality in the FPDF library.
 """
@@ -17,12 +17,14 @@ TRISTAN_LOGO = 'images\\TRISTAN LOGO.jpg'
 logger = logging.getLogger(__name__)
 
 #header and footer methods in FPDF render the page header and footer.
-#They are automatically called by add_page and close and should not be called 
-#directly by the application.  The implementation in FPDF is empty, 
-#so we have to subclass it and override the method to define the required functionality.
+#They are automatically called by add_page and close 
+#and should not be directly by the application.  
+#The implementation in FPDF is empty so, we have to subclass it 
+#and override the method to define the required functionality.
 class PDF(FPDF):
     def __init__(self, title):
-        super().__init__() #Inherit functionality from the __init__ method of class FPDF
+        #Inherit functionality from the __init__ method of class FPDF
+        super().__init__() 
         self.title = title  #Then add a local property
         logger.info('In module ' + __name__ + '. Created an instance of class PDF.')
 
@@ -40,7 +42,8 @@ class PDF(FPDF):
 
     def footer(self):
         """Prints a footer at the bottom of every page of the report.
-        It includes the page number and date/time when the report was created. """
+        It includes the page number and date/time 
+        when the report was created. """
         # Position at 1.5 cm from bottom
         self.set_y(-15)
         # Arial italic 8
@@ -54,16 +57,18 @@ class PDF(FPDF):
     def CreateAndSavePDFReport(self, fileName, dataFileName, modelName, imageName, 
                                parameterDictionary):
         """Creates and saves a copy of a curve fitting report.
-        It includes the name of the file containing the data to be plotted and the name
-        of the model used for curve fitting.  A table of input parameters, their values
-        and their confidence limits is displayed above an image of the concentration/time
-        plot.
+        It includes the name of the file containing the data 
+        to be plotted and the name of the model used for curve fitting.  
+        A table of input parameters, their values
+        and their confidence limits is displayed above 
+        an image of the concentration/time plot.
         
         Input Parameters
         ----------------
         fileName - file path and name of the PDF report.
-        dataFileName - file path and name of the CSV file containing the 
-            time/concentration data that has been analysed.
+        dataFileName - file path and name of the CSV file 
+            containing the time/concentration data that 
+            has been analysed.
         modelName - Name of the model used to curve fit the time/concentration data.
         imageName - Name of the PNG file holding an image of the plot of time/concentration
             data on the GUI.
@@ -73,10 +78,15 @@ class PDF(FPDF):
 
         Action
         ------
-        Creates and saves a PDF report at fileName.  This report lists the name of the data file
-        containing the data being analyses, displays the values of the model input parameters in 
-        a table. If curve fitting has been done, this table also displays the 95% confidence limits
-        of the predicted parameter values.  The report also displays the time/concentration plots.
+        Creates and saves a PDF report  at the location 
+        held in the string variable fileName.  
+        This report lists the name of the data file
+        containing the data being analyses, 
+        displays the values of the model input parameters in 
+        a table. If curve fitting has been done, 
+        this table also displays the 95% confidence limits
+        of the predicted parameter values.  
+        The report also displays the time/concentration plots.
         """
         try:
             logger.info('Function PDFWriter.CreateAndSavePDFReport called with filename={}, \

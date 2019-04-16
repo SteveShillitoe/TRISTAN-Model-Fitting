@@ -4,49 +4,66 @@ The GUI was built using PyQT5.
 
 How to Use.
 -----------
-   The TRISTAN-Model-Fitting application allows the user to analyse organ time/concentration data
-   by fitting a model to the Region Of Interest (ROI) time/concentration curve. 
+   The TRISTAN-Model-Fitting application allows the user to analyse 
+   organ time/concentration data by fitting a model to the 
+   Region Of Interest (ROI) time/concentration curve. 
    The TRISTAN-Model-Fitting application provides the following functionality:
         1. Load an XML configuration file that describes the models to be fitted
             to the concentration/time data.
-        2. Then load a CSV file of concentration/time data.  The first column must contain time data 
-			in seconds. The remaining columns of data must contain concentration data in 
-			millimoles (mM) for individual organs at the time points in the time column. 
+        2. Then load a CSV file of concentration/time or MR Signal/time data.  
+            The first column must contain time data in seconds. 
+            remaining columns of data must contain concentration in 
+			millimoles (mM) or MR signal data for individual organs 
+            at the time points in the time column. 
 			There must be at least 2 columns of concentration data.  
 			There is no upper limit on the number of columns of concentration data.
 			Each time a CSV file is loaded, the screen is reset to its initial state.
         3. Select a Region Of Interest (ROI) and display a plot of its concentration against
             time.
         4. The user can then select a model they would like to fit to the ROI data.  
-            When a model is selected, a schematic representation of it is displayed on the 
-            right-hand side of the screen.
+            When a model is selected, a schematic representation of it may be
+           displayed on the right-hand side of the screen if an image is available.
+           An image file will have to be stored in the images 
+           folder in the root folder containing the application 
+           source code and its name defined in the XML configuration file.
         5. Depending on the model selected the user can then select an Arterial Input Function(AIF)
             and/or a Venous Input Function (VIF) and display a plot(s) of its/their concentration 
             against time on the same axes as the ROI.
-        6. After step 4 is performed, the selected model is used to create a time/concentration series
-           based on default values for the models input parameters.  This data series is also plotted 
-           on the above axes.
-        7. The default model parameters are displayed on the form and the user may vary them
-           and observe the effect on the curve generated in step 5.
-        8. Clicking the 'Reset' button resets the model input parameters to their default values.
-        9. By clicking the 'Fit Model' button, the model is fitted to the ROI data and the resulting
-           values of the model input parameters are displayed on the screen together with 
-           their 95% confidence limits.
+        6. After step 4 is performed, the selected model is used 
+           to create a time/concentration series
+           based on default values for the models input parameters.  
+          data series is also plotted on the above axes.
+        7. The default model parameters are displayed on the form 
+           and the user may vary them and observe the effect on 
+           the curve generated in step 5.
+        8. Clicking the 'Reset' button resets the model 
+           input parameters to their default values.
+        9. By clicking the 'Fit Model' button, the model is 
+           fitted to the ROI data and the resulting values 
+           of the model input parameters are displayed on 
+           the screen together with their 95% confidence limits.
         10. By clicking the 'Save plot data to CSV file' button the data plotted on the screen is saved
             to a CSV file - one column for each plot and a column for time.
             A file dialog box is displayed allowing the user to select a location 
             and enter a file name.
-        11. By clicking the 'Save Report in PDF Format', the current state of the model fitting session
-            is saved in PDF format.  This includes a image of the plot, name of the model, name of the 
-            data file and the values of the model input parameters. If curve fitting has been carried 
-            out and the values of the model input parameters have not been manually adjusted, then
-            the report will contain the 95% confidence limits of the model input parameter values 
-            arrived at by curve fitting.
-        12. While this application is running, events & function calls with data where appropriate 
-            are logged to a file called TRISTAN.log, stored at the same location as the 
-            source code or executable. This file will used as a debugging aid. 
+        11. By clicking the 'Save Report in PDF Format', 
+            current state of the model fitting session
+            is saved in PDF format.  This includes a image 
+            of the plot, name of the model, name of the 
+            data file and the values of the model input parameters. 
+            If curve fitting has been carried 
+            out and the values of the model input parameters 
+            have not been manually adjusted, then the report 
+            will contain the 95% confidence limits of the 
+            model input parameter values arrived at by curve fitting.
+        12. While this application is running, events & function 
+            calls with data where appropriate 
+            are logged to a file called TRISTAN.log, 
+            stored at the same location as the 
+            source code or executable. This file can be used as a debugging aid. 
             When a new instance of the application is started, 
-            TRISTAN.log from the last session will be deleted and a new log file started.
+            TRISTAN.log from the last session will be deleted
+            and a new log file started.
         13. Clicking the 'Start Batch Processing' button applies model fitting
             to the concentration/time data in all the files in the folder containing
             the data file selected in step 2.  For each file, a PDF report is created
@@ -56,7 +73,8 @@ How to Use.
 
 Application Module Structure.
 ---------------------------
-The modelFittingGUI.py class module is the start up module in the TRISTAN-Model-Fitting application. 
+The modelFittingGUI.py class module is the start up module 
+in the TRISTAN-Model-Fitting application. 
 It defines the GUI and the logic providing the application's functionality.
 The GUI was built using PyQT5.
 
@@ -65,10 +83,11 @@ the XML configuration file that describes all the models to be made available
 for curve fitting.  It also contains functions that query the XML tree using
 XPath notation and return data.
 
-The styleSheet.py module contains style instructions using CSS notation for each control/widget.
+The styleSheet.py module contains style instructions using CSS 
+notation for each control/widget.
 
-The Tools.py module contains a library of mathematical functions used to solve the equations in 
-the models in ModelFunctionsHelper.py.
+The Tools.py module contains a library of mathematical functions 
+used to solve the equations in the models in ModelFunctionsHelper.py.
 
 Objects of the following 2 classes are created in modelFittingGUI.py 
 and provide services to this class:
@@ -88,10 +107,10 @@ functions in ModelFunctions.py by functions in ModelFittingGUI.py
 GUI Structure
 --------------
 The GUI is based on the QWidget class.
-The GUI contains a single form.  Controls are arranged in two vertical columns on this form
-using Vertical Layout widgets.
-Consequently, a horizontal layout control in placed on this form. Within this horizontal
-layout are placed 2 vertical layout controls.
+The GUI contains a single form.  Controls are arranged in two 
+vertical columns on this form using Vertical Layout widgets.
+Consequently, a horizontal layout control in placed on this form. 
+Within this horizontal layout are placed 2 vertical layout controls.
 
 The left-hand side vertical layout holds controls pertaining to the input and 
 selection of data and the selection of a model to analyse the data. The results
@@ -207,7 +226,7 @@ class NavigationToolbar(NavigationToolbar):
                  t[0] in ('Home', 'Pan', 'Zoom', 'Save')]
 
 
-# Python user-defined exceptions
+# User-defined exceptions
 class Error(Exception):
    """Base class for other exceptions"""
    pass
@@ -218,7 +237,8 @@ class NoModelFunctionDefined(Error):
    pass
 
 class NoModelInletTypeDefined(Error):
-   """Raised when the inlet type of the model is not returned from the XML configuration file."""
+   """Raised when the inlet type of the model is not returned
+    from the XML configuration file."""
    pass
 
 class ModelFittingApp(QWidget):   
@@ -252,7 +272,8 @@ class ModelFittingApp(QWidget):
         self.setWindowIcon(QIcon(TRISTAN_LOGO))
         width, height = self.GetScreenResolution()
         self.setGeometry(width*0.05, height*0.05, width*0.9, height*0.9)
-        self.setWindowFlags(QtCore.Qt.WindowMinMaxButtonsHint |  QtCore.Qt.WindowCloseButtonHint)
+        self.setWindowFlags(QtCore.Qt.WindowMinMaxButtonsHint |  
+                            QtCore.Qt.WindowCloseButtonHint)
         
         #Store path to time/concentration data files for use 
         #in batch processing.

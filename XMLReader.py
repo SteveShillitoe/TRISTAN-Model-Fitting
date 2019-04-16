@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 FIRST_ITEM_MODEL_LIST = 'Select a model'
 
-# Python user-defined exceptions
+# User-defined exceptions
 class Error(Exception):
    """Base class for other exceptions"""
    pass
@@ -73,6 +73,7 @@ class XMLReader:
             logger.error('Error in XMLReader.parseConfigFile: ' + str(e)) 
             self.hasXMLFileParsedOK = False
 
+
     def getListModelShortNames(self):
         """Returns a list of model short names for display
         in a combo dropdown list on the application GUI """
@@ -101,6 +102,7 @@ class XMLReader:
             print('Error in XMLReader.getListModelShortNames: ' + str(e)) 
             logger.error('Error in XMLReader.getListModelShortNames: ' + str(e)) 
     
+
     def getFunctionName(self, shortModelName):
         """Returns the name of the function that 
         contains the logic corresponding to the model
@@ -130,6 +132,7 @@ class XMLReader:
                   + str(e)) 
             return None
 
+
     def getYAxisLabel(self):
         """Returns the text of the Y Axis Label use
        with the model with a short name 
@@ -156,6 +159,7 @@ class XMLReader:
             print('Error in XMLReader.getYAxisLabel: ' + str(e)) 
             logger.error('Error in XMLReader.getYAxisLabel: ' + str(e)) 
             return ''
+
 
     def getImageName(self, shortModelName):
         """Returns the name of the image that represents the model
@@ -186,6 +190,7 @@ class XMLReader:
                   + str(e)) 
             return None
 
+
     def getLongModelName(self, shortModelName):
         """Returns the long name of the model
        with a short name in the string variable shortModelName"""
@@ -215,6 +220,7 @@ class XMLReader:
                   + str(e)) 
             return None
 
+
     def getModelInletType(self, shortModelName):
         """Returns the inlet type (single or dual) of the model
        with a short name in the string variable shortModelName"""
@@ -242,6 +248,7 @@ class XMLReader:
             logger.error('Error in XMLReader.getModelInletType when shortModelName ={}: '.format(shortModelName) 
                   + str(e)) 
             return None
+
 
     def getNumberOfParameters(self, shortModelName) ->int:
         """Returns the number of input parameters to the model whose
@@ -327,6 +334,7 @@ class XMLReader:
                   + str(e)) 
             return None, ''
 
+
     def getParameterShortName(self, shortModelName, positionNumber):
         """Returns the short name of a parameter.
 
@@ -363,6 +371,7 @@ class XMLReader:
                   + str(e)) 
             return ''
 
+
     def getParameterDefault(self, shortModelName, positionNumber)->float:
         """
         Returns the default value for parameter in ordinal position,
@@ -396,6 +405,7 @@ class XMLReader:
             logger.error('Error in XMLReader.getParameterDefault when shortModelName ={} and xPath={}: '.format(shortModelName, xPath) 
                   + str(e)) 
             return 0.0
+
 
     def getParameterStep(self, shortModelName, positionNumber)->float:
         """
@@ -433,6 +443,7 @@ class XMLReader:
                   + str(e)) 
             return 0.0
 
+
     def getParameterPrecision(self, shortModelName, positionNumber)->int:
         """
         Returns the number of decimal places to be displayed in the spinbox 
@@ -468,6 +479,7 @@ class XMLReader:
                   + str(e)) 
             return 0.0
 
+
     def getMaxParameterDisplayValue(self, shortModelName, positionNumber)->float:
         """
         Returns the maximum value allowed 
@@ -501,6 +513,7 @@ class XMLReader:
             logger.error('Error in XMLReader.getMaxParameterDisplayValue when shortModelName ={} and xPath={}: '.format(shortModelName, xPath) 
                   + str(e)) 
             return None
+
 
     def getMinParameterDisplayValue(self, shortModelName, positionNumber)->float:
         """
@@ -571,6 +584,7 @@ class XMLReader:
                   + str(e)) 
             return None
 
+
     def getLowerParameterConstraint(self, shortModelName, positionNumber)->float:
         """
         Returns the lower constraint value for curve fitting
@@ -605,6 +619,7 @@ class XMLReader:
                   + str(e)) 
             return None
 
+
     def getDataFileFolder(self)->str:
         """ Returns the path to the folder where the data files are stored"""
         try:
@@ -625,6 +640,7 @@ class XMLReader:
                   + str(e)) 
             return ''
         
+
     def getStringOfConstants(self):
         """ Returns a string representation of a dictionary of
             model constant name:value pairs."""

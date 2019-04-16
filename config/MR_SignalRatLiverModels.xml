@@ -72,7 +72,7 @@ The <name></name> tags enclose the <short></short> and
       <long>High Flow Single Inlet - Two Compartment Filtration and 2DSPGR Model</long>
     </name>
     <function_path>Models.TwoCompartmentModels.SingleInletModels.HighFlowGadoxetate2DSPGR_Rat.HighFlowGadoxetate2DSPGR_Rat</function_path>
-    <function>HighFlowGadoxetate2DSPGR_Rat</function>
+    <function>HighFlowSingleInletGadoxetate2DSPGR_Rat</function>
     <image>HighFlowSingleInletTwoCompartmentGadoxetateModel.png</image>
     <inlet_type>single</inlet_type>
     <parameters>
@@ -138,7 +138,7 @@ The <name></name> tags enclose the <short></short> and
       <long>High Flow Single Inlet - Two Compartment Filtration and 3DSPGR Model</long>
     </name>
     <function_path>Models/TwoCompartmentModels/SingleInletModels/HighFlowGadoxetate3DSPGR_Rat</function_path>
-    <function>HighFlowGadoxetate3DSPGR_Rat</function>
+    <function>HighFlowSingleInletGadoxetate3DSPGR_Rat</function>
     <image>HighFlowSingleInletTwoCompartmentGadoxetateModel.png</image>
     <inlet_type>single</inlet_type>
     <parameters>

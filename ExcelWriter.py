@@ -42,16 +42,17 @@ class ExcelWriter:
         
         return boolWSExists
 
+
     def RecordSkippedFiles(self, fileName, failureReason):
         """Records details of CSV data files that have to be skipped
        during batch processing because they do not conform
-       to required format in a worksheet called 'Skipped files'.
+       to a required format in a worksheet called 'Skipped files'.
        
        Input Parameters
        ----------------
        fileName - Name of the skipped file.
        failureReason - String containing the reason why the
-      file was skipped."""
+       file was skipped."""
         try:
             if not self.isWorksheet("Skipped files"):
                 #Skipped files tab does not exist.
@@ -77,6 +78,7 @@ class ExcelWriter:
         except Exception as e:
             print('ExcelWriter.RecordSkippedFiles: ' + str(e)) 
             logger.error('ExcelWriter.RecordSkippedFiles: ' + str(e)) 
+
 
     def RecordParameterValues(self, fileName, modelName, paramName, 
                               paramValue, paramLower, paramUpper):
@@ -121,8 +123,7 @@ class ExcelWriter:
                 thisWS['E2'] = str(paramLower)
                 thisWS['F2'] = str(paramUpper)
             else:
-                #Worksheet already exists, 
-                #so retrieve it
+                #Worksheet already exists, so retrieve it
                 thisWS = self.wb[paramName]
                 #get next empty row
                 row_count = thisWS.max_row

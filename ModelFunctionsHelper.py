@@ -1,5 +1,6 @@
-"""This module contains functions that coordinate the calling of functions
-in the module ModelFunctions.py that calculate the variation of concentration
+"""This module contains functions that coordinate 
+the calling of functions in the module ModelFunctions.py 
+that calculate the variation of concentration
 with time according to tracer kinetic models.  
 
 The function ModelSelector coordinates the execution of the 
@@ -8,11 +9,14 @@ appropriate function according to the model selected on the GUI.
 The function, CurveFit calls the Model function imported from 
 the lmfit Python package to fit any of the models in ModelFunctions.py
 to actual concentration/time data.  
+
+Initially curve fitting was done using scipy.optimize.curve_fit but
+lmfit was found to be more suitable. The code pertaining to the scipy
+implementation has been commented out.
 """
 
 #from scipy.optimize import curve_fit
 from lmfit import Parameters, Model
-import lmfit
 import numpy as np
 import logging
 import ModelFunctions as modelFunctions
@@ -21,37 +25,46 @@ import ModelFunctions as modelFunctions
 logger = logging.getLogger(__name__)
 
 def ModelSelector(functionName: str, 
-                  inletType:str, times, 
+                  inletType:str,
+                  times, 
                   AIFConcentration, 
-                  parameterArray, constantsString,
+                  parameterArray, 
+                  constantsString,
                   VIFConcentration=[]):
-    """Function called in the GUI of the model fitting application to 
-    run the function corresponding to each model and return a list of
+    """Function called in the GUI of the model fitting 
+    application to select & run the function corresponding 
+    to each model and return a list of
     calculated concentrations.
 
     Input Parameters
     ----------------
         functionName - Name of the function corresponding to the model.
 
+        inletType - String variable indicating if the model is single or
+            dual compartment. The value 'single' indicates single compartment.
+            The value 'dual' indicates dual compartment.
+
         time - NumPy Array of time values stored as floats. Created from a 
             Python list.
 
-        AIFConcentration - NumPy Array of concentration values stored as floats. 
-            Created from a Python list.  These concentrations are the Arterial
-            Input Function input to the model.
+        AIFConcentration - NumPy Array of concentration values stored as 
+            floats. Created from a Python list.  
+            These concentrations are the Arterial Input Function input 
+            to the model.
 
         parameterArray - list of model input parameter values.
 
-        boolDualInput - boolean indicating if the input to the model is 
-            single(=False) AIF only or dual(=True) AIF & VIR.
-
+        constantsString - String representation of a dictionary of constant
+            name:value pairs used to convert concentrations predicted by the
+            models to MR signal values.
+            
         VIFConcentration - Optional NumPy Array of concentration values stored as floats. 
             Created from a Python list.  These concentrations are the Venous
             Input Function input to the model.
 
         Returns
         ------
-        Returns a list of concentrations calculated using the selected model at the times in the array time.
+        Returns a list of MR signals calculated using the selected model at the times in the array time.
         """
     logger.info("In ModelFunctionsHelper.ModelSelector. Called with model {} and parameters {}".format(functionName, parameterArray))
     try:
@@ -69,42 +82,50 @@ def ModelSelector(functionName: str,
         logger.error('Error in ModelFunctionsHelper.ModelSelector: ' + str(e))
         print('ModelFunctionsHelper.ModelSelector: ' + str(e))  
 
+
 def CurveFit(functionName: str, paramList, times, AIFConcs, 
              VIFConcs, concROI, inletType, constantsString):
-    """This function calls the curve_fit function imported from scipy.optimize 
-    to fit the time/conconcentration data calculated by a model in this module 
-    to actual Region of Interest (ROI) concentration/time data using   
-    non-linear least squares. 
 
-    In the function calls to curve_fit, bounds are set on the input parameters to 
-    avoid division by zero errors.
+    """This function calls the fit function of the Model object 
+    imported from the lmfit package.  It is used to fit the
+    time/MR signal data calculated by a model in this module 
+    to actual Region of Interest (ROI) MR signal/time data using   
+    non-linear least squares. 
 
     Input Parameters
     ----------------
         functionName - The name of the function corresponding to the model.
 
+        paramArray - list of model input parameter values.
+
         time - NumPy Array of time values stored as floats. Created from a 
             Python list.
 
-        AIFConcs - NumPy Array of concentration values stored as floats. 
-            Created from a Python list.  These concentrations are the Arterial
+        AIFConcs - NumPy Array of MR signals values stored as floats. 
+            Created from a Python list.  These MR signals are the Arterial
             Input Function input to the model.
 
-        VIFConcs - NumPy Array of concentration values stored as floats. 
-            Created from a Python list.  These concentrations are the Venous
+        VIFConcs - NumPy Array of MR signals values stored as floats. 
+            Created from a Python list.  These MR signals are the Venous
             Input Function input to the model.
 
-        concROI - NumPy Array of concentration values stored as floats. 
-            Created from a Python list.  These concentrations belong to
+        concROI - NumPy Array of MR signals values stored as floats. 
+            Created from a Python list.  These MR signals belong to
             the Region of Interest (ROI).
 
-        paramArray - list of model input parameter values.
+        inletType - String variable indicating if the model is single or
+            dual compartment. The value 'single' indicates single compartment.
+            The value 'dual' indicates dual compartment.
 
+        constantsString - String representation of a dictionary of constant
+            name:value pairs used to convert concentrations predicted by the
+            models to MR signal values.
+        
         Returns
         ------
-        optimumParams - An array of optimum values of the model input parameters
+        result.best_values - An array of optimum values of the model input parameters
                 that achieve the best curve fit.
-        paramCovarianceMatrix - The estimated covariance of the values in optimumParams.
+        result.covar - The estimated covariance of the values in optimumParams.
             Used to calculate 95% confidence limits.
     """
     try:

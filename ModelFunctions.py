@@ -1,5 +1,5 @@
 """This module contains functions that calculate the variation 
-of concentration with time according to a tracer kinetic model.
+of concentration or MR signal with time according to a tracer kinetic model.
 """
 import Tools as tools
 import ExceptionHandling as exceptionHandler
@@ -10,14 +10,34 @@ import logging
 logger = logging.getLogger(__name__)
 
 # Note: The input paramaters for the volume fractions and rate constants in
-# the following model function definitions are listed in the same order as they are 
-# displayed in the GUI from top (first) to bottom (last) 
+# the following model function definitions are listed in the same order 
+# as they are displayed in the GUI from top (first) to bottom (last) 
 
 ####################################################################
 ####  MR Signal Rat Models 
 ####################################################################
-def HighFlowGadoxetate2DSPGR_Rat(xData2DArray, Ve, Kbh, Khe,
+def HighFlowSingleInletGadoxetate2DSPGR_Rat(xData2DArray, Ve, Kbh, Khe,
                                  constantsString):
+    """This function contains the algorithm for calculating 
+       how MR signal from a 2D scan varies with time using the 
+       High Flow Single Inlet Two Compartment Gadoxetate Model model.
+        
+            Input Parameters
+            ----------------
+                xData2DArray - time and AIF concentration 1D arrays 
+                    stacked into one 2D array.
+                Ve - Plasma Volume Fraction (decimal fraction).
+                Khe - Hepatocyte Uptake Rate (mL/min/mL)
+                Kbh - Biliary Efflux Rate (mL/min/mL) 
+                constantsString - String representation of a dictionary 
+                of constant name:value pairs used to convert concentrations 
+                predicted by this model to MR signal values.
+
+            Returns
+            -------
+            St_rel - list of calculated MR signals at each of the 
+                time points in array 'time'.
+            """ 
     try:
         exceptionHandler.modelFunctionInfoLogger()
         t = xData2DArray[:,0]
@@ -49,14 +69,15 @@ def HighFlowGadoxetate2DSPGR_Rat(xData2DArray, Ve, Kbh, Khe,
         # if Kbh == 0
         if Kbh != 0:
             Th = (1-Ve)/Kbh
-            ct = Ve*ce + Khe*Th*tools.expconv(Th,t,ce, 'HighFlowGadoxetate2DSPGR_Rat')
+            ct = Ve*ce + Khe*Th*tools.expconv(Th,t,ce, 'HighFlowSingleInletGadoxetate2DSPGR_Rat')
         else:
             ct = Ve*ce + Khe*tools.integrate(ce,t)
         
         # Convert to signal
         St_rel = tools.spgr2d_func_inv(r1, FA, TR, R10t, ct)
         
-        return(St_rel) #Returns tissue signal relative to the baseline St/St_baseline
+        #Return tissue signal relative to the baseline St/St_baseline
+        return(St_rel) 
  
     except ZeroDivisionError as zde:
         exceptionHandler.handleDivByZeroException(zde)
@@ -64,8 +85,28 @@ def HighFlowGadoxetate2DSPGR_Rat(xData2DArray, Ve, Kbh, Khe,
         exceptionHandler.handleGeneralException(e)
 
 
-def HighFlowGadoxetate3DSPGR_Rat(xData2DArray, Ve, Kbh, Khe, 
+def HighFlowSingleInletGadoxetate3DSPGR_Rat(xData2DArray, Ve, Kbh, Khe, 
                                  constantsString):
+    """This function contains the algorithm for calculating 
+       how the MR signal from a 3D scan varies with time using the 
+       High Flow Single Inlet Two Compartment Gadoxetate Model model.
+        
+            Input Parameters
+            ----------------
+                xData2DArray - time and AIF concentration 1D arrays 
+                    stacked into one 2D array.
+                Ve - Plasma Volume Fraction (decimal fraction).
+                Khe - Hepatocyte Uptake Rate (mL/min/mL)
+                Kbh - Biliary Efflux Rate (mL/min/mL) 
+                constantsString - String representation of a dictionary 
+                of constant name:value pairs used to convert concentrations 
+                predicted by this model to MR signal values.
+
+            Returns
+            -------
+            St_rel - list of calculated MR signals at each of the 
+                time points in array 'time'.
+            """ 
     try:
         exceptionHandler.modelFunctionInfoLogger()
         t = xData2DArray[:,0]
@@ -95,7 +136,7 @@ def HighFlowGadoxetate3DSPGR_Rat(xData2DArray, Ve, Kbh, Khe,
         ve_spleen = 0.43
         ce = ca/ve_spleen
         Th = (1-Ve)/Kbh
-        ct = Ve*ce + Khe*Th*tools.expconv(Th,t,ce,'HighFlowGadoxetate3DSPGR_Rat')
+        ct = Ve*ce + Khe*Th*tools.expconv(Th,t,ce,'HighFlowSingleInletGadoxetate3DSPGR_Rat')
         #if Kbh != 0:
            # Th = (1-Ve)/Kbh
            # ct = Ve*ce + Khe*Th*tools.expconv(Th,t,ce,'HighFlowGadoxetate3DSPGR_Rat')

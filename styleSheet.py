@@ -1,4 +1,6 @@
-"""This module contains style instructions using CSS notation for each control/widget """
+"""This module contains style instructions using CSS notation 
+for each control/widget.  Each set of CSS instructions is saved
+in a string constant. TRISTAN_GREY is the preferred style."""
 TRISTAN_Green ="""
                 QDialog{background-color: rgb(221, 255, 153)} 
                 QPushButton {background-color: rgb(48, 153, 0);
