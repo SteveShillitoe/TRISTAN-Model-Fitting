@@ -339,6 +339,10 @@ class ModelFittingApp(QWidget):
     def SetUpLeftVerticalLayout(self, layout):
         """
         Creates widgets and places them on the left-handside vertical layout. 
+
+        Inputs
+        ------
+        layout - holds a reference to the left handside vertical layout widget
         """
         #Create Load Configuration XML file Button
         self.btnLoadConfigFile = QPushButton('Load Configuration File')
@@ -357,16 +361,14 @@ class ModelFittingApp(QWidget):
         self.btnLoadDataFile.resize(self.btnLoadDataFile.minimumSizeHint())
         self.btnLoadDataFile.clicked.connect(self.LoadDataFile)
         
-        #Add a vertical spacer to the top of vertical layout to ensure
-        #the top of the Load Data button is level with the MATPLOTLIB toolbar 
-        #in the central vertical layout.
         verticalSpacer = QSpacerItem(20, 60, QSizePolicy.Minimum, 
                           QSizePolicy.Minimum)
-        #Add Load configuration file button to the top of the vertical layout
+        
         layout.addWidget(self.btnLoadConfigFile)
         layout.addItem(verticalSpacer)
         layout.addWidget(self.btnLoadDataFile)
         layout.addItem(verticalSpacer)
+
         #Create dropdown list & label for selection of ROI
         self.lblROI = QLabel("Region of Interest:")
         self.lblROI.setAlignment(QtCore.Qt.AlignRight)
@@ -385,8 +387,7 @@ class ModelFittingApp(QWidget):
         
         #Create a group box to group together widgets associated with
         #the model selected. 
-        #It is placed in the left-handside vertical layout
-        self.SetUpModelGroupBox(layout, verticalSpacer)
+        self.SetUpModelGroupBox(layout)
         
         self.btnSaveReport = QPushButton('Save Report in PDF Format')
         self.btnSaveReport.hide()
@@ -405,7 +406,7 @@ class ModelFittingApp(QWidget):
         self.btnExit.clicked.connect(self.ExitApp)
         
 
-    def SetUpModelGroupBox(self, layout, verticalSpacer):
+    def SetUpModelGroupBox(self, layout):
         """Creates a group box to hold widgets associated with the 
         selection of a model and for inputing/displaying that model's
         parameter data."""
@@ -453,11 +454,12 @@ class ModelFittingApp(QWidget):
         self.modelLabel.setAlignment(QtCore.Qt.AlignRight)
         self.cmbModels = QComboBox()
         self.cmbModels.setToolTip('Select a model to fit to the data')
-        self.cmbModels.setCurrentIndex(0) #Display "Select a Model"
+        #Display first item in list, the string "Select a Model"
+        self.cmbModels.setCurrentIndex(0) 
         self.cmbModels.currentIndexChanged.connect(self.UncheckFixParameterCheckBoxes)
         self.cmbModels.currentIndexChanged.connect(self.DisplayModelImage)
         self.cmbModels.currentIndexChanged.connect(self.ConfigureGUIForEachModel)
-        self.cmbModels.currentIndexChanged.connect(lambda: self.ClearOptimisedParamaterList('cmbModels')) 
+        self.cmbModels.currentIndexChanged.connect(lambda: self.clearOptimisedParamaterList('cmbModels')) 
         self.cmbModels.currentIndexChanged.connect(self.display_FitModel_SaveCSV_SaveReport_Buttons)
         self.cmbModels.activated.connect(lambda:  self.plotConcentrations('cmbModels'))
 
@@ -467,12 +469,12 @@ class ModelFittingApp(QWidget):
         self.cmbAIF.setToolTip('Select Arterial Input Function')
         self.lblVIF = QLabel("Venous Input Function:")
         self.cmbVIF = QComboBox()
-       
         self.cmbVIF.setToolTip('Select Venous Input Function')
-        #When a ROI is selected plot its concentration data on the graph.
+
+        #When a ROI is selected: 
+        #plot its concentration data on the graph.
         self.cmbROI.activated.connect(lambda:  self.plotConcentrations('cmbROI'))
-        #When a ROI is selected, then make the Model groupbox and the widgets
-        #contains visible.
+        #then make the Model groupbox and the widgets it contains visible.
         self.cmbROI.activated.connect(self.DisplayModelFittingGroupBox)
         #When an AIF is selected plot its concentration data on the graph.
         self.cmbAIF.activated.connect(lambda: self.plotConcentrations('cmbAIF'))
@@ -519,7 +521,7 @@ class ModelFittingApp(QWidget):
         self.lblConfInt.setAlignment(QtCore.Qt.AlignRight)
         gridLayoutParamLabels.addWidget(self.lblConfInt, 1,4)
 
-        #Create spinboxes and their labels
+        #Create model parameter spinboxes and their labels
         #Label text set when the model is selected
         self.labelParameter1 = QLabel("") 
         self.labelParameter1.hide()
@@ -625,7 +627,13 @@ class ModelFittingApp(QWidget):
 
     def SetUpBatchProcessingGroupBox(self, layout):
         """Creates a group box to hold widgets associated with batch
-        processing functionality."""
+        processing functionality.
+        
+        Inputs
+        ------
+        layout - holds a reference to the left handside vertical layout widget
+        
+        """
         self.groupBoxBatchProcessing = QGroupBox('Batch Processing')
         self.groupBoxBatchProcessing.setAlignment(QtCore.Qt.AlignHCenter)
         self.groupBoxBatchProcessing.hide()
@@ -652,6 +660,7 @@ class ModelFittingApp(QWidget):
         try:
             ROI = str(self.cmbROI.currentText())
             if ROI != 'Please Select':
+                #A ROI has been selected
                 self.groupBoxModel.show()
                 self.btnSaveReport.show()
                 logger.info("Function DisplayModelFittingGroupBox called. Model group box and Save Report button shown when ROI = {}".format(ROI))
@@ -667,13 +676,20 @@ class ModelFittingApp(QWidget):
 
     def SetUpPlotArea(self, layout):
         """Adds widgets for the display of the graph onto the 
-        right-hand side vertical layout."""
+        right-hand side vertical layout.
+        
+        Inputs
+        ------
+        layout - holds a pointer to the right-hand side vertical layout widget
+        """
         layout.setAlignment(QtCore.Qt.AlignTop)
         verticalSpacer = QSpacerItem(20, 35, QSizePolicy.Minimum, QSizePolicy.Minimum)
         layout.addItem(verticalSpacer)
         layout.addItem(verticalSpacer)
 
-        self.lblModelImage = QLabel(self)
+        #lblModelImage is used to display an a schematic
+        #representation of the model.
+        self.lblModelImage = QLabel('') 
         self.lblModelImage.setAlignment(QtCore.Qt.AlignCenter )
         self.lblModelName = QLabel('')
         self.lblModelName.setAlignment(QtCore.Qt.AlignCenter)
@@ -732,15 +748,26 @@ class ModelFittingApp(QWidget):
             logger.error('Error in function ApplyStyleSheet: ' + str(e))
 
     def DisplayModelImage(self):
-        """This method takes the name of the model from the drop-down list 
-            on the left-hand side of the GUI and displays the corresponding
-            image depicting the model and the full name of the model at the
-            top of the right-hand side of the GUI."""
+        """This method takes the name of the model from the 
+            drop-down list on the left-hand side of the GUI 
+            and displays the corresponding image depicting 
+            the model and the full name of the model at the
+            top of the right-hand side of the GUI.
+            
+            Both the name of the image file and the full name
+            of the model are retrieved from the XML configuration
+            file.
+
+            If no image is defined for the model in the XML configuration
+            file, then the string 'No image available for this model' is 
+            displayed on the GUI.
+            """
         try:
             logger.info('Function DisplayModelImage called.')
             shortModelName = str(self.cmbModels.currentText())
         
             if shortModelName != 'Select a model':
+                #A model has been selected
                 imageName = self.objXMLReader.getImageName(shortModelName)
                 if imageName:
                     imagePath = IMAGE_FOLDER + imageName
@@ -751,10 +778,11 @@ class ModelFittingApp(QWidget):
                     pixmapModelImage = pixmapModelImage.scaled(pMapWidth, pMapHeight, 
                           QtCore.Qt.KeepAspectRatio, QtCore.Qt.SmoothTransformation)
                     self.lblModelImage.setPixmap(pixmapModelImage)
-                
+                    logger.info('Image {} displayed.'.format(imageName))
                     longModelName = self.objXMLReader.getLongModelName(shortModelName)
                     self.lblModelName.setText(longModelName)
                 else:
+                    logger.info('Function DisplayModelImage - No image available for this model')
                     self.lblModelImage.clear()
                     self.lblModelName.setText('No image available for this model')
             else:
@@ -774,27 +802,51 @@ class ModelFittingApp(QWidget):
         parameter and its confidence inteval."""
 
         self.isCurveFittingDone=False
-        self.ClearOptimisedParamaterList('Function-OptimumParameterChanged')
+        self.clearOptimisedParamaterList('Function-OptimumParameterChanged')
 
-    def CurveFitSetConfIntLabel(self, paramNumber, nextIndex):
+    def CurveFitSetConfIntLabel(self, paramNumber):
         """Called by the CurveFitProcessOptimumParameters function,
-        this function populates the label that displays the upper and lower
-        confidence limits for each calculated optimum parameter value.
+        this function populates the label that displays the 
+        upper and lower confidence limits for each calculated 
+        optimum parameter value.
 
         Where necessary decimal fractions are converted to % and the
         corresponding value in the global list self.optimisedParamaterList
         is updated, which is also the source of this data.
+
+        Upto 5 model input parameters can be displayed on the GUI.  
+        For each parameter there is a spinbox displaying its value,
+        a checkbox to indicate if this parameter should have its 
+        value remain fixed during curve fitting and a label to display
+        the upper and lower 95% confidence limits of the parameter value
+        determined during curve fitting.
+        Checking the checkbox, fixes the parameter's value during
+        curve fitting.
+
+        This trio of widgets follows a set naming convention.
+        spinBoxParameter1, ckbParameter1 and lblParam1 refer
+        to the first parameter; spinBoxParameter2, 
+        ckbParameter2 and lblParam2 refer to the second parameter
+        and so on. This set naming convention allows objects 
+        corresponding to this trio of widgets for a given parameter
+        to be created using the getattr function. 
+
+        Inputs
+        ------
+        paramNumber - Ordinal number of the parameter, takes values 1-5
         """
-        logger.info('Function CurveFitSetConfIntLabel called with paramNumber={} nextIndex={}'.format(paramNumber, nextIndex))
+        logger.info('Function CurveFitSetConfIntLabel called ' +
+                   'with paramNumber={}'.format(paramNumber))
         try:
             objSpinBox = getattr(self, 'spinBoxParameter' + str(paramNumber))
             objCheckBox = getattr(self, 'ckbParameter' + str(paramNumber))
             objLabel = getattr(self, 'lblParam' + str(paramNumber) + 'ConfInt')
-        
-            parameterValue = self.optimisedParamaterList[nextIndex][0]
-            lowerLimit = self.optimisedParamaterList[nextIndex][1]
-            upperLimit = self.optimisedParamaterList[nextIndex][2]
+            index = paramNumber - 1
+            parameterValue = self.optimisedParamaterList[index][0]
+            lowerLimit = self.optimisedParamaterList[index][1]
+            upperLimit = self.optimisedParamaterList[index][2]
             if objSpinBox.suffix() == '%':
+                #Convert decimal fraction to a percentage
                 parameterValue = parameterValue * 100.0
                 if not objCheckBox.isChecked():
                     lowerLimit = lowerLimit * 100.0
@@ -807,44 +859,48 @@ class ModelFittingApp(QWidget):
             #For display in the PDF report, 
             #overwrite decimal volume fraction values 
             #in  self.optimisedParamaterList with the % equivalent
-            self.optimisedParamaterList[nextIndex][0] = parameterValue
-            self.optimisedParamaterList[nextIndex][1] = lowerLimit
-            self.optimisedParamaterList[nextIndex][2] = upperLimit
+            self.optimisedParamaterList[index][0] = parameterValue
+            self.optimisedParamaterList[index][1] = lowerLimit
+            self.optimisedParamaterList[index][2] = upperLimit
            
             if not objCheckBox.isChecked():
+                #Display 95% confidence limits on the GUI
                 confidenceStr = '[{}     {}]'.format(lowerLimit, upperLimit)
                 objLabel.setText(confidenceStr)
+
         except Exception as e:
-            print('Error in function CurveFitSetConfIntLabel with paramNumber={} nextIndex={}'.format(paramNumber, nextIndex) + str(e))
-            logger.error('Error in function CurveFitSetConfIntLabel with paramNumber={} nextIndex={}'.format(paramNumber, nextIndex) + str(e))
+            print('Error in function CurveFitSetConfIntLabel with paramNumber={} index={}'.format(paramNumber, index) + str(e))
+            logger.error('Error in function CurveFitSetConfIntLabel with paramNumber={} index={}'.format(paramNumber, index) + str(e))
+
 
     def CurveFitProcessOptimumParameters(self):
-        """Displays the confidence limits for the optimum parameter values 
-           resulting from curve fitting on the right-hand side of the GUI."""
+        """Displays the confidence limits for the optimum 
+           parameter values resulting from curve fitting 
+           on the right-hand side of the GUI."""
         try:
             logger.info('Function CurveFitProcessOptimumParameters called.')
             self.lblConfInt.show()
             modelName = str(self.cmbModels.currentText())
             numParams = self.objXMLReader.getNumberOfParameters(modelName)
             if numParams >= 1:
-                self.CurveFitSetConfIntLabel(1,0)
+                self.CurveFitSetConfIntLabel(1)
             if numParams >= 2:
-                self.CurveFitSetConfIntLabel(2,1)
+                self.CurveFitSetConfIntLabel(2)
             if numParams >= 3:
-                self.CurveFitSetConfIntLabel(3,2)
+                self.CurveFitSetConfIntLabel(3)
             if numParams >= 4:
-                self.CurveFitSetConfIntLabel(4,3)
+                self.CurveFitSetConfIntLabel(4)
             if numParams >= 5:
-                self.CurveFitSetConfIntLabel(5,4)
+                self.CurveFitSetConfIntLabel(5)
             
         except Exception as e:
             print('Error in function CurveFitProcessOptimumParameters: ' + str(e))
             logger.error('Error in function CurveFitProcessOptimumParameters: ' + str(e))
 
     def ClearOptimumParamaterConfLimitsOnGUI(self):
-        """Clears the contents of the labels on the left handside of the GUI 
-        that display parameter values confidence limits resulting 
-        from curve fitting. """
+        """Clears the contents of the labels on the left 
+        handside of the GUI that display parameter value
+        confidence limits resulting from curve fitting. """
         try:
             logger.info('Function ClearOptimumParamaterConfLimitsOnGUI called.')
             self.lblConfInt.hide()
@@ -857,6 +913,7 @@ class ModelFittingApp(QWidget):
             print('Error in function ClearOptimumParamaterConfLimitsOnGUI: ' + str(e))
             logger.error('Error in function ClearOptimumParamaterConfLimitsOnGUI: ' + str(e))
     
+
     def SaveCSVFile(self, fileName=""):
         """Saves in CSV format the data in the plot on the GUI """ 
         try:
@@ -870,17 +927,19 @@ class ModelFittingApp(QWidget):
             else:
                CSVFileName = fileName
 
-           #Check that the user did not press Cancel on the create file dialog
+           #Check that the user did not press Cancel on the
+           #create file dialog
             if CSVFileName:
-                logger.info('Function SaveCSVFile - csv file name = ' + CSVFileName)
+                logger.info('Function SaveCSVFile - csv file name = ' + 
+                            CSVFileName)
             
                 ROI = str(self.cmbROI.currentText())
                 AIF = str(self.cmbAIF.currentText())
                 if self.cmbVIF.isVisible():
                     VIF = str(self.cmbVIF.currentText())
-                    boolIncludeVIF = True
+                    mustIncludeVIF = True
                 else:
-                    boolIncludeVIF = False
+                    mustIncludeVIF = False
 
                 #If CSVFileName already exists, delete it
                 if os.path.exists(CSVFileName):
@@ -888,7 +947,7 @@ class ModelFittingApp(QWidget):
 
                 with open(CSVFileName, 'w',  newline='') as csvfile:
                     writeCSV = csv.writer(csvfile,  delimiter=',')
-                    if boolIncludeVIF:
+                    if mustIncludeVIF:
                         #write header row
                         writeCSV.writerow(['Time (min)', ROI, AIF, VIF, modelName + ' model'])
                         #Write rows of data
@@ -915,20 +974,21 @@ class ModelFittingApp(QWidget):
             print('Error in function SaveCSVFile: ' + str(e) + ' at line in CSV file ', WriteCSV.line_num)
             logger.error('Error in function SaveCSVFile: ' + str(e) + ' at line in CSV file ', WriteCSV.line_num)
 
-    def ClearOptimisedParamaterList(self, callingControl: str):
-        """Clears results of curve fitting from the GUI and from the global list
-        self.optimisedParamaterList """
+    def clearOptimisedParamaterList(self, callingControl: str):
+        """Clears results of curve fitting from the GUI 
+        and from the global list self.optimisedParamaterList """
         try:
-            logger.info('ClearOptimisedParamaterList called from ' + callingControl)
+            logger.info('clearOptimisedParamaterList called from ' + callingControl)
             self.optimisedParamaterList.clear()
             self.ClearOptimumParamaterConfLimitsOnGUI()
         except Exception as e:
-            print('Error in function ClearOptimisedParamaterList: ' + str(e)) 
-            logger.error('Error in function ClearOptimisedParamaterList: ' + str(e))
+            print('Error in function clearOptimisedParamaterList: ' + str(e)) 
+            logger.error('Error in function clearOptimisedParamaterList: ' + str(e))
 
     def display_FitModel_SaveCSV_SaveReport_Buttons(self):
-        """Displays the Fit Model, Save CSV and Save PFD Report buttons if both a ROI & AIF 
-        are selected.  Otherwise hides them."""
+        """Displays the Fit Model, Save CSV and Save PFD Report
+       buttons if both a ROI & AIF are selected.  
+       Otherwise hides them."""
         try:
             #Hide buttons then display them if appropriate
             self.btnFitModel.hide()
@@ -960,10 +1020,12 @@ class ModelFittingApp(QWidget):
             print('Error in function display_FitModel_SaveCSV_SaveReport_Buttons: ' + str(e))
             logger.error('Error in function display_FitModel_SaveCSV_SaveReport_Buttons: ' + str(e))
 
+
     def GetSpinBoxValue(self, paramNumber, initialParametersArray):
         """
-        Gets the value in a parameter spinbox. Converts a % to a decimal 
-        fraction if necessary. This value is then appended to an array.
+        Gets the value in a parameter spinbox. 
+        Converts a % to a decimal fraction if necessary. 
+        This value is then appended to the array, initialParametersArray.
         """
         logger.info('Function GetSpinBoxValue called when paramNumber={} and initialParametersArray={}.'
                     .format(paramNumber,initialParametersArray))
@@ -980,7 +1042,8 @@ class ModelFittingApp(QWidget):
             logger.error('Error in function GetSpinBoxValue: ' + str(e))
     
     def BuildParameterArray(self) -> List[float]:
-        """Forms a 1D array of model input parameters.  
+        """Forms a 1D array of model input parameters
+        for input to the modle function.  
             
             Returns
             -------
@@ -1010,23 +1073,27 @@ class ModelFittingApp(QWidget):
             logger.error('Error in function BuildParameterArray '  + str(e))
 
 
-    def SetParameterSpinBoxValue(self, paramNumber, index, parameterList):
+    def SetParameterSpinBoxValue(self, paramNumber, parameterList):
         """
         Sets the value of an individual parameter spinbox.  If necessary
         converts a decimal fraction to a %.
         """
         logger.info('Function SetParameterSpinBoxValue called.')
         try:
-            objSpinBox = getattr(self, 'spinBoxParameter' + str(paramNumber))
+            objSpinBox = getattr(self, 'spinBoxParameter' + 
+                                 str(paramNumber))
             objSpinBox.blockSignals(True)
+            index = paramNumber - 1
             if objSpinBox.suffix() == '%':
-                objSpinBox.setValue(parameterList[index]* 100) 
+                objSpinBox.setValue(parameterList[index] * 100) 
             else:
                 objSpinBox.setValue(parameterList[index])
             objSpinBox.blockSignals(False)
+
         except Exception as e:
             print('Error in function SetParameterSpinBoxValue ' + str(e))
             logger.error('Error in function SetParameterSpinBoxValue '  + str(e))
+
 
     def SetParameterSpinBoxValues(self, parameterList):
         """Sets the value displayed in the model parameter spinboxes 
@@ -1043,25 +1110,29 @@ class ModelFittingApp(QWidget):
             numParams = self.objXMLReader.getNumberOfParameters(modelName)
 
             if numParams >= 1:
-                self.SetParameterSpinBoxValue(1, 0, parameterList)
+                self.SetParameterSpinBoxValue(1, parameterList)
             if numParams >= 2:
-                self.SetParameterSpinBoxValue(2, 1, parameterList)
+                self.SetParameterSpinBoxValue(2, parameterList)
             if numParams >= 3:
-                self.SetParameterSpinBoxValue(3, 2, parameterList)
+                self.SetParameterSpinBoxValue(3, parameterList)
             if numParams >= 4:
-                self.SetParameterSpinBoxValue(4, 3, parameterList)
+                self.SetParameterSpinBoxValue(4, parameterList)
             if numParams >= 5:
-                self.SetParameterSpinBoxValue(5, 4, parameterList)
+                self.SetParameterSpinBoxValue(5, parameterList)
             
         except Exception as e:
             print('Error in function SetParameterSpinBoxValues ' + str(e))
             logger.error('Error in function SetParameterSpinBoxValues '  + str(e))
 
-    def CurveFitCalculate95ConfidenceLimits(self, numDataPoints: int, numParams: int, 
-                                    optimumParams, paramCovarianceMatrix):
-        """Calculates the 95% confidence limits of optimum parameter values 
-        resulting from curve fitting. Results are stored in 
-        global self.optimisedParamaterList that is used in the creation of the PDF report
+
+    def CurveFitCalculate95ConfidenceLimits(self, numDataPoints: int, 
+                                            numParams: int, 
+                                            optimumParams, 
+                                            paramCovarianceMatrix):
+        """Calculates the 95% confidence limits of optimum 
+        parameter values resulting from curve fitting. 
+        Results are stored in global self.optimisedParamaterList 
+        that is used in the creation of the PDF report
         and to display results on the GUI.
         
         Input Parameters
@@ -1071,8 +1142,9 @@ class ModelFittingApp(QWidget):
         numParams - Number of model input parameters.
         optimumParams - Array of optimum model input parameter values 
                         resulting from curve fitting.
-        paramCovarianceMatrix - The estimated covariance of the values in optimumParams. 
-                        calculated during curve fitting.
+        paramCovarianceMatrix - The estimated covariance of 
+                the values in optimumParams calculated during 
+                curve fitting.
         """
         try:
             logger.info('Function CurveFitCalculate95ConfidenceLimits called: numDataPoints ={}, numParams={}, optimumParams={}, paramCovarianceMatrix={}'
@@ -1083,6 +1155,8 @@ class ModelFittingApp(QWidget):
 
             #Check for fixed parameters.
             #Removed fixed parameters from the optimum parameter list
+            #as they should not be included in the calculation of
+            #confidence limits
             for paramNumber in range(1, len(optimumParams)+ 1):
                 #Make parameter checkbox
                 objCheckBox = getattr(self, 'ckbParameter' + str(paramNumber))
@@ -1136,13 +1210,13 @@ class ModelFittingApp(QWidget):
             logger.error('Runtime Error in function CurveFitCalculate95ConfidenceLimits '  + str(rte))  
         except Exception as e:
             print('Error in function CurveFitCalculate95ConfidenceLimits ' + str(e))
-       
             logger.error('Error in function CurveFitCalculate95ConfidenceLimits '  + str(e))  
     
+
     def CurveFitGetParameterData(self, modelName, paramNumber):
         """
         Returns a tuple containing all data associated with a parameter
-        that is required by lmfit curve fitting; namely,
+        as required by lmfit curve fitting; namely,
         (parameter name, parameter value, fix parameter value (True/False),
         minimum value, maximum value, expression, step size)
 
@@ -1175,17 +1249,19 @@ class ModelFittingApp(QWidget):
             tempTuple = (paramShortName, value, vary, lower, upper, None, None)
             
             return tempTuple
-
         except Exception as e:
             print('Error in function CurveFitGetParameterData: ' + str(e) )
             logger.error('Error in function CurveFitGetParameterData: ' + str(e) )
 
+
     def CurveFitCollateParameterData(self)-> List[float]:
-        """Forms a 1D array of model input parameters.  
+        """Forms a 1D array of model input parameters to 
+        be used as input to curve fitting.  
             
             Returns
             -------
-                A list of model input parameter values.
+                A list of model input parameter values 
+                for curve fitting.
             """
         try:
             logger.info('Function CurveFitCollateParameterData called.')
@@ -1216,15 +1292,18 @@ class ModelFittingApp(QWidget):
             logger.error('Error in function CurveFitCollateParameterData '  + str(e))
 
     def CurveFit(self):
-        """Performs curve fitting to fit AIF (and VIF) data to the ROI curve.
-        Then displays the optimum model input parameters on the GUI and calls 
-        the plot function to display the line of best fit on the graph on the GUI
+        """Performs curve fitting to fit AIF (and VIF) data 
+        to the ROI curve.  Then displays the optimum model 
+        input parameters on the GUI and calls 
+        the plot function to display the line of best fit 
+        on the graph on the GUI
         when these parameter values are input to the selected model.
-        Also, takes results from curve fitting (optimal parameter values) and 
-        determines their 95% confidence limits which are stored in the global list
-        self.optimisedParamaterList.
+        Also, takes results from curve fitting (optimal parameter values) 
+        and determines their 95% confidence limits which are 
+        stored in the global list self.optimisedParamaterList.
         """
         try:
+            #Form inputs to the curve fitting function
             paramList = self.CurveFitCollateParameterData()
             constantsString = self.objXMLReader.getStringOfConstants()
             
@@ -1235,12 +1314,16 @@ class ModelFittingApp(QWidget):
 
             #Get arrays of data corresponding to the above 3 regions 
             #and the time over which the measurements were made.
-            arrayTimes = np.array(self.concentrationData['time'], dtype='float')
-            arrayROIConcs = np.array(self.concentrationData[ROI], dtype='float')
-            arrayAIFConcs = np.array(self.concentrationData[AIF], dtype='float')
+            arrayTimes = np.array(self.concentrationData['time'], 
+                                  dtype='float')
+            arrayROIConcs = np.array(self.concentrationData[ROI], 
+                                     dtype='float')
+            arrayAIFConcs = np.array(self.concentrationData[AIF], 
+                                     dtype='float')
 
             if VIF != 'Please Select':
-                arrayVIFConcs = np.array(self.concentrationData[VIF], dtype='float')
+                arrayVIFConcs = np.array(self.concentrationData[VIF], 
+                                         dtype='float')
             else:
                 #Create empty dummy array to act as place holder in  
                 #ModelFunctionsHelper.CurveFit function call 
@@ -1304,7 +1387,8 @@ class ModelFittingApp(QWidget):
             print('Error in function CurveFit with model ' + modelName + ': ' + str(e))
             logger.error('Error in function CurveFit with model ' + modelName + ': ' + str(e))
     
-    def GetValuesForEachParameter(self, paramNumber, index,
+
+    def GetValuesForEachParameter(self, paramNumber, 
                     confidenceLimitsArray, parameterDictionary):
         """Called by the function, BuildParameterDictionary, for each
         parameter spinbox, this function builds a list containing the
@@ -1317,16 +1401,15 @@ class ModelFittingApp(QWidget):
          ------
          paramNumber - Ordinal number of the parameter on the GUI, which number
                     from 1 (top) to 5 (bottom).
-         index - Used to reference the upper & lower confidence limits for each
-            parameter in confidenceLimitsArray.
          confidenceLimitsArray - An array of upper and lower confidence limits
                     for the optimum value of each model parameter obtained
                     after curve fitting.  
         """
         try:
-            logger.info('Function GetValuesForEachParameter called when paramNumber={}, index={}.'
-                        .format(paramNumber, index))
+            logger.info('Function GetValuesForEachParameter called when paramNumber={}.'
+                        .format(paramNumber))
             parameterList = []
+            index = paramNumber - 1
             objLabel = getattr(self, 'labelParameter' + str(paramNumber))
             objSpinBox = getattr(self, 'spinBoxParameter' + str(paramNumber))
             if confidenceLimitsArray != None:
@@ -1349,8 +1432,8 @@ class ModelFittingApp(QWidget):
     def BuildParameterDictionary(self, confidenceLimitsArray = None):
         """Builds a dictionary of values and their confidence limits 
         (if curve fitting is performed) for each model input parameter 
-        (dictionary key). This dictionary is used in the creation of a 
-        parameter values table in the creation of the PDF report.  
+        (dictionary key). This dictionary is used to build a 
+        parameter values table used to create the PDF report.  
         It orders the input parameters in the same 
        vertical order as the parameters on the GUI, top to bottom.
        
@@ -1370,19 +1453,19 @@ class ModelFittingApp(QWidget):
             numParams = self.objXMLReader.getNumberOfParameters(modelName)
 
             if numParams >= 1:
-                self.GetValuesForEachParameter(1, 0,
+                self.GetValuesForEachParameter(1,
                     confidenceLimitsArray, parameterDictionary)
             if numParams >= 2:
-                self.GetValuesForEachParameter(2, 1,
+                self.GetValuesForEachParameter(2,
                     confidenceLimitsArray, parameterDictionary)
             if numParams >= 3:
-                self.GetValuesForEachParameter(3, 2,
+                self.GetValuesForEachParameter(3,
                     confidenceLimitsArray, parameterDictionary)
             if numParams >= 4:
-                self.GetValuesForEachParameter(4, 3,
+                self.GetValuesForEachParameter(4,
                     confidenceLimitsArray, parameterDictionary)
             if numParams >= 5:
-                self.GetValuesForEachParameter(5, 4,
+                self.GetValuesForEachParameter(5,
                     confidenceLimitsArray, parameterDictionary)
            
             return parameterDictionary
@@ -1393,26 +1476,38 @@ class ModelFittingApp(QWidget):
 
 
     def CreatePDFReport(self, reportFileName=""):
-        """Creates and saves a report of model fitting. It includes the name of the model, 
-        the current values of its input parameters and a copy of the current plot.
+        """Creates and saves a report of model fitting in PDF format. 
+        It includes the name of the model, the current values
+        of its input parameters and a copy of the current plot.
         
         Input Parameter:
         ****************
-            reportFileName - file path and name of the PDF file in which the report will be save.
-                    Used during batch processing.
+            reportFileName - file path and name of the PDF file 
+            in which the report will be saved.
+            Used during batch processing.
+
+        Return:
+        -------
+            parameterDict - A dictionary of parameter short name:value pairs
+                used during batch processing to create the overall results
+                summary, in an Excel spreadsheet, from all the data input files.
         """
         try:
             pdf = PDF(REPORT_TITLE) 
             
             if not reportFileName:
-                #Ask the user to specify the path & name of PDF report. A default report name is suggested, see the Constant declarations at the top of this file
+                #Ask the user to specify the path & name of PDF report. 
+                #A default report name is suggested, 
+                #see the Constant declarations at the top of this file
                 reportFileName, _ = QFileDialog.getSaveFileName(self, caption="Enter PDF file name", 
                                                                 directory=DEFAULT_REPORT_FILE_PATH_NAME, 
                                                                 filter="*.pdf")
 
             if reportFileName:
-                #If the user has entered the name of a new file, then we will have to add the .pdf extension
-                #If the user has decided to overwrite an existing file, then will not have to add the .pdf extension
+                #If the user has entered the name of a new file, 
+                #then we will have to add the .pdf extension
+                #If the user has decided to overwrite an existing file, 
+                #then will not have to add the .pdf extension
                 name, ext = os.path.splitext(reportFileName)
                 if ext != '.pdf':
                     #Need to add .pdf extension to reportFileName
@@ -1448,10 +1543,12 @@ class ModelFittingApp(QWidget):
             print('Error in function CreatePDFReport: ' + str(e))
             logger.error('Error in function CreatePDFReport: ' + str(e))
 
+###HERE###
     def PopulateModelListCombo(self):
         """
-        Builds a list of model short names from data in the XML configuration
-        file and adds this list to the cmbModels combo box for display on the GUI.
+        Builds a list of model short names from data in the 
+        XML configuration file and adds this list to the 
+        cmbModels combo box for display on the GUI.
         """
         try:
             logger.info('Function PopulateModelListCombo called.')
