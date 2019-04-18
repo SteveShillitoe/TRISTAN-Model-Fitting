@@ -1722,22 +1722,19 @@ class ModelFittingApp(QWidget):
             logger.error('Error in function LoadDataFile: ' + str(e) + ' at line {} in the CSV file'.format( readCSV.line_num))
             QMessageBox().warning(self, "CSV data file", "Error reading CSV file at line {} - {}".format(readCSV.line_num, e), QMessageBox.Ok)
 
-### Here ###
+
     def HideAllControlsOnGUI(self):
         """
         Hides/clears all the widgets on left-hand side of the application 
         except for the Load & Display Data and Exit buttons.  
-        It is called before a data file is loaded in case the Cancel button on the dialog
-        is clicked.  This prevents the scenario where buttons are displayed but there is no
-        data loaded to process when they are clicked.
+        It is called before a data file is loaded in case the 
+        Cancel button on the dialog is clicked.  
+        This prevents the scenario where buttons are displayed 
+        but there is no data loaded to process when they are clicked.
         """
-
         logger.info('Function HideAllControlsOnGUI called')
-        #Clear label displaying name of the datafile
         self.statusbar.clearMessage()
-
         self.pbar.reset()
-
         self.lblROI.hide()
         self.cmbROI.hide()
         self.groupBoxModel.hide()
@@ -1746,7 +1743,7 @@ class ModelFittingApp(QWidget):
         self.btnSaveCSV.hide()
         self.groupBoxBatchProcessing.hide()
         
-
+### Here ###
     def ConfigureGUIAfterLoadingData(self):
         """After successfully loading a datafile, this method loads a list of
         organs into ROI, AIF & VIF drop-down lists and displays 
