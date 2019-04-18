@@ -1570,7 +1570,7 @@ class ModelFittingApp(QWidget):
     def LoadConfigFile(self):
         """Loads the contents of an XML file containing model(s) 
         configuration data.  If the XML file parses successfully,
-        display the 'Load Data FIle' button and build the list 
+        display the 'Load Data File' button and build the list 
         of model short names."""
         
         try:
@@ -1581,8 +1581,9 @@ class ModelFittingApp(QWidget):
         
             self.HideAllControlsOnGUI()
 
-            #get the configuration file in XML format
-            #filter parameter set so that the user can only open an XML file
+            # Get the configuration file in XML format.
+            # The filter parameter is set so that the 
+            # user can only open an XML file.
             defaultPath = "config\\"
             fullFilePath, _ = QFileDialog.getOpenFileName(parent=self, 
                 caption="Select configuration file", 
@@ -1619,15 +1620,19 @@ class ModelFittingApp(QWidget):
 
 
     def LoadDataFile(self):
-        """Loads the contents of a CSV file containing time and concentration data
-        into a dictionary of lists. The key is the name of the organ or 'time' and 
-        the corresponding value is a list of concentrations 
-        (or times when the key is 'time')
+        """
+        Loads the contents of a CSV file containing time 
+        and concentration data into a dictionary of lists. 
+        The key is the name of the organ or the word'time'  
+        and the corresponding value is a list of concentrations
+        for that organ (or times when the key is 'time').
         
         The following validation is applied to the data file:
-            -The CSV file must contain at least 3 columns of data separated by commas.
+            -The CSV file must contain at least 3 columns of data 
+                separated by commas.
             -The first column in the CSV file must contain time data.
-            -The header of the time column must contain the word 'time'."""
+            -The header of the time column must contain the word 'time'.
+        """
         
         #clear the dictionary of previous data
         self.concentrationData.clear()
@@ -1635,8 +1640,9 @@ class ModelFittingApp(QWidget):
         self.HideAllControlsOnGUI()
         
         try:
-            #get the data file in csv format
-            #filter parameter set so that the user can only open a csv file
+            # Get the data file in csv format.
+            # Filter parameter set so that the user can only
+            # open a csv file.
             dataFileFolder = self.objXMLReader.getDataFileFolder()
             fullFilePath, _ = QFileDialog.getOpenFileName(parent=self, 
                                                      caption="Select csv file", 
@@ -1646,47 +1652,54 @@ class ModelFittingApp(QWidget):
                 with open(fullFilePath, newline='') as csvfile:
                     line = csvfile.readline()
                     if line.count(',') < (MIN_NUM_COLUMNS_CSV_FILE - 1):
-                        QMessageBox().warning(self, "CSV data file", "The CSV file must contain at least 3 columns of data separated by commas.  The first column must contain time data.", QMessageBox.Ok)
+                        QMessageBox().warning(self, 
+                          "CSV data file", 
+                          "The CSV file must contain at least 3 columns of data separated by commas.  The first column must contain time data.", 
+                          QMessageBox.Ok)
                         raise RuntimeError('The CSV file must contain at least 3 columns of data separated by commas.')
                     
-                    #go back to top of the file
+                    # Go back to top of the file
                     csvfile.seek(0)
                     readCSV = csv.reader(csvfile, delimiter=',')
-                    #Get column header labels
-                    headers = next(readCSV, None)  # returns the headers or `None` if the input is empty
+                    # Get column header labels
+                    # Returns the headers or `None` if the input is empty
+                    headers = next(readCSV, None)  
                     if headers:
                         firstColumnHeader = headers[0].strip().lower()
                         if 'time' not in firstColumnHeader:
-                            QMessageBox().warning(self, "CSV data file", "The first column must contain time data.", QMessageBox.Ok)
+                            QMessageBox().warning(self, 
+                               "CSV data file", 
+                               "The first column must contain time data.", 
+                               QMessageBox.Ok)
                             raise RuntimeError('The first column in the CSV file must contain time data.')    
 
                     logger.info('CSV data file {} loaded'.format(fullFilePath))
                     
-                    #Extract data filename from the full data file path
-
                     folderName = os.path.basename(os.path.dirname(fullFilePath))
                     self.dataFileDirectory, self.dataFileName = os.path.split(fullFilePath)
                     self.statusbar.showMessage('File ' + self.dataFileName + ' loaded')
                     self.lblBatchProcessing.setText("Batch process all CSV data files in folder: " + folderName)
                     
-                    #Column headers form the keys in the dictionary called self.concentrationData
+                    # Column headers form the keys in the dictionary 
+                    # called self.concentrationData
                     for header in headers:
                         if 'time' in header:
                             header ='time'
                         self.concentrationData[header.title().lower()]=[]
-                    #Also add a 'model' key to hold a list of concentrations generated by a model
+                    # Also add a 'model' key to hold a list of concentrations generated by a model
                     self.concentrationData['model'] = []
 
-                    #Each key in the dictionary is paired with a list of 
-                    #corresponding concentrations 
-                    #(except the Time key that is paired with a list of times)
+                    # Each key in the dictionary is paired 
+                    # with a list of corresponding concentrations 
+                    # (except the Time key that is paired 
+                    # with a list of times)
                     for row in readCSV:
                         colNum=0
                         for key in self.concentrationData:
-                            #Iterate over columns in the selected row
+                            # Iterate over columns in the selected row
                             if key != 'model':
                                 if colNum == 0: 
-                                    #time column
+                                    # time column
                                     self.concentrationData['time'].append(float(row[colNum])/60.0)
                                 else:
                                     self.concentrationData[key].append(float(row[colNum]))
@@ -1709,12 +1722,15 @@ class ModelFittingApp(QWidget):
             logger.error('Error in function LoadDataFile: ' + str(e) + ' at line {} in the CSV file'.format( readCSV.line_num))
             QMessageBox().warning(self, "CSV data file", "Error reading CSV file at line {} - {}".format(readCSV.line_num, e), QMessageBox.Ok)
 
+### Here ###
     def HideAllControlsOnGUI(self):
-        """Hides/clears all the widgets on left-hand side of the application 
+        """
+        Hides/clears all the widgets on left-hand side of the application 
         except for the Load & Display Data and Exit buttons.  
         It is called before a data file is loaded in case the Cancel button on the dialog
         is clicked.  This prevents the scenario where buttons are displayed but there is no
-        data loaded to process when they are clicked."""
+        data loaded to process when they are clicked.
+        """
 
         logger.info('Function HideAllControlsOnGUI called')
         #Clear label displaying name of the datafile
