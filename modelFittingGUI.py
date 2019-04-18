@@ -1743,20 +1743,23 @@ class ModelFittingApp(QWidget):
         self.btnSaveCSV.hide()
         self.groupBoxBatchProcessing.hide()
         
-### Here ###
+
     def ConfigureGUIAfterLoadingData(self):
-        """After successfully loading a datafile, this method loads a list of
-        organs into ROI, AIF & VIF drop-down lists and displays 
-        the ROI drop-down list.  It also clears the Matplotlib graph."""
+        """
+        After successfully loading a datafile, 
+        this method loads a list of organs into ROI, 
+        AIF & VIF drop-down lists and displays 
+        the ROI drop-down list.  
+        It also clears the Matplotlib graph.
+        """
         try:
-            #Data file loaded OK, so set up the GUI
-            #Reset and enable dropdown list of models
+            # Reset and show the dropdown list of organs
             self.cmbROI.clear()
             self.cmbAIF.clear()
             self.cmbVIF.clear()
             
-            #Create a list of organs for which concentrations are
-            #provided in the data input file.  See LoadDataFile method.
+            # Create a list of organs for which concentrations are
+            # provided in the data input file.  See LoadDataFile method.
             organArray = []
             organArray = self.GetListOrgans()
             
@@ -1766,10 +1769,9 @@ class ModelFittingApp(QWidget):
             self.lblROI.show()
             self.cmbROI.show()
 
-            #Clear the existing plot
+            # Clear the existing plot
             self.figure.clear()
             self.figure.set_visible(False)
-            
             self.canvas.draw()
 
             logger.info('Function ConfigureGUIAfterLoadingData called and the following organ list loaded: {}'.format(organArray))
@@ -1779,7 +1781,8 @@ class ModelFittingApp(QWidget):
         except Exception as e:
             print('Error in function ConfigureGUIAfterLoadingData: ' + str(e) )
             logger.error('Error in function ConfigureGUIAfterLoadingData: ' + str(e))
-        
+     
+   ### Here ###         
     def GetListOrgans(self):
         """Builds a list of organs from the headers in the CSV data file. 
         The CSV data file comprises columns of concentration data for a
@@ -1796,8 +1799,10 @@ class ModelFittingApp(QWidget):
             organList.append('Please Select') #First item at the top of the drop-down list
             for key in self.concentrationData:
                 if key.lower() != 'time' and key.lower() != 'model':  
-                    organList.append(str(key))       
+                    organList.append(str(key))
+                    
             return organList
+
         except RuntimeError as re:
             print('runtime error in function GetListOrgans' + str(re))
             logger.error('runtime error in function GetListOrgans' + str(re))
