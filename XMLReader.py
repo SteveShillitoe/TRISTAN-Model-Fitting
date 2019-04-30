@@ -503,7 +503,7 @@ class XMLReader:
                 
         except ValueNotDefinedInConfigFile:
             warningString = 'Maximum value allowed in the spinbox for the parameter '  + \
-                    'at position {} when the model short = {}'.format(positionNumber, shortModelName)
+                    'at position {} when the model short = {} is not defined'.format(positionNumber, shortModelName)
             print(warningString)
             logger.info('XMLReader.getMaxParameterDisplayValue - ' + warningString)
             return None
@@ -538,7 +538,7 @@ class XMLReader:
                 
         except ValueNotDefinedInConfigFile:
             warningString = 'Minimum value allowed in the spinbox for the parameter '  + \
-                    'at position {} when the model short = {}'.format(positionNumber, shortModelName)
+                    'at position {} when the model short = {} is not defined'.format(positionNumber, shortModelName)
             print(warningString)
             logger.info('XMLReader.getMinParameterDisplayValue - ' + warningString)
             return None
@@ -573,7 +573,7 @@ class XMLReader:
                 
         except ValueNotDefinedInConfigFile:
             warningString = 'Upper constraint for curve fitting for the parameter '  + \
-                    'at position {} when the model short = {}'.format(positionNumber, shortModelName)
+                    'at position {} when the model short = {} is not defined'.format(positionNumber, shortModelName)
             print(warningString)
             logger.info('XMLReader.getUpperParameterConstraint - ' + warningString)
             return None
@@ -608,7 +608,7 @@ class XMLReader:
                 
         except ValueNotDefinedInConfigFile:
             warningString = 'Lower constraint for curve fitting for the parameter '  + \
-                    'at position {} when the model short = {}'.format(positionNumber, shortModelName)
+                    'at position {} when the model short = {} is not defined'.format(positionNumber, shortModelName)
             print(warningString)
             logger.info('XMLReader.getLowerParameterConstraint - ' + warningString)
             return None
@@ -648,13 +648,13 @@ class XMLReader:
             logger.info('XMLReader.getStringOfConstants called')
            
             xPath='./constants/constant'
-            collConstants = self.root.findall(xPath)
+            collectionConstants = self.root.findall(xPath)
 
-            if collConstants is None:
+            if collectionConstants is None:
                 raise ValueNotDefinedInConfigFile
             else:
                 constantsDict = {}
-                for constant in collConstants:
+                for constant in collectionConstants:
                     name = constant.find('name').text
                     value = constant.find('value').text
                     constantsDict[name] = value
@@ -674,3 +674,31 @@ class XMLReader:
             logger.error('Error in XMLReader.getStringOfConstants:' 
                   + str(e)) 
             return ''
+
+    def getNumBaselineScans(self):
+        """ Gets the number of the baseline scans."""
+        try:
+            logger.info('XMLReader.getNumBaselineScans called')
+           
+            xPath="./constants/constant[name ='baseline']/value"
+            baselineValue = self.root.find(xPath)
+
+            if baselineValue is None:
+                raise ValueNotDefinedInConfigFile
+            else:
+                return int(baselineValue.text)
+        
+        except ValueNotDefinedInConfigFile:
+            warningString = 'Warning - XMLReader.getNumBaselineScans - No baseline value defined.'
+            print(warningString)
+            logger.info(warningString)
+            return ''
+        except Exception as e:
+            print('Error in XMLReader.getNumBaselineScans: ' 
+                  + str(e)) 
+            logger.error('Error in XMLReader.getNumBaselineScans: ' 
+                  + str(e)) 
+            return ''
+
+        
+        #//models/constants/constant[name[text()='baseline']]/value/text()

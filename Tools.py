@@ -82,15 +82,15 @@ def spgr3d_func(x, FA, TR, R10, S0, S):
         print('Tools.spgr3d_func has error: {} '.format(str(e)))
         logger.error('Tools.spgr3d_func has error: {} '.format(str(e)))
 
-def spgr3d_func_inv(r1, FA, TR, R10, conc):
+def spgr3d_func_inv(r1, FA, TR, R10t, conc):
     logger.info("Tools.spgr3d_func_inv called")
     try:
         c = np.cos(FA*np.pi/180)
-        E0 = np.exp(-TR*R10)
+        E0 = np.exp(-TR*R10t)
         E1 = np.exp(-TR*r1*conc)*E0
-        Srel = (1-E1)*(1-c*E0)/((1-E0)*(1-c*E1))
+        St_rel = (1-E1)*(1-c*E0)/((1-E0)*(1-c*E1))
     
-        return(Srel)
+        return(St_rel)
     except RuntimeError as re:
         print('Tools.spgr3d_func_inv has runtime error: {} '.format(str(re)))
         logger.error('Tools.spgr3d_func_inv has runtime error: {} '.format(str(re)))

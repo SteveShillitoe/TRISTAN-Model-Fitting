@@ -31,7 +31,7 @@ The <name></name> tags enclose the <short></short> and
   <data_file_path>C:\TRISTAN Data\MR Signal Data</data_file_path>
   <!--Plot configuration for all the models represented in this XML file-->
   <plot>
-    <y_axis_label>Signal Intensity</y_axis_label>
+    <y_axis_label>Normalised Signal Intensity</y_axis_label>
   </plot>
   <!--Constants used by all the models represented in this XML file.-->
   <constants>

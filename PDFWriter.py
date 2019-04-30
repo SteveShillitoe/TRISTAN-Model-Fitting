@@ -10,10 +10,8 @@ import datetime
 from fpdf import FPDF
 import logging
 
-#Constant - Images
 TRISTAN_LOGO = 'images\\TRISTAN LOGO.jpg'
 
-#Create logger
 logger = logging.getLogger(__name__)
 
 #header and footer methods in FPDF render the page header and footer.

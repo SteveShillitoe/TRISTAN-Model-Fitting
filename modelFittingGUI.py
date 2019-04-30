@@ -288,8 +288,8 @@ class ModelFittingApp(QWidget):
         #by curve fitting.
         self.isCurveFittingDone = False
 
-        #Dictionary to store concentration data from the data input file
-        self.concentrationData={} 
+        #Dictionary to store signal data from the data input file
+        self.signalData={} 
         
         #List to store concentrations calculated by the models
         self.listModel = [] 
@@ -461,7 +461,7 @@ class ModelFittingApp(QWidget):
         self.cmbModels.currentIndexChanged.connect(self.ConfigureGUIForEachModel)
         self.cmbModels.currentIndexChanged.connect(lambda: self.clearOptimisedParamaterList('cmbModels')) 
         self.cmbModels.currentIndexChanged.connect(self.display_FitModel_SaveCSV_SaveReport_Buttons)
-        self.cmbModels.activated.connect(lambda:  self.plotConcentrations('cmbModels'))
+        self.cmbModels.activated.connect(lambda:  self.plotMRSignals('cmbModels'))
 
         #Create dropdown lists for selection of AIF & VIF
         self.lblAIF = QLabel('Arterial Input Function:')
@@ -473,16 +473,16 @@ class ModelFittingApp(QWidget):
 
         #When a ROI is selected: 
         #plot its concentration data on the graph.
-        self.cmbROI.activated.connect(lambda:  self.plotConcentrations('cmbROI'))
+        self.cmbROI.activated.connect(lambda:  self.plotMRSignals('cmbROI'))
         #then make the Model groupbox and the widgets it contains visible.
         self.cmbROI.activated.connect(self.DisplayModelFittingGroupBox)
         #When an AIF is selected plot its concentration data on the graph.
-        self.cmbAIF.activated.connect(lambda: self.plotConcentrations('cmbAIF'))
+        self.cmbAIF.activated.connect(lambda: self.plotMRSignals('cmbAIF'))
         #When an AIF is selected display the Fit Model and Save plot CVS buttons.
         self.cmbAIF.currentIndexChanged.connect(self.display_FitModel_SaveCSV_SaveReport_Buttons)
         self.cmbVIF.currentIndexChanged.connect(self.display_FitModel_SaveCSV_SaveReport_Buttons)
         #When a VIF is selected plot its concentration data on the graph.
-        self.cmbVIF.activated.connect(lambda: self.plotConcentrations('cmbVIF'))
+        self.cmbVIF.activated.connect(lambda: self.plotMRSignals('cmbVIF'))
         self.lblAIF.hide()
         self.cmbAIF.hide()
         self.lblVIF.hide()
@@ -511,7 +511,7 @@ class ModelFittingApp(QWidget):
         self.btnReset.clicked.connect(self.OptimumParameterChanged)
         #If parameters reset to their default values, 
         #replot the concentration and model data
-        self.btnReset.clicked.connect(lambda: self.plotConcentrations('Reset Button'))
+        self.btnReset.clicked.connect(lambda: self.plotMRSignals('Reset Button'))
         modelHorizontalLayoutReset.addWidget(self.cboxDelay)
         modelHorizontalLayoutReset.addWidget(self.cboxConstaint)
         modelHorizontalLayoutReset.addWidget(self.btnReset)
@@ -573,11 +573,11 @@ class ModelFittingApp(QWidget):
         self.spinBoxParameter5.hide()
 
         #If a parameter value is changed, replot the concentration and model data
-        self.spinBoxParameter1.valueChanged.connect(lambda: self.plotConcentrations('spinBoxParameter1')) 
-        self.spinBoxParameter2.valueChanged.connect(lambda: self.plotConcentrations('spinBoxParameter2')) 
-        self.spinBoxParameter3.valueChanged.connect(lambda: self.plotConcentrations('spinBoxParameter3')) 
-        self.spinBoxParameter4.valueChanged.connect(lambda: self.plotConcentrations('spinBoxParameter4'))
-        self.spinBoxParameter5.valueChanged.connect(lambda: self.plotConcentrations('spinBoxParameter5'))
+        self.spinBoxParameter1.valueChanged.connect(lambda: self.plotMRSignals('spinBoxParameter1')) 
+        self.spinBoxParameter2.valueChanged.connect(lambda: self.plotMRSignals('spinBoxParameter2')) 
+        self.spinBoxParameter3.valueChanged.connect(lambda: self.plotMRSignals('spinBoxParameter3')) 
+        self.spinBoxParameter4.valueChanged.connect(lambda: self.plotMRSignals('spinBoxParameter4'))
+        self.spinBoxParameter5.valueChanged.connect(lambda: self.plotMRSignals('spinBoxParameter5'))
         #Set boolean variable, self.isCurveFittingDone to false to 
         #indicate that the value of a model parameter
         #has been changed manually rather than by curve fitting
@@ -951,14 +951,14 @@ class ModelFittingApp(QWidget):
                         #write header row
                         writeCSV.writerow(['Time (min)', ROI, AIF, VIF, modelName + ' model'])
                         #Write rows of data
-                        for i, time in enumerate(self.concentrationData['time']):
-                            writeCSV.writerow([time, self.concentrationData[ROI][i], self.concentrationData[AIF][i], self.concentrationData[VIF][i], self.listModel[i]])
+                        for i, time in enumerate(self.signalData['time']):
+                            writeCSV.writerow([time, self.signalData[ROI][i], self.signalData[AIF][i], self.signalData[VIF][i], self.listModel[i]])
                     else:
                         #write header row
                         writeCSV.writerow(['Time (min)', ROI, AIF, modelName + ' model'])
                         #Write rows of data
-                        for i, time in enumerate(self.concentrationData['time']):
-                            writeCSV.writerow([time, self.concentrationData[ROI][i], self.concentrationData[AIF][i], self.listModel[i]])
+                        for i, time in enumerate(self.signalData['time']):
+                            writeCSV.writerow([time, self.signalData[ROI][i], self.signalData[AIF][i], self.listModel[i]])
                     csvfile.close()
 
         except csv.Error:
@@ -1314,15 +1314,15 @@ class ModelFittingApp(QWidget):
 
             #Get arrays of data corresponding to the above 3 regions 
             #and the time over which the measurements were made.
-            arrayTimes = np.array(self.concentrationData['time'], 
+            arrayTimes = np.array(self.signalData['time'], 
                                   dtype='float')
-            arrayROIConcs = np.array(self.concentrationData[ROI], 
+            arrayROIConcs = np.array(self.signalData[ROI], 
                                      dtype='float')
-            arrayAIFConcs = np.array(self.concentrationData[AIF], 
+            arrayAIFConcs = np.array(self.signalData[AIF], 
                                      dtype='float')
 
             if VIF != 'Please Select':
-                arrayVIFConcs = np.array(self.concentrationData[VIF], 
+                arrayVIFConcs = np.array(self.signalData[VIF], 
                                          dtype='float')
             else:
                 #Create empty dummy array to act as place holder in  
@@ -1358,7 +1358,7 @@ class ModelFittingApp(QWidget):
             self.SetParameterSpinBoxValues(optimumParamsList)
 
             #Plot the best curve on the graph
-            self.plotConcentrations('CurveFit')
+            self.plotMRSignals('CurveFit')
 
             #Determine 95% confidence limits.
             numDataPoints = arrayROIConcs.size
@@ -1543,7 +1543,7 @@ class ModelFittingApp(QWidget):
             print('Error in function CreatePDFReport: ' + str(e))
             logger.error('Error in function CreatePDFReport: ' + str(e))
 
-###HERE###
+
     def PopulateModelListCombo(self):
         """
         Builds a list of model short names from data in the 
@@ -1596,7 +1596,8 @@ class ModelFittingApp(QWidget):
                 if self.objXMLReader.hasXMLFileParsedOK:
                     logger.info('Config file {} loaded'.format(fullFilePath))
                     
-                    folderName, configFileName = os.path.split(fullFilePath)
+                    folderName, configFileName = \
+                        os.path.split(fullFilePath)
                     self.statusbar.showMessage('Configuration file ' + configFileName + ' loaded')
                     self.btnLoadDataFile.show()
                     self.PopulateModelListCombo()
@@ -1622,9 +1623,9 @@ class ModelFittingApp(QWidget):
     def LoadDataFile(self):
         """
         Loads the contents of a CSV file containing time 
-        and concentration data into a dictionary of lists. 
-        The key is the name of the organ or the word'time'  
-        and the corresponding value is a list of concentrations
+        and MR signal data into a dictionary of lists. 
+        The key is the name of the organ or the word 'time'  
+        and the corresponding value is a list of MR signals
         for that organ (or times when the key is 'time').
         
         The following validation is applied to the data file:
@@ -1635,7 +1636,7 @@ class ModelFittingApp(QWidget):
         """
         
         #clear the dictionary of previous data
-        self.concentrationData.clear()
+        self.signalData.clear()
         
         self.HideAllControlsOnGUI()
         
@@ -1681,13 +1682,13 @@ class ModelFittingApp(QWidget):
                     self.lblBatchProcessing.setText("Batch process all CSV data files in folder: " + folderName)
                     
                     # Column headers form the keys in the dictionary 
-                    # called self.concentrationData
+                    # called self.signalData
                     for header in headers:
                         if 'time' in header:
                             header ='time'
-                        self.concentrationData[header.title().lower()]=[]
+                        self.signalData[header.title().lower()]=[]
                     # Also add a 'model' key to hold a list of concentrations generated by a model
-                    self.concentrationData['model'] = []
+                    self.signalData['model'] = []
 
                     # Each key in the dictionary is paired 
                     # with a list of corresponding concentrations 
@@ -1695,17 +1696,18 @@ class ModelFittingApp(QWidget):
                     # with a list of times)
                     for row in readCSV:
                         colNum=0
-                        for key in self.concentrationData:
+                        for key in self.signalData:
                             # Iterate over columns in the selected row
                             if key != 'model':
                                 if colNum == 0: 
                                     # time column
-                                    self.concentrationData['time'].append(float(row[colNum])/60.0)
+                                    self.signalData['time'].append(float(row[colNum])/60.0)
                                 else:
-                                    self.concentrationData[key].append(float(row[colNum]))
+                                    self.signalData[key].append(float(row[colNum]))
                                 colNum+=1           
                 csvfile.close()
 
+                self.NormaliseSignalData()
                 self.ConfigureGUIAfterLoadingData()
                 
         except csv.Error:
@@ -1721,6 +1723,38 @@ class ModelFittingApp(QWidget):
             print('Error in function LoadDataFile: ' + str(e) + ' at line {} in the CSV file'.format( readCSV.line_num))
             logger.error('Error in function LoadDataFile: ' + str(e) + ' at line {} in the CSV file'.format( readCSV.line_num))
             QMessageBox().warning(self, "CSV data file", "Error reading CSV file at line {} - {}".format(readCSV.line_num, e), QMessageBox.Ok)
+
+
+    def NormaliseSignalData(self):
+        """
+        This function normalises the MR signal data by dividing
+        each data point by the average of the initial baseline
+        scans done before the perfusion agent is added to the 
+        bloodstream.
+        """
+        try:
+            # Get the number of baseline scans is defined 
+            # in the xml configuration file
+            numBaseLineScans = self.objXMLReader.getNumBaselineScans()
+
+            for key, signalList in self.signalData.items():
+                if key == 'model' or key == 'time':
+                    # data from a model is already normalised
+                    continue
+                
+                # Calculate mean baseline for the current 
+                # list of signals
+                signalBaseline = \
+                    sum(signalList[0:numBaseLineScans])/numBaseLineScans
+
+                # Divide each value in the list by the baseline
+                signalList[:] = [signal/signalBaseline 
+                                 for signal in signalList]
+                self.signalData[key] = signalList
+
+        except Exception as e:
+            print('Error in function NormaliseSignalData: ' + str(e))
+            logger.error('Error in function NormaliseSignalData: ' + str(e))
 
 
     def HideAllControlsOnGUI(self):
@@ -1782,12 +1816,12 @@ class ModelFittingApp(QWidget):
             print('Error in function ConfigureGUIAfterLoadingData: ' + str(e) )
             logger.error('Error in function ConfigureGUIAfterLoadingData: ' + str(e))
      
-   ### Here ###         
+            
     def GetListOrgans(self):
         """Builds a list of organs from the headers in the CSV data file. 
         The CSV data file comprises columns of concentration data for a
-        set of organs.  Each column of concentration data is labeled by
-        header giving the name of organ.
+        set of organs.  Each column of concentration data is labeled with
+        a header giving the name of organ.
         
         Returns
         -------
@@ -1797,7 +1831,7 @@ class ModelFittingApp(QWidget):
             logger.info('Function GetListOrgans called')
             organList =[]
             organList.append('Please Select') #First item at the top of the drop-down list
-            for key in self.concentrationData:
+            for key in self.signalData:
                 if key.lower() != 'time' and key.lower() != 'model':  
                     organList.append(str(key))
                     
@@ -1831,6 +1865,7 @@ class ModelFittingApp(QWidget):
         self.ckbParameter2.blockSignals(False)
         self.ckbParameter3.blockSignals(False)
         self.ckbParameter5.blockSignals(False)
+
 
     def populateParameterLabelAndSpinBox(self, modelName, paramNumber):
         """
@@ -1891,6 +1926,7 @@ class ModelFittingApp(QWidget):
             print('Error in function populateParameterLabelAndSpinBox: ' + str(e) )
             logger.error('Error in function populateParameterLabelAndSpinBox: ' + str(e) )
 
+
     def SetParameterSpinBoxToDefault(self, modelName, paramNumber):
         """Resets the value of a parameter spinbox to the default
         stored in the XML configuration file. 
@@ -1915,10 +1951,13 @@ class ModelFittingApp(QWidget):
             print('Error in function populateParameterLabelAndSpinBox: ' + str(e) )
             logger.error('Error in function populateParameterLabelAndSpinBox: ' + str(e) )
 
+
     def InitialiseParameterSpinBoxes(self):
-        """Initialises all the parameter spinbox vales for the selected model
-        by coordinating the calling of the function 
-        SetParameterSpinBoxToDefault for each parameter spinbox. """
+        """
+        Initialises all the parameter spinbox vales 
+        for the selected model by coordinating the 
+        calling of the function SetParameterSpinBoxToDefault 
+        for each parameter spinbox. """
         try:
             modelName = str(self.cmbModels.currentText())
             logger.info(
@@ -1940,6 +1979,7 @@ class ModelFittingApp(QWidget):
         except Exception as e:
             print('Error in function InitialiseParameterSpinBoxes: ' + str(e) )
             logger.error('Error in function InitialiseParameterSpinBoxes: ' + str(e) )
+
 
     def SetUpParameterLabelsAndSpinBoxes(self):
         """Coordinates the calling of function
@@ -1963,6 +2003,7 @@ class ModelFittingApp(QWidget):
         except Exception as e:
             print('Error in function SetUpParameterLabelsAndSpinBoxes: ' + str(e) )
             logger.error('Error in function SetUpParameterLabelsAndSpinBoxes: ' + str(e) )
+
 
     def ClearAndHideParameterLabelsSpinBoxesAndCheckBoxes(self):
         self.spinBoxParameter1.hide()
@@ -1993,10 +2034,10 @@ class ModelFittingApp(QWidget):
 
 
     def ConfigureGUIForEachModel(self):
-        """When a model is selected, this method configures the appearance 
-        of the GUI accordingly.  
-        For example, spinboxes for the input of model parameter values are
-        given an appropriate label."""
+        """When a model is selected, this method configures 
+        the appearance of the GUI accordingly.  
+        For example, spinboxes for the input of model parameter 
+        values are given an appropriate label."""
         try:
             modelName = str(self.cmbModels.currentText())
             logger.info('Function ConfigureGUIForEachModel called when model = ' + modelName)   
@@ -2041,9 +2082,11 @@ class ModelFittingApp(QWidget):
         except Exception as e:
             print('Error in function ConfigureGUIForEachModel: ' + str(e) )
             logger.error('Error in function ConfigureGUIForEachModel: ' + str(e) )
+           
             
     def GetScreenResolution(self):
-        """Determines the screen resolution of the device running this software.
+        """Determines the screen resolution of the device 
+        running this software.
         
         Returns
         -------
@@ -2057,6 +2100,7 @@ class ModelFittingApp(QWidget):
             print('Error in function GetScreenResolution: ' + str(e) )
             logger.error('Error in function GetScreenResolution: ' + str(e) )
         
+
     def DetermineTextSize(self):
         """Determines the optimum size for the title & labels on the 
            matplotlib graph from the screen resolution.
@@ -2087,9 +2131,11 @@ class ModelFittingApp(QWidget):
             print('Error in function DetermineTextSize: ' + str(e) )
             logger.error('Error in function DetermineTextSize: ' + str(e) )
     
-    def plotConcentrations(self, nameCallingFunction: str):
-        """Plots the concentration against time curves for the ROI, AIF, VIF.  
-        Also, plots the concentration/time curve predicted by the 
+
+    def plotMRSignals(self, nameCallingFunction: str):
+        """Plots the normalised signal against time curves 
+        for the ROI, AIF, VIF.  
+        Also, plots the normalised signal/time curve predicted by the 
         selected model.
         
         Input Parameter
@@ -2101,7 +2147,7 @@ class ModelFittingApp(QWidget):
         try:
             boolAIFSelected = False
             boolVIFSelected = False
-            t0 = 80
+            #t0 = 80
             self.figure.clear()
             self.figure.set_visible(True)
             
@@ -2117,12 +2163,13 @@ class ModelFittingApp(QWidget):
             #Get the name of the model 
             modelName = str(self.cmbModels.currentText())
             
-            arrayTimes = np.array(self.concentrationData['time'], dtype='float')
+            arrayTimes = np.array(self.signalData['time'], dtype='float')
 
             ROI = str(self.cmbROI.currentText())
             if ROI != 'Please Select':
-                arrayROIConcs = np.array(self.concentrationData[ROI], dtype='float')
-                ROI_baseline = np.mean(arrayROIConcs[0:int(t0/arrayTimes[1])-1])
+                arrayROIConcs = np.array(self.signalData[ROI], dtype='float')
+                #ROI_baseline = np.mean(arrayROIConcs[0:int(t0/arrayTimes[1])-1])
+                ROI_baseline = 1
                 ax.plot(arrayTimes, arrayROIConcs/ROI_baseline, 'b.-', label= ROI)
                 #ax.plot(arrayTimes, arrayROIConcs, 'b.-', label= ROI)
 
@@ -2136,8 +2183,9 @@ class ModelFittingApp(QWidget):
             if AIF != 'Please Select':
                 #Plot AIF curve
                 
-                arrayAIFConcs = np.array(self.concentrationData[AIF], dtype='float')
-                Sa_baseline = np.mean(arrayAIFConcs[0:int(t0/arrayTimes[1])-1])
+                arrayAIFConcs = np.array(self.signalData[AIF], dtype='float')
+                #Sa_baseline = np.mean(arrayAIFConcs[0:int(t0/arrayTimes[1])-1])
+                Sa_baseline = 1
                 ax.plot(arrayTimes, arrayAIFConcs/Sa_baseline, 'r.-', label= AIF)
                 #ax.plot(arrayTimes, arrayAIFConcs, 'r.-', label= AIF)
                 boolAIFSelected = True
@@ -2145,8 +2193,9 @@ class ModelFittingApp(QWidget):
             if VIF != 'Please Select':
                 #Plot VIF curve
                 t0=80
-                arrayVIFConcs = np.array(self.concentrationData[VIF], dtype='float')
-                Sv_baseline = np.mean(arrayVIFConcs[0:int(t0/arrayTimes[1])-1])
+                arrayVIFConcs = np.array(self.signalData[VIF], dtype='float')
+                #Sv_baseline = np.mean(arrayVIFConcs[0:int(t0/arrayTimes[1])-1])
+                Sv_baseline = 1
                 ax.plot(arrayTimes, arrayVIFConcs/Sv_baseline, 'k.-', label= VIF)
                 #ax.plot(arrayTimes, arrayVIFConcs, 'k.-', label= VIF)
                 boolVIFSelected = True
@@ -2197,20 +2246,23 @@ class ModelFittingApp(QWidget):
             warningString = 'Cannot procede because no function ' + \
                 'is defined for this model in the configuration file.'
             print(warningString)
-            logger.info('plotConcentrations - ' + warningString)
+            logger.info('plotMRSignals - ' + warningString)
             QMessageBox().critical( self,  "Plot Concentrations", warningString, QMessageBox.Ok)
         except Exception as e:
-                print('Error in function plotConcentrations when an event associated with ' + str(nameCallingFunction) + ' is fired : ROI=' + ROI + ' AIF = ' + AIF + ' : ' + str(e) )
-                logger.error('Error in function plotConcentrations when an event associated with ' + str(nameCallingFunction) + ' is fired : ROI=' + ROI + ' AIF = ' + AIF + ' : ' + str(e) )
+                print('Error in function plotMRSignals when an event associated with ' + str(nameCallingFunction) + ' is fired : ROI=' + ROI + ' AIF = ' + AIF + ' : ' + str(e) )
+                logger.error('Error in function plotMRSignals when an event associated with ' + str(nameCallingFunction) + ' is fired : ROI=' + ROI + ' AIF = ' + AIF + ' : ' + str(e) )
     
+
     def ExitApp(self):
         """Closes the Model Fitting application."""
         logger.info("Application closed using the Exit button.")
         sys.exit(0)  
 
+
     def toggleEnabled(self, boolEnabled=False):
-        """Used to disable all the controls on the form during batch processing
-       and to enable them again when batch processing is complete."""
+        """Used to disable all the controls on the form 
+        during batch processing and to enable them again 
+        when batch processing is complete."""
         self.btnExit.setEnabled(boolEnabled)
         self.btnLoadDataFile.setEnabled(boolEnabled)
         self.cmbROI.setEnabled(boolEnabled)
@@ -2236,7 +2288,8 @@ class ModelFittingApp(QWidget):
         
 
     def BatchProcessAllCSVDataFiles(self):
-        """When a CSV data file is selected, the path to its folder is saved.
+        """
+       When a CSV data file is selected, the path to its folder is saved.
        This function processes all the CSV data files in that folder by 
        performing curve fitting using the selected model. 
        
@@ -2329,7 +2382,7 @@ class ModelFittingApp(QWidget):
                         objSpreadSheet.RecordSkippedFiles(self.dataFileName, failureReason)
                         continue  #Skip this iteration if problems loading file
                 
-                    self.plotConcentrations('BatchProcessAllCSVDataFiles') #Plot data                
+                    self.plotMRSignals('BatchProcessAllCSVDataFiles') #Plot data                
                     self.CurveFit() #Fit curve to model 
                     self.SaveCSVFile(csvPlotDataFolder + '/plot' + file) #Save plot data to CSV file               
                     parameterDict = self.CreatePDFReport(pdfReportFolder + '/' + os.path.splitext(file)[0]) #Save PDF Report                
@@ -2346,8 +2399,10 @@ class ModelFittingApp(QWidget):
         except Exception as e:
             print('Error in function BatchProcessAllCSVDataFiles: ' + str(e) )
             logger.error('Error in function BatchProcessAllCSVDataFiles: ' + str(e) )
-            self.toggleEnabled(True)      
+            QApplication.restoreOverrideCursor()
+            self.toggleEnabled(True)     
 
+##HERE##
     def BatchProcessingCreateBatchSummaryExcelSpreadSheet(self, pathToFolder):
         """Creates an Excel spreadsheet to hold a summary of model 
         fitting a batch of data files""" 
@@ -2374,7 +2429,6 @@ class ModelFittingApp(QWidget):
             
             return spreadSheet, boolExcelFileCreatedOK
         except OSError as ose:
-            #print (ExcelFileName + ' is open. It must be closed. Error =' + str(ose))
             logger.error (ExcelFileName + 'is open. It must be closed. Error =' + str(ose))
             QMessageBox.warning(self, 'Spreadsheet open in Excel', 
                        "Close the batch summary spreadsheet and try again", 
@@ -2433,7 +2487,7 @@ class ModelFittingApp(QWidget):
         """
       
         #clear the dictionary of previous data
-        self.concentrationData.clear()
+        self.signalData.clear()
 
         boolFileFormatOK = True
         boolDataOK = True
@@ -2474,29 +2528,30 @@ class ModelFittingApp(QWidget):
                             boolFileFormatOK = False
 
                     if boolFileFormatOK:
-                        #Column headers form the keys in the dictionary called self.concentrationData
+                        #Column headers form the keys in the dictionary called self.signalData
                         for header in headers:
                             if 'time' in header:
                                 header ='time'
-                            self.concentrationData[header.title().lower()]=[]
+                            self.signalData[header.title().lower()]=[]
                         #Also add a 'model' key to hold a list of concentrations generated by a model
-                        self.concentrationData['model'] = []
+                        self.signalData['model'] = []
 
                         #Each key in the dictionary is paired with a list of 
                         #corresponding concentrations 
                         #(except the Time key that is paired with a list of times)
                         for row in readCSV:
                             colNum=0
-                            for key in self.concentrationData:
+                            for key in self.signalData:
                                 #Iterate over columns in the selected row
                                 if key != 'model':
                                     if colNum == 0: 
                                         #time column
-                                        self.concentrationData['time'].append(float(row[colNum])/60.0)
+                                        self.signalData['time'].append(float(row[colNum])/60.0)
                                     else:
-                                        self.concentrationData[key].append(float(row[colNum]))
+                                        self.signalData[key].append(float(row[colNum]))
                                     colNum+=1           
                         logger.info('Batch Processing: CSV data file {} loaded OK'.format(fullFilePath))
+            self.NormaliseSignalData()
             return boolFileFormatOK, failureReason
         
         except csv.Error:

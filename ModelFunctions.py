@@ -116,7 +116,6 @@ def HighFlowSingleInletGadoxetate3DSPGR_Rat(xData2DArray, Ve, Kbh, Khe,
         # a string representation of a dictionary
         # of constants and their values
         constantsDict = eval(constantsString) 
-        print('constantsString = ' + constantsString)
         TR, baseline, FA, r1, R10a, R10t = \
         float(constantsDict['TR']), \
         int(constantsDict['baseline']),\
@@ -124,9 +123,10 @@ def HighFlowSingleInletGadoxetate3DSPGR_Rat(xData2DArray, Ve, Kbh, Khe,
         float(constantsDict['R10a']), float(constantsDict['R10t']) 
         
         # Precontrast signal
-        Sa_baseline = np.mean(Sa[0:baseline])
+        Sa_baseline = 1
         
         # Convert to concentrations
+        #Sa_baseline ->1
         R1a = [Parallel(n_jobs=4)(delayed(fsolve)(tools.spgr3d_func, x0=0, args = (FA, TR, R10a, Sa_baseline, Sa[p])) for p in np.arange(0,len(t)))]
         R1a = np.squeeze(R1a)
         
@@ -144,11 +144,7 @@ def HighFlowSingleInletGadoxetate3DSPGR_Rat(xData2DArray, Ve, Kbh, Khe,
            # ct = Ve*ce + Khe*tools.integrate(ce,t)
         
         # Convert to signal
-        c = np.cos(FA*np.pi/180)
-        E0 = np.exp(-TR*R10t)
-        E1 = np.exp(-TR*r1*ct)*E0
-        St_rel = (1-E1)/(1-c*E1)#(1-E1)*(1-c*E0)/((1-E0)*(1-c*E1))
-        #St_rel = tools.spgr3d_func_inv(r1, FA, TR, R10t, ct)
+        St_rel = tools.spgr3d_func_inv(r1, FA, TR, R10t, ct)
         
         return(St_rel) #Returns tissue signal relative to the baseline St/St_baseline
         
