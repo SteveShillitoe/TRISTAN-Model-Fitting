@@ -628,10 +628,10 @@ class XMLReader:
             xPath='./data_file_path'
             dataFileFolder = self.root.find(xPath)
 
-            if dataFileFolder:
-                return dataFileFolder.text
-            else:
+            if dataFileFolder is None:
                 raise ValueNotDefinedInConfigFile
+            else:
+                return dataFileFolder.text
 
         except ValueNotDefinedInConfigFile:
             warningString = 'Warning - Path to folder containing data files is not defined'
