@@ -1,31 +1,64 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <!--Description of the XML Configuration file structure. 
 <models></models> is the root node.
-The root node contains a collection of 1 or more <model></model>
-tags that encapsulate the data that describes each model.
 
-Each opening <model id="2-2CFM"> tag has an id attribute that is
-set to the short name of the model.
+The optional<data_file_path></data_file_path>
+tags enclose the path to the folder containing the MR signal CSV 
+data files.  This provides the default folder path when the Load Data button 
+is clicked and the open file dialog box is displayed.
 
-The <name></name> tags enclose the <short></short> and 
-<long></long> names of the model.
+The <plot></plot> tags enclose data pertaining to the graphical
+display of the MR signal data.  
+  Within the <plot></plot> tags, the optional <y_axis_label></y_axis_label>
+  tags enclose the label to be displayed on the y axis of the graphical
+  display of the MR signal data. 
 
-The <function></function> tags enclose the name of the function
-in ModelFunctions.py that contains the algorithm for the model.
+The <constants></constants> tags contains a collection of 1 or more
+<constant></constant> tags that enclose data that describes each
+constant used in the conversion of MR signal values to concentration
+values and back to MR signal values.
+  Each pair of <constant></constant> tags, contains a pair of
+  <name></name> tags that enclose the name of the constant and
+  the <value></value> tags that enclose the value of the constant. 
 
-The <image></image> tags enclose the name of the image file in the 
-images folder that represents schematically the model.
+The root node also contains a collection of 1 or more <model></model>
+tags that enclose data that describes each model.
 
-The <inlet_type></inlet_type> tags enclose the inlet type 
-(single or dual) of the model.
+Each opening <model id=short_model_name> tag has an id attribute that is
+set to the short name of the model; e.g., <model id="2-2CFM">
+
+  The <name></name> tags enclose the <short></short> and 
+  <long></long> names of the model.
+
+  The <function></function> tags enclose the name of the function
+  in ModelFunctions.py that contains the algorithm for the model.
+
+  The <image></image> tags enclose the name of the image file in the 
+  images folder that represents schematically the model.
+
+  The mandatory <inlet_type></inlet_type> tags enclose the inlet type 
+  (single or dual) of the model.
 
 The <parameters></parameters> tags enclose a collection of 
 1 or more <parameter></parameter> tags that enclose the
 data that describe each model input parameter.
-
-The <name></name> tags enclose the <short></short> and 
-<long></long> names of the parameter.
-
+Within each pair of <parameter></parameter> tags
+    The <name></name> tags enclose the <short></short> and 
+    <long></long> names of the parameter.
+    The <units></units> tags enclose the units of the parameter.
+    The <default></default> tags enclose the default value of the parameter.
+    The <step></step> tags enclose the amount by which the parameter is
+    incremented/decremented when the arrows attached to the spinbox, 
+    displaying the parameter, are clicked. 
+    The <precision></precision> tags enclose the number of decimal places
+    to which the parameter should be displayed in its spinbox.
+    The <display_value></display_value> tags enclose the <min></min>
+    and <max></max> pairs of tags that fix the lower and upper 
+    values of the parameter in the spinbox.
+    The <constraints></constraints> tags enclose the <lower></lower>
+    and <upper></upper> pairs of tags that define the lower and 
+    upper values of the constraints that can be applied to the parameter
+    during curve fitting.
 -->
 <models>
   <data_file_path>C:\TRISTAN Data\MR Signal Data</data_file_path>
@@ -71,10 +104,12 @@ The <name></name> tags enclose the <short></short> and
       <short>HF1-2CFM+2DSPGR</short>
       <long>High Flow Single Inlet - Two Compartment Filtration and 2DSPGR Model</long>
     </name>
-    <function_path>Models.TwoCompartmentModels.SingleInletModels.HighFlowGadoxetate2DSPGR_Rat.HighFlowGadoxetate2DSPGR_Rat</function_path>
+    <!--Name of the function implementing this model-->
     <function>HighFlowSingleInletGadoxetate2DSPGR_Rat</function>
+    <!--Name of the image describing schematically this model-->
     <image>HighFlowSingleInletTwoCompartmentGadoxetateModel.png</image>
     <inlet_type>single</inlet_type>
+    <!--Model input parameters-->
     <parameters>
       <parameter>
         <name>
@@ -137,7 +172,6 @@ The <name></name> tags enclose the <short></short> and
       <short>HF1-2CFM+3DSPGR</short>
       <long>High Flow Single Inlet - Two Compartment Filtration and 3DSPGR Model</long>
     </name>
-    <function_path>Models/TwoCompartmentModels/SingleInletModels/HighFlowGadoxetate3DSPGR_Rat</function_path>
     <function>HighFlowSingleInletGadoxetate3DSPGR_Rat</function>
     <image>HighFlowSingleInletTwoCompartmentGadoxetateModel.png</image>
     <inlet_type>single</inlet_type>

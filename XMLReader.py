@@ -91,7 +91,7 @@ class XMLReader:
             return tempList
 
         except ValueNotDefinedInConfigFile:
-            warningString = 'No models defined in the configuration file.'
+            warningString = 'Error - No models defined in the configuration file.'
             print(warningString)
             logger.error('XMLReader.getListModelShortNames - ' + warningString)
             return tempList
@@ -121,7 +121,7 @@ class XMLReader:
                 return None
 
         except ValueNotDefinedInConfigFile:
-            warningString = 'No function defined for model {}'.format(shortModelName)
+            warningString = 'Error - No function defined for model {}'.format(shortModelName)
             print(warningString)
             logger.info('XMLReader.getFunctionName - ' + warningString)
             return None
@@ -178,7 +178,7 @@ class XMLReader:
                 return None
 
         except ValueNotDefinedInConfigFile:
-            warningString = 'The name of an image describing model {}' \
+            warningString = 'Warning - The name of an image describing model {}' \
                 .format(shorModelName) +' is not defined in the configuration file.'
             print(warningString)
             logger.info('XMLReader.getImageName - ' + waringString)
@@ -209,7 +209,7 @@ class XMLReader:
             else:
                 return None
         except ValueNotDefinedInConfigFile:
-            warningString = 'No long name defined for this model in the configuration file'
+            warningString = 'Warning - No long name defined for this model in the configuration file'
             print(warningString)
             logger.info('XMLReader.getLongModel - '   + NamewarningString)
             return 'No long name defined for this model'
@@ -238,7 +238,7 @@ class XMLReader:
                 return None
 
         except ValueNotDefinedInConfigFile:  
-            warningString = 'No model inlet type defined'
+            warningString = 'Error - No model inlet type defined in the config file'
             print(warningString)
             logger.info('XMLReader.getModelInletType - ' + warningString)
             return None
@@ -323,7 +323,7 @@ class XMLReader:
 
                 return isPercentage, fullName
         except CannotFormFullParameterName:
-            warningString = 'Cannot form the full name for parameter at position {}'.format(str(positionNumber))
+            warningString = 'Warning - Cannot form the full name for parameter at position {}'.format(str(positionNumber))
             print (warningString)
             logger.info('XMLReader.getParameterLabel - ' + warningString)
             return False, 'Cannot form full parameter name'
@@ -359,7 +359,7 @@ class XMLReader:
                 return shortName.text
 
         except ValueNotDefinedInConfigFile:
-            warningString = 'No short name defined for the parameter '  + \
+            warningString = 'Warning - No short name defined for the parameter '  + \
                     'at position {} when the model short = {}'.format(positionNumber, shortModelName)
             print(warningString)
             logger.info('XMLReader.getParameterShortName - ' + warningString)
@@ -394,7 +394,7 @@ class XMLReader:
                 return 0.0
 
         except ValueNotDefinedInConfigFile:
-            warningString = 'No default value defined for the parameter '  + \
+            warningString = 'Warning - No default value defined for the parameter '  + \
                     'at position {} when the model short = {}'.format(positionNumber, shortModelName)
             print(warningString)
             logger.info('XMLReader.getParameterDefault - ' + warningString)
@@ -431,7 +431,7 @@ class XMLReader:
                 return 0.0
 
         except ValueNotDefinedInConfigFile:
-            warningString = 'No increment/decrement step value defined for the parameter '  + \
+            warningString = 'Warning - No increment/decrement step value defined for the parameter '  + \
                     'at position {} when the model short = {}'.format(positionNumber, shortModelName)
             print(warningString)
             logger.info('XMLReader.getParameterStep - ' + warningString)
@@ -467,7 +467,7 @@ class XMLReader:
                 return 0
 
         except ValueNotDefinedInConfigFile:
-            warningString = 'Number of decimal places is not defined for the parameter '  + \
+            warningString = 'Warning - Number of decimal places is not defined for the parameter '  + \
                     'at position {} when the model short = {}'.format(positionNumber, shortModelName)
             print(warningString)
             logger.info('XMLReader.getParameterPrecision - ' + warningString)
@@ -502,7 +502,7 @@ class XMLReader:
                     return float(max.text)
                 
         except ValueNotDefinedInConfigFile:
-            warningString = 'Maximum value allowed in the spinbox for the parameter '  + \
+            warningString = 'Warning - Maximum value allowed in the spinbox for the parameter '  + \
                     'at position {} when the model short = {} is not defined'.format(positionNumber, shortModelName)
             print(warningString)
             logger.info('XMLReader.getMaxParameterDisplayValue - ' + warningString)
@@ -537,7 +537,7 @@ class XMLReader:
                     return float(min.text)
                 
         except ValueNotDefinedInConfigFile:
-            warningString = 'Minimum value allowed in the spinbox for the parameter '  + \
+            warningString = 'Warning - Minimum value allowed in the spinbox for the parameter '  + \
                     'at position {} when the model short = {} is not defined'.format(positionNumber, shortModelName)
             print(warningString)
             logger.info('XMLReader.getMinParameterDisplayValue - ' + warningString)
@@ -566,13 +566,13 @@ class XMLReader:
                     ']/parameters/parameter[' + str(positionNumber) + ']/constraints/upper'
                 upper = self.root.find(xPath)
 
-                if upper is None or upper.text is None:
+                if upper is None:
                     raise ValueNotDefinedInConfigFile
                 else:
                     return float(upper.text)
                 
         except ValueNotDefinedInConfigFile:
-            warningString = 'Upper constraint for curve fitting for the parameter '  + \
+            warningString = 'Warning - Upper constraint for curve fitting for the parameter '  + \
                     'at position {} when the model short = {} is not defined'.format(positionNumber, shortModelName)
             print(warningString)
             logger.info('XMLReader.getUpperParameterConstraint - ' + warningString)
@@ -601,13 +601,13 @@ class XMLReader:
                     ']/parameters/parameter[' + str(positionNumber) + ']/constraints/lower'
                 lower = self.root.find(xPath)
 
-                if lower is None or lower.text is None:
+                if lower is None:
                     raise ValueNotDefinedInConfigFile
                 else:
                     return float(lower.text)
                 
         except ValueNotDefinedInConfigFile:
-            warningString = 'Lower constraint for curve fitting for the parameter '  + \
+            warningString = 'Warning - Lower constraint for curve fitting for the parameter '  + \
                     'at position {} when the model short = {} is not defined'.format(positionNumber, shortModelName)
             print(warningString)
             logger.info('XMLReader.getLowerParameterConstraint - ' + warningString)
@@ -628,11 +628,16 @@ class XMLReader:
             xPath='./data_file_path'
             dataFileFolder = self.root.find(xPath)
 
-            if dataFileFolder.text:
+            if dataFileFolder:
                 return dataFileFolder.text
             else:
-                return ''
+                raise ValueNotDefinedInConfigFile
 
+        except ValueNotDefinedInConfigFile:
+            warningString = 'Warning - Path to folder containing data files is not defined'
+            print(warningString)
+            logger.info('XMLReader.getDataFileFolder - ' + warningString)
+            return ''
         except Exception as e:
             print('Error in XMLReader.getDataFileFolder:' 
                   + str(e)) 
@@ -699,6 +704,3 @@ class XMLReader:
             logger.error('Error in XMLReader.getNumBaselineScans: ' 
                   + str(e)) 
             return ''
-
-        
-        #//models/constants/constant[name[text()='baseline']]/value/text()

@@ -54,7 +54,7 @@ def HighFlowSingleInletGadoxetate2DSPGR_Rat(xData2DArray, Ve, Kbh, Khe,
         float(constantsDict['R10a']), float(constantsDict['R10t']) 
                
         # Precontrast signal
-        Sa_baseline = np.mean(Sa[0:baseline])
+        Sa_baseline = 1
         
         # Convert to concentrations
         R1a = [Parallel(n_jobs=4)(delayed(fsolve)(tools.spgr2d_func, x0=0, args = (FA, TR, R10a, Sa_baseline, Sa[p])) for p in np.arange(0,len(t)))]
@@ -126,7 +126,6 @@ def HighFlowSingleInletGadoxetate3DSPGR_Rat(xData2DArray, Ve, Kbh, Khe,
         Sa_baseline = 1
         
         # Convert to concentrations
-        #Sa_baseline ->1
         R1a = [Parallel(n_jobs=4)(delayed(fsolve)(tools.spgr3d_func, x0=0, args = (FA, TR, R10a, Sa_baseline, Sa[p])) for p in np.arange(0,len(t)))]
         R1a = np.squeeze(R1a)
         
