@@ -14,14 +14,14 @@ TRISTAN_LOGO = 'images\\TRISTAN LOGO.jpg'
 
 logger = logging.getLogger(__name__)
 
-#header and footer methods in FPDF render the page header and footer.
-#They are automatically called by add_page and close 
-#and should not be directly by the application.  
-#The implementation in FPDF is empty so, we have to subclass it 
-#and override the method to define the required functionality.
+# header and footer methods in FPDF render the page header and footer.
+# They are automatically called by add_page and close 
+#  should not be directly by the application.  
+# The implementation in FPDF is empty so, we have to subclass it 
+# and override the method to define the required functionality.
 class PDF(FPDF):
     def __init__(self, title):
-        #Inherit functionality from the __init__ method of class FPDF
+        # Inherit functionality from the __init__ method of class FPDF
         super().__init__() 
         self.title = title  #Then add a local property
         logger.info('In module ' + __name__ + '. Created an instance of class PDF.')
@@ -104,15 +104,15 @@ class PDF(FPDF):
             col_width = effectivePageWidth/6
             # Text height is the same as current font size
             textHeight = self.font_size
-            #Parameter Table - Header Row
+            # Parameter Table - Header Row
             self.cell(col_width*3,textHeight, 'Parameter', border=1)
             self.cell(col_width,textHeight, 'Value', border=1)
             self.cell(col_width*2,textHeight, '95% confidence interval', border=1)
             self.ln(textHeight)
 
-            #Parameter Table - Rows of parameter data
+            # Parameter Table - Rows of parameter data
             for paramName, paramList in parameterDictionary.items():
-                #print('paramName = {}, value={}, lower={}, upper={}'.format(paramName, 
+                # print('paramName = {}, value={}, lower={}, upper={}'.format(paramName, 
                 #        paramList[0], paramList[1], paramList[2]))
                 #Create a row in the table
                 self.cell(col_width*3,textHeight*2, paramName.replace('\n', ''), border=1)
@@ -128,9 +128,9 @@ class PDF(FPDF):
 
             self.write(10, '\n') #line break
 
-            #Add an image of the plot to the report
+            # Add an image of the plot to the report
             self.image(imageName, x = None, y = None, w = 170, h = 130, type = '', link = '') 
-            #Save report PDF
+            # Save report PDF
             self.output(fileName, 'F')  
         except Exception as e:
             print('PDFWriter.CreateAndSavePDFReport: ' + str(e)) 

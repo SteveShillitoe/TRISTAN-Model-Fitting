@@ -17,8 +17,8 @@ def modelFunctionInfoLogger():
     into this function.
     """
     try: 
-        #Inspect the call stack to get the name, host module
-        #and input arguments of the function
+        #  the call stack to get the name, host module
+        # and input arguments of the function
         # from which a call is made to this function. 
         funcName = sys._getframe().f_back.f_code.co_name
         modName = sys._getframe().f_back.f_globals['__name__']
@@ -44,8 +44,8 @@ def handleDivByZeroException(exceptionObj):
     warning the use about this error. Details of this exceptiona 
     are also logged and printed in the Python kernal black screen.
     """
-    #Inspect the call stack to get the name, host module
-    #and input arguments of the function
+    # Inspect the call stack to get the name, host module
+    # and input arguments of the function
     # from which a call is made to this function. 
     funcName = sys._getframe().f_back.f_code.co_name
     modName = sys._getframe().f_back.f_globals['__name__']
@@ -65,8 +65,8 @@ def handleGeneralException(exceptionObj):
     the division by zero exception. Details of the exceptiona are 
     logged and printed in the Python kernal black screen.
     """
-    #Inspect the call stack to get the name, host module
-    #and input arguments of the function
+    # Inspect the call stack to get the name, host module
+    # and input arguments of the function
     # from which a call is made to this function. 
     funcName = sys._getframe().f_back.f_code.co_name
     modName = sys._getframe().f_back.f_globals['__name__']

@@ -21,7 +21,6 @@ import numpy as np
 import logging
 import ModelFunctions as modelFunctions
 
-#Create logger
 logger = logging.getLogger(__name__)
 
 def ModelSelector(functionName: str, 

@@ -275,41 +275,41 @@ class ModelFittingApp(QWidget):
         self.setWindowFlags(QtCore.Qt.WindowMinMaxButtonsHint |  
                             QtCore.Qt.WindowCloseButtonHint)
         
-        #Store path to time/concentration data files for use 
-        #in batch processing.
+        # Store path to time/concentration data files for use 
+        # in batch processing.
         self.dataFileDirectory = ""
         
-        #Name of current loaded data file
+        # Name of current loaded data file
         self.dataFileName = ''
         self.yAxisLabel = ''
 
-        #Boolean variable indicating that the last 
-        #change to the model parameters was caused
-        #by curve fitting.
+        # Boolean variable indicating that the last 
+        # change to the model parameters was caused
+        #  by curve fitting.
         self.isCurveFittingDone = False
 
-        #Dictionary to store signal data from the data input file
+        # Dictionary to store signal data from the data input file
         self.signalData={} 
         
-        #List to store concentrations calculated by the models
+        # List to store concentrations calculated by the models
         self.listModel = [] 
         
-        #Stores optimum parameters from Curve fitting
+        # Stores optimum parameters from Curve fitting
         self.optimisedParamaterList = [] 
         
-        #XML reader object to process XML configuration file
+        # XML reader object to process XML configuration file
         self.objXMLReader = XMLReader() 
         
         self.ApplyStyleSheet()
        
-        #Setup the layouts, the containers for widgets
+        # Setup the layouts, the containers for widgets
         verticalLayoutLeft, verticalLayoutRight = self.SetUpLayouts() 
         
-        #Add widgets to the left-hand side vertical layout
+        # Add widgets to the left-hand side vertical layout
         self.SetUpLeftVerticalLayout(verticalLayoutLeft)
 
-        #Set up the graph to plot concentration data on
-        # the right-hand side vertical layout
+        # Set up the graph to plot concentration data on
+        #  the right-hand side vertical layout
         self.SetUpPlotArea(verticalLayoutRight)
         
         logger.info("GUI created successfully.")
@@ -344,7 +344,7 @@ class ModelFittingApp(QWidget):
         ------
         layout - holds a reference to the left handside vertical layout widget
         """
-        #Create Load Configuration XML file Button
+        # Create Load Configuration XML file Button
         self.btnLoadConfigFile = QPushButton('Load Configuration File')
         self.btnLoadConfigFile.setToolTip(
             'Opens file dialog box to select the configuration file')
@@ -352,7 +352,7 @@ class ModelFittingApp(QWidget):
         self.btnLoadConfigFile.setAutoDefault(False)
         self.btnLoadConfigFile.clicked.connect(self.LoadConfigFile)
 
-        #Create Load Data File Button
+        # Create Load Data File Button
         self.btnLoadDataFile = QPushButton('Load Data File')
         self.btnLoadDataFile.hide()
         self.btnLoadDataFile.setToolTip('Opens file dialog box to select the data file')
@@ -369,7 +369,7 @@ class ModelFittingApp(QWidget):
         layout.addWidget(self.btnLoadDataFile)
         layout.addItem(verticalSpacer)
 
-        #Create dropdown list & label for selection of ROI
+        # Create dropdown list & label for selection of ROI
         self.lblROI = QLabel("Region of Interest:")
         self.lblROI.setAlignment(QtCore.Qt.AlignRight)
         self.cmbROI = QComboBox()
@@ -377,16 +377,16 @@ class ModelFittingApp(QWidget):
         self.lblROI.hide()
         self.cmbROI.hide()
         
-        #Below Load Data button add ROI list.  It is placed in a 
-        #horizontal layout together with its label, so they are
-        #aligned in the same row.
+        # Below Load Data button add ROI list.  It is placed in a 
+        # horizontal layout together with its label, so they are
+        # aligned in the same row.
         ROI_HorizontalLayout = QHBoxLayout()
         ROI_HorizontalLayout.addWidget(self.lblROI)
         ROI_HorizontalLayout.addWidget(self.cmbROI)
         layout.addLayout(ROI_HorizontalLayout)
         
-        #Create a group box to group together widgets associated with
-        #the model selected. 
+        # Create a group box to group together widgets associated with
+        # the model selected. 
         self.SetUpModelGroupBox(layout)
         
         self.btnSaveReport = QPushButton('Save Report in PDF Format')
@@ -412,13 +412,13 @@ class ModelFittingApp(QWidget):
         parameter data."""
         self.groupBoxModel = QGroupBox('Model Fitting')
         self.groupBoxModel.setAlignment(QtCore.Qt.AlignHCenter)
-        #The group box is hidden until a ROI is selected.
+        # The group box is hidden until a ROI is selected.
         self.groupBoxModel.hide()
         layout.addWidget(self.groupBoxModel)
         
-        #Create horizontal layouts, one row of widgets to 
-        #each horizontal layout. Then add them to a vertical layout, 
-        #then add the vertical layout to the group box
+        # Create horizontal layouts, one row of widgets to 
+        # each horizontal layout. Then add them to a vertical layout, 
+        # then add the vertical layout to the group box
         modelHorizontalLayoutModelList = QHBoxLayout()
         modelHorizontalLayoutParamLabels = QHBoxLayout()
         gridLayoutParamLabels = QGridLayout()
@@ -449,7 +449,7 @@ class ModelFittingApp(QWidget):
         modelVerticalLayout.addLayout(modelHorizontalLayoutSaveCSVBtn)
         self.groupBoxModel.setLayout(modelVerticalLayout)
         
-        #Create dropdown list to hold names of models
+        # Create dropdown list to hold names of models
         self.modelLabel = QLabel("Model:")
         self.modelLabel.setAlignment(QtCore.Qt.AlignRight)
         self.cmbModels = QComboBox()
@@ -463,7 +463,7 @@ class ModelFittingApp(QWidget):
         self.cmbModels.currentIndexChanged.connect(self.display_FitModel_SaveCSV_SaveReport_Buttons)
         self.cmbModels.activated.connect(lambda:  self.plotMRSignals('cmbModels'))
 
-        #Create dropdown lists for selection of AIF & VIF
+        # Create dropdown lists for selection of AIF & VIF
         self.lblAIF = QLabel('Arterial Input Function:')
         self.cmbAIF = QComboBox()
         self.cmbAIF.setToolTip('Select Arterial Input Function')
@@ -471,17 +471,17 @@ class ModelFittingApp(QWidget):
         self.cmbVIF = QComboBox()
         self.cmbVIF.setToolTip('Select Venous Input Function')
 
-        #When a ROI is selected: 
-        #plot its concentration data on the graph.
+        # When a ROI is selected: 
+        # plot its concentration data on the graph.
         self.cmbROI.activated.connect(lambda:  self.plotMRSignals('cmbROI'))
-        #then make the Model groupbox and the widgets it contains visible.
+        # then make the Model groupbox and the widgets it contains visible.
         self.cmbROI.activated.connect(self.DisplayModelFittingGroupBox)
-        #When an AIF is selected plot its concentration data on the graph.
+        # When an AIF is selected plot its concentration data on the graph.
         self.cmbAIF.activated.connect(lambda: self.plotMRSignals('cmbAIF'))
-        #When an AIF is selected display the Fit Model and Save plot CVS buttons.
+        # When an AIF is selected display the Fit Model and Save plot CVS buttons.
         self.cmbAIF.currentIndexChanged.connect(self.display_FitModel_SaveCSV_SaveReport_Buttons)
         self.cmbVIF.currentIndexChanged.connect(self.display_FitModel_SaveCSV_SaveReport_Buttons)
-        #When a VIF is selected plot its concentration data on the graph.
+        # When a VIF is selected plot its concentration data on the graph.
         self.cmbVIF.activated.connect(lambda: self.plotMRSignals('cmbVIF'))
         self.lblAIF.hide()
         self.cmbAIF.hide()
@@ -491,7 +491,7 @@ class ModelFittingApp(QWidget):
         self.cmbAIF.setSizeAdjustPolicy(QComboBox.AdjustToContents)
         self.cmbVIF.setSizeAdjustPolicy(QComboBox.AdjustToContents)
         
-        #Add combo boxes and their labels to the horizontal layouts
+        # Add combo boxes and their labels to the horizontal layouts
         modelHorizontalLayoutModelList.insertStretch (0, 2)
         modelHorizontalLayoutModelList.addWidget(self.modelLabel)
         modelHorizontalLayoutModelList.addWidget(self.cmbModels)
@@ -509,8 +509,8 @@ class ModelFittingApp(QWidget):
         self.btnReset.hide()
         self.btnReset.clicked.connect(self.InitialiseParameterSpinBoxes)
         self.btnReset.clicked.connect(self.OptimumParameterChanged)
-        #If parameters reset to their default values, 
-        #replot the concentration and model data
+        # If parameters reset to their default values, 
+        # replot the concentration and model data
         self.btnReset.clicked.connect(lambda: self.plotMRSignals('Reset Button'))
         modelHorizontalLayoutReset.addWidget(self.cboxDelay)
         modelHorizontalLayoutReset.addWidget(self.cboxConstaint)
@@ -521,8 +521,8 @@ class ModelFittingApp(QWidget):
         self.lblConfInt.setAlignment(QtCore.Qt.AlignRight)
         gridLayoutParamLabels.addWidget(self.lblConfInt, 1,4)
 
-        #Create model parameter spinboxes and their labels
-        #Label text set when the model is selected
+        # Create model parameter spinboxes and their labels
+        # Label text set when the model is selected
         self.labelParameter1 = QLabel("") 
         self.labelParameter1.hide()
         self.ckbParameter1 = QCheckBox("Fix")
@@ -572,22 +572,22 @@ class ModelFittingApp(QWidget):
         self.spinBoxParameter4.hide()
         self.spinBoxParameter5.hide()
 
-        #If a parameter value is changed, replot the concentration and model data
+        # If a parameter value is changed, replot the concentration and model data
         self.spinBoxParameter1.valueChanged.connect(lambda: self.plotMRSignals('spinBoxParameter1')) 
         self.spinBoxParameter2.valueChanged.connect(lambda: self.plotMRSignals('spinBoxParameter2')) 
         self.spinBoxParameter3.valueChanged.connect(lambda: self.plotMRSignals('spinBoxParameter3')) 
         self.spinBoxParameter4.valueChanged.connect(lambda: self.plotMRSignals('spinBoxParameter4'))
         self.spinBoxParameter5.valueChanged.connect(lambda: self.plotMRSignals('spinBoxParameter5'))
-        #Set boolean variable, self.isCurveFittingDone to false to 
-        #indicate that the value of a model parameter
-        #has been changed manually rather than by curve fitting
+        # Set boolean variable, self.isCurveFittingDone to false to 
+        # indicate that the value of a model parameter
+        # has been changed manually rather than by curve fitting
         self.spinBoxParameter1.valueChanged.connect(self.OptimumParameterChanged) 
         self.spinBoxParameter2.valueChanged.connect(self.OptimumParameterChanged) 
         self.spinBoxParameter3.valueChanged.connect(self.OptimumParameterChanged) 
         self.spinBoxParameter4.valueChanged.connect(self.OptimumParameterChanged)
         self.spinBoxParameter5.valueChanged.connect(self.OptimumParameterChanged)
         
-        #Place spin boxes and their labels in horizontal layouts
+        # Place spin boxes and their labels in horizontal layouts
         modelHorizontalLayoutParameter1.addWidget(self.labelParameter1)
         modelHorizontalLayoutParameter1.addWidget(self.spinBoxParameter1)
         modelHorizontalLayoutParameter1.addWidget(self.ckbParameter1)
@@ -660,7 +660,7 @@ class ModelFittingApp(QWidget):
         try:
             ROI = str(self.cmbROI.currentText())
             if ROI != 'Please Select':
-                #A ROI has been selected
+                # A ROI has been selected
                 self.groupBoxModel.show()
                 self.btnSaveReport.show()
                 logger.info("Function DisplayModelFittingGroupBox called. Model group box and Save Report button shown when ROI = {}".format(ROI))
@@ -687,8 +687,8 @@ class ModelFittingApp(QWidget):
         layout.addItem(verticalSpacer)
         layout.addItem(verticalSpacer)
 
-        #lblModelImage is used to display an a schematic
-        #representation of the model.
+        # lblModelImage is used to display an a schematic
+        # representation of the model.
         self.lblModelImage = QLabel('') 
         self.lblModelImage.setAlignment(QtCore.Qt.AlignCenter )
         self.lblModelName = QLabel('')
@@ -704,7 +704,7 @@ class ModelFittingApp(QWidget):
         # it takes the Canvas widget as a parent
         self.toolbar = NavigationToolbar(self.canvas, self)
 
-        #Display TRISTAN & University of Leeds Logos in labels
+        # Display TRISTAN & University of Leeds Logos in labels
         self.lblTRISTAN_Logo = QLabel(self)
         self.lblUoL_Logo = QLabel(self)
         self.lblTRISTAN_Logo.setAlignment(QtCore.Qt.AlignHCenter)
@@ -728,13 +728,13 @@ class ModelFittingApp(QWidget):
         layout.addWidget(self.lblModelName)
         layout.addWidget(self.toolbar)
         layout.addWidget(self.canvas)
-        #Create horizontal layout box to hold TRISTAN & University of Leeds Logos
+        # Create horizontal layout box to hold TRISTAN & University of Leeds Logos
         horizontalLogoLayout = QHBoxLayout()
         horizontalLogoLayout.setAlignment(QtCore.Qt.AlignRight)
-        #Add horizontal layout to bottom of the vertical layout
+        # Add horizontal layout to bottom of the vertical layout
         layout.addLayout(horizontalLogoLayout)
-         #Add labels displaying logos to the horizontal layout, 
-        #Tristan on the LHS, UoL on the RHS
+        # Add labels displaying logos to the horizontal layout, 
+        # Tristan on the LHS, UoL on the RHS
         horizontalLogoLayout.addWidget(self.lblTRISTAN_Logo)
         horizontalLogoLayout.addWidget(self.lblUoL_Logo)
 
@@ -767,12 +767,12 @@ class ModelFittingApp(QWidget):
             shortModelName = str(self.cmbModels.currentText())
         
             if shortModelName != 'Select a model':
-                #A model has been selected
+                # A model has been selected
                 imageName = self.objXMLReader.getImageName(shortModelName)
                 if imageName:
                     imagePath = IMAGE_FOLDER + imageName
                     pixmapModelImage = QPixmap(imagePath)
-                    #Increase the size of the model image
+                    # Increase the size of the model image
                     pMapWidth = pixmapModelImage.width() * 1.35
                     pMapHeight = pixmapModelImage.height() * 1.35
                     pixmapModelImage = pixmapModelImage.scaled(pMapWidth, pMapHeight, 
@@ -846,7 +846,7 @@ class ModelFittingApp(QWidget):
             lowerLimit = self.optimisedParamaterList[index][1]
             upperLimit = self.optimisedParamaterList[index][2]
             if objSpinBox.suffix() == '%':
-                #Convert decimal fraction to a percentage
+                # Convert decimal fraction to a percentage
                 parameterValue = parameterValue * 100.0
                 if not objCheckBox.isChecked():
                     lowerLimit = lowerLimit * 100.0
@@ -856,15 +856,15 @@ class ModelFittingApp(QWidget):
             if not objCheckBox.isChecked():
                 lowerLimit = round(lowerLimit, 3)
                 upperLimit = round(upperLimit, 3)
-            #For display in the PDF report, 
-            #overwrite decimal volume fraction values 
-            #in  self.optimisedParamaterList with the % equivalent
+            # For display in the PDF report, 
+            # overwrite decimal volume fraction values 
+            # in  self.optimisedParamaterList with the % equivalent
             self.optimisedParamaterList[index][0] = parameterValue
             self.optimisedParamaterList[index][1] = lowerLimit
             self.optimisedParamaterList[index][2] = upperLimit
            
             if not objCheckBox.isChecked():
-                #Display 95% confidence limits on the GUI
+                # Display 95% confidence limits on the GUI
                 confidenceStr = '[{}     {}]'.format(lowerLimit, upperLimit)
                 objLabel.setText(confidenceStr)
 
@@ -922,13 +922,13 @@ class ModelFittingApp(QWidget):
             modelName.replace(" ", "-")
 
             if not fileName:
-                #Ask the user to specify the path & name of the CSV file. The name of the model is suggested as a default file name.
+                # Ask the user to specify the path & name of the CSV file. The name of the model is suggested as a default file name.
                 CSVFileName, _ = QFileDialog.getSaveFileName(self, caption="Enter CSV file name", directory=DEFAULT_PLOT_DATA_FILE_PATH_NAME, filter="*.csv")
             else:
                CSVFileName = fileName
 
-           #Check that the user did not press Cancel on the
-           #create file dialog
+           # Check that the user did not press Cancel on the
+           # create file dialog
             if CSVFileName:
                 logger.info('Function SaveCSVFile - csv file name = ' + 
                             CSVFileName)
@@ -941,22 +941,22 @@ class ModelFittingApp(QWidget):
                 else:
                     mustIncludeVIF = False
 
-                #If CSVFileName already exists, delete it
+                # If CSVFileName already exists, delete it
                 if os.path.exists(CSVFileName):
                     os.remove(CSVFileName)
 
                 with open(CSVFileName, 'w',  newline='') as csvfile:
                     writeCSV = csv.writer(csvfile,  delimiter=',')
                     if mustIncludeVIF:
-                        #write header row
+                        # write header row
                         writeCSV.writerow(['Time (min)', ROI, AIF, VIF, modelName + ' model'])
-                        #Write rows of data
+                        # Write rows of data
                         for i, time in enumerate(self.signalData['time']):
                             writeCSV.writerow([time, self.signalData[ROI][i], self.signalData[AIF][i], self.signalData[VIF][i], self.listModel[i]])
                     else:
-                        #write header row
+                        # write header row
                         writeCSV.writerow(['Time (min)', ROI, AIF, modelName + ' model'])
-                        #Write rows of data
+                        # Write rows of data
                         for i, time in enumerate(self.signalData['time']):
                             writeCSV.writerow([time, self.signalData[ROI][i], self.signalData[AIF][i], self.listModel[i]])
                     csvfile.close()
@@ -990,7 +990,7 @@ class ModelFittingApp(QWidget):
        buttons if both a ROI & AIF are selected.  
        Otherwise hides them."""
         try:
-            #Hide buttons then display them if appropriate
+            # Hide buttons then display them if appropriate
             self.btnFitModel.hide()
             self.btnSaveCSV.hide()
             self.btnSaveReport.hide()
@@ -1033,7 +1033,7 @@ class ModelFittingApp(QWidget):
             objSpinBox = getattr(self, 'spinBoxParameter' + str(paramNumber))
             parameter = objSpinBox.value()
             if objSpinBox.suffix() == '%':
-                #This is a volume fraction so convert % to a decimal fraction
+                # This is a volume fraction so convert % to a decimal fraction
                 parameter = parameter/100.0
             initialParametersArray.append(parameter)
 
@@ -1149,16 +1149,16 @@ class ModelFittingApp(QWidget):
         try:
             logger.info('Function CurveFitCalculate95ConfidenceLimits called: numDataPoints ={}, numParams={}, optimumParams={}, paramCovarianceMatrix={}'
                         .format(numDataPoints, numParams, optimumParams, paramCovarianceMatrix))
-            alpha = 0.05 #95% confidence interval = 100*(1-alpha)
+            alpha = 0.05 # 95% confidence interval = 100*(1-alpha)
             originalOptimumParams = optimumParams.copy()
             originalNumParams = numParams
 
-            #Check for fixed parameters.
-            #Removed fixed parameters from the optimum parameter list
-            #as they should not be included in the calculation of
-            #confidence limits
+            # Check for fixed parameters.
+            # Removed fixed parameters from the optimum parameter list
+            # as they should not be included in the calculation of
+            # confidence limits
             for paramNumber in range(1, len(optimumParams)+ 1):
-                #Make parameter checkbox
+                # Make parameter checkbox
                 objCheckBox = getattr(self, 'ckbParameter' + str(paramNumber))
                 if objCheckBox.isChecked():
                     numParams -=1
@@ -1166,20 +1166,20 @@ class ModelFittingApp(QWidget):
                     
             numDegsOfFreedom = max(0, numDataPoints - numParams) 
         
-            #student-t value for the degrees of freedom and the confidence level
+            # student-t value for the degrees of freedom and the confidence level
             tval = t.ppf(1.0-alpha/2., numDegsOfFreedom)
         
-            #Remove results of previous curve fitting
+            # Remove results of previous curve fitting
             self.optimisedParamaterList.clear()
-            #self.optimisedParamaterList is a list of lists. 
-            #Add an empty list for each parameter to hold its value 
-            #and confidence limits
+            # self.optimisedParamaterList is a list of lists. 
+            # Add an empty list for each parameter to hold its value 
+            # and confidence limits
             for i in range(numParams):
                 self.optimisedParamaterList.append([])
            
             for counter, numParams, var in zip(range(numDataPoints), optimumParams, np.diag(paramCovarianceMatrix)):
-                #Calculate 95% confidence interval for each parameter 
-                #allowed to vary and add these to a list
+                # Calculate 95% confidence interval for each parameter 
+                # allowed to vary and add these to a list
                 sigma = var**0.5
                 lower = numParams - sigma*tval
                 upper = numParams + sigma*tval
@@ -1189,17 +1189,17 @@ class ModelFittingApp(QWidget):
                 logger.info('Just added value {}, lower {}, upper {} to self.optimisedParamaterList at position{}'
                             .format(numParams, lower, upper, counter))
             
-            #Now insert fixed parameters into _optimisedParameterList
-            #if there are any.
+            # Now insert fixed parameters into _optimisedParameterList
+            # if there are any.
             for index in range(originalNumParams):
                 objCheckBox = getattr(self, 'ckbParameter' + str(index + 1))
                 if objCheckBox.isVisible() and objCheckBox.isChecked():
-                    #Add the fixed optimum parameter value to a list
+                    # Add the fixed optimum parameter value to a list
                     fixedParamValue = originalOptimumParams[index]
                     lower = ''
                     upper = ''
                     tempList = [fixedParamValue, lower, upper]
-                    #Now add this list to the list of lists 
+                    # Now add this list to the list of lists 
                     self.optimisedParamaterList.insert(index, tempList)
                     logger.info('Just added temp list {} to self.optimisedParamaterList at position{}'
                             .format(tempList, index))
@@ -1303,33 +1303,33 @@ class ModelFittingApp(QWidget):
         stored in the global list self.optimisedParamaterList.
         """
         try:
-            #Form inputs to the curve fitting function
+            # Form inputs to the curve fitting function
             paramList = self.CurveFitCollateParameterData()
             constantsString = self.objXMLReader.getStringOfConstants()
             
-            #Get name of region of interest, arterial and venal input functions
+            # Get name of region of interest, arterial and venal input functions
             ROI = str(self.cmbROI.currentText())
             AIF = str(self.cmbAIF.currentText())
             VIF = str(self.cmbVIF.currentText())
 
-            #Get arrays of data corresponding to the above 3 regions 
-            #and the time over which the measurements were made.
+            # Get arrays of data corresponding to the above 3 regions 
+            # and the time over which the measurements were made.
             arrayTimes = np.array(self.signalData['time'], 
                                   dtype='float')
-            arrayROIConcs = np.array(self.signalData[ROI], 
+            array_ROI_MR_Signals = np.array(self.signalData[ROI], 
                                      dtype='float')
-            arrayAIFConcs = np.array(self.signalData[AIF], 
+            array_AIF_MR_Signals = np.array(self.signalData[AIF], 
                                      dtype='float')
 
             if VIF != 'Please Select':
-                arrayVIFConcs = np.array(self.signalData[VIF], 
+                array_VIF_MR_Signals = np.array(self.signalData[VIF], 
                                          dtype='float')
             else:
-                #Create empty dummy array to act as place holder in  
-                #ModelFunctionsHelper.CurveFit function call 
-                arrayVIFConcs = []
+                # Create empty dummy array to act as place holder in  
+                # ModelFunctionsHelper.CurveFit function call 
+                array_VIF_MR_Signals = []
             
-            #Get the name of the model to be fitted to the ROI curve
+            # Get the name of the model to be fitted to the ROI curve
             modelName = str(self.cmbModels.currentText())
             functionName = self.objXMLReader.getFunctionName(modelName)
             if functionName is None:
@@ -1343,7 +1343,7 @@ class ModelFittingApp(QWidget):
             optimumParamsDict, paramCovarianceMatrix = \
                 ModelFunctionsHelper.CurveFit(
                 functionName, paramList, arrayTimes, 
-                arrayAIFConcs, arrayVIFConcs, arrayROIConcs,
+                array_AIF_MR_Signals, array_VIF_MR_Signals, array_ROI_MR_Signals,
                 inletType, constantsString)
             
             self.isCurveFittingDone = True 
@@ -1351,17 +1351,17 @@ class ModelFittingApp(QWidget):
             logger.info('ModelFunctionsHelper.CurveFit returned optimum parameters {}'
                         .format(optimumParamsDict))
             
-            #Display results of curve fitting  
-            #(optimum model parameter values) on GUI.
+            # Display results of curve fitting  
+            # (optimum model parameter values) on GUI.
             optimumParamsList = list(optimumParamsDict.values())
             self.ClearOptimumParamaterConfLimitsOnGUI()
             self.SetParameterSpinBoxValues(optimumParamsList)
 
-            #Plot the best curve on the graph
+            # Plot the best curve on the graph
             self.plotMRSignals('CurveFit')
 
-            #Determine 95% confidence limits.
-            numDataPoints = arrayROIConcs.size
+            # Determine 95% confidence limits.
+            numDataPoints = array_ROI_MR_Signals.size
             numParams = len(optimumParamsList)
             if paramCovarianceMatrix.size:
                 self.CurveFitCalculate95ConfidenceLimits(numDataPoints, numParams, 
@@ -1413,12 +1413,12 @@ class ModelFittingApp(QWidget):
             objLabel = getattr(self, 'labelParameter' + str(paramNumber))
             objSpinBox = getattr(self, 'spinBoxParameter' + str(paramNumber))
             if confidenceLimitsArray != None:
-                #curve fitting has just been done
-                parameterList.append(confidenceLimitsArray[index][0]) #Parameter Value
-                parameterList.append(confidenceLimitsArray[index][1]) #Lower Limit
-                parameterList.append(confidenceLimitsArray[index][2]) #Upper Limit
+                # curve fitting has just been done
+                parameterList.append(confidenceLimitsArray[index][0]) # Parameter Value
+                parameterList.append(confidenceLimitsArray[index][1]) # Lower Limit
+                parameterList.append(confidenceLimitsArray[index][2]) # Upper Limit
             else:
-                #Curve fitting has not just been done
+                # Curve fitting has not just been done
                 parameterList.append(round(objSpinBox.value(), 2))
                 parameterList.append('N/A')
                 parameterList.append('N/A')
@@ -1496,32 +1496,32 @@ class ModelFittingApp(QWidget):
             pdf = PDF(REPORT_TITLE) 
             
             if not reportFileName:
-                #Ask the user to specify the path & name of PDF report. 
-                #A default report name is suggested, 
-                #see the Constant declarations at the top of this file
+                # Ask the user to specify the path & name of PDF report. 
+                # A default report name is suggested, 
+                # see the Constant declarations at the top of this file
                 reportFileName, _ = QFileDialog.getSaveFileName(self, caption="Enter PDF file name", 
                                                                 directory=DEFAULT_REPORT_FILE_PATH_NAME, 
                                                                 filter="*.pdf")
 
             if reportFileName:
-                #If the user has entered the name of a new file, 
-                #then we will have to add the .pdf extension
-                #If the user has decided to overwrite an existing file, 
-                #then will not have to add the .pdf extension
+                # If the user has entered the name of a new file, 
+                # then we will have to add the .pdf extension
+                # If the user has decided to overwrite an existing file, 
+                # then will not have to add the .pdf extension
                 name, ext = os.path.splitext(reportFileName)
                 if ext != '.pdf':
-                    #Need to add .pdf extension to reportFileName
+                    # Need to add .pdf extension to reportFileName
                     reportFileName = reportFileName + '.pdf'
                 if os.path.exists(reportFileName):
-                    #delete existing copy of PDF called reportFileName
+                    # delete existing copy of PDF called reportFileName
                     os.remove(reportFileName) 
                     
                 shortModelName = self.cmbModels.currentText()
                 longModelName = self.objXMLReader.getLongModelName(shortModelName)
 
-                #Save a png of the concentration/time plot for display 
-                #in the PDF report.
-                self.figure.savefig(fname=IMAGE_NAME, dpi=150)  #dpi=150 so as to get a clear image in the PDF report
+                # Save a png of the concentration/time plot for display 
+                # in the PDF report.
+                self.figure.savefig(fname=IMAGE_NAME, dpi=150)  # dpi=150 so as to get a clear image in the PDF report
                 
                 if self.isCurveFittingDone:
                     parameterDict = self.BuildParameterDictionary(self.optimisedParamaterList)
@@ -1535,7 +1535,7 @@ class ModelFittingApp(QWidget):
                 
                 QApplication.restoreOverrideCursor()
 
-                #Delete image file
+                # Delete image file
                 os.remove(IMAGE_NAME)
                 logger.info('PDF Report created called ' + reportFileName)
                 return parameterDict
@@ -1552,9 +1552,9 @@ class ModelFittingApp(QWidget):
         """
         try:
             logger.info('Function PopulateModelListCombo called.')
-            #Clear the list of models, ready to accept 
-            #a new list of models from the XML configuration
-            #file just loaded
+            # Clear the list of models, ready to accept 
+            # a new list of models from the XML configuration
+            # file just loaded
             self.cmbModels.clear()
 
             tempList = self.objXMLReader.getListModelShortNames()
@@ -1574,14 +1574,14 @@ class ModelFittingApp(QWidget):
         of model short names."""
         
         try:
-            #Clear the existing plot
+            # Clear the existing plot
             self.figure.clear()
             self.figure.set_visible(False)
             self.canvas.draw()
         
             self.HideAllControlsOnGUI()
 
-            # Get the configuration file in XML format.
+            #  Get the configuration file in XML format.
             # The filter parameter is set so that the 
             # user can only open an XML file.
             defaultPath = "config\\"
@@ -1635,7 +1635,7 @@ class ModelFittingApp(QWidget):
             -The header of the time column must contain the word 'time'.
         """
         
-        #clear the dictionary of previous data
+        # clear the dictionary of previous data
         self.signalData.clear()
         
         self.HideAllControlsOnGUI()
@@ -2147,7 +2147,7 @@ class ModelFittingApp(QWidget):
         try:
             boolAIFSelected = False
             boolVIFSelected = False
-            #t0 = 80
+            
             self.figure.clear()
             self.figure.set_visible(True)
             
@@ -2167,37 +2167,26 @@ class ModelFittingApp(QWidget):
 
             ROI = str(self.cmbROI.currentText())
             if ROI != 'Please Select':
-                arrayROIConcs = np.array(self.signalData[ROI], dtype='float')
-                #ROI_baseline = np.mean(arrayROIConcs[0:int(t0/arrayTimes[1])-1])
-                ROI_baseline = 1
-                ax.plot(arrayTimes, arrayROIConcs/ROI_baseline, 'b.-', label= ROI)
-                #ax.plot(arrayTimes, arrayROIConcs, 'b.-', label= ROI)
+                array_ROI_MR_Signals = np.array(self.signalData[ROI], dtype='float')
+                ax.plot(arrayTimes, array_ROI_MR_Signals, 'b.-', label= ROI)
 
             AIF = str(self.cmbAIF.currentText())
             VIF = str(self.cmbVIF.currentText())
 
-            logger.info('Function plot called from ' 
-                        + nameCallingFunction + 
+            logger.info('Function plot called from ' +
+                        nameCallingFunction + 
                         ' when ROI={}, AIF={} and VIF={}'.format(ROI, AIF, VIF))
 
             if AIF != 'Please Select':
                 #Plot AIF curve
-                
-                arrayAIFConcs = np.array(self.signalData[AIF], dtype='float')
-                #Sa_baseline = np.mean(arrayAIFConcs[0:int(t0/arrayTimes[1])-1])
-                Sa_baseline = 1
-                ax.plot(arrayTimes, arrayAIFConcs/Sa_baseline, 'r.-', label= AIF)
-                #ax.plot(arrayTimes, arrayAIFConcs, 'r.-', label= AIF)
+                array_AIF_MR_Signals = np.array(self.signalData[AIF], dtype='float')
+                ax.plot(arrayTimes, array_AIF_MR_Signals, 'r.-', label= AIF)
                 boolAIFSelected = True
 
             if VIF != 'Please Select':
                 #Plot VIF curve
-                t0=80
-                arrayVIFConcs = np.array(self.signalData[VIF], dtype='float')
-                #Sv_baseline = np.mean(arrayVIFConcs[0:int(t0/arrayTimes[1])-1])
-                Sv_baseline = 1
-                ax.plot(arrayTimes, arrayVIFConcs/Sv_baseline, 'k.-', label= VIF)
-                #ax.plot(arrayTimes, arrayVIFConcs, 'k.-', label= VIF)
+                array_VIF_MR_Signals = np.array(self.signalData[VIF], dtype='float')
+                ax.plot(arrayTimes, array_VIF_MR_Signals, 'k.-', label= VIF)
                 boolVIFSelected = True
                     
             #Plot concentration curve from the model
@@ -2212,9 +2201,9 @@ class ModelFittingApp(QWidget):
                     
                     self.listModel = ModelFunctionsHelper.ModelSelector(
                         modelFunctionName, 
-                        'dual', arrayTimes, arrayAIFConcs, 
+                        'dual', arrayTimes, array_AIF_MR_Signals, 
                         parameterArray, constantsString,
-                       arrayVIFConcs)
+                       array_VIF_MR_Signals)
                     arrayModel =  np.array(self.listModel, dtype='float')
                     ax.plot(arrayTimes, arrayModel, 'g--', label= modelName + ' model')
             elif inletType == 'single':
@@ -2224,7 +2213,7 @@ class ModelFittingApp(QWidget):
                     
                     self.listModel = ModelFunctionsHelper.ModelSelector(
                         modelFunctionName, 
-                        'single', arrayTimes, arrayAIFConcs, 
+                        'single', arrayTimes, array_AIF_MR_Signals, 
                         parameterArray, constantsString)
                     arrayModel =  np.array(self.listModel, dtype='float')
                     ax.plot(arrayTimes, arrayModel, 'g--', label= modelName + ' model')
@@ -2242,6 +2231,7 @@ class ModelFittingApp(QWidget):
             else:
                 # draw a blank graph on the canvas
                 self.canvas.draw()
+
         except NoModelFunctionDefined:
             warningString = 'Cannot procede because no function ' + \
                 'is defined for this model in the configuration file.'
@@ -2351,7 +2341,9 @@ class ModelFittingApp(QWidget):
 
             self.toggleEnabled(False)
             QApplication.processEvents()
-            count = 0
+            # Counter to show progress of batch processing in 
+            # progress bar.
+            count = 0  
 
             modelName = str(self.cmbModels.currentText())
 
@@ -2402,10 +2394,18 @@ class ModelFittingApp(QWidget):
             QApplication.restoreOverrideCursor()
             self.toggleEnabled(True)     
 
-##HERE##
-    def BatchProcessingCreateBatchSummaryExcelSpreadSheet(self, pathToFolder):
+
+    def BatchProcessingCreateBatchSummaryExcelSpreadSheet(self, 
+                                                pathToFolder):
         """Creates an Excel spreadsheet to hold a summary of model 
-        fitting a batch of data files""" 
+        fitting a batch of data files
+        
+        Input
+        -----
+           pathToFolder - location of the folder holding the 
+                MR signal data
+        
+        """ 
         try:
             boolExcelFileCreatedOK = True
             logger.info('Function BatchProcessingCreateBatchSummaryExcelSpreadSheet called.')
@@ -2428,6 +2428,7 @@ class ModelFittingApp(QWidget):
             spreadSheet = ExcelWriter(ExcelFileName)
             
             return spreadSheet, boolExcelFileCreatedOK
+
         except OSError as ose:
             logger.error (ExcelFileName + 'is open. It must be closed. Error =' + str(ose))
             QMessageBox.warning(self, 'Spreadsheet open in Excel', 
@@ -2450,9 +2451,25 @@ class ModelFittingApp(QWidget):
             boolExcelFileCreatedOK = False
             return None, boolExcelFileCreatedOK
 
-    def BatchProcessWriteOptimumParamsToSummary(self, objExcelFile, fileName, modelName, paramDict):
-        """During batch processing of data files, writes the optimum
-        parameter values resulting from curve fitting to an Excel spreadsheet"""
+
+    def BatchProcessWriteOptimumParamsToSummary(self, 
+                                                objExcelFile, 
+                                                fileName, 
+                                                modelName, 
+                                                paramDict):
+        """During batch processing of data files, writes 
+        the optimum parameter values resulting from  
+       curve fitting to Excel spreadsheet.
+       
+       Inputs
+       -----
+       objExcelFile - object instanciated from the XMLReader class
+       fileName - Name of the MR Signal data file currently being
+            batch processed.
+       modelName - Name of the model being used for curve fitting.
+       paramDict - Dictionary of optimum parameter values determined
+            by the curve fitting process
+       """
         try:
             for paramName, paramList in paramDict.items(): 
                 paramName.replace('\n', '')
@@ -2468,8 +2485,10 @@ class ModelFittingApp(QWidget):
             logger.error('Error in function BatchProcessWriteOptimumParamsToSummary: ' + str(e))
             self.toggleEnabled(True)      
 
+
     def BatchProcessingLoadDataFile(self, fullFilePath):
-        """Loads the contents of a CSV file containing time and concentration data
+        """ 
+        Loads the contents of a CSV file containing time and concentration data
         into a dictionary of lists. The key is the name of the organ or 'time' and 
         the corresponding value is a list of concentrations 
         (or times when the key is 'time')
@@ -2482,11 +2501,10 @@ class ModelFittingApp(QWidget):
         Input Parameters:
         ******************
             fullFilePath - Full file path to a CSV file containing 
-                            time/concentration data
-            
+                            time/concentration data    
         """
       
-        #clear the dictionary of previous data
+        # clear the dictionary of previous data
         self.signalData.clear()
 
         boolFileFormatOK = True
@@ -2503,10 +2521,10 @@ class ModelFittingApp(QWidget):
                         errorStr = 'Batch Processing: CSV file {} must acontain at least 3 columns of data separated by commas.'.format(fullFilePath)
                         logger.info(errorStr)
                         
-                    #go back to top of the file
+                    # Go back to top of the file
                     csvfile.seek(0)
                     readCSV = csv.reader(csvfile, delimiter=',')
-                    #Get column header labels
+                    # Get column header labels
                     headers = next(readCSV, None)  # returns the headers or `None` if the input is empty
                     if headers:
                         join = ""
@@ -2528,24 +2546,24 @@ class ModelFittingApp(QWidget):
                             boolFileFormatOK = False
 
                     if boolFileFormatOK:
-                        #Column headers form the keys in the dictionary called self.signalData
+                        # Column headers form the keys in the dictionary called self.signalData
                         for header in headers:
                             if 'time' in header:
                                 header ='time'
                             self.signalData[header.title().lower()]=[]
-                        #Also add a 'model' key to hold a list of concentrations generated by a model
+                        # Also add a 'model' key to hold a list of concentrations generated by a model
                         self.signalData['model'] = []
 
-                        #Each key in the dictionary is paired with a list of 
-                        #corresponding concentrations 
-                        #(except the Time key that is paired with a list of times)
+                        # Each key in the dictionary is paired with a 
+                        # list of corresponding concentrations 
+                        # (except the Time key that is paired with a list of times)
                         for row in readCSV:
                             colNum=0
                             for key in self.signalData:
-                                #Iterate over columns in the selected row
+                                # Iterate over columns in the selected row
                                 if key != 'model':
                                     if colNum == 0: 
-                                        #time column
+                                        # time column
                                         self.signalData['time'].append(float(row[colNum])/60.0)
                                     else:
                                         self.signalData[key].append(float(row[colNum]))
@@ -2580,20 +2598,26 @@ class ModelFittingApp(QWidget):
         data for the ROI, AIF and, if appropriate, the VIF.
         
         If data is missing, it returns false and a string indicating 
-        what data is missing."""
+        what data is missing.
+
+        Input
+        -----
+        headers - A list of the column headers in the MR signal
+            CSV data file
+        """
         boolDataOK = True
         join = ""
         failureReason = ""
         try:
             lowerCaseHeaders = [header.strip().lower() for header in headers]
 
-            #Check ROI data is in the current data file
+            # Check ROI data is in the current data file
             ROI = str(self.cmbROI.currentText().strip().lower())
             if ROI not in (lowerCaseHeaders):
                 boolDataOK = False
                 failureReason = ROI + " data missing"
             
-            #Check AIF data is in the current data file
+            # Check AIF data is in the current data file
             AIF = str(self.cmbAIF.currentText().strip().lower())
             if AIF not in (lowerCaseHeaders):
                 boolDataOK = False
@@ -2602,7 +2626,7 @@ class ModelFittingApp(QWidget):
                 failureReason = failureReason + join + AIF + " data missing"
 
             if self.cmbVIF.isVisible():
-                #Check VIF data is in the current data file
+                # Check VIF data is in the current data file
                 VIF = str(self.cmbVIF.currentText().strip().lower())
                 if VIF not in (lowerCaseHeaders):
                     boolDataOK = False
@@ -2621,8 +2645,8 @@ class ModelFittingApp(QWidget):
             self.toggleEnabled(True)
 
     def BatchProcessingHaveParamsChanged(self) -> bool:
-        """Returns True if the user has changed parameter 
-        spinbox values from the defaults"""
+        """Returns True if the user has changed one or more  
+        parameter spinbox values from the defaults"""
         try:
             boolParameterChanged = False
             modelName = str(self.cmbModels.currentText())
@@ -2659,6 +2683,7 @@ class ModelFittingApp(QWidget):
             logger.error('Error in function BatchProcessingHaveParamsChanged: ' + str(e) )
             self.toggleEnabled(True)
             
+
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     main = ModelFittingApp()

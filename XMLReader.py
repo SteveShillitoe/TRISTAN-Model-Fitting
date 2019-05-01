@@ -38,8 +38,8 @@ class XMLReader:
         try:
             self.hasXMLFileParsedOK = True
             self.fullFilePath = ""
-            self.tree = None #Points to XML tree in memory
-            self.root = None #Points to the root node of the above XML tree
+            self.tree = None # Points to XML tree in memory
+            self.root = None # Points to the root node of the above XML tree
            
             logger.info('In module ' + __name__ + ' Created XML Reader Object')
 
@@ -57,7 +57,7 @@ class XMLReader:
             self.tree = ET.parse(fullFilePath)
             self.root = self.tree.getroot()
 
-            #Uncomment to test XML file loaded OK
+            # Uncomment to test XML file loaded OK
             #print(ET.tostring(self.root, encoding='utf8').decode('utf8'))
            
             logger.info('In module ' + __name__ 
@@ -86,7 +86,7 @@ class XMLReader:
                 tempList = [name.text 
                         for name in shortModelNames]
 
-            #Insert string 'Select a model' as the start of the list
+            # Insert string 'Select a model' as the start of the list
             tempList.insert(0, FIRST_ITEM_MODEL_LIST)
             return tempList
 
