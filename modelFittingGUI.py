@@ -2132,8 +2132,52 @@ class ModelFittingApp(QWidget):
             logger.error('Error in function DetermineTextSize: ' + str(e) )
     
 
+    def plotModelCurve(self, modelName, 
+                       inletType,
+                       arrayTimes, 
+                       array_AIF_MR_Signals, 
+                       array_VIF_MR_Signals, objSubPlot):
+        """
+        This function calls the function that calculates the 
+        MR signal/time curve using the selected model and then
+        plots this curve on the matplotlib plot.
+
+        Inputs
+        ------
+        modelName - short name of the select model
+        inletType - inlet type of the model, single or dual
+        arrayTimes - array of time points over which the
+                MR signal data is recorded.
+        array_AIF_MR_Signals - array of AIF MR signal data over
+                the time period stored in arrayTimes.
+        array_VIF_MR_Signals - array of VIF MR signal data over
+                the time period stored in arrayTimes.
+        objSubPlot - object pointing to the matplotlib plot.
+        """
+        try:
+            parameterArray = self.BuildParameterArray()
+            constantsString = self.objXMLReader.getStringOfConstants()
+            modelFunctionName = self.objXMLReader.getFunctionName(modelName)
+            
+            logger.info('ModelFunctionsHelper.ModelSelector called when model={}, function ={} & parameter array = {}'. format(modelName, modelFunctionName, parameterArray))        
+            
+            self.listModel = ModelFunctionsHelper.ModelSelector(
+                        modelFunctionName, 
+                        inletType, arrayTimes, array_AIF_MR_Signals, 
+                        parameterArray, constantsString,
+                        array_VIF_MR_Signals)
+            
+            arrayModel =  np.array(self.listModel, dtype='float')
+            objSubPlot.plot(arrayTimes, arrayModel, 'g--', label= modelName + ' model')
+            
+        except Exception as e:
+                print('Error in function plotModelCurve ' + str(e) )
+                logger.error('Error in function plotModelCurve ' + str(e) )
+    
+
     def plotMRSignals(self, nameCallingFunction: str):
-        """Plots the normalised signal against time curves 
+        """If a Region of Interest has been selected, 
+        this function plots the normalised signal against time curves 
         for the ROI, AIF, VIF.  
         Also, plots the normalised signal/time curve predicted by the 
         selected model.
@@ -2154,22 +2198,15 @@ class ModelFittingApp(QWidget):
             # create an axis
             ax = self.figure.add_subplot(111)
 
-            #Get the optimum label size for the screen resolution.
-            tickLabelSize, xyAxisLabelSize, titleSize = self.DetermineTextSize()
+            # Get the optimum label size for the screen resolution.
+            tickLabelSize, xyAxisLabelSize, titleSize = \
+                self.DetermineTextSize()
             
-            #Set size of the x,y axis tick labels
-            ax.tick_params(axis='both', which='major', labelsize=tickLabelSize)
-
-            #Get the name of the model 
-            modelName = str(self.cmbModels.currentText())
-            
-            arrayTimes = np.array(self.signalData['time'], dtype='float')
+            # Set size of the x,y axis tick labels
+            ax.tick_params(axis='both', 
+                           which='major', labelsize=tickLabelSize)
 
             ROI = str(self.cmbROI.currentText())
-            if ROI != 'Please Select':
-                array_ROI_MR_Signals = np.array(self.signalData[ROI], dtype='float')
-                ax.plot(arrayTimes, array_ROI_MR_Signals, 'b.-', label= ROI)
-
             AIF = str(self.cmbAIF.currentText())
             VIF = str(self.cmbVIF.currentText())
 
@@ -2177,48 +2214,9 @@ class ModelFittingApp(QWidget):
                         nameCallingFunction + 
                         ' when ROI={}, AIF={} and VIF={}'.format(ROI, AIF, VIF))
 
-            if AIF != 'Please Select':
-                #Plot AIF curve
-                array_AIF_MR_Signals = np.array(self.signalData[AIF], dtype='float')
-                ax.plot(arrayTimes, array_AIF_MR_Signals, 'r.-', label= AIF)
-                boolAIFSelected = True
-
-            if VIF != 'Please Select':
-                #Plot VIF curve
-                array_VIF_MR_Signals = np.array(self.signalData[VIF], dtype='float')
-                ax.plot(arrayTimes, array_VIF_MR_Signals, 'k.-', label= VIF)
-                boolVIFSelected = True
-                    
-            #Plot concentration curve from the model
-            parameterArray = self.BuildParameterArray()
-            constantsString = self.objXMLReader.getStringOfConstants()
-            inletType = self.objXMLReader.getModelInletType(modelName)
-                    
-            if inletType == 'dual':
-                if boolAIFSelected and boolVIFSelected:
-                    modelFunctionName = self.objXMLReader.getFunctionName(modelName)
-                    logger.info('ModelFunctionsHelper.ModelSelector called when model={}, function ={} & parameter array = {}'. format(modelName, modelFunctionName, parameterArray))        
-                    
-                    self.listModel = ModelFunctionsHelper.ModelSelector(
-                        modelFunctionName, 
-                        'dual', arrayTimes, array_AIF_MR_Signals, 
-                        parameterArray, constantsString,
-                       array_VIF_MR_Signals)
-                    arrayModel =  np.array(self.listModel, dtype='float')
-                    ax.plot(arrayTimes, arrayModel, 'g--', label= modelName + ' model')
-            elif inletType == 'single':
-                if boolAIFSelected:
-                    modelFunctionName = self.objXMLReader.getFunctionName(modelName)
-                    logger.info('ModelFunctionsHelper.ModelSelector called when model ={}, function ={} & parameter array = {}'. format(modelName, modelFunctionName, parameterArray))        
-                    
-                    self.listModel = ModelFunctionsHelper.ModelSelector(
-                        modelFunctionName, 
-                        'single', arrayTimes, array_AIF_MR_Signals, 
-                        parameterArray, constantsString)
-                    arrayModel =  np.array(self.listModel, dtype='float')
-                    ax.plot(arrayTimes, arrayModel, 'g--', label= modelName + ' model')
-
             if ROI != 'Please Select':  
+                # A Region of Interest has been selected
+                arrayTimes = np.array(self.signalData['time'], dtype='float')
                 ax.set_xlabel('Time (mins)', fontsize=xyAxisLabelSize)
                 ax.set_ylabel(self.yAxisLabel, fontsize=xyAxisLabelSize)
                 ax.set_title('Time Curves', fontsize=titleSize, pad=25)
@@ -2226,18 +2224,48 @@ class ModelFittingApp(QWidget):
                 chartBox = ax.get_position()
                 ax.set_position([chartBox.x0*1.1, chartBox.y0, chartBox.width*0.9, chartBox.height])
                 ax.legend(loc='upper center', bbox_to_anchor=(0.9, 1.0), shadow=True, ncol=1, fontsize='x-large')
+                
+                array_ROI_MR_Signals = np.array(self.signalData[ROI], dtype='float')
+                ax.plot(arrayTimes, array_ROI_MR_Signals, 'b.-', label= ROI)
+                array_AIF_MR_Signals = []
+                array_VIF_MR_Signals = []
+
+                if AIF != 'Please Select':
+                    # Plot AIF curve
+                    array_AIF_MR_Signals = np.array(self.signalData[AIF], dtype='float')
+                    ax.plot(arrayTimes, array_AIF_MR_Signals, 'r.-', label= AIF)
+                    boolAIFSelected = True
+
+                if VIF != 'Please Select':
+                    # Plot VIF curve
+                    array_VIF_MR_Signals = np.array(self.signalData[VIF], dtype='float')
+                    ax.plot(arrayTimes, array_VIF_MR_Signals, 'k.-', label= VIF)
+                    boolVIFSelected = True
+
+                # Plot signal curve from the model
+                modelName = str(self.cmbModels.currentText())
+                if modelName != 'Select a model':
+                    inletType = self.objXMLReader.getModelInletType(modelName)
+                    if (inletType == 'single' and boolAIFSelected) \
+                        or \
+                        inletType == 'dual' and (boolAIFSelected and boolVIFSelected):
+                        # If the inletType is 'single' then we have to
+                        # ensure an AIF has been selected.
+                        # If the inletType is Dual then we have to ensure
+                        # that both an AIF & an VIF have been selected    
+                            self.plotModelCurve(modelName, 
+                                inletType,
+                                arrayTimes, 
+                                array_AIF_MR_Signals, 
+                                array_VIF_MR_Signals, 
+                                ax)
+                    
                 # refresh canvas
                 self.canvas.draw()
             else:
                 # draw a blank graph on the canvas
                 self.canvas.draw()
 
-        except NoModelFunctionDefined:
-            warningString = 'Cannot procede because no function ' + \
-                'is defined for this model in the configuration file.'
-            print(warningString)
-            logger.info('plotMRSignals - ' + warningString)
-            QMessageBox().critical( self,  "Plot Concentrations", warningString, QMessageBox.Ok)
         except Exception as e:
                 print('Error in function plotMRSignals when an event associated with ' + str(nameCallingFunction) + ' is fired : ROI=' + ROI + ' AIF = ' + AIF + ' : ' + str(e) )
                 logger.error('Error in function plotMRSignals when an event associated with ' + str(nameCallingFunction) + ' is fired : ROI=' + ROI + ' AIF = ' + AIF + ' : ' + str(e) )

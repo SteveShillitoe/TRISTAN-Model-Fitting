@@ -16,6 +16,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 FIRST_ITEM_MODEL_LIST = 'Select a model'
+NO_MODELS_DEFINED_IN_CONFIG_FILE = 'No models defined in config file'
 
 # User-defined exceptions
 class Error(Exception):
@@ -78,9 +79,10 @@ class XMLReader:
         """Returns a list of model short names for display
         in a combo dropdown list on the application GUI """
         try:
+            tempList = []
             shortModelNames = self.root.findall('./model/name/short')
-            if shortModelNames is None:
-                tempList.append('No models defined in config file.')
+            if not shortModelNames:
+                tempList.append(NO_MODELS_DEFINED_IN_CONFIG_FILE)
                 raise ValueNotDefinedInConfigFile
             else:
                 tempList = [name.text 
@@ -112,7 +114,7 @@ class XMLReader:
             if len(shortModelName) > 0:
                 xPath='./model[@id=' + chr(34) + shortModelName + chr(34) + ']/function'
                 functionName = self.root.find(xPath)
-                if functionName is None:
+                if functionName.text is None:
                     raise ValueNotDefinedInConfigFile
                 else:
                     logger.info('XMLReader.getFunctionName found function name ' + functionName.text)
@@ -143,7 +145,7 @@ class XMLReader:
             
             xPath='./plot/y_axis_label'
             yAxisLabel = self.root.find(xPath)
-            if yAxisLabel is None:
+            if yAxisLabel.text is None:
                 raise ValueNotDefinedInConfigFile
             else:
                 logger.info('XMLReader.getYAxisLabel found Y Axis Label' 
@@ -169,7 +171,7 @@ class XMLReader:
             if len(shortModelName) > 0:
                 xPath='./model[@id=' + chr(34) + shortModelName + chr(34) + ']/image'
                 imageName = self.root.find(xPath)
-                if imageName is None:
+                if imageName.text is None:
                     raise ValueNotDefinedInConfigFile
                 else:
                     logger.info('XMLReader.getImageName found image ' + imageName.text)
@@ -200,7 +202,7 @@ class XMLReader:
                 xPath='./model[@id=' + chr(34) + shortModelName + chr(34) + \
                     ']/name/long'
                 modelName = self.root.find(xPath)
-                if modelName is None:
+                if modelName.text is None:
                     raise ValueNotDefinedInConfigFile
                 else:
                     logger.info('XMLReader.getLongModelName found long model name ' + \
@@ -226,10 +228,12 @@ class XMLReader:
        with a short name in the string variable shortModelName"""
         try:
             logger.info('XMLReader.getModelInletType called with short model name= ' + shortModelName)
-            if len(shortModelName) > 0 and shortModelName != FIRST_ITEM_MODEL_LIST:
+            if len(shortModelName) > 0 and \
+                shortModelName != FIRST_ITEM_MODEL_LIST and \
+                shortModelName != NO_MODELS_DEFINED_IN_CONFIG_FILE:
                 xPath='./model[@id=' + chr(34) + shortModelName + chr(34) + ']/inlet_type'
                 modelInletType= self.root.find(xPath)
-                if modelInletType is None:
+                if modelInletType.text is None:
                     raise ValueNotDefinedInConfigFile
                 else:
                     logger.info('XMLReader.getModelInletType found model inlet type ' + modelInletType.text)
@@ -260,13 +264,18 @@ class XMLReader:
                     ']/parameters/parameter'
                 parameters = self.root.findall(xPath)
                 if parameters:
-                    numParams = len(self.root.findall(xPath))
+                    numParams = len(parameters)
                     return numParams
                 else:
-                    return 0
+                    raise ValueNotDefinedInConfigFile
             else:
                 return 0
 
+        except ValueNotDefinedInConfigFile:
+            warningString = 'Warning - No parameters defined when shortModelName = {} and xPath= {}: '.format(shortModelName, xPath) 
+            print(warningString)
+            logger.info('XMLReader.getNumberOfParameters - ' + warningString)
+            return 0
         except Exception as e:
             print('Error in XMLReader.getNumberOfParameters when shortModelName ={} and xPath={}: '.format(shortModelName, xPath) 
                   + str(e)) 
@@ -294,21 +303,21 @@ class XMLReader:
                 xPath='./model[@id=' + chr(34) + shortModelName + chr(34) + \
                     ']/parameters/parameter[' + str(positionNumber) + ']/name/short'
                 shortName = self.root.find(xPath)
-                if shortName is None:
+                if shortName.text is None:
                     missingShortName = True
                     print('short name for parameter at position {} is missing.'.format(str(positionNumber)))
 
                 xPath='./model[@id=' + chr(34) + shortModelName + chr(34) + \
                     ']/parameters/parameter[' + str(positionNumber) + ']/name/long'
                 longName = self.root.find(xPath)
-                if longName is None:
+                if longName.text is None:
                     missingLongName = True
                     print('Long name for parameter at position {} is missing.'.format(str(positionNumber)))
 
                 xPath='./model[@id=' + chr(34) + shortModelName + chr(34) + \
                     ']/parameters/parameter[' + str(positionNumber) + ']/units'
                 units = self.root.find(xPath)
-                if units is None:
+                if units.text is None:
                     print('Units for parameter at position {} are missing.'.format(str(positionNumber)))
                 else:
                     if units.text == '%':
@@ -353,7 +362,7 @@ class XMLReader:
             else:
                 return ''
 
-            if shortName is None:
+            if shortName.text is None:
                 raise ValueNotDefinedInConfigFile
             else:
                 return shortName.text
@@ -386,7 +395,7 @@ class XMLReader:
                     ']/parameters/parameter[' + str(positionNumber) + ']/default'
                 default = self.root.find(xPath)
                 #print('Default ={} when position={}'.format(default.text, positionNumber))
-                if default is None:
+                if default.text is None:
                     raise ValueNotDefinedInConfigFile
                 else:
                     return float(default.text)
@@ -423,7 +432,7 @@ class XMLReader:
                     ']/parameters/parameter[' + str(positionNumber) + ']/step'
                 step = self.root.find(xPath)
 
-                if step is None:
+                if step.text is None:
                     raise ValueNotDefinedInConfigFile
                 else:
                     return float(step.text)
@@ -459,7 +468,7 @@ class XMLReader:
                     ']/parameters/parameter[' + str(positionNumber) + ']/precision'
                 precision = self.root.find(xPath)
 
-                if precision is None:
+                if precision.text is None:
                     raise ValueNotDefinedInConfigFile
                 else:
                     return int(precision.text)
@@ -496,7 +505,7 @@ class XMLReader:
                     ']/parameters/parameter[' + str(positionNumber) + ']/display_value/max'
                 max = self.root.find(xPath)
 
-                if max is None:
+                if max.text is None:
                     raise ValueNotDefinedInConfigFile
                 else:
                     return float(max.text)
@@ -531,7 +540,7 @@ class XMLReader:
                     ']/parameters/parameter[' + str(positionNumber) + ']/display_value/min'
                 min = self.root.find(xPath)
 
-                if min is None:
+                if min.text is None:
                     raise ValueNotDefinedInConfigFile
                 else:
                     return float(min.text)
@@ -566,7 +575,7 @@ class XMLReader:
                     ']/parameters/parameter[' + str(positionNumber) + ']/constraints/upper'
                 upper = self.root.find(xPath)
 
-                if upper is None:
+                if upper.text is None:
                     raise ValueNotDefinedInConfigFile
                 else:
                     return float(upper.text)
@@ -601,7 +610,7 @@ class XMLReader:
                     ']/parameters/parameter[' + str(positionNumber) + ']/constraints/lower'
                 lower = self.root.find(xPath)
 
-                if lower is None:
+                if lower.text is None:
                     raise ValueNotDefinedInConfigFile
                 else:
                     return float(lower.text)
@@ -628,7 +637,7 @@ class XMLReader:
             xPath='./data_file_path'
             dataFileFolder = self.root.find(xPath)
 
-            if dataFileFolder is None:
+            if dataFileFolder.text is None:
                 raise ValueNotDefinedInConfigFile
             else:
                 return dataFileFolder.text
@@ -655,7 +664,7 @@ class XMLReader:
             xPath='./constants/constant'
             collectionConstants = self.root.findall(xPath)
 
-            if collectionConstants is None:
+            if not collectionConstants:
                 raise ValueNotDefinedInConfigFile
             else:
                 constantsDict = {}
@@ -697,10 +706,10 @@ class XMLReader:
             warningString = 'Warning - XMLReader.getNumBaselineScans - No baseline value defined.'
             print(warningString)
             logger.info(warningString)
-            return ''
+            return 1
         except Exception as e:
             print('Error in XMLReader.getNumBaselineScans: ' 
                   + str(e)) 
             logger.error('Error in XMLReader.getNumBaselineScans: ' 
                   + str(e)) 
-            return ''
+            return 1
