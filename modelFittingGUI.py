@@ -125,18 +125,20 @@ The appearance of the GUI is controlled by the CSS commands in styleSheet.py
 
 Reading Data into the Application.
 ----------------------------------
-The function LoadConfigFile loads and parses the contents of the XML file that
-describes the models to be used for curve fitting.  If parsing is successful,
-the XML tree is stored in memory and used to build a list of models for display
-in a combo box on the GUI, and the 'Load Data File' button is made visible.
+The function LoadConfigFile loads and parses the contents of the 
+XML file that describes the models to be used for curve fitting.  
+If parsing is successful, the XML tree is stored in memory 
+and used to build a list of models for display in a combo box on the GUI,
+and the 'Load Data File' button is made visible.
 See the README file for a detailed description of the XML configuration file.
 
 Clicking the 'Load Data File' button executes the LoadDataFile function.
-The function LoadDataFile loads the contents of a CSV file containing time and 
-concentration data into a dictionary of lists. The key is the name of the organ 
-or 'time' and the corresponding value is a list of concentrations for that organ
-(or times when the key is 'time').  The header label of each column of data is
-taken as a key.  
+The function LoadDataFile loads the contents of a CSV file
+containing time and MR signal data into a dictionary of lists.
+The key is the name of the organ or 'time' and the 
+corresponding value is a list of MR signals for that organ
+(or times when the key is 'time').  
+The header label of each column of data is taken as a key.  
         
 The following validation is applied to the data file:
     -The CSV file must contain at least 3 columns of data separated by commas.
