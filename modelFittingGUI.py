@@ -65,7 +65,7 @@ How to Use.
             TRISTAN.log from the last session will be deleted
             and a new log file started.
         13. Clicking the 'Start Batch Processing' button applies model fitting
-            to the concentration/time data in all the files in the folder containing
+            to the MR signal/time data in all the files in the folder containing
             the data file selected in step 2.  For each file, a PDF report is created
             as in step 11. Also, a Microsoft Excel spread sheet summarising all
             the results is generated.
@@ -905,7 +905,7 @@ class ModelFittingApp(QWidget):
         confidence limits resulting from curve fitting. """
         try:
             logger.info('Function ClearOptimumParamaterConfLimitsOnGUI called.')
-            self.lblConfInt.hide()
+            #self.lblConfInt.hide()
             self.lblParam1ConfInt.clear()
             self.lblParam2ConfInt.clear()
             self.lblParam3ConfInt.clear()
@@ -2177,6 +2177,53 @@ class ModelFittingApp(QWidget):
                 logger.error('Error in function plotModelCurve ' + str(e) )
     
 
+    def setUpPlot(self):
+        """
+        This function draws the matplotlib plot on the GUI
+        for the display of the MR signal/time curves.
+        """
+        try:
+            logger.info('Function setUpPlot called.')
+            self.figure.clear()
+            self.figure.set_visible(True)
+        
+            objSubPlot = self.figure.add_subplot(111)
+
+            # Get the optimum label size for the screen resolution.
+            tickLabelSize, xyAxisLabelSize, titleSize = \
+                self.DetermineTextSize()
+
+            # Set size of the x,y axis tick labels
+            objSubPlot.tick_params(axis='both', 
+                                   which='major', 
+                                   labelsize=tickLabelSize)
+
+            objSubPlot.set_xlabel('Time (mins)', fontsize=xyAxisLabelSize)
+            objSubPlot.set_ylabel(self.yAxisLabel, fontsize=xyAxisLabelSize)
+            objSubPlot.set_title('Time Curves', fontsize=titleSize, pad=25)
+            objSubPlot.grid()
+
+            return objSubPlot
+
+        except Exception as e:
+                print('Error in function setUpPlot: ' + str(e))
+                logger.error('Error in function setUpPlot: ' + str(e))
+
+
+    def setUpLegendBox(self, objPlot):
+        """
+        This function draws the legend box holding the key
+        to the MR signal/time curves on the plot.
+        """
+        logger.info('Function setUpLegendBox called.')
+        chartBox = objPlot.get_position()
+        objPlot.set_position([chartBox.x0*1.1, chartBox.y0, 
+                              chartBox.width*0.9, chartBox.height])
+        objPlot.legend(loc='upper center', 
+                       bbox_to_anchor=(0.9, 1.0), 
+                       shadow=True, ncol=1, fontsize='x-large')
+
+
     def plotMRSignals(self, nameCallingFunction: str):
         """If a Region of Interest has been selected, 
         this function plots the normalised signal against time curves 
@@ -2193,80 +2240,57 @@ class ModelFittingApp(QWidget):
         try:
             boolAIFSelected = False
             boolVIFSelected = False
-            
-            self.figure.clear()
-            self.figure.set_visible(True)
-            
-            # create an axis
-            ax = self.figure.add_subplot(111)
 
-            # Get the optimum label size for the screen resolution.
-            tickLabelSize, xyAxisLabelSize, titleSize = \
-                self.DetermineTextSize()
-            
-            # Set size of the x,y axis tick labels
-            ax.tick_params(axis='both', 
-                           which='major', labelsize=tickLabelSize)
+            objPlot = self.setUpPlot()
 
+            # Get the names of the regions 
+            # selected from the drop down lists.
             ROI = str(self.cmbROI.currentText())
             AIF = str(self.cmbAIF.currentText())
+            VIF = 'Not Selected'
             VIF = str(self.cmbVIF.currentText())
 
             logger.info('Function plot called from ' +
                         nameCallingFunction + 
                         ' when ROI={}, AIF={} and VIF={}'.format(ROI, AIF, VIF))
 
-            if ROI != 'Please Select':  
-                # A Region of Interest has been selected
-                arrayTimes = np.array(self.signalData['time'], dtype='float')
-                ax.set_xlabel('Time (mins)', fontsize=xyAxisLabelSize)
-                ax.set_ylabel(self.yAxisLabel, fontsize=xyAxisLabelSize)
-                ax.set_title('Time Curves', fontsize=titleSize, pad=25)
-                ax.grid()
-                chartBox = ax.get_position()
-                ax.set_position([chartBox.x0*1.1, chartBox.y0, chartBox.width*0.9, chartBox.height])
-                ax.legend(loc='upper center', bbox_to_anchor=(0.9, 1.0), shadow=True, ncol=1, fontsize='x-large')
-                
-                array_ROI_MR_Signals = np.array(self.signalData[ROI], dtype='float')
-                ax.plot(arrayTimes, array_ROI_MR_Signals, 'b.-', label= ROI)
-                array_AIF_MR_Signals = []
-                array_VIF_MR_Signals = []
+            arrayTimes = np.array(self.signalData['time'], dtype='float')
+            
+            if AIF != 'Please Select':
+                array_AIF_MR_Signals = np.array(self.signalData[AIF], dtype='float')
+                objPlot.plot(arrayTimes, array_AIF_MR_Signals, 'r.-', label= AIF)
+                boolAIFSelected = True
 
-                if AIF != 'Please Select':
-                    # Plot AIF curve
-                    array_AIF_MR_Signals = np.array(self.signalData[AIF], dtype='float')
-                    ax.plot(arrayTimes, array_AIF_MR_Signals, 'r.-', label= AIF)
-                    boolAIFSelected = True
-
-                if VIF != 'Please Select':
-                    # Plot VIF curve
-                    array_VIF_MR_Signals = np.array(self.signalData[VIF], dtype='float')
-                    ax.plot(arrayTimes, array_VIF_MR_Signals, 'k.-', label= VIF)
-                    boolVIFSelected = True
-
-                # Plot signal curve from the model
-                modelName = str(self.cmbModels.currentText())
-                if modelName != 'Select a model':
-                    inletType = self.objXMLReader.getModelInletType(modelName)
-                    if (inletType == 'single' and boolAIFSelected) \
-                        or \
-                        inletType == 'dual' and (boolAIFSelected and boolVIFSelected):
-                        # If the inletType is 'single' then we have to
-                        # ensure an AIF has been selected.
-                        # If the inletType is Dual then we have to ensure
-                        # that both an AIF & an VIF have been selected    
-                            self.plotModelCurve(modelName, 
-                                inletType,
-                                arrayTimes, 
-                                array_AIF_MR_Signals, 
-                                array_VIF_MR_Signals, 
-                                ax)
+            array_VIF_MR_Signals = []
+            if VIF != 'Please Select':
+                array_VIF_MR_Signals = np.array(self.signalData[VIF], dtype='float')
+                objPlot.plot(arrayTimes, array_VIF_MR_Signals, 'k.-', label= VIF)
+                boolVIFSelected = True
                     
-                # refresh canvas
+            # Plot concentration curve from the model
+            modelName = str(self.cmbModels.currentText())
+            if modelName != 'Select a model':
+                inletType = self.objXMLReader.getModelInletType(modelName)
+                if (inletType == 'dual') and \
+                    (boolAIFSelected and boolVIFSelected) \
+                    or \
+                    (inletType == 'single') and boolAIFSelected:
+                    self.plotModelCurve(modelName, inletType,
+                                        arrayTimes, 
+                                        array_AIF_MR_Signals, 
+                                       array_VIF_MR_Signals, objPlot)
+
+            if ROI != 'Please Select':
+                array_ROI_MR_Signals = np.array(self.signalData[ROI], dtype='float')
+                objPlot.plot(arrayTimes, array_ROI_MR_Signals, 'b.-', label= ROI)
+                
+                self.setUpLegendBox(objPlot)
+                
+                # Refresh canvas
                 self.canvas.draw()
             else:
-                # draw a blank graph on the canvas
-                self.canvas.draw()
+                # Draw a blank graph on the canvas
+                self.canvas.draw
 
         except Exception as e:
                 print('Error in function plotMRSignals when an event associated with ' + str(nameCallingFunction) + ' is fired : ROI=' + ROI + ' AIF = ' + AIF + ' : ' + str(e) )
@@ -2327,7 +2351,7 @@ class ModelFittingApp(QWidget):
             
             logger.info('Function BatchProcessAllCSVDataFiles called.')
             
-            #Create a list of csv files in the selected directory
+            # Create a list of csv files in the selected directory
             csvDataFiles = [file 
                             for file in os.listdir(self.dataFileDirectory) 
                             if file.lower().endswith('.csv')]
@@ -2338,7 +2362,8 @@ class ModelFittingApp(QWidget):
             self.lblBatchProcessing.setText('{}: {} csv files.'
                                        .format(self.dataFileDirectory, str(numCSVFiles)))
 
-            #Make nested folders to hold plot CSV files and PDF reports
+            # Make nested folders to hold CSV files 
+            # of plot data and PDF reports
             csvPlotDataFolder = self.dataFileDirectory + '/CSVPlotDataFiles'
             pdfReportFolder = self.dataFileDirectory + '/PDFReports'
             if not os.path.exists(csvPlotDataFolder):
@@ -2348,15 +2373,15 @@ class ModelFittingApp(QWidget):
                 os.makedirs(pdfReportFolder)
                 logger.info('BatchProcessAllCSVDataFiles: {} created.'.format(pdfReportFolder))
             
-            #Set up progress bar
+            # Set up progress bar
             self.pbar.show()
             self.pbar.setMaximum(numCSVFiles)
             self.pbar.setValue(0)
         
             boolUseParameterDefaultValues = True
-            #If the user has changed one or more parameter values
-            #ask if they still wish to use the parameter default values
-            #or the values they have selected.
+            # If the user has changed one or more parameter values
+            # ask if they still wish to use the parameter default values
+            # or the values they have selected.
             if self.BatchProcessingHaveParamsChanged():
                 buttonReply = QMessageBox.question(self, 'Parameter values changed.', 
                        "Do you wish to use to use the new parameter values (Yes) or the default values (No)?", QMessageBox.Yes | QMessageBox.No, 
@@ -2377,7 +2402,7 @@ class ModelFittingApp(QWidget):
 
             modelName = str(self.cmbModels.currentText())
 
-            #Create the Excel spreadsheet to record the results
+            # Create the Excel spreadsheet to record the results
             objSpreadSheet, boolExcelFileCreatedOK = self.BatchProcessingCreateBatchSummaryExcelSpreadSheet(self.dataFileDirectory)
             
             if boolExcelFileCreatedOK:
@@ -2386,26 +2411,26 @@ class ModelFittingApp(QWidget):
                     if boolUseParameterDefaultValues:
                         self.InitialiseParameterSpinBoxes() #Reset default values
                     else:
-                        #Reset parameters to values selected by the user before
-                        #the start of batch processing
+                        # Reset parameters to values selected by the user before
+                        # the start of batch processing
                         self.SetParameterSpinBoxValues(initialParameterArray)
 
-                    #Set class instance property dataFileName 
-                    #to name of file in current iteration 
-                    #as this variable used to write datafile 
-                    #name in the PDF report
+                    # Set class instance property dataFileName 
+                    # to name of file in current iteration 
+                    #  this variable used to write datafile 
+                    #  in the PDF report
                     self.dataFileName = str(file) 
                     self.statusbar.showMessage('File ' + self.dataFileName + ' loaded.')
                     count +=1
                     self.lblBatchProcessing.setText("Processing {}".format(self.dataFileName))
-                    #Load current file
+                    # Load current file
                     fileLoadedOK, failureReason = self.BatchProcessingLoadDataFile(self.dataFileDirectory + '/' + self.dataFileName)
                     if not fileLoadedOK:
                         objSpreadSheet.RecordSkippedFiles(self.dataFileName, failureReason)
-                        continue  #Skip this iteration if problems loading file
+                        continue  # Skip this iteration if problems loading file
                 
                     self.plotMRSignals('BatchProcessAllCSVDataFiles') #Plot data                
-                    self.CurveFit() #Fit curve to model 
+                    self.CurveFit() # Fit curve to model 
                     self.SaveCSVFile(csvPlotDataFolder + '/plot' + file) #Save plot data to CSV file               
                     parameterDict = self.CreatePDFReport(pdfReportFolder + '/' + os.path.splitext(file)[0]) #Save PDF Report                
                     self.BatchProcessWriteOptimumParamsToSummary(objSpreadSheet, 

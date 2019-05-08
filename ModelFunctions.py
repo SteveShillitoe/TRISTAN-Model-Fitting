@@ -57,7 +57,11 @@ def HighFlowSingleInletGadoxetate2DSPGR_Rat(xData2DArray, Ve, Kbh, Khe,
         Sa_baseline = 1
         
         # Convert to concentrations
-        R1a = [Parallel(n_jobs=4)(delayed(fsolve)(tools.spgr2d_func, x0=0, args = (FA, TR, R10a, Sa_baseline, Sa[p])) for p in np.arange(0,len(t)))]
+        R1a = [Parallel(n_jobs=4)(delayed(fsolve)
+           (tools.spgr2d_func, x0=0, 
+            args = (r1, FA, TR, R10a, Sa_baseline, Sa[p])) 
+            for p in np.arange(0,len(t)))]
+
         R1a = np.squeeze(R1a)
         
         ca = (R1a - R10a)/r1
@@ -126,7 +130,10 @@ def HighFlowSingleInletGadoxetate3DSPGR_Rat(xData2DArray, Ve, Kbh, Khe,
         Sa_baseline = 1
         
         # Convert to concentrations
-        R1a = [Parallel(n_jobs=4)(delayed(fsolve)(tools.spgr3d_func, x0=0, args = (FA, TR, R10a, Sa_baseline, Sa[p])) for p in np.arange(0,len(t)))]
+        R1a = [Parallel(n_jobs=4)(delayed(fsolve)
+          (tools.spgr3d_func, x0=0, 
+           args = (FA, TR, R10a, Sa_baseline, Sa[p])) 
+           for p in np.arange(0,len(t)))]
         R1a = np.squeeze(R1a)
         
         ca = (R1a - R10a)/r1

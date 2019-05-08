@@ -88,7 +88,7 @@ def CurveFit(functionName: str, paramList, times, AIFConcs,
     """This function calls the fit function of the Model object 
     imported from the lmfit package.  It is used to fit the
     time/MR signal data calculated by a model in this module 
-    to actual Region of Interest (ROI) MR signal/time data using   
+    to the actual Region of Interest (ROI) MR signal/time data using   
     non-linear least squares. 
 
     Input Parameters

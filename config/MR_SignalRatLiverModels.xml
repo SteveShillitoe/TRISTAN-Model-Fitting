@@ -61,7 +61,10 @@ Within each pair of <parameter></parameter> tags
     during curve fitting.
 -->
 <models>
-  <data_file_path>C:\TRISTAN Data\MR Signal Data</data_file_path>
+  <!--Path to the folder holding the MR signal data files. 
+  Optional but if set causes the load data file dialog to 
+  open at this location -->
+  <data_file_path>data</data_file_path>
   <!--Plot configuration for all the models represented in this XML file-->
   <plot>
     <y_axis_label>Normalised Signal Intensity</y_axis_label>

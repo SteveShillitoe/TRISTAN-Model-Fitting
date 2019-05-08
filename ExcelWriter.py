@@ -1,7 +1,7 @@
 """
 This class module provides the functionality for the creation
 of an Excel spreadsheet to store the results from the batch
-processing of time-concentration data files. 
+processing of time-MR signal data files. 
 
 This is done using the openpyxl Python package.
 """
