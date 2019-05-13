@@ -1,8 +1,9 @@
 {
   "ExpandedNodes": [
     "",
-    "\\config"
+    "\\config",
+    "\\data"
   ],
-  "SelectedNode": "\\modelFittingGUI.py",
+  "SelectedNode": "\\config",
   "PreviewInSolutionExplorer": false
 }

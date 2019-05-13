@@ -2426,7 +2426,7 @@ class ModelFittingApp(QWidget):
                     # Load current file
                     fileLoadedOK, failureReason = self.BatchProcessingLoadDataFile(self.dataFileDirectory + '/' + self.dataFileName)
                     if not fileLoadedOK:
-                        objSpreadSheet.RecordSkippedFiles(self.dataFileName, failureReason)
+                        objSpreadSheet.recordSkippedFiles(self.dataFileName, failureReason)
                         continue  # Skip this iteration if problems loading file
                 
                     self.plotMRSignals('BatchProcessAllCSVDataFiles') #Plot data                
@@ -2441,7 +2441,7 @@ class ModelFittingApp(QWidget):
                 self.lblBatchProcessing.setText("Processing complete.")
                 QApplication.restoreOverrideCursor()
                 self.toggleEnabled(True)
-                objSpreadSheet.SaveSpreadSheet()
+                objSpreadSheet.saveSpreadSheet()
 
         except Exception as e:
             print('Error in function BatchProcessAllCSVDataFiles: ' + str(e) )
@@ -2533,7 +2533,7 @@ class ModelFittingApp(QWidget):
                 value = str(round(paramList[0],3))
                 lower = paramList[1]
                 upper = paramList[2]
-                objExcelFile.RecordParameterValues(fileName, modelName, paramName, value, lower, upper)
+                objExcelFile.recordParameterValues(fileName, modelName, paramName, value, lower, upper)
                 
         except Exception as e:
             print('Error in function BatchProcessWriteOptimumParamsToSummary: ' + str(e))

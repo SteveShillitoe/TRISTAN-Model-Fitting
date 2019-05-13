@@ -14,7 +14,8 @@ logger = logging.getLogger(__name__)
 class ExcelWriter:
     def __init__(self, fullFilePath): 
         """Creates an instance of the ExcelWriter class that
-       contains an empty Excel Workbook.
+       contains an Excel Workbook with one worksheet with a tab
+       entitled 'Skipped files'.
        
        Input Parameter
        ----------------
@@ -24,12 +25,17 @@ class ExcelWriter:
             self.fullFilePath = fullFilePath
             #print ("Excel fullFilePath = " + fullFilePath)
             self.wb = Workbook()
-            
+            self.ws = self.wb.active
+            self.ws.title = "Skipped files"
+            self.ws['A1'] = "If any of the data files could not be " + \
+               "loaded, their names and the reason(s) are recorded here."
+
             logger.info('In module ' + __name__ 
                     + '. Created an instance of class ExcelWriter.')
         except Exception as e:
             print('ExcelWriter.__init__: ' + str(e)) 
             logger.error('ExcelWriter.__init__: ' + str(e)) 
+
 
     def isWorksheet(self, title) -> bool:
         """Returns True if the worksheet called title already 
@@ -43,7 +49,7 @@ class ExcelWriter:
         return boolWSExists
 
 
-    def RecordSkippedFiles(self, fileName, failureReason):
+    def recordSkippedFiles(self, fileName, failureReason):
         """Records details of CSV data files that have to be skipped
        during batch processing because they do not conform
        to a required format in a worksheet called 'Skipped files'.
@@ -54,33 +60,22 @@ class ExcelWriter:
        failureReason - String containing the reason why the
        file was skipped."""
         try:
-            if not self.isWorksheet("Skipped files"):
-                #Skipped files tab does not exist.
-                #Create it and add first skipped file info
-                #to the first row on the worksheet.
-                self.ws = self.wb.active
-                self.ws.title = "Skipped files"
-                self.ws['A1'] = "File"
-                self.ws['B1'] = "Failure Reason"
-                self.ws['A2'] = fileName
-                self.ws['B2'] = failureReason
-            else:
-                thisWS = self.wb["Skipped files"]
-                #get next empty row
-                row_count = thisWS.max_row
-                nextRow = row_count + 1
-                thisWS['A' + str(nextRow)] = fileName
-                thisWS['B' + str(nextRow)] = failureReason
+            thisWS = self.wb["Skipped files"]
+            # get next empty row
+            row_count = thisWS.max_row
+            nextRow = row_count + 1
+            thisWS['A' + str(nextRow)] = fileName
+            thisWS['B' + str(nextRow)] = failureReason
                     
             logger.info('In module ' + __name__ 
-                    + '.RecordSkippedFiles.')
+                    + '.recordSkippedFiles.')
 
         except Exception as e:
-            print('ExcelWriter.RecordSkippedFiles: ' + str(e)) 
-            logger.error('ExcelWriter.RecordSkippedFiles: ' + str(e)) 
+            print('ExcelWriter.recordSkippedFiles: ' + str(e)) 
+            logger.error('ExcelWriter.recordSkippedFiles: ' + str(e)) 
 
 
-    def RecordParameterValues(self, fileName, modelName, paramName, 
+    def recordParameterValues(self, fileName, modelName, paramName, 
                               paramValue, paramLower, paramUpper):
         """During batch processing, records each optimum parameter 
         value (and associated information) resulting from curve 
@@ -104,11 +99,10 @@ class ExcelWriter:
             paramName = paramName[0:31] #worksheet title max 31 chars 
                 
             if not self.isWorksheet(paramName):
-                #This parameter tab does not exist.
-                #Create it and add first parameter value data
-                #to the first row of the worksheet.
+                # This parameter tab does not exist.
+                # Create it and add first parameter value data
+                # to the first row of the worksheet.
                 thisWS = self.wb.create_sheet(paramName)
-                #thisWS.title = paramName
                 thisWS['A1'] = "File"
                 thisWS['B1'] = "Model"
                 thisWS['C1'] = "Parameter"
@@ -123,9 +117,9 @@ class ExcelWriter:
                 thisWS['E2'] = str(paramLower)
                 thisWS['F2'] = str(paramUpper)
             else:
-                #Worksheet already exists, so retrieve it
+                # Worksheet already exists, so retrieve it
                 thisWS = self.wb[paramName]
-                #get next empty row
+                # get next empty row
                 row_count = thisWS.max_row
                 nextRow = row_count + 1
                 thisWS['A' + str(nextRow)] = fileName
@@ -136,22 +130,23 @@ class ExcelWriter:
                 thisWS['F' + str(nextRow)] = str(paramUpper)
                         
             logger.info('In module ' + __name__ 
-                    + '.RecordParameterValues when paramater = ' + paramName)
+                    + '.recordParameterValues when paramater = ' + paramName)
         except Exception as e:
-            print('ExcelWriter.RecordParameterValues when paramater = ' 
+            print('ExcelWriter.recordParameterValues when paramater = ' 
                   + paramName + str(e)) 
-            logger.error('ExcelWriter.RecordParameterValues when paramater = ' 
+            logger.error('ExcelWriter.recordParameterValues when paramater = ' 
                          + paramName + str(e)) 
 
-    def SaveSpreadSheet(self): 
+
+    def saveSpreadSheet(self): 
         """ Saves the workbook as an Excel spreadsheet at fullFilePath"""
         try:
             self.wb.save(self.fullFilePath)
             logger.info('In module ' + __name__ 
-                    + '. SaveSpreadSheet.')
+                    + '. saveSpreadSheet.')
         except Exception as e:
-            print('ExcelWriter.SaveSpreadSheet: ' + str(e)) 
-            logger.error('ExcelWriter.SaveSpreadSheet: ' + str(e)) 
+            print('ExcelWriter.saveSpreadSheet: ' + str(e)) 
+            logger.error('ExcelWriter.saveSpreadSheet: ' + str(e)) 
             
 
 
