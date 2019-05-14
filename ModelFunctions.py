@@ -57,7 +57,11 @@ def HighFlowSingleInletGadoxetate2DSPGR_Rat(xData2DArray, Ve, Kbh, Khe,
         Sa_baseline = 1
         
         # Convert to concentrations
-        R1a = [Parallel(n_jobs=4)(delayed(fsolve)
+        # n_jobs set to 1 to turn off parallel processing
+        # because parallel processing caused a segmentation
+        # fault in the compiled version of this application. 
+        # This is not a problem in the uncompiled script
+        R1a = [Parallel(n_jobs=1)(delayed(fsolve)
            (tools.spgr2d_func, x0=0, 
             args = (r1, FA, TR, R10a, Sa_baseline, Sa[p])) 
             for p in np.arange(0,len(t)))]
@@ -130,7 +134,11 @@ def HighFlowSingleInletGadoxetate3DSPGR_Rat(xData2DArray, Ve, Kbh, Khe,
         Sa_baseline = 1
         
         # Convert to concentrations
-        R1a = [Parallel(n_jobs=4)(delayed(fsolve)
+        # n_jobs set to 1 to turn off parallel processing
+        # because parallel processing caused a segmentation
+        # fault in the compiled version of this application.
+        # This is not a problem in the uncompiled script
+        R1a = [Parallel(n_jobs=1)(delayed(fsolve)
           (tools.spgr3d_func, x0=0, 
            args = (FA, TR, R10a, Sa_baseline, Sa[p])) 
            for p in np.arange(0,len(t)))]

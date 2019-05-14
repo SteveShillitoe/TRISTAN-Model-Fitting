@@ -2438,7 +2438,7 @@ class ModelFittingApp(QWidget):
                     self.pbar.setValue(count)
                     QApplication.processEvents()
 
-                self.lblBatchProcessing.setText("Processing complete.")
+                self.lblBatchProcessing.setText("Batch processing complete.")
                 QApplication.restoreOverrideCursor()
                 self.toggleEnabled(True)
                 objSpreadSheet.saveSpreadSheet()

@@ -68,7 +68,7 @@ def spgr2d_func_inv(r1, FA, TR, R10, conc):
         logger.error('Tools.spgr2d_func_inv has error: {} '.format(str(e)))
 
 def spgr3d_func(x, FA, TR, R10, S0, S):
-    logger.info("Tools.spgr3d_func called")
+    #logger.info("Tools.spgr3d_func called")
     try:
         E0 = np.exp(-TR*R10)
         E1 = np.exp(-TR*x)
@@ -112,7 +112,7 @@ def arr_shift(A,n):
 # Performs convolution of (1/T)exp(-t/T) with a 
     
 def expconv(T, t, a, modelName):
-    logger.info("Tools.expconv called for model: " + modelName)
+    #logger.info("Tools.expconv called for model: " + modelName)
     try:
         if T==0:
             return(a)
