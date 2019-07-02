@@ -367,9 +367,9 @@ class ModelFittingApp(QWidget):
                           QSizePolicy.Minimum)
         
         layout.addWidget(self.btnLoadConfigFile)
-        layout.addItem(verticalSpacer)
+        #layout.addItem(verticalSpacer)
         layout.addWidget(self.btnLoadDataFile)
-        layout.addItem(verticalSpacer)
+        #layout.addItem(verticalSpacer)
 
         # Create dropdown list & label for selection of ROI
         self.lblROI = QLabel("Region of Interest:")
