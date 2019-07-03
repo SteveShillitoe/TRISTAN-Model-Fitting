@@ -347,9 +347,9 @@ class ModelFittingApp(QWidget):
         layout - holds a reference to the left handside vertical layout widget
         """
         # Create Load Configuration XML file Button
-        self.btnLoadConfigFile = QPushButton('Load Configuration File')
+        self.btnLoadConfigFile = QPushButton('Load Model Library')
         self.btnLoadConfigFile.setToolTip(
-            'Opens file dialog box to select the configuration file')
+            'Opens file dialog box to select the model library file')
         self.btnLoadConfigFile.setShortcut("Ctrl+C")
         self.btnLoadConfigFile.setAutoDefault(False)
         self.btnLoadConfigFile.clicked.connect(self.LoadConfigFile)
@@ -417,39 +417,13 @@ class ModelFittingApp(QWidget):
         # The group box is hidden until a ROI is selected.
         self.groupBoxModel.hide()
         layout.addWidget(self.groupBoxModel)
-        
-        # Create horizontal layouts, one row of widgets to 
-        # each horizontal layout. Then add them to a vertical layout, 
-        # then add the vertical layout to the group box
-        modelHorizontalLayoutModelList = QHBoxLayout()
-        modelHorizontalLayoutParamLabels = QHBoxLayout()
-        gridLayoutParamLabels = QGridLayout()
-        modelHorizontalLayoutAIF = QHBoxLayout()
-        modelHorizontalLayoutVIF = QHBoxLayout()
-        modelHorizontalLayoutReset = QHBoxLayout()
-        modelHorizontalLayoutParameter1 = QHBoxLayout()
-        modelHorizontalLayoutParameter2 = QHBoxLayout()
-        modelHorizontalLayoutParameter3 = QHBoxLayout()
-        modelHorizontalLayoutParameter4 = QHBoxLayout()
-        modelHorizontalLayoutParameter5 = QHBoxLayout()
-        modelHorizontalLayoutFitModelBtn = QHBoxLayout()
-        modelHorizontalLayoutSaveCSVBtn = QHBoxLayout()
-        modelVerticalLayout = QVBoxLayout()
-        modelVerticalLayout.setAlignment(QtCore.Qt.AlignTop) 
-        modelVerticalLayout.addLayout(modelHorizontalLayoutModelList)
-        modelVerticalLayout.addLayout(modelHorizontalLayoutAIF)
-        modelVerticalLayout.addLayout(modelHorizontalLayoutVIF)
-        modelVerticalLayout.addLayout(modelHorizontalLayoutReset)
-        modelVerticalLayout.addLayout(modelHorizontalLayoutParamLabels)
-        modelHorizontalLayoutParamLabels.addLayout(gridLayoutParamLabels)
-        modelVerticalLayout.addLayout(modelHorizontalLayoutParameter1)
-        modelVerticalLayout.addLayout(modelHorizontalLayoutParameter2)
-        modelVerticalLayout.addLayout(modelHorizontalLayoutParameter3)
-        modelVerticalLayout.addLayout(modelHorizontalLayoutParameter4)
-        modelVerticalLayout.addLayout(modelHorizontalLayoutParameter5)
-        modelVerticalLayout.addLayout(modelHorizontalLayoutFitModelBtn)
-        modelVerticalLayout.addLayout(modelHorizontalLayoutSaveCSVBtn)
-        self.groupBoxModel.setLayout(modelVerticalLayout)
+        grid = QGridLayout()
+        grid.setColumnStretch(0, 20)
+        grid.setColumnStretch(1, 20)
+        grid.setColumnMinimumWidth(0,175)
+        grid.setColumnMinimumWidth(1,175)
+
+        self.groupBoxModel.setLayout(grid)
         
         # Create dropdown list to hold names of models
         self.modelLabel = QLabel("Model:")
@@ -493,19 +467,6 @@ class ModelFittingApp(QWidget):
         self.cmbAIF.setSizeAdjustPolicy(QComboBox.AdjustToContents)
         self.cmbVIF.setSizeAdjustPolicy(QComboBox.AdjustToContents)
         
-        # Add combo boxes and their labels to the horizontal layouts
-        modelHorizontalLayoutModelList.insertStretch (0, 2)
-        modelHorizontalLayoutModelList.addWidget(self.modelLabel)
-        modelHorizontalLayoutModelList.addWidget(self.cmbModels)
-        modelHorizontalLayoutAIF.addWidget(self.lblAIF)
-        modelHorizontalLayoutAIF.addWidget(self.cmbAIF)
-        modelHorizontalLayoutVIF.addWidget(self.lblVIF)
-        modelHorizontalLayoutVIF.addWidget(self.cmbVIF)
-        
-        self.cboxDelay = QCheckBox('Delay', self)
-        self.cboxConstaint = QCheckBox('Constraint', self)
-        self.cboxDelay.hide()
-        self.cboxConstaint.hide()
         self.btnReset = QPushButton('Reset')
         self.btnReset.setToolTip('Reset parameters to their default values.')
         self.btnReset.hide()
@@ -514,14 +475,10 @@ class ModelFittingApp(QWidget):
         # If parameters reset to their default values, 
         # replot the concentration and model data
         self.btnReset.clicked.connect(lambda: self.plotMRSignals('Reset Button'))
-        modelHorizontalLayoutReset.addWidget(self.cboxDelay)
-        modelHorizontalLayoutReset.addWidget(self.cboxConstaint)
-        modelHorizontalLayoutReset.addWidget(self.btnReset)
         
         self.lblConfInt = QLabel("95% Confidence Interval")
         self.lblConfInt.hide()
         self.lblConfInt.setAlignment(QtCore.Qt.AlignRight)
-        gridLayoutParamLabels.addWidget(self.lblConfInt, 1,4)
 
         # Create model parameter spinboxes and their labels
         # Label text set when the model is selected
@@ -589,43 +546,65 @@ class ModelFittingApp(QWidget):
         self.spinBoxParameter4.valueChanged.connect(self.OptimumParameterChanged)
         self.spinBoxParameter5.valueChanged.connect(self.OptimumParameterChanged)
         
-        # Place spin boxes and their labels in horizontal layouts
-        modelHorizontalLayoutParameter1.addWidget(self.labelParameter1)
-        modelHorizontalLayoutParameter1.addWidget(self.spinBoxParameter1)
-        modelHorizontalLayoutParameter1.addWidget(self.ckbParameter1)
-        modelHorizontalLayoutParameter1.addWidget(self.lblParam1ConfInt)
+        ### Place spin boxes and their labels in horizontal layouts
+        ##modelHorizontalLayoutParameter1.addWidget(self.labelParameter1)
+        ##modelHorizontalLayoutParameter1.addWidget(self.spinBoxParameter1)
+        ##modelHorizontalLayoutParameter1.addWidget(self.ckbParameter1)
+        ##modelHorizontalLayoutParameter1.addWidget(self.lblParam1ConfInt)
 
-        modelHorizontalLayoutParameter2.addWidget(self.labelParameter2)
-        modelHorizontalLayoutParameter2.addWidget(self.spinBoxParameter2)
-        modelHorizontalLayoutParameter2.addWidget(self.ckbParameter2)
-        modelHorizontalLayoutParameter2.addWidget(self.lblParam2ConfInt)
-
-        modelHorizontalLayoutParameter3.addWidget(self.labelParameter3)
-        modelHorizontalLayoutParameter3.addWidget(self.spinBoxParameter3)
-        modelHorizontalLayoutParameter3.addWidget(self.ckbParameter3)
-        modelHorizontalLayoutParameter3.addWidget(self.lblParam3ConfInt)
-
-        modelHorizontalLayoutParameter4.addWidget(self.labelParameter4)
-        modelHorizontalLayoutParameter4.addWidget(self.spinBoxParameter4)
-        modelHorizontalLayoutParameter4.addWidget(self.ckbParameter4)
-        modelHorizontalLayoutParameter4.addWidget(self.lblParam4ConfInt)
-
-        modelHorizontalLayoutParameter5.addWidget(self.labelParameter5)
-        modelHorizontalLayoutParameter5.addWidget(self.spinBoxParameter5)
-        modelHorizontalLayoutParameter5.addWidget(self.ckbParameter5)
-        modelHorizontalLayoutParameter5.addWidget(self.lblParam5ConfInt)
-        
         self.btnFitModel = QPushButton('Fit Model')
         self.btnFitModel.setToolTip('Use non-linear least squares to fit the selected model to the data')
         self.btnFitModel.hide()
-        modelHorizontalLayoutFitModelBtn.addWidget(self.btnFitModel)
         self.btnFitModel.clicked.connect(self.CurveFit)
         
         self.btnSaveCSV = QPushButton('Save plot data to CSV file')
         self.btnSaveCSV.setToolTip('Save the data plotted on the graph to a CSV file')
         self.btnSaveCSV.hide()
-        modelHorizontalLayoutSaveCSVBtn.addWidget(self.btnSaveCSV)
         self.btnSaveCSV.clicked.connect(self.SaveCSVFile)
+
+        # Add combo boxes and their labels to the grid layout
+        grid.addWidget(self.modelLabel, 0,3)
+        grid.addWidget(self.cmbModels, 0,4)
+
+        grid.addWidget(self.lblAIF, 1,3)
+        grid.addWidget(self.cmbAIF, 1,4)
+
+        grid.addWidget(self.lblVIF, 2,3)
+        grid.addWidget(self.cmbVIF, 2,4)
+
+        grid.addWidget(self.btnReset, 3,2,1,2)
+
+        grid.addWidget(self.lblConfInt, 4,4)
+
+        grid.addWidget(self.labelParameter1, 5, 0, 1, 2)
+        grid.addWidget(self.spinBoxParameter1, 5,2)
+        grid.addWidget(self.ckbParameter1, 5,3)
+        grid.addWidget(self.lblParam1ConfInt, 5,4)
+        
+        grid.addWidget(self.labelParameter2, 6,0,1,2)
+        grid.addWidget(self.spinBoxParameter2, 6,2)
+        grid.addWidget(self.ckbParameter2, 6,3)
+        grid.addWidget(self.lblParam2ConfInt, 6,4)
+
+        grid.addWidget(self.labelParameter3, 7,0,1,2)
+        grid.addWidget(self.spinBoxParameter3, 7,2)
+        grid.addWidget(self.ckbParameter3, 7,3)
+        grid.addWidget(self.lblParam3ConfInt, 7,4)
+
+        grid.addWidget(self.labelParameter4, 8,0,1,2)
+        grid.addWidget(self.spinBoxParameter4, 8,2)
+        grid.addWidget(self.ckbParameter4, 8,3)
+        grid.addWidget(self.lblParam4ConfInt, 8, 4)
+
+        grid.addWidget(self.labelParameter5, 9, 0, 1, 2)
+        grid.addWidget(self.spinBoxParameter5, 9, 2)
+        grid.addWidget(self.ckbParameter5, 9, 3)
+        grid.addWidget(self.lblParam5ConfInt, 9, 4)
+
+        grid.addWidget(self.btnFitModel, 10,2,1,2)
+
+        grid.addWidget(self.btnSaveCSV, 11, 2, 1, 2)
+
 
     def SetUpBatchProcessingGroupBox(self, layout):
         """Creates a group box to hold widgets associated with batch
