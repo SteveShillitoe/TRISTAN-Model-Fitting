@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 # as they are displayed in the GUI from top (first) to bottom (last) 
 
 ####################################################################
-####  MR Signal Rat Models 
+####  MR Sign  al Rat Models 
 ####################################################################
 def HighFlowSingleInletGadoxetate2DSPGR_Rat(xData2DArray, Ve, Kbh, Khe,
                                  constantsString):

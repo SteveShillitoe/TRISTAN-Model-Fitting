@@ -42,14 +42,14 @@ TRISTAN_BLUE ="""
 TRISTAN_GREY = """
                 QPushButton {
                              background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
-                                      stop: 0 #CCCCCC, stop: 1 #FFFFFF);
+                                      stop: 0 #CCCCBB, stop: 1 #FFFFFF);
                              border-width: 3px;
                              border-style: solid;
                              border-color: rgb(10, 10, 10);
                              border-radius: 5px;
                              text-align: centre;
                              font-weight: bold;
-                             font-size: 10pt;
+                             font-size: 9pt;
                              padding: 6px;} 
 
                 QPushButton:hover {
@@ -81,16 +81,15 @@ TRISTAN_GREY = """
                         font-size: 9pt;
                           }
 
-                
-
-
                 QLabel{ padding: 4px;
+                        min-height: 1em;
                         text-align: centre;
                         font-weight: bold;
-                        font-size: 8pt;
+                        font-size: 9pt;
                         }
 
                 QDoubleSpinBox{
+                    min-width: 4.5em;
                     padding: 4px;
                     font-size: 8pt;
                     font-weight: bold;}
