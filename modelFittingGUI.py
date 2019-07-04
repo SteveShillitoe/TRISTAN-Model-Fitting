@@ -414,15 +414,14 @@ class ModelFittingApp(QWidget):
         parameter data."""
         self.groupBoxModel = QGroupBox('Model Fitting')
         self.groupBoxModel.setAlignment(QtCore.Qt.AlignHCenter)
+                                       
         # The group box is hidden until a ROI is selected.
         self.groupBoxModel.hide()
         layout.addWidget(self.groupBoxModel)
-        grid = QGridLayout()
-        grid.setColumnStretch(0, 20)
-        grid.setColumnStretch(1, 20)
-        grid.setColumnMinimumWidth(0,175)
-        grid.setColumnMinimumWidth(1,175)
-
+        grid = QGridLayout
+        
+        grid.setColumnMinimumWidth
+        #print ('grid spacing=' + str(self.grid.horizontalSpacing()))
         self.groupBoxModel.setLayout(grid)
         
         # Create dropdown list to hold names of models
@@ -545,12 +544,6 @@ class ModelFittingApp(QWidget):
         self.spinBoxParameter3.valueChanged.connect(self.OptimumParameterChanged) 
         self.spinBoxParameter4.valueChanged.connect(self.OptimumParameterChanged)
         self.spinBoxParameter5.valueChanged.connect(self.OptimumParameterChanged)
-        
-        ### Place spin boxes and their labels in horizontal layouts
-        ##modelHorizontalLayoutParameter1.addWidget(self.labelParameter1)
-        ##modelHorizontalLayoutParameter1.addWidget(self.spinBoxParameter1)
-        ##modelHorizontalLayoutParameter1.addWidget(self.ckbParameter1)
-        ##modelHorizontalLayoutParameter1.addWidget(self.lblParam1ConfInt)
 
         self.btnFitModel = QPushButton('Fit Model')
         self.btnFitModel.setToolTip('Use non-linear least squares to fit the selected model to the data')
@@ -563,47 +556,47 @@ class ModelFittingApp(QWidget):
         self.btnSaveCSV.clicked.connect(self.SaveCSVFile)
 
         # Add combo boxes and their labels to the grid layout
-        grid.addWidget(self.modelLabel, 0,3)
-        grid.addWidget(self.cmbModels, 0,4)
+        grid.addWidget(self.modelLabel, 0, 3)
+        grid.addWidget(self.cmbModels, 0, 4)
 
-        grid.addWidget(self.lblAIF, 1,3)
-        grid.addWidget(self.cmbAIF, 1,4)
+        grid.addWidget(self.lblAIF, 1, 3)
+        grid.addWidget(self.cmbAIF, 1, 4)
 
-        grid.addWidget(self.lblVIF, 2,3)
-        grid.addWidget(self.cmbVIF, 2,4)
+        grid.addWidget(self.lblVIF, 2, 3)
+        grid.addWidget(self.cmbVIF, 2, 4)
 
-        grid.addWidget(self.btnReset, 3,2,1,2)
+        grid.addWidget(self.btnReset, 3, 3)
 
-        grid.addWidget(self.lblConfInt, 4,4)
+        grid.addWidget(self.lblConfInt, 4, 4)
 
         grid.addWidget(self.labelParameter1, 5, 0, 1, 2)
-        grid.addWidget(self.spinBoxParameter1, 5,2)
-        grid.addWidget(self.ckbParameter1, 5,3)
-        grid.addWidget(self.lblParam1ConfInt, 5,4)
-        
-        grid.addWidget(self.labelParameter2, 6,0,1,2)
-        grid.addWidget(self.spinBoxParameter2, 6,2)
-        grid.addWidget(self.ckbParameter2, 6,3)
-        grid.addWidget(self.lblParam2ConfInt, 6,4)
+        grid.addWidget(self.spinBoxParameter1, 5, 2)
+        grid.addWidget(self.ckbParameter1, 5, 3)
+        grid.addWidget(self.lblParam1ConfInt, 5, 4, alignment=QtCore.Qt.AlignCenter)
+       
+        grid.addWidget(self.labelParameter2, 8, 0, 1, 2)
+        grid.addWidget(self.spinBoxParameter2, 8, 2)
+        grid.addWidget(self.ckbParameter2, 8, 3)
+        grid.addWidget(self.lblParam2ConfInt, 8, 4, alignment=QtCore.Qt.AlignCenter)
 
-        grid.addWidget(self.labelParameter3, 7,0,1,2)
-        grid.addWidget(self.spinBoxParameter3, 7,2)
-        grid.addWidget(self.ckbParameter3, 7,3)
-        grid.addWidget(self.lblParam3ConfInt, 7,4)
+        grid.addWidget(self.labelParameter3, 10, 0, 1, 2)
+        grid.addWidget(self.spinBoxParameter3, 10, 2)
+        grid.addWidget(self.ckbParameter3, 10, 3)
+        grid.addWidget(self.lblParam3ConfInt, 10, 4, alignment=QtCore.Qt.AlignCenter)
 
-        grid.addWidget(self.labelParameter4, 8,0,1,2)
-        grid.addWidget(self.spinBoxParameter4, 8,2)
-        grid.addWidget(self.ckbParameter4, 8,3)
-        grid.addWidget(self.lblParam4ConfInt, 8, 4)
+        grid.addWidget(self.labelParameter4, 12, 0, 1, 2)
+        grid.addWidget(self.spinBoxParameter4, 12, 2)
+        grid.addWidget(self.ckbParameter4, 12, 3)
+        grid.addWidget(self.lblParam4ConfInt, 12, 4, alignment=QtCore.Qt.AlignCenter)
 
-        grid.addWidget(self.labelParameter5, 9, 0, 1, 2)
-        grid.addWidget(self.spinBoxParameter5, 9, 2)
-        grid.addWidget(self.ckbParameter5, 9, 3)
-        grid.addWidget(self.lblParam5ConfInt, 9, 4)
+        grid.addWidget(self.labelParameter5, 14, 0, 1, 2)
+        grid.addWidget(self.spinBoxParameter5, 14, 2)
+        grid.addWidget(self.ckbParameter5, 14, 3)
+        grid.addWidget(self.lblParam5ConfInt, 14, 4)
 
-        grid.addWidget(self.btnFitModel, 10,2,1,2)
+        grid.addWidget(self.btnFitModel, 15, 3)
 
-        grid.addWidget(self.btnSaveCSV, 11, 2, 1, 2)
+        grid.addWidget(self.btnSaveCSV, 16, 3)
 
 
     def SetUpBatchProcessingGroupBox(self, layout):
