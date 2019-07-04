@@ -99,6 +99,11 @@ TRISTAN_GREY = """
                                      border-color: rgb(200, 51, 200);}
 
                 QCheckBox{
+                    width: 5px;
+                    margin: 5px;
+                    border-width: 5px;
+                    padding: 5px;
+                    spacing: 5px;
                     font-weight: bold;
                     font-size: 9pt;}
 

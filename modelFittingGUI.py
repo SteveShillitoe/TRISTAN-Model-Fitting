@@ -407,22 +407,49 @@ class ModelFittingApp(QWidget):
         layout.addWidget(self.statusbar)
         self.btnExit.clicked.connect(self.ExitApp)
         
-
     def SetUpModelGroupBox(self, layout):
         """Creates a group box to hold widgets associated with the 
         selection of a model and for inputing/displaying that model's
         parameter data."""
         self.groupBoxModel = QGroupBox('Model Fitting')
         self.groupBoxModel.setAlignment(QtCore.Qt.AlignHCenter)
-                                       
         # The group box is hidden until a ROI is selected.
         self.groupBoxModel.hide()
         layout.addWidget(self.groupBoxModel)
-        grid = QGridLayout
         
-        grid.setColumnMinimumWidth
-        #print ('grid spacing=' + str(self.grid.horizontalSpacing()))
-        self.groupBoxModel.setLayout(grid)
+        # Create horizontal layouts, one row of widgets to 
+        # each horizontal layout. Then add them to a vertical layout, 
+        # then add the vertical layout to the group box
+        modelHorizontalLayoutModelList = QHBoxLayout()
+        modelHorizontalLayoutConfLabel = QHBoxLayout()
+        gridLayoutParamLabels = QGridLayout()
+        modelHorizontalLayoutAIF = QHBoxLayout()
+        modelHorizontalLayoutVIF = QHBoxLayout()
+        modelHorizontalLayoutReset = QHBoxLayout()
+        grid = QGridLayout()
+        #modelHorizontalLayoutParameter1 = QHBoxLayout()
+        #modelHorizontalLayoutParameter2 = QHBoxLayout()
+        #modelHorizontalLayoutParameter3 = QHBoxLayout()
+        #modelHorizontalLayoutParameter4 = QHBoxLayout()
+        #modelHorizontalLayoutParameter5 = QHBoxLayout()
+        #modelHorizontalLayoutFitModelBtn = QHBoxLayout()
+        #modelHorizontalLayoutSaveCSVBtn = QHBoxLayout()
+        modelVerticalLayout = QVBoxLayout()
+        modelVerticalLayout.setAlignment(QtCore.Qt.AlignTop) 
+        modelVerticalLayout.addLayout(modelHorizontalLayoutModelList)
+        modelVerticalLayout.addLayout(modelHorizontalLayoutAIF)
+        modelVerticalLayout.addLayout(modelHorizontalLayoutVIF)
+        modelVerticalLayout.addLayout(modelHorizontalLayoutReset)
+        modelVerticalLayout.addLayout(modelHorizontalLayoutConfLabel)
+        modelVerticalLayout.addLayout(grid)
+        #modelVerticalLayout.addLayout(modelHorizontalLayoutParameter1)
+        #modelVerticalLayout.addLayout(modelHorizontalLayoutParameter2)
+        #modelVerticalLayout.addLayout(modelHorizontalLayoutParameter3)
+        #modelVerticalLayout.addLayout(modelHorizontalLayoutParameter4)
+        #modelVerticalLayout.addLayout(modelHorizontalLayoutParameter5)
+        #modelVerticalLayout.addLayout(modelHorizontalLayoutFitModelBtn)
+        #modelVerticalLayout.addLayout(modelHorizontalLayoutSaveCSVBtn)
+        #self.groupBoxModel.setLayout(modelVerticalLayout)
         
         # Create dropdown list to hold names of models
         self.modelLabel = QLabel("Model:")
@@ -466,6 +493,21 @@ class ModelFittingApp(QWidget):
         self.cmbAIF.setSizeAdjustPolicy(QComboBox.AdjustToContents)
         self.cmbVIF.setSizeAdjustPolicy(QComboBox.AdjustToContents)
         
+        # Add combo boxes and their labels to the horizontal layouts
+        modelHorizontalLayoutModelList.insertStretch (0, 2)
+        modelHorizontalLayoutModelList.addWidget(self.modelLabel)
+        modelHorizontalLayoutModelList.addWidget(self.cmbModels)
+        modelHorizontalLayoutAIF.insertStretch (0, 2)
+        modelHorizontalLayoutAIF.addWidget(self.lblAIF)
+        modelHorizontalLayoutAIF.addWidget(self.cmbAIF)
+        modelHorizontalLayoutVIF.insertStretch (0, 2)
+        modelHorizontalLayoutVIF.addWidget(self.lblVIF)
+        modelHorizontalLayoutVIF.addWidget(self.cmbVIF)
+        
+        self.cboxDelay = QCheckBox('Delay', self)
+        self.cboxConstaint = QCheckBox('Constraint', self)
+        self.cboxDelay.hide()
+        self.cboxConstaint.hide()
         self.btnReset = QPushButton('Reset')
         self.btnReset.setToolTip('Reset parameters to their default values.')
         self.btnReset.hide()
@@ -474,10 +516,15 @@ class ModelFittingApp(QWidget):
         # If parameters reset to their default values, 
         # replot the concentration and model data
         self.btnReset.clicked.connect(lambda: self.plotMRSignals('Reset Button'))
+        modelHorizontalLayoutReset.addWidget(self.cboxDelay)
+        modelHorizontalLayoutReset.addWidget(self.cboxConstaint)
+        modelHorizontalLayoutReset.addWidget(self.btnReset)
         
         self.lblConfInt = QLabel("95% Confidence Interval")
         self.lblConfInt.hide()
         self.lblConfInt.setAlignment(QtCore.Qt.AlignRight)
+        modelHorizontalLayoutConfLabel.insertStretch (0, 2)
+        modelHorizontalLayoutConfLabel.addWidget(self.lblConfInt)
 
         # Create model parameter spinboxes and their labels
         # Label text set when the model is selected
@@ -545,58 +592,271 @@ class ModelFittingApp(QWidget):
         self.spinBoxParameter4.valueChanged.connect(self.OptimumParameterChanged)
         self.spinBoxParameter5.valueChanged.connect(self.OptimumParameterChanged)
 
+        grid.addWidget(self.lblConfInt, 0, 4)
+        grid.addWidget(self.labelParameter1, 1, 0, 1, 2)
+        grid.addWidget(self.spinBoxParameter1, 1, 2)
+        grid.addWidget(self.ckbParameter1, 1, 3)
+        grid.addWidget(self.lblParam1ConfInt, 1, 4, alignment=QtCore.Qt.AlignCenter)
+       
+        grid.addWidget(self.labelParameter2, 2, 0, 1, 2)
+        grid.addWidget(self.spinBoxParameter2, 2, 2)
+        grid.addWidget(self.ckbParameter2, 2, 3)
+        grid.addWidget(self.lblParam2ConfInt, 2, 4, alignment=QtCore.Qt.AlignCenter)
+
+        grid.addWidget(self.labelParameter3, 3, 0, 1, 2)
+        grid.addWidget(self.spinBoxParameter3, 3, 2)
+        grid.addWidget(self.ckbParameter3, 3, 3)
+        grid.addWidget(self.lblParam3ConfInt, 3, 4, alignment=QtCore.Qt.AlignCenter)
+
+        grid.addWidget(self.labelParameter4, 4, 0, 1, 2)
+        grid.addWidget(self.spinBoxParameter4, 4, 2)
+        grid.addWidget(self.ckbParameter4, 4, 3)
+        grid.addWidget(self.lblParam4ConfInt, 4, 4, alignment=QtCore.Qt.AlignCenter)
+
+        grid.addWidget(self.labelParameter5, 5, 0, 1, 2)
+        grid.addWidget(self.spinBoxParameter5, 5, 2)
+        grid.addWidget(self.ckbParameter5, 5, 3)
+        grid.addWidget(self.lblParam5ConfInt, 5, 4)
+
+        ## Place spin boxes and their labels in horizontal layouts
+        #modelHorizontalLayoutParameter1.addWidget(self.labelParameter1)
+        #modelHorizontalLayoutParameter1.addWidget(self.spinBoxParameter1)
+        #modelHorizontalLayoutParameter1.addWidget(self.ckbParameter1)
+        #modelHorizontalLayoutParameter1.addWidget(self.lblParam1ConfInt)
+
+        #modelHorizontalLayoutParameter2.addWidget(self.labelParameter2)
+        #modelHorizontalLayoutParameter2.addWidget(self.spinBoxParameter2)
+        #modelHorizontalLayoutParameter2.addWidget(self.ckbParameter2)
+        #modelHorizontalLayoutParameter2.addWidget(self.lblParam2ConfInt)
+
+        #modelHorizontalLayoutParameter3.addWidget(self.labelParameter3)
+        #modelHorizontalLayoutParameter3.addWidget(self.spinBoxParameter3)
+        #modelHorizontalLayoutParameter3.addWidget(self.ckbParameter3)
+        #modelHorizontalLayoutParameter3.addWidget(self.lblParam3ConfInt)
+
+        #modelHorizontalLayoutParameter4.addWidget(self.labelParameter4)
+        #modelHorizontalLayoutParameter4.addWidget(self.spinBoxParameter4)
+        #modelHorizontalLayoutParameter4.addWidget(self.ckbParameter4)
+        #modelHorizontalLayoutParameter4.addWidget(self.lblParam4ConfInt)
+
+        #modelHorizontalLayoutParameter5.addWidget(self.labelParameter5)
+        #modelHorizontalLayoutParameter5.addWidget(self.spinBoxParameter5)
+        #modelHorizontalLayoutParameter5.addWidget(self.ckbParameter5)
+        #modelHorizontalLayoutParameter5.addWidget(self.lblParam5ConfInt)
+        
         self.btnFitModel = QPushButton('Fit Model')
         self.btnFitModel.setToolTip('Use non-linear least squares to fit the selected model to the data')
         self.btnFitModel.hide()
+        modelHorizontalLayoutFitModelBtn.addWidget(self.btnFitModel)
         self.btnFitModel.clicked.connect(self.CurveFit)
         
         self.btnSaveCSV = QPushButton('Save plot data to CSV file')
         self.btnSaveCSV.setToolTip('Save the data plotted on the graph to a CSV file')
         self.btnSaveCSV.hide()
+        modelHorizontalLayoutSaveCSVBtn.addWidget(self.btnSaveCSV)
         self.btnSaveCSV.clicked.connect(self.SaveCSVFile)
 
-        # Add combo boxes and their labels to the grid layout
-        grid.addWidget(self.modelLabel, 0, 3)
-        grid.addWidget(self.cmbModels, 0, 4)
+    #def SetUpModelGroupBox(self, layout):
+    #    """Creates a group box to hold widgets associated with the 
+    #    selection of a model and for inputing/displaying that model's
+    #    parameter data."""
+    #    self.groupBoxModel = QGroupBox('Model Fitting')
+    #    self.groupBoxModel.setAlignment(QtCore.Qt.AlignHCenter)
+                                       
+    #    # The group box is hidden until a ROI is selected.
+    #    self.groupBoxModel.hide()
+    #    layout.addWidget(self.groupBoxModel)
+    #    modelVerticalLayout = QVBoxLayout()
+    #    grid = QGridLayout
+    #    modelHorizontalLayoutModelList = QHBoxLayout()
+    #    self.groupBoxModel.setLayout(modelHorizontalLayoutModelList)
+    #    #self.groupBoxModel.setLayout(grid)
+    #    self.groupBoxModel.setLayout(modelVerticalLayout)
 
-        grid.addWidget(self.lblAIF, 1, 3)
-        grid.addWidget(self.cmbAIF, 1, 4)
+    #    #modelHorizontalLayoutModelList.insertStretch (0, 2)
+    #    #.addWidget(self.modelLabel)
+    #    #.addWidget(self.cmbModels)
 
-        grid.addWidget(self.lblVIF, 2, 3)
-        grid.addWidget(self.cmbVIF, 2, 4)
+    #    # Create dropdown list to hold names of models
+    #    self.modelLabel = QLabel("Model:")
+    #    self.modelLabel.setAlignment(QtCore.Qt.AlignRight)
+    #    self.cmbModels = QComboBox()
+    #    self.cmbModels.setToolTip('Select a model to fit to the data')
+    #    #Display first item in list, the string "Select a Model"
+    #    self.cmbModels.setCurrentIndex(0) 
+    #    self.cmbModels.currentIndexChanged.connect(self.UncheckFixParameterCheckBoxes)
+    #    self.cmbModels.currentIndexChanged.connect(self.DisplayModelImage)
+    #    self.cmbModels.currentIndexChanged.connect(self.ConfigureGUIForEachModel)
+    #    self.cmbModels.currentIndexChanged.connect(lambda: self.clearOptimisedParamaterList('cmbModels')) 
+    #    self.cmbModels.currentIndexChanged.connect(self.display_FitModel_SaveCSV_SaveReport_Buttons)
+    #    self.cmbModels.activated.connect(lambda:  self.plotMRSignals('cmbModels'))
 
-        grid.addWidget(self.btnReset, 3, 3)
+    #    # Create dropdown lists for selection of AIF & VIF
+    #    self.lblAIF = QLabel('Arterial Input Function:')
+    #    self.cmbAIF = QComboBox()
+    #    self.cmbAIF.setToolTip('Select Arterial Input Function')
+    #    self.lblVIF = QLabel("Venous Input Function:")
+    #    self.cmbVIF = QComboBox()
+    #    self.cmbVIF.setToolTip('Select Venous Input Function')
 
-        grid.addWidget(self.lblConfInt, 4, 4)
+    #    # When a ROI is selected: 
+    #    # plot its concentration data on the graph.
+    #    self.cmbROI.activated.connect(lambda:  self.plotMRSignals('cmbROI'))
+    #    # then make the Model groupbox and the widgets it contains visible.
+    #    self.cmbROI.activated.connect(self.DisplayModelFittingGroupBox)
+    #    # When an AIF is selected plot its concentration data on the graph.
+    #    self.cmbAIF.activated.connect(lambda: self.plotMRSignals('cmbAIF'))
+    #    # When an AIF is selected display the Fit Model and Save plot CVS buttons.
+    #    self.cmbAIF.currentIndexChanged.connect(self.display_FitModel_SaveCSV_SaveReport_Buttons)
+    #    self.cmbVIF.currentIndexChanged.connect(self.display_FitModel_SaveCSV_SaveReport_Buttons)
+    #    # When a VIF is selected plot its concentration data on the graph.
+    #    self.cmbVIF.activated.connect(lambda: self.plotMRSignals('cmbVIF'))
+    #    self.lblAIF.hide()
+    #    self.cmbAIF.hide()
+    #    self.lblVIF.hide()
+    #    self.cmbVIF.hide()
+    #    self.cmbROI.setSizeAdjustPolicy(QComboBox.AdjustToContents)
+    #    self.cmbAIF.setSizeAdjustPolicy(QComboBox.AdjustToContents)
+    #    self.cmbVIF.setSizeAdjustPolicy(QComboBox.AdjustToContents)
+        
+    #    self.btnReset = QPushButton('Reset')
+    #    self.btnReset.setToolTip('Reset parameters to their default values.')
+    #    self.btnReset.hide()
+    #    self.btnReset.clicked.connect(self.InitialiseParameterSpinBoxes)
+    #    self.btnReset.clicked.connect(self.OptimumParameterChanged)
+    #    # If parameters reset to their default values, 
+    #    # replot the concentration and model data
+    #    self.btnReset.clicked.connect(lambda: self.plotMRSignals('Reset Button'))
+        
+    #    self.lblConfInt = QLabel("95% Confidence Interval")
+    #    self.lblConfInt.hide()
+    #    self.lblConfInt.setAlignment(QtCore.Qt.AlignRight)
 
-        grid.addWidget(self.labelParameter1, 5, 0, 1, 2)
-        grid.addWidget(self.spinBoxParameter1, 5, 2)
-        grid.addWidget(self.ckbParameter1, 5, 3)
-        grid.addWidget(self.lblParam1ConfInt, 5, 4, alignment=QtCore.Qt.AlignCenter)
+    #    # Create model parameter spinboxes and their labels
+    #    # Label text set when the model is selected
+    #    nWidth = 100
+    #    self.labelParameter1 = QLabel("") 
+    #    self.labelParameter1.hide()
+    #    self.ckbParameter1 = QCheckBox("Fix")
+    #    self.ckbParameter1.setMaximumWidth(nWidth)
+
+    #    self.ckbParameter1.hide()
+    #    self.lblParam1ConfInt = QLabel("")
+    #    self.lblParam1ConfInt.setAlignment(QtCore.Qt.AlignCenter)
+        
+    #    self.labelParameter2 = QLabel("")
+    #    self.ckbParameter2 = QCheckBox("Fix")
+    #    self.ckbParameter2.setMaximumWidth(nWidth)
+    #    self.ckbParameter2.hide()
+    #    self.lblParam2ConfInt = QLabel("")
+    #    self.lblParam2ConfInt.setAlignment(QtCore.Qt.AlignCenter)
+        
+    #    self.labelParameter3 = QLabel("")
+    #    self.ckbParameter3 = QCheckBox("Fix")
+    #    self.ckbParameter3.setMaximumWidth(nWidth)
+    #    self.ckbParameter3.hide()
+    #    self.lblParam3ConfInt = QLabel("")
+    #    self.lblParam3ConfInt.setAlignment(QtCore.Qt.AlignCenter)
+        
+    #    self.labelParameter4 = QLabel("")
+    #    self.ckbParameter4 = QCheckBox("Fix")
+    #    self.ckbParameter4.setMaximumWidth(nWidth)
+    #    self.ckbParameter4.hide()
+    #    self.lblParam4ConfInt = QLabel("")
+    #    self.lblParam4ConfInt.setAlignment(QtCore.Qt.AlignCenter)
+
+    #    self.labelParameter5 = QLabel("")
+    #    self.ckbParameter5 = QCheckBox("Fix")
+    #    self.ckbParameter5.setMaximumWidth(nWidth)
+    #    self.ckbParameter5.hide()
+    #    self.lblParam5ConfInt = QLabel("")
+    #    self.lblParam5ConfInt.setAlignment(QtCore.Qt.AlignCenter)
+
+    #    self.labelParameter1.setWordWrap(True)
+    #    self.labelParameter2.setWordWrap(True)
+    #    self.labelParameter3.setWordWrap(True)
+    #    self.labelParameter4.setWordWrap(True)
+    #    self.labelParameter5.setWordWrap(True)
+        
+    #    self.spinBoxParameter1 = QDoubleSpinBox()
+    #    self.spinBoxParameter2 = QDoubleSpinBox()
+    #    self.spinBoxParameter3 = QDoubleSpinBox()
+    #    self.spinBoxParameter4 = QDoubleSpinBox()
+    #    self.spinBoxParameter5 = QDoubleSpinBox()
+        
+    #    self.spinBoxParameter1.hide()
+    #    self.spinBoxParameter2.hide()
+    #    self.spinBoxParameter3.hide()
+    #    self.spinBoxParameter4.hide()
+    #    self.spinBoxParameter5.hide()
+
+    #    # If a parameter value is changed, replot the concentration and model data
+    #    self.spinBoxParameter1.valueChanged.connect(lambda: self.plotMRSignals('spinBoxParameter1')) 
+    #    self.spinBoxParameter2.valueChanged.connect(lambda: self.plotMRSignals('spinBoxParameter2')) 
+    #    self.spinBoxParameter3.valueChanged.connect(lambda: self.plotMRSignals('spinBoxParameter3')) 
+    #    self.spinBoxParameter4.valueChanged.connect(lambda: self.plotMRSignals('spinBoxParameter4'))
+    #    self.spinBoxParameter5.valueChanged.connect(lambda: self.plotMRSignals('spinBoxParameter5'))
+    #    # Set boolean variable, self.isCurveFittingDone to false to 
+    #    # indicate that the value of a model parameter
+    #    # has been changed manually rather than by curve fitting
+    #    self.spinBoxParameter1.valueChanged.connect(self.OptimumParameterChanged) 
+    #    self.spinBoxParameter2.valueChanged.connect(self.OptimumParameterChanged) 
+    #    self.spinBoxParameter3.valueChanged.connect(self.OptimumParameterChanged) 
+    #    self.spinBoxParameter4.valueChanged.connect(self.OptimumParameterChanged)
+    #    self.spinBoxParameter5.valueChanged.connect(self.OptimumParameterChanged)
+
+    #    self.btnFitModel = QPushButton('Fit Model')
+    #    self.btnFitModel.setToolTip('Use non-linear least squares to fit the selected model to the data')
+    #    self.btnFitModel.hide()
+    #    self.btnFitModel.clicked.connect(self.CurveFit)
+        
+    #    self.btnSaveCSV = QPushButton('Save plot data to CSV file')
+    #    self.btnSaveCSV.setToolTip('Save the data plotted on the graph to a CSV file')
+    #    self.btnSaveCSV.hide()
+    #    self.btnSaveCSV.clicked.connect(self.SaveCSVFile)
+
+    #    # Add combo boxes and their labels to the grid layout
+    #    grid.addWidget(self.modelLabel, 0, 3)
+    #    grid.addWidget(self.cmbModels, 0, 4)
+
+    #    grid.addWidget(self.lblAIF, 1, 3)
+    #    grid.addWidget(self.cmbAIF, 1, 4)
+
+    #    grid.addWidget(self.lblVIF, 2, 3)
+    #    grid.addWidget(self.cmbVIF, 2, 4)
+
+    #    grid.addWidget(self.btnReset, 3, 3)
+
+    #    grid.addWidget(self.lblConfInt, 4, 4)
+
+    #    grid.addWidget(self.labelParameter1, 5, 0, 1, 2)
+    #    grid.addWidget(self.spinBoxParameter1, 5, 2)
+    #    grid.addWidget(self.ckbParameter1, 5, 3)
+    #    grid.addWidget(self.lblParam1ConfInt, 5, 4, alignment=QtCore.Qt.AlignCenter)
        
-        grid.addWidget(self.labelParameter2, 8, 0, 1, 2)
-        grid.addWidget(self.spinBoxParameter2, 8, 2)
-        grid.addWidget(self.ckbParameter2, 8, 3)
-        grid.addWidget(self.lblParam2ConfInt, 8, 4, alignment=QtCore.Qt.AlignCenter)
+    #    grid.addWidget(self.labelParameter2, 8, 0, 1, 2)
+    #    grid.addWidget(self.spinBoxParameter2, 8, 2)
+    #    grid.addWidget(self.ckbParameter2, 8, 3)
+    #    grid.addWidget(self.lblParam2ConfInt, 8, 4, alignment=QtCore.Qt.AlignCenter)
 
-        grid.addWidget(self.labelParameter3, 10, 0, 1, 2)
-        grid.addWidget(self.spinBoxParameter3, 10, 2)
-        grid.addWidget(self.ckbParameter3, 10, 3)
-        grid.addWidget(self.lblParam3ConfInt, 10, 4, alignment=QtCore.Qt.AlignCenter)
+    #    grid.addWidget(self.labelParameter3, 10, 0, 1, 2)
+    #    grid.addWidget(self.spinBoxParameter3, 10, 2)
+    #    grid.addWidget(self.ckbParameter3, 10, 3)
+    #    grid.addWidget(self.lblParam3ConfInt, 10, 4, alignment=QtCore.Qt.AlignCenter)
 
-        grid.addWidget(self.labelParameter4, 12, 0, 1, 2)
-        grid.addWidget(self.spinBoxParameter4, 12, 2)
-        grid.addWidget(self.ckbParameter4, 12, 3)
-        grid.addWidget(self.lblParam4ConfInt, 12, 4, alignment=QtCore.Qt.AlignCenter)
+    #    grid.addWidget(self.labelParameter4, 12, 0, 1, 2)
+    #    grid.addWidget(self.spinBoxParameter4, 12, 2)
+    #    grid.addWidget(self.ckbParameter4, 12, 3)
+    #    grid.addWidget(self.lblParam4ConfInt, 12, 4, alignment=QtCore.Qt.AlignCenter)
 
-        grid.addWidget(self.labelParameter5, 14, 0, 1, 2)
-        grid.addWidget(self.spinBoxParameter5, 14, 2)
-        grid.addWidget(self.ckbParameter5, 14, 3)
-        grid.addWidget(self.lblParam5ConfInt, 14, 4)
+    #    grid.addWidget(self.labelParameter5, 14, 0, 1, 2)
+    #    grid.addWidget(self.spinBoxParameter5, 14, 2)
+    #    grid.addWidget(self.ckbParameter5, 14, 3)
+    #    grid.addWidget(self.lblParam5ConfInt, 14, 4)
 
-        grid.addWidget(self.btnFitModel, 15, 3)
+    #    grid.addWidget(self.btnFitModel, 15, 3)
 
-        grid.addWidget(self.btnSaveCSV, 16, 3)
+    #    grid.addWidget(self.btnSaveCSV, 16, 2, 1,2)
 
 
     def SetUpBatchProcessingGroupBox(self, layout):
@@ -828,8 +1088,8 @@ class ModelFittingApp(QWidget):
         
             parameterValue = round(parameterValue, 3)
             if not objCheckBox.isChecked():
-                lowerLimit = round(lowerLimit, 3)
-                upperLimit = round(upperLimit, 3)
+                lowerLimit = round(lowerLimit, 2)
+                upperLimit = round(upperLimit, 2)
             # For display in the PDF report, 
             # overwrite decimal volume fraction values 
             # in  self.optimisedParamaterList with the % equivalent
@@ -839,7 +1099,7 @@ class ModelFittingApp(QWidget):
            
             if not objCheckBox.isChecked():
                 # Display 95% confidence limits on the GUI
-                confidenceStr = '[{}     {}]'.format(lowerLimit, upperLimit)
+                confidenceStr = '[{}  {}]'.format(lowerLimit, upperLimit)
                 objLabel.setText(confidenceStr)
 
         except Exception as e:
