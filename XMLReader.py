@@ -39,9 +39,9 @@ class XMLReader:
         try:
             self.hasXMLFileParsedOK = True
             self.fullFilePath = ""
-            self.tree = None # Points to XML tree in memory
-            self.root = None # Points to the root node of the above XML tree
-           
+            self.tree = None 
+            self.root = None 
+
             logger.info('In module ' + __name__ + ' Created XML Reader Object')
 
         except Exception as e:
@@ -131,6 +131,38 @@ class XMLReader:
             print('Error in XMLReader.getFunctionName when shortModelName ={}: '.format(shortModelName) 
                   + str(e)) 
             logger.error('Error in XMLReader.getFunctionName when shortModelName ={}: '.format(shortModelName) 
+                  + str(e)) 
+            return None
+
+
+    def getModuleName(self, shortModelName):
+        """Returns the name of the module that 
+        contains the function corresponding to the model
+       with a short name in the string variable shortModelName"""
+        try:
+            logger.info('XMLReader.getModuleName called with short model name= ' 
+                        + shortModelName)
+            if len(shortModelName) > 0:
+                xPath='./model[@id=' + chr(34) + shortModelName + chr(34) + ']/module'
+                moduleName = self.root.find(xPath)
+                if moduleName.text is None:
+                    raise ValueNotDefinedInConfigFile
+                else:
+                    logger.info('XMLReader.getModuleName found module name ' 
+                                + moduleName.text)
+                    return moduleName.text
+            else:
+                return None
+
+        except ValueNotDefinedInConfigFile:
+            warningString = 'Error - No module defined for model {}'.format(shortModelName)
+            print(warningString)
+            logger.info('XMLReader.getFunctionName - ' + warningString)
+            return None
+        except Exception as e:
+            print('Error in XMLReader.getModuleName when shortModelName ={}: '.format(shortModelName) 
+                  + str(e)) 
+            logger.error('Error in XMLReader.getModuleName when shortModelName ={}: '.format(shortModelName) 
                   + str(e)) 
             return None
 

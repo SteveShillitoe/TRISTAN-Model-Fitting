@@ -107,6 +107,8 @@ Within each pair of <parameter></parameter> tags
       <short>HF1-2CFM+2DSPGR</short>
       <long>High Flow Single Inlet - Two Compartment Filtration and 2DSPGR Model</long>
     </name>
+    <!--Name of the module containing the function-->
+    <module>ModelFunctions</module>
     <!--Name of the function implementing this model-->
     <function>HighFlowSingleInletGadoxetate2DSPGR_Rat</function>
     <!--Name of the image describing schematically this model-->
@@ -175,6 +177,7 @@ Within each pair of <parameter></parameter> tags
       <short>HF1-2CFM+3DSPGR</short>
       <long>High Flow Single Inlet - Two Compartment Filtration and 3DSPGR Model</long>
     </name>
+    <module>ModelFunctions</module>
     <function>HighFlowSingleInletGadoxetate3DSPGR_Rat</function>
     <image>HighFlowSingleInletTwoCompartmentGadoxetateModel.png</image>
     <inlet_type>single</inlet_type>

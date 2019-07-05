@@ -238,6 +238,11 @@ class NoModelFunctionDefined(Error):
    to a model is not returned from the XML configuration file."""
    pass
 
+class NoModuleDefined(Error):
+   """Raised when the name of the module containing the function corresponding 
+   to a model is not returned from the XML configuration file."""
+   pass
+
 class NoModelInletTypeDefined(Error):
    """Raised when the inlet type of the model is not returned
     from the XML configuration file."""
@@ -1329,6 +1334,9 @@ class ModelFittingApp(QWidget):
             
             # Get the name of the model to be fitted to the ROI curve
             modelName = str(self.cmbModels.currentText())
+            moduleName = self.objXMLReader.getModuleName(modelName)
+            if moduleName is None:
+                raise NoModuleDefined
             functionName = self.objXMLReader.getFunctionName(modelName)
             if functionName is None:
                 raise NoModelFunctionDefined
@@ -1340,7 +1348,7 @@ class ModelFittingApp(QWidget):
             QApplication.setOverrideCursor(QCursor(QtCore.Qt.WaitCursor))
             optimumParamsDict, paramCovarianceMatrix = \
                 ModelFunctionsHelper.CurveFit(
-                functionName, paramList, arrayTimes, 
+                functionName, moduleName, paramList, arrayTimes, 
                 array_AIF_MR_Signals, array_VIF_MR_Signals, array_ROI_MR_Signals,
                 inletType, constantsString)
             
@@ -1375,6 +1383,12 @@ class ModelFittingApp(QWidget):
         except NoModelFunctionDefined:
             warningString = 'Cannot procede because no function ' + \
                 'is defined for this model in the configuration file.'
+            print(warningString)
+            logger.info('CurveFit - ' + warningString)
+            QMessageBox().critical( self,  "Curve Fitting", warningString, QMessageBox.Ok)
+        except NoModuleDefined:
+            warningString = 'Cannot procede because no module ' + \
+                'is defined for this model function in the configuration file.'
             print(warningString)
             logger.info('CurveFit - ' + warningString)
             QMessageBox().critical( self,  "Curve Fitting", warningString, QMessageBox.Ok)
@@ -2158,11 +2172,12 @@ class ModelFittingApp(QWidget):
             parameterArray = self.BuildParameterArray()
             constantsString = self.objXMLReader.getStringOfConstants()
             modelFunctionName = self.objXMLReader.getFunctionName(modelName)
-            
+            moduleName = self.objXMLReader.getModuleName(modelName)
+
             logger.info('ModelFunctionsHelper.ModelSelector called when model={}, function ={} & parameter array = {}'. format(modelName, modelFunctionName, parameterArray))        
             
             self.listModel = ModelFunctionsHelper.ModelSelector(
-                        modelFunctionName, 
+                        modelFunctionName, moduleName,
                         inletType, arrayTimes, array_AIF_MR_Signals, 
                         parameterArray, constantsString,
                         array_VIF_MR_Signals)

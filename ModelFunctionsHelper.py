@@ -19,11 +19,14 @@ implementation has been commented out.
 from lmfit import Parameters, Model
 import numpy as np
 import logging
-import ModelFunctions as modelFunctions
+import importlib
+# ModelFunctions as modelFunctions
+
 
 logger = logging.getLogger(__name__)
 
 def ModelSelector(functionName: str, 
+                  moduleName: str,
                   inletType:str,
                   times, 
                   AIFConcentration, 
@@ -72,7 +75,7 @@ def ModelSelector(functionName: str,
         elif inletType == 'dual':
             timeInputConcs2DArray = np.column_stack((times, AIFConcentration, VIFConcentration))
 
-        #modelFunctionModule = __import__(functionModule, fromlist=[functionName])
+        modelFunctions = importlib.import_module(moduleName, package=None)
         modelFunction=getattr(modelFunctions, functionName)
         
         return modelFunction(timeInputConcs2DArray, *parameterArray, constantsString)
@@ -82,8 +85,15 @@ def ModelSelector(functionName: str,
         print('ModelFunctionsHelper.ModelSelector: ' + str(e))  
 
 
-def CurveFit(functionName: str, paramList, times, AIFConcs, 
-             VIFConcs, concROI, inletType, constantsString):
+def CurveFit(functionName: str, 
+             moduleName: str,
+             paramList, 
+             times,
+             AIFConcs, 
+             VIFConcs, 
+             concROI, 
+             inletType, 
+             constantsString):
 
     """This function calls the fit function of the Model object 
     imported from the lmfit package.  It is used to fit the
@@ -137,6 +147,7 @@ def CurveFit(functionName: str, paramList, times, AIFConcs,
         elif inletType == 'single':
             timeInputConcs2DArray = np.column_stack((times, AIFConcs))
 
+        modelFunctions = importlib.import_module(moduleName, package=None)
         modelFunction=getattr(modelFunctions, functionName)
 
         params = Parameters()
