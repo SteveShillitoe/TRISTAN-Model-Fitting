@@ -334,8 +334,8 @@ class ModelFittingApp(QWidget):
         verticalLayoutRight = QVBoxLayout()
         
         self.setLayout(horizontalLayout)
-        horizontalLayout.addLayout(verticalLayoutLeft, 1)
-        horizontalLayout.addLayout(verticalLayoutRight, 1)
+        horizontalLayout.addLayout(verticalLayoutLeft, 9)
+        horizontalLayout.addLayout(verticalLayoutRight, 10)
         return verticalLayoutLeft,  verticalLayoutRight  
 
     def SetUpLeftVerticalLayout(self, layout):
@@ -507,7 +507,7 @@ class ModelFittingApp(QWidget):
         modelHorizontalLayoutReset.addWidget(self.cboxConstaint)
         modelHorizontalLayoutReset.addWidget(self.btnReset)
         
-        self.lblConfInt = QLabel("95% Confidence Range")
+        self.lblConfInt = QLabel("95% Confidence Interval")
         self.lblFix = QLabel("Fix")
         self.lblFix.hide()
         self.lblConfInt.hide()
