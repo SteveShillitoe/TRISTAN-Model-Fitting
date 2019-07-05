@@ -383,6 +383,7 @@ class ModelFittingApp(QWidget):
         # horizontal layout together with its label, so they are
         # aligned in the same row.
         ROI_HorizontalLayout = QHBoxLayout()
+        ROI_HorizontalLayout.insertStretch (0, 2)
         ROI_HorizontalLayout.addWidget(self.lblROI)
         ROI_HorizontalLayout.addWidget(self.cmbROI)
         layout.addLayout(ROI_HorizontalLayout)
