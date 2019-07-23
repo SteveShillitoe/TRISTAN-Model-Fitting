@@ -72,6 +72,7 @@ the following Python packages must be installed on your computer:
 	FPDF
 	openpyxl
 	lmfit
+	importlib
 
 The 9 Python files that comprise this application must be
 placed in folder together with the following 2 subfolders:
