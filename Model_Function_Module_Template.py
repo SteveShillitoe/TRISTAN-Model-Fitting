@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 ####################################################################
 ####  MR Signal Models 
 ####################################################################
-def Model_Function_Template(xData2DArray, Ve, Kbh, Khe,
+def Model_Function_Template(xData2DArray, para1, Kbh, Khe,
                                  constantsString):
     """This function contains the algorithm for calculating 
        how MR signal varies with time.

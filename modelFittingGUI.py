@@ -513,10 +513,13 @@ class ModelFittingApp(QWidget):
         modelHorizontalLayoutReset.addWidget(self.cboxConstaint)
         modelHorizontalLayoutReset.addWidget(self.btnReset)
         
+        self.lblPhysParams = QLabel("Model Parameters")
         self.lblConfInt = QLabel("95% Confidence Interval")
         self.lblFix = QLabel("Fix")
+        self.lblPhysParams.hide()
         self.lblFix.hide()
         self.lblConfInt.hide()
+        self.lblPhysParams.setAlignment(QtCore.Qt.AlignLeft)
         self.lblConfInt.setAlignment(QtCore.Qt.AlignRight)
         self.lblFix.setAlignment(QtCore.Qt.AlignLeft)
 
@@ -586,6 +589,7 @@ class ModelFittingApp(QWidget):
         self.spinBoxParameter4.valueChanged.connect(self.OptimumParameterChanged)
         self.spinBoxParameter5.valueChanged.connect(self.OptimumParameterChanged)
 
+        grid.addWidget(self.lblPhysParams, 0, 0, 1, 2, alignment=QtCore.Qt.AlignLeft)
         grid.addWidget(self.lblFix, 0, 3)
         grid.addWidget(self.lblConfInt, 0, 4)
 
@@ -883,6 +887,7 @@ class ModelFittingApp(QWidget):
             logger.info('Function CurveFitProcessOptimumParameters called.')
             self.lblConfInt.show()
             self.lblFix.show()
+            self.lblPhysParams.show()
             modelName = str(self.cmbModels.currentText())
             numParams = self.objXMLReader.getNumberOfParameters(modelName)
             if numParams >= 1:
@@ -2078,10 +2083,12 @@ class ModelFittingApp(QWidget):
                 self.groupBoxBatchProcessing.hide()
                 self.lblConfInt.hide()
                 self.lblFix.hide()
+                self.lblPhysParams.hide()
             else:
                 self.SetUpParameterLabelsAndSpinBoxes()
                 self.lblConfInt.show()
                 self.lblFix.show()
+                self.lblPhysParams.show()
                 self.lblAIF.show() #Common to all models
                 self.cmbAIF.show() #Common to all models
                 inletType = self.objXMLReader.getModelInletType(modelName)
