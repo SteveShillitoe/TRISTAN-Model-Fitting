@@ -79,7 +79,7 @@ Within each pair of <parameter></parameter> tags
     <constant>
       <!-- Number of baseline scans -->
       <name>baseline</name>
-      <value>5</value>
+      <value>1</value>
     </constant>
     <constant>
       <!-- Degrees-->

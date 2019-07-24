@@ -104,8 +104,8 @@ Within each pair of <parameter></parameter> tags
   </constants>
   <model id="short model name">
     <name>
-      <short></short>
-      <long></long>
+      <short>short model name</short>
+      <long>long model name</long>
     </name>
     <!--Name of the module containing the function-->
     <module></module>

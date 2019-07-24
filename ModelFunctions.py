@@ -131,7 +131,7 @@ def HighFlowSingleInletGadoxetate3DSPGR_Rat(xData2DArray, Ve, Kbh, Khe,
         float(constantsDict['R10a']), float(constantsDict['R10t']) 
         
         # Precontrast signal
-        Sa_baseline = 1
+        #Sa_baseline = 1
         
         # Convert to concentrations
         # n_jobs set to 1 to turn off parallel processing
@@ -140,7 +140,7 @@ def HighFlowSingleInletGadoxetate3DSPGR_Rat(xData2DArray, Ve, Kbh, Khe,
         # This is not a problem in the uncompiled script
         R1a = [Parallel(n_jobs=1)(delayed(fsolve)
           (tools.spgr3d_func, x0=0, 
-           args = (FA, TR, R10a, Sa_baseline, Sa[p])) 
+           args = (FA, TR, R10a, baseline, Sa[p])) 
            for p in np.arange(0,len(t)))]
         R1a = np.squeeze(R1a)
         
