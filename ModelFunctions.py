@@ -130,8 +130,6 @@ def HighFlowSingleInletGadoxetate3DSPGR_Rat(xData2DArray, Ve, Kbh, Khe,
         float(constantsDict['FA']), float(constantsDict['r1']), \
         float(constantsDict['R10a']), float(constantsDict['R10t']) 
         
-        # Precontrast signal
-        #Sa_baseline = 1
         
         # Convert to concentrations
         # n_jobs set to 1 to turn off parallel processing

@@ -112,7 +112,7 @@ def arr_shift(A,n):
 # Performs convolution of (1/T)exp(-t/T) with a 
     
 def expconv(T, t, a, modelName):
-    #logger.info("Tools.expconv called for model: " + modelName)
+    logger.info("Tools.expconv called for model: " + modelName)
     try:
         if T==0:
             return(a)

@@ -5,6 +5,6 @@
     "\\data",
     "\\__pycache__"
   ],
-  "SelectedNode": "\\data\\Preclinical_MR_Signal_3D_1.csv",
+  "SelectedNode": "\\config\\MR_SignalRatLiverModels.xml",
   "PreviewInSolutionExplorer": false
 }
