@@ -123,12 +123,19 @@ Within each pair of <parameter></parameter> tags
         </name>
         <units></units>
         <default></default>
+        <!--When parameter spinbox arrows are clicked, 
+        the value of the parameter is incremented/decremented by 
+        the value of step-->
         <step></step>
+        <!--precision is the number of decimal places displayed 
+        in the parameter spinbox-->
         <precision></precision>
+        <!--Lower and upper display value in the spinbox -->
         <display_value>
           <min></min>
           <max></max>
         </display_value>
+        <!--Constraints applied during model fitting-->
         <constraints>
           <lower></lower>
           <upper></upper>

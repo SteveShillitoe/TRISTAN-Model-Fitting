@@ -3,8 +3,9 @@
     "",
     "\\config",
     "\\data",
+    "\\images",
     "\\__pycache__"
   ],
-  "SelectedNode": "\\config\\MR_SignalRatLiverModels.xml",
+  "SelectedNode": "\\ModelFunctions.py",
   "PreviewInSolutionExplorer": false
 }

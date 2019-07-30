@@ -189,12 +189,19 @@ Within each pair of <parameter></parameter> tags
         </name>
         <units>%</units>
         <default>23.0</default>
+        <!--When parameter spinbox arrows are clicked, 
+        the value of the parameter is incremented/decremented by 
+        the value of step-->
         <step>1.0</step>
+        <!--precision is the number of decimal places displayed 
+        in the parameter spinbox-->
         <precision>2</precision>
+        <!--Lower and upper display value in the spinbox -->
         <display_value>
           <min>0.01</min>
           <max>99.99</max>
         </display_value>
+        <!--Constraints applied during model fitting-->
         <constraints>
           <lower></lower>
           <upper></upper>
@@ -225,7 +232,12 @@ Within each pair of <parameter></parameter> tags
         </name>
         <units>mL/min/mL</units>
         <default>2.358</default>
+        <!--When parameter spinbox arrows are clicked, 
+        the value of the parameter is incremented/decremented by 
+        the value of step-->
         <step>0.1</step>
+        <!--precision is the number of decimal places displayed 
+        in the parameter spinbox-->
         <precision>3</precision>
         <display_value>
           <min>0.0001</min>
