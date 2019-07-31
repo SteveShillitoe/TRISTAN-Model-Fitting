@@ -76,7 +76,7 @@ The <name></name> tags enclose the <short></short> and
       <value>1.25</value>
     </constant>
   </constants>
-  <model id="2-2CFM+2DSPGR">
+  <model>
     <name>
       <short>2-2CFM+2DSPGR</short>
       <long>2 Inlet - Two Compartment Gadoxetate and 2DSPGR Model</long>
@@ -157,7 +157,7 @@ The <name></name> tags enclose the <short></short> and
       </parameter>
     </parameters>
   </model>
-  <model id="2-2CFM+3DSPGR">
+  <model>
     <name>
       <short>2-2CFM+3DSPGR</short>
       <long>2 Inlet - Two Compartment Gadoxetate and 3DSPGR Model</long>
@@ -238,7 +238,7 @@ The <name></name> tags enclose the <short></short> and
       </parameter>
     </parameters>
   </model>
-  <model id="HF2-2CFM+2DSPGR">
+  <model>
     <name>
       <short>HF2-2CFM+2DSPGR</short>
       <long>High Flow 2 Inlet - Two Compartment Filtration and 2DSPGR Model</long>
@@ -305,7 +305,7 @@ The <name></name> tags enclose the <short></short> and
       </parameter>
     </parameters>
   </model>
-  <model id="HF2-2CFM+3DSPGR">
+  <model>
     <name>
       <short>HF2-2CFM+3DSPGR</short>
       <long>High Flow 2 Inlet - Two Compartment Filtration and 3DSPGR Model</long>
@@ -372,7 +372,7 @@ The <name></name> tags enclose the <short></short> and
       </parameter>
     </parameters>
   </model>
-  <model id="HF1-2CFM+2DSPGR">
+  <model>
     <name>
       <short>HF1-2CFM+2DSPGR</short>
       <long>High Flow 1 Inlet - Two Compartment Filtration and 2DSPGR Model</long>
@@ -425,7 +425,7 @@ The <name></name> tags enclose the <short></short> and
       </parameter>
     </parameters>
   </model>
-  <model id="HF1-2CFM+3DSPGR">
+  <model>
     <name>
       <short>HF1-2CFM+3DSPGR</short>
       <long>High Flow 1 Inlet - Two Compartment Filtration and 3DSPGR Model</long>

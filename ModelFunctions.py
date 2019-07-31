@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 # as they are displayed in the GUI from top (first) to bottom (last) 
 
 ####################################################################
-####  MR Sign  al Rat Models 
+####  MR Signal Rat Models 
 ####################################################################
 def HighFlowSingleInletGadoxetate2DSPGR_Rat(xData2DArray, Ve, Kbh, Khe,
                                  constantsString):
@@ -53,8 +53,6 @@ def HighFlowSingleInletGadoxetate2DSPGR_Rat(xData2DArray, Ve, Kbh, Khe,
         float(constantsDict['FA']), float(constantsDict['r1']), \
         float(constantsDict['R10a']), float(constantsDict['R10t']) 
                
-        # Precontrast signal
-        Sa_baseline = 1
         
         # Convert to concentrations
         # n_jobs set to 1 to turn off parallel processing
@@ -63,7 +61,7 @@ def HighFlowSingleInletGadoxetate2DSPGR_Rat(xData2DArray, Ve, Kbh, Khe,
         # This is not a problem in the uncompiled script
         R1a = [Parallel(n_jobs=1)(delayed(fsolve)
            (tools.spgr2d_func, x0=0, 
-            args = (r1, FA, TR, R10a, Sa_baseline, Sa[p])) 
+            args = (r1, FA, TR, R10a, baseline, Sa[p])) 
             for p in np.arange(0,len(t)))]
 
         R1a = np.squeeze(R1a)
@@ -74,7 +72,6 @@ def HighFlowSingleInletGadoxetate2DSPGR_Rat(xData2DArray, Ve, Kbh, Khe,
         ve_spleen = 0.43
         ce = ca/ve_spleen
         
-        # if Kbh == 0
         if Kbh != 0:
             Th = (1-Ve)/Kbh
             ct = Ve*ce + Khe*Th*tools.expconv(Th,t,ce, 'HighFlowSingleInletGadoxetate2DSPGR_Rat')
@@ -149,11 +146,7 @@ def HighFlowSingleInletGadoxetate3DSPGR_Rat(xData2DArray, Ve, Kbh, Khe,
         ce = ca/ve_spleen
         Th = (1-Ve)/Kbh
         ct = Ve*ce + Khe*Th*tools.expconv(Th,t,ce,'HighFlowSingleInletGadoxetate3DSPGR_Rat')
-        #if Kbh != 0:
-           # Th = (1-Ve)/Kbh
-           # ct = Ve*ce + Khe*Th*tools.expconv(Th,t,ce,'HighFlowGadoxetate3DSPGR_Rat')
-        #else:
-           # ct = Ve*ce + Khe*tools.integrate(ce,t)
+        
         
         # Convert to signal
         St_rel = tools.spgr3d_func_inv(r1, FA, TR, R10t, ct)

@@ -81,6 +81,7 @@ class XMLReader:
         try:
             tempList = []
             shortModelNames = self.root.findall('./model/name/short')
+
             if not shortModelNames:
                 tempList.append(NO_MODELS_DEFINED_IN_CONFIG_FILE)
                 raise ValueNotDefinedInConfigFile
@@ -112,7 +113,7 @@ class XMLReader:
         try:
             logger.info('XMLReader.getFunctionName called with short model name= ' + shortModelName)
             if len(shortModelName) > 0:
-                xPath='./model[@id=' + chr(34) + shortModelName + chr(34) + ']/function'
+                xPath='./model/name[short=' + chr(34) + shortModelName + chr(34) +']..function'
                 functionName = self.root.find(xPath)
                 if functionName.text is None:
                     raise ValueNotDefinedInConfigFile
@@ -134,7 +135,6 @@ class XMLReader:
                   + str(e)) 
             return None
 
-
     def getModuleName(self, shortModelName):
         """Returns the name of the module that 
         contains the function corresponding to the model
@@ -143,7 +143,7 @@ class XMLReader:
             logger.info('XMLReader.getModuleName called with short model name= ' 
                         + shortModelName)
             if len(shortModelName) > 0:
-                xPath='./model[@id=' + chr(34) + shortModelName + chr(34) + ']/module'
+                xPath='./model/name[short=' + chr(34) + shortModelName + chr(34) +']..module'
                 moduleName = self.root.find(xPath)
                 if moduleName.text is None:
                     raise ValueNotDefinedInConfigFile
@@ -201,7 +201,7 @@ class XMLReader:
         try:
             logger.info('XMLReader.getImageName called with short model name= ' + shortModelName)
             if len(shortModelName) > 0:
-                xPath='./model[@id=' + chr(34) + shortModelName + chr(34) + ']/image'
+                xPath='./model/name[short=' + chr(34) + shortModelName + chr(34) +']..image'
                 imageName = self.root.find(xPath)
                 if imageName.text is None:
                     raise ValueNotDefinedInConfigFile
@@ -231,8 +231,7 @@ class XMLReader:
         try:
             logger.info('XMLReader.getLongModelName called with short model name= ' + shortModelName)
             if len(shortModelName) > 0:
-                xPath='./model[@id=' + chr(34) + shortModelName + chr(34) + \
-                    ']/name/long'
+                xPath='./model/name[short=' + chr(34) + shortModelName + chr(34) +']/long'
                 modelName = self.root.find(xPath)
                 if modelName.text is None:
                     raise ValueNotDefinedInConfigFile
@@ -263,7 +262,7 @@ class XMLReader:
             if len(shortModelName) > 0 and \
                 shortModelName != FIRST_ITEM_MODEL_LIST and \
                 shortModelName != NO_MODELS_DEFINED_IN_CONFIG_FILE:
-                xPath='./model[@id=' + chr(34) + shortModelName + chr(34) + ']/inlet_type'
+                xPath='./model/name[short=' + chr(34) + shortModelName + chr(34) +']..inlet_type'
                 modelInletType= self.root.find(xPath)
                 if modelInletType.text is None:
                     raise ValueNotDefinedInConfigFile
@@ -292,8 +291,7 @@ class XMLReader:
         try:
             logger.info('XMLReader.getNumberOfParameters called with short model name= ' + shortModelName)
             if len(shortModelName) > 0:
-                xPath='./model[@id=' + chr(34) + shortModelName + chr(34) + \
-                    ']/parameters/parameter'
+                xPath='./model/name[short=' + chr(34) + shortModelName + chr(34) +']..parameters/parameter'
                 parameters = self.root.findall(xPath)
                 if parameters:
                     numParams = len(parameters)
@@ -332,22 +330,23 @@ class XMLReader:
             missingLongName = False
 
             if len(shortModelName) > 0:
-                xPath='./model[@id=' + chr(34) + shortModelName + chr(34) + \
-                    ']/parameters/parameter[' + str(positionNumber) + ']/name/short'
+                xPath='./model/name[short=' + chr(34) + shortModelName + chr(34) + \
+                    ']..parameters/parameter[' + str(positionNumber) + ']/name/short'
+               
                 shortName = self.root.find(xPath)
                 if shortName.text is None:
                     missingShortName = True
                     print('short name for parameter at position {} is missing.'.format(str(positionNumber)))
 
-                xPath='./model[@id=' + chr(34) + shortModelName + chr(34) + \
-                    ']/parameters/parameter[' + str(positionNumber) + ']/name/long'
+                xPath='./model/name[short=' + chr(34) + shortModelName + chr(34) + \
+                    ']..parameters/parameter[' + str(positionNumber) + ']/name/long'
                 longName = self.root.find(xPath)
                 if longName.text is None:
                     missingLongName = True
                     print('Long name for parameter at position {} is missing.'.format(str(positionNumber)))
 
-                xPath='./model[@id=' + chr(34) + shortModelName + chr(34) + \
-                    ']/parameters/parameter[' + str(positionNumber) + ']/units'
+                xPath='./model/name[short=' + chr(34) + shortModelName + chr(34) + \
+                    ']..parameters/parameter[' + str(positionNumber) + ']/units'
                 units = self.root.find(xPath)
                 if units.text is None:
                     print('Units for parameter at position {} are missing.'.format(str(positionNumber)))
@@ -388,8 +387,8 @@ class XMLReader:
             logger.info('XMLReader.getParameterShortName called with short model name= {} and position={} '.format(shortModelName,positionNumber) )
             
             if len(shortModelName) > 0:
-                xPath='./model[@id=' + chr(34) + shortModelName + chr(34) + \
-                    ']/parameters/parameter[' + str(positionNumber) + ']/name/short'
+                xPath='./model/name[short=' + chr(34) + shortModelName + chr(34) + \
+                    ']..parameters/parameter[' + str(positionNumber) + ']/name/short'
                 shortName = self.root.find(xPath)
             else:
                 return ''
@@ -423,8 +422,8 @@ class XMLReader:
             logger.info('XMLReader.getParameterDefault called with short model name= {} and position={} '.format(shortModelName,positionNumber) )
             
             if len(shortModelName) > 0:
-                xPath='./model[@id=' + chr(34) + shortModelName + chr(34) + \
-                    ']/parameters/parameter[' + str(positionNumber) + ']/default'
+                xPath='./model/name[short=' + chr(34) + shortModelName + chr(34) + \
+                    ']..parameters/parameter[' + str(positionNumber) + ']/default'
                 default = self.root.find(xPath)
                 #print('Default ={} when position={}'.format(default.text, positionNumber))
                 if default.text is None:
@@ -460,8 +459,8 @@ class XMLReader:
             logger.info('XMLReader.getParameterStep called with short model name= {} and position={} '.format(shortModelName,positionNumber) )
             
             if len(shortModelName) > 0:
-                xPath='./model[@id=' + chr(34) + shortModelName + chr(34) + \
-                    ']/parameters/parameter[' + str(positionNumber) + ']/step'
+                xPath='./model/name[short=' + chr(34) + shortModelName + chr(34) + \
+                    ']..parameters/parameter[' + str(positionNumber) + ']/step'
                 step = self.root.find(xPath)
 
                 if step.text is None:
@@ -496,8 +495,8 @@ class XMLReader:
             logger.info('XMLReader.getParameterPrecision called with short model name= {} and position={} '.format(shortModelName,positionNumber) )
             
             if len(shortModelName) > 0:
-                xPath='./model[@id=' + chr(34) + shortModelName + chr(34) + \
-                    ']/parameters/parameter[' + str(positionNumber) + ']/precision'
+                xPath='./model/name[short=' + chr(34) + shortModelName + chr(34) + \
+                    ']..parameters/parameter[' + str(positionNumber) + ']/precision'
                 precision = self.root.find(xPath)
 
                 if precision.text is None:
@@ -533,8 +532,8 @@ class XMLReader:
             logger.info('XMLReader.getMaxParameterDisplayValue called with short model name= {} and position={} '.format(shortModelName,positionNumber) )
             
             if len(shortModelName) > 0:
-                xPath='./model[@id=' + chr(34) + shortModelName + chr(34) + \
-                    ']/parameters/parameter[' + str(positionNumber) + ']/display_value/max'
+                xPath='./model/name[short=' + chr(34) + shortModelName + chr(34) + \
+                    ']..parameters/parameter[' + str(positionNumber) + ']/display_value/max'
                 max = self.root.find(xPath)
 
                 if max.text is None:
@@ -568,8 +567,8 @@ class XMLReader:
             logger.info('XMLReader.getMinParameterDisplayValue called with short model name= {} and position={} '.format(shortModelName,positionNumber) )
             
             if len(shortModelName) > 0:
-                xPath='./model[@id=' + chr(34) + shortModelName + chr(34) + \
-                    ']/parameters/parameter[' + str(positionNumber) + ']/display_value/min'
+                xPath='./model/name[short=' + chr(34) + shortModelName + chr(34) + \
+                    ']..parameters/parameter[' + str(positionNumber) + ']/display_value/min'
                 min = self.root.find(xPath)
 
                 if min.text is None:
@@ -603,8 +602,8 @@ class XMLReader:
             logger.info('XMLReader.getUpperParameterConstraint called with short model name= {} and position={} '.format(shortModelName,positionNumber) )
             
             if len(shortModelName) > 0:
-                xPath='./model[@id=' + chr(34) + shortModelName + chr(34) + \
-                    ']/parameters/parameter[' + str(positionNumber) + ']/constraints/upper'
+                xPath='./model/name[short=' + chr(34) + shortModelName + chr(34) + \
+                    ']..parameters/parameter[' + str(positionNumber) + ']/constraints/upper'
                 upper = self.root.find(xPath)
 
                 if upper.text is None:
@@ -638,8 +637,8 @@ class XMLReader:
             logger.info('XMLReader.getLowerParameterConstraint called with short model name= {} and position={} '.format(shortModelName,positionNumber) )
             
             if len(shortModelName) > 0:
-                xPath='./model[@id=' + chr(34) + shortModelName + chr(34) + \
-                    ']/parameters/parameter[' + str(positionNumber) + ']/constraints/lower'
+                xPath='./model/name[short=' + chr(34) + shortModelName + chr(34) + \
+                    ']..parameters/parameter[' + str(positionNumber) + ']/constraints/lower'
                 lower = self.root.find(xPath)
 
                 if lower.text is None:
@@ -707,6 +706,7 @@ class XMLReader:
 
             #Return a string representation of the
             #dictionary
+            print (str(constantsDict))
             return str(constantsDict)
         
         except ValueNotDefinedInConfigFile:

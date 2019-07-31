@@ -102,7 +102,7 @@ Within each pair of <parameter></parameter> tags
       <value>1.3203</value>
     </constant>
   </constants>
-  <model id="short model name">
+  <model>
     <name>
       <short>short model name</short>
       <long>long model name</long>

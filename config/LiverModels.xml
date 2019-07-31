@@ -29,11 +29,12 @@ The <name></name> tags enclose the <short></short> and
 -->
 <models>
   <data_file_path>C:\TRISTAN Data\PreClinical</data_file_path>
-  <model id="2-2CFM">
+  <model>
     <name>
       <short>2-2CFM</short>
       <long>2 Inlet - Two Compartment Filtration Model</long>
     </name>
+    <module>ModelFunctions</module>
     <function>DualInputTwoCompartmentFiltrationModel</function>
     <image>DualInletTwoCompartmentGadoxetateModel.png</image>
     <inlet_type>dual</inlet_type>
@@ -110,11 +111,12 @@ The <name></name> tags enclose the <short></short> and
       </parameter>
     </parameters>
   </model>
-  <model id="HF2-2CFM">
+  <model>
     <name>
       <short>HF2-2CFM</short>
       <long>High Flow 2 Inlet - Two Compartment Filtration Model</long>
     </name>
+    <module>ModelFunctions</module>
     <function>HighFlowDualInletTwoCompartmentGadoxetateModel</function>
     <image>HighFlowDualInletTwoCompartmentGadoxetateModel.png</image>
     <inlet_type>dual</inlet_type>
@@ -177,11 +179,12 @@ The <name></name> tags enclose the <short></short> and
       </parameter>
     </parameters>
   </model>
-  <model id="HF1-2CFM">
+  <model>
     <name>
       <short>HF1-2CFM</short>
       <long>High Flow 1 Inlet - Two Compartment Filtration Model</long>
     </name>
+    <module>ModelFunctions</module>
     <function>HighFlowSingleInletTwoCompartmentGadoxetateModel</function>
     <image>HighFlowSingleInletTwoCompartmentGadoxetateModel.png</image>
     <inlet_type>single</inlet_type>

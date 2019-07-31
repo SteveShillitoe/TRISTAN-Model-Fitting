@@ -102,7 +102,7 @@ Within each pair of <parameter></parameter> tags
       <value>1.3203</value>
     </constant>
   </constants>
-  <model id="HF1-2CFM+2DSPGR">
+  <model>
     <name>
       <short>HF1-2CFM+2DSPGR</short>
       <long>High Flow Single Inlet - Two Compartment Filtration and 2DSPGR Model</long>
@@ -172,7 +172,7 @@ Within each pair of <parameter></parameter> tags
       </parameter>
     </parameters>
   </model>
-  <model id="HF1-2CFM+3DSPGR">
+  <model>
     <name>
       <short>HF1-2CFM+3DSPGR</short>
       <long>High Flow Single Inlet - Two Compartment Filtration and 3DSPGR Model</long>
