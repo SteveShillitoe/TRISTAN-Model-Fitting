@@ -1,8 +1,8 @@
-MR Signal TRISTAN-Model-Fitting
+FERRET for MR Signal Model Fitting
 ----------------------
 How to use.
 ------------
-   The TRISTAN-Model-Fitting application allows the user to 
+   FERRET allows the user to 
    analyse organ time/MR signal data by fitting a model 
    to the Region Of Interest (ROI) time/MR signal curve. 
    Changes in the MR signal correspond to changes in the
@@ -83,7 +83,7 @@ placed in folder together with the following 2 subfolders:
 Application Module Structure.
 ---------------------------
 The modelFittingGUI.py class module is the start up module
-in the TRISTAN-Model-Fitting application. 
+of the FERRET application. 
 It defines the GUI and the logic providing the application's functionality.
 The GUI was built using PyQT5.
 
@@ -182,7 +182,7 @@ provide a means of selecting the Region of Interest (ROI),
 Input Function (AIF) and the Venous Input Function (VIF).
 
 As the time data is read, it is divided by 60 in order to 
-it into minutes
+convert it to minutes
 
 Included in this repository is a sample data input file 
 called Sample_Data.csv
