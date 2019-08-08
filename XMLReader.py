@@ -706,7 +706,6 @@ class XMLReader:
 
             #Return a string representation of the
             #dictionary
-            print (str(constantsDict))
             return str(constantsDict)
         
         except ValueNotDefinedInConfigFile:
