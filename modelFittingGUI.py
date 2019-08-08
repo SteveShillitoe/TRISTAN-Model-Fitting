@@ -2404,7 +2404,7 @@ class ModelFittingApp(QWidget):
             # or the values they have selected.
             if self.BatchProcessingHaveParamsChanged():
                 buttonReply = QMessageBox.question(self, 'Parameter values changed.', 
-                       "Do you wish to use to use the new parameter values (Yes) or the default values (No)?", QMessageBox.Yes | QMessageBox.No, 
+                       "As initial values, do you wish to use to use the new parameter values (Yes) or the default values (No)?", QMessageBox.Yes | QMessageBox.No, 
                        QMessageBox.No)
                 if buttonReply == QMessageBox.Yes:
                     logger.info('BatchProcessAllCSVDataFiles: Using new parameter values')
