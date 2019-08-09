@@ -278,7 +278,8 @@ class ModelFittingApp(QWidget):
         self.setWindowTitle(WINDOW_TITLE)
         self.setWindowIcon(QIcon(TRISTAN_LOGO))
         width, height = self.GetScreenResolution()
-        self.setGeometry(width*0.05, height*0.05, width*0.9, height*0.9)
+        #self.setGeometry(width*0.05, height*0.05, width*0.9, height*0.9)
+        self.setGeometry(0, 0, width, height)
         self.setWindowFlags(QtCore.Qt.WindowMinMaxButtonsHint |  
                             QtCore.Qt.WindowCloseButtonHint)
         
@@ -2400,7 +2401,7 @@ class ModelFittingApp(QWidget):
         
             boolUseParameterDefaultValues = True
             # If the user has changed one or more parameter values
-            # ask if they still wish to use the parameter default values
+            # ask if they still wish to use the parameter default valuesSet
             # or the values they have selected.
             if self.BatchProcessingHaveParamsChanged():
                 buttonReply = QMessageBox.question(self, 'Parameter values changed.', 
