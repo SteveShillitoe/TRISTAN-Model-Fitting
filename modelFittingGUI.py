@@ -691,10 +691,10 @@ class ModelFittingApp(QWidget):
         """
         layout.setAlignment(QtCore.Qt.AlignTop)
         verticalSpacer = QSpacerItem(20, 35, QSizePolicy.Minimum, QSizePolicy.Minimum)
-        layout.addItem(verticalSpacer)
-        layout.addItem(verticalSpacer)
+        #layout.addItem(verticalSpacer)
+        #layout.addItem(verticalSpacer)
 
-        # lblModelImage is used to display an a schematic
+        # lblModelImage is used to display a schematic
         # representation of the model.
         self.lblModelImage = QLabel('') 
         self.lblModelImage.setAlignment(QtCore.Qt.AlignCenter )
@@ -781,7 +781,7 @@ class ModelFittingApp(QWidget):
                     pixmapModelImage = QPixmap(imagePath)
                     # Increase the size of the model image
                     pMapWidth = pixmapModelImage.width() * 1.35
-                    pMapHeight = pixmapModelImage.height() * 1.35
+                    pMapHeight = pixmapModelImage.height() * 1.30
                     pixmapModelImage = pixmapModelImage.scaled(pMapWidth, pMapHeight, 
                           QtCore.Qt.KeepAspectRatio, QtCore.Qt.SmoothTransformation)
                     self.lblModelImage.setPixmap(pixmapModelImage)

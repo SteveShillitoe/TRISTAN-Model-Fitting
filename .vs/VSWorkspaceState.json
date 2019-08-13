@@ -1,9 +1,10 @@
 {
   "ExpandedNodes": [
     "",
+    "\\config",
     "\\data",
     "\\__pycache__"
   ],
-  "SelectedNode": "\\README.md",
+  "SelectedNode": "\\ModelFunctionsHelper.py",
   "PreviewInSolutionExplorer": false
 }

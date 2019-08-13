@@ -20,7 +20,10 @@ from lmfit import Parameters, Model
 import numpy as np
 import logging
 import importlib
-# ModelFunctions as modelFunctions
+#Although a dynamic import of ModelFunctions is done in the 2 functions in this module
+#an import has to be done here, so that Model Functions is included when a compiled
+#version of this program is created using Pyinstaller.
+import ModelFunctions
 
 
 logger = logging.getLogger(__name__)
