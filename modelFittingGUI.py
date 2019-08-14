@@ -780,8 +780,8 @@ class ModelFittingApp(QWidget):
                     imagePath = IMAGE_FOLDER + imageName
                     pixmapModelImage = QPixmap(imagePath)
                     # Increase the size of the model image
-                    pMapWidth = pixmapModelImage.width() * 1.35
-                    pMapHeight = pixmapModelImage.height() * 1.30
+                    pMapWidth = pixmapModelImage.width() * 1.15
+                    pMapHeight = pixmapModelImage.height() * 1.15
                     pixmapModelImage = pixmapModelImage.scaled(pMapWidth, pMapHeight, 
                           QtCore.Qt.KeepAspectRatio, QtCore.Qt.SmoothTransformation)
                     self.lblModelImage.setPixmap(pixmapModelImage)
