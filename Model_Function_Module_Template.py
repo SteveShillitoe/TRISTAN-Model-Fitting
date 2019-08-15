@@ -7,9 +7,10 @@ from joblib import Parallel, delayed
 import logging
 logger = logging.getLogger(__name__)
 
-# Note: The input paramaters for the volume fractions and rate constants in
-# the following model function definitions are listed in the same order 
-# as they are displayed in the GUI from top (first) to bottom (last) 
+#  PLEASE READ: The function paramaters in the model function definition
+#  are listed in the same order as they are displayed in the GUI 
+#  from top (first) to bottom (last).  The maximum number of
+#  parameters allowed is 5. 
 
 ####################################################################
 ####  MR Signal Models 
@@ -27,6 +28,8 @@ def Model_Function_Template(xData2DArray, param1, param2, param3, param4, param5
                 param1 - model parameter.
                 param2 - model parameter.
                 param3 - model parameter.
+                param4 - model parameter.
+                param5 - model parameter.
                 constantsString - String representation of a dictionary 
                 of constant name:value pairs used to convert concentrations 
                 predicted by this model to MR signal values.
