@@ -169,7 +169,7 @@ from PyQt5 import QtCore
 from PyQt5.QtWidgets import QApplication, QPushButton, QDoubleSpinBox,\
      QVBoxLayout, QHBoxLayout, QGroupBox, QComboBox, QLabel,  \
      QMessageBox, QFileDialog, QCheckBox, QLineEdit, QSizePolicy, QSpacerItem, \
-     QGridLayout, QWidget, QStatusBar, QProgressBar
+     QGridLayout, QWidget, QStatusBar, QProgressBar, QFrame
 
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
@@ -278,8 +278,7 @@ class ModelFittingApp(QWidget):
         self.setWindowTitle(WINDOW_TITLE)
         self.setWindowIcon(QIcon(TRISTAN_LOGO))
         width, height = self.GetScreenResolution()
-        #self.setGeometry(width*0.05, height*0.05, width*0.9, height*0.9)
-        self.setGeometry(0, 0, width, height)
+        self.setGeometry(0, 0, width, height*0.95)
         self.setWindowFlags(QtCore.Qt.WindowMinMaxButtonsHint |  
                             QtCore.Qt.WindowCloseButtonHint)
         
@@ -690,19 +689,20 @@ class ModelFittingApp(QWidget):
         layout - holds a pointer to the right-hand side vertical layout widget
         """
         layout.setAlignment(QtCore.Qt.AlignTop)
-        verticalSpacer = QSpacerItem(20, 35, QSizePolicy.Minimum, QSizePolicy.Minimum)
-        #layout.addItem(verticalSpacer)
-        #layout.addItem(verticalSpacer)
 
         # lblModelImage is used to display a schematic
         # representation of the model.
         self.lblModelImage = QLabel('') 
         self.lblModelImage.setAlignment(QtCore.Qt.AlignCenter )
+        self.lblModelImage.setMargin(2)
+                                        
         self.lblModelName = QLabel('')
         self.lblModelName.setAlignment(QtCore.Qt.AlignCenter)
+        self.lblModelName.setMargin(2)
+        self.lblModelName.setFrameStyle(QFrame.Panel | QFrame.Sunken)
         self.lblModelName.setWordWrap(True)
 
-        self.figure = plt.figure(figsize=(5, 9), dpi=100) 
+        self.figure = plt.figure(figsize=(5, 8), dpi=100) 
         # this is the Canvas Widget that displays the `figure`
         # it takes the `figure` instance as a parameter 
         # to its __init__ function
