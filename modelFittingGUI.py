@@ -2448,6 +2448,7 @@ class ModelFittingApp(QWidget):
                     fileLoadedOK, failureReason = self.BatchProcessingLoadDataFile(self.dataFileDirectory + '/' + self.dataFileName)
                     if not fileLoadedOK:
                         objSpreadSheet.recordSkippedFiles(self.dataFileName, failureReason)
+                        self.pbar.setValue(count)
                         continue  # Skip this iteration if problems loading file
                 
                     self.plotMRSignals('BatchProcessAllCSVDataFiles') #Plot data                
