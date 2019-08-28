@@ -40,6 +40,7 @@ TRISTAN_BLUE ="""
                 QCheckBox{font: bold "Arial";}
                 """
 TRISTAN_GREY = """
+                /* warm grey QWidget{background-color: rgb(215, 210, 203);} */
                 QPushButton {
                              background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
                                       stop: 0 #CCCCBB, stop: 1 #FFFFFF);
@@ -86,6 +87,7 @@ TRISTAN_GREY = """
                         text-align: centre;
                         font-weight: bold;
                         font-size: 9pt;
+                        background: transparent;
                         }
 
                 QDoubleSpinBox{
@@ -105,7 +107,8 @@ TRISTAN_GREY = """
                     padding: 5px;
                     spacing: 5px;
                     font-weight: bold;
-                    font-size: 9pt;}
+                    font-size: 9pt;
+                    background: transparent;}
 
                 QCheckBox:hover{
                         background-color: rgb(175, 175, 175);
