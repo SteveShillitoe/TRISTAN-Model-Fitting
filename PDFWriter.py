@@ -27,7 +27,7 @@ class PDF(FPDF):
 
     def header(self):
         """Prints a header at the top of every page of the report.
-        It includes the TRISTAN Logo and the title of the report. """
+        It includes the Logo and the title of the report. """
         # Logo
         self.image(self.logo, 5, 0, 27, 18)
         
