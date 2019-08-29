@@ -1520,7 +1520,7 @@ class ModelFittingApp(QWidget):
                 summary, in an Excel spreadsheet, from all the data input files.
         """
         try:
-            pdf = PDF(REPORT_TITLE) 
+            pdf = PDF(REPORT_TITLE, FERRET_LOGO) 
             
             if not reportFileName:
                 # Ask the user to specify the path & name of PDF report. 
@@ -2772,7 +2772,6 @@ class ModelFittingApp(QWidget):
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    app.setWindowIcon(QIcon('FERRET_icon.ico'))
     main = ModelFittingApp()
     main.show()
     sys.exit(app.exec_())

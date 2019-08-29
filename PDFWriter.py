@@ -10,8 +10,6 @@ import datetime
 from fpdf import FPDF
 import logging
 
-TRISTAN_LOGO = 'images\\TRISTAN LOGO.jpg'
-
 logger = logging.getLogger(__name__)
 
 # header and footer methods in FPDF render the page header and footer.
@@ -20,17 +18,19 @@ logger = logging.getLogger(__name__)
 # The implementation in FPDF is empty so, we have to subclass it 
 # and override the method to define the required functionality.
 class PDF(FPDF):
-    def __init__(self, title):
+    def __init__(self, title, logo):
         # Inherit functionality from the __init__ method of class FPDF
         super().__init__() 
-        self.title = title  #Then add a local property
+        self.title = title  #Then add local properties
+        self.logo = logo
         logger.info('In module ' + __name__ + '. Created an instance of class PDF.')
 
     def header(self):
         """Prints a header at the top of every page of the report.
         It includes the TRISTAN Logo and the title of the report. """
         # Logo
-        self.image(TRISTAN_LOGO, 10, 8, 33, 10)
+        self.image(self.logo, 5, 0, 27, 18)
+        
         # Arial bold 15
         self.set_font('Arial', 'BU', 15)
         # Title

@@ -39,3 +39,4 @@
 /data/BatchSummary.xlsx
 /data/CSVPlotDataFiles/plotPreclinical_MR_Signal_3D_1.csv
 /data/CSVPlotDataFiles/plotPreclinical_MR_Signal_3D_2.csv
+/__pycache__/FERRET.cpython-37.pyc
