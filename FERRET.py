@@ -2511,7 +2511,7 @@ class ModelFittingApp(QWidget):
                 os.remove(ExcelFileName)
             
             #Create spreadsheet object
-            spreadSheet = ExcelWriter(ExcelFileName)
+            spreadSheet = ExcelWriter(ExcelFileName, FERRET_LOGO)
             
             return spreadSheet, boolExcelFileCreatedOK
 

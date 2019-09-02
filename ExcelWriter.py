@@ -7,12 +7,13 @@ This is done using the openpyxl Python package.
 """
 
 from openpyxl import Workbook
+from openpyxl.drawing.image import Image
 import logging
 
 logger = logging.getLogger(__name__)
 
 class ExcelWriter:
-    def __init__(self, fullFilePath): 
+    def __init__(self, fullFilePath, logo): 
         """Creates an instance of the ExcelWriter class that
        contains an Excel Workbook with one worksheet with a tab
        entitled 'Skipped files'.
@@ -23,11 +24,21 @@ class ExcelWriter:
        """
         try:
             self.fullFilePath = fullFilePath
-            #print ("Excel fullFilePath = " + fullFilePath)
+            self.logo = Image(logo)
+            #Resize logo
+            self.logo.height = 50
+            self.logo.width = 50
+           
             self.wb = Workbook()
             self.ws = self.wb.active
             self.ws.title = "Skipped files"
-            self.ws['A1'] = "If any of the data files could not be " + \
+
+            #Adjust size of cell A1 to accomodate logo
+            self.ws.column_dimensions['A'].width = 7
+            self.ws.row_dimensions[1].height = 37.5
+            self.ws.add_image(self.logo, 'A1')
+
+            self.ws['B1'] = "If any of the data files could not be " + \
                "loaded, their names and the reason(s) are recorded here."
 
             logger.info('In module ' + __name__ 
