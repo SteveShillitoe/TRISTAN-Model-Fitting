@@ -40,3 +40,5 @@
 /data/CSVPlotDataFiles/plotPreclinical_MR_Signal_3D_1.csv
 /data/CSVPlotDataFiles/plotPreclinical_MR_Signal_3D_2.csv
 /__pycache__/FERRET.cpython-37.pyc
+/CoreModules/__pycache__
+/Models/__pycache__

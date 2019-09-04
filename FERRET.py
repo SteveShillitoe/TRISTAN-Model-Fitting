@@ -157,7 +157,11 @@ __date__ = "Date: 2018/12/12"
 
 import sys
 import csv
-import os.path
+import os
+#Add folders CoreModules & Models to the Module Search Path. 
+#path[0] is the current working directory
+sys.path.append(os.path.join(sys.path[0],'CoreModules'))
+sys.path.append(os.path.join(sys.path[0],'Models'))
 import numpy as np
 import pyautogui
 import logging
@@ -319,6 +323,7 @@ class ModelFittingApp(QWidget):
         # Set up the graph to plot concentration data on
         #  the right-hand side vertical layout
         self.SetUpPlotArea(verticalLayoutRight)
+        print(os.getcwd())
         
         logger.info("GUI created successfully.")
 
