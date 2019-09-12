@@ -86,7 +86,7 @@ XPath notation and return data.
 The styleSheet.py module contains style instructions using CSS 
 notation for each control/widget.
 
-The Tools.py module contains a library of mathematical functions 
+The MathsTools.py module contains a library of mathematical functions 
 used to solve the equations in the models in ModelFunctionsHelper.py.
 
 Objects of the following 2 classes are created in modelFittingGUI.py 
@@ -125,7 +125,7 @@ The appearance of the GUI is controlled by the CSS commands in styleSheet.py
 
 Reading Data into the Application.
 ----------------------------------
-The function LoadConfigFile loads and parses the contents of the 
+The function LoadModelLibrary loads and parses the contents of the 
 XML file that describes the models to be used for curve fitting.  
 If parsing is successful, the XML tree is stored in memory 
 and used to build a list of models for display in a combo box on the GUI,
@@ -158,10 +158,11 @@ __date__ = "Date: 2018/12/12"
 import sys
 import csv
 import os
-#Add folders CoreModules & Models to the Module Search Path. 
+#Add folders CoreModules & Developer/ModelLibrary to the Module Search Path. 
 #path[0] is the current working directory
 sys.path.append(os.path.join(sys.path[0],'CoreModules'))
-sys.path.append(os.path.join(sys.path[0],'Models'))
+sys.path.append(os.path.join(sys.path[0],'Developer//ModelLibrary//'))
+
 import numpy as np
 import pyautogui
 import logging
@@ -209,7 +210,7 @@ TRISTAN_LOGO = 'images\\TRISTAN LOGO.jpg'
 LARGE_TRISTAN_LOGO ='images\\logo-tristan.png'
 UNI_OF_LEEDS_LOGO ='images\\uni-leeds-logo.jpg'
 FERRET_LOGO = 'images\\FERRET_LOGO.png'
-IMAGE_FOLDER = 'images\\'
+MODEL_DIAGRAM_FOLDER = 'Developer\\ModelDiagrams\\'
 #######################################
 
 #Create and configure the logger
@@ -358,12 +359,12 @@ class ModelFittingApp(QWidget):
         layout - holds a reference to the left handside vertical layout widget
         """
         # Create Load Configuration XML file Button
-        self.btnLoadConfigFile = QPushButton('Load Model Library')
-        self.btnLoadConfigFile.setToolTip(
+        self.btnLoadModelLibrary = QPushButton('Load Model Library')
+        self.btnLoadModelLibrary.setToolTip(
             'Opens file dialog box to select the model library file')
-        self.btnLoadConfigFile.setShortcut("Ctrl+C")
-        self.btnLoadConfigFile.setAutoDefault(False)
-        self.btnLoadConfigFile.clicked.connect(self.LoadConfigFile)
+        self.btnLoadModelLibrary.setShortcut("Ctrl+C")
+        self.btnLoadModelLibrary.setAutoDefault(False)
+        self.btnLoadModelLibrary.clicked.connect(self.LoadModelLibrary)
 
         # Create Load Data File Button
         self.btnLoadDataFile = QPushButton('Load Data File')
@@ -377,7 +378,7 @@ class ModelFittingApp(QWidget):
         verticalSpacer = QSpacerItem(10, 60, QSizePolicy.Minimum, 
                           QSizePolicy.Minimum)
         #layout.addItem(verticalSpacer)
-        layout.addWidget(self.btnLoadConfigFile)
+        layout.addWidget(self.btnLoadModelLibrary)
         layout.addWidget(self.btnLoadDataFile)
         #layout.addItem(verticalSpacer)
 
@@ -791,7 +792,7 @@ class ModelFittingApp(QWidget):
                 # A model has been selected
                 imageName = self.objXMLReader.getImageName(shortModelName)
                 if imageName:
-                    imagePath = IMAGE_FOLDER + imageName
+                    imagePath = MODEL_DIAGRAM_FOLDER + imageName
                     pixmapModelImage = QPixmap(imagePath)
                     # Increase the size of the model image
                     pMapWidth = pixmapModelImage.width() * 1.15
@@ -1599,7 +1600,7 @@ class ModelFittingApp(QWidget):
             logger.error('Error in function PopulateModelListCombo: ' + str(e))
 
 
-    def LoadConfigFile(self):
+    def LoadModelLibrary(self):
         """Loads the contents of an XML file containing model(s) 
         configuration data.  If the XML file parses successfully,
         display the 'Load Data File' button and build the list 
@@ -1616,9 +1617,9 @@ class ModelFittingApp(QWidget):
             #  Get the configuration file in XML format.
             # The filter parameter is set so that the 
             # user can only open an XML file.
-            defaultPath = "config\\"
+            defaultPath = "Developer\\ModelConfiguration\\"
             fullFilePath, _ = QFileDialog.getOpenFileName(parent=self, 
-                caption="Select configuration file", 
+                caption="Select model configuration file", 
                 directory=defaultPath,
                 filter="*.xml")
 
@@ -1640,16 +1641,16 @@ class ModelFittingApp(QWidget):
                     QMessageBox().warning(self, "XML configuration file", "Error reading XML file ", QMessageBox.Ok)
             
         except IOError as ioe:
-            print ('IOError in function LoadConfigFile:' + str(ioe))
-            logger.error ('IOError in function LoadConfigFile: cannot open file' 
+            print ('IOError in function LoadModelLibrary:' + str(ioe))
+            logger.error ('IOError in function LoadModelLibrary: cannot open file' 
                    + str(ioe))
         except RuntimeError as re:
-            print('Runtime error in function LoadConfigFile: ' + str(re))
-            logger.error('Runtime error in function LoadConfigFile: ' 
+            print('Runtime error in function LoadModelLibrary: ' + str(re))
+            logger.error('Runtime error in function LoadModelLibrary: ' 
                          + str(re))
         except Exception as e:
-            print('Error in function LoadConfigFile: ' + str(e))
-            logger.error('Error in function LoadConfigFile: ' + str(e))           
+            print('Error in function LoadModelLibrary: ' + str(e))
+            logger.error('Error in function LoadModelLibrary: ' + str(e))           
 
 
     def LoadDataFile(self):

@@ -29,7 +29,7 @@
 /__pycache__/XMLReader.cpython-37.pyc
 /__pycache__/PDFWriter.cpython-37.pyc
 /__pycache__/StyleSheet.cpython-37.pyc
-/__pycache__/Tools.cpython-37.pyc
+/__pycache__/MathsTools.cpython-37.pyc
 /__pycache__/modelFittingGUI.cpython-37.pyc
 /config/data/PDFReports/Preclinical_MR_Signal_3D_1.pdf
 /config/data/PDFReports/Preclinical_MR_Signal_3D_2.pdf
@@ -42,3 +42,4 @@
 /__pycache__/FERRET.cpython-37.pyc
 /CoreModules/__pycache__
 /Models/__pycache__
+/Developer/ModelLibrary/__pycache__/ModelFunctions.cpython-37.pyc

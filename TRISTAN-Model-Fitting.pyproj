@@ -34,7 +34,7 @@
     <Compile Include="PDFWriter.py" />
     
 <Compile Include="styleSheet.py" />
-<Compile Include="Tools.py" />
+<Compile Include="MathsTools.py" />
    
     
   
